@@ -1,0 +1,12 @@
+# Forward signal + role ownership (fill real GitHub handles)
+docs/po/**            @TBD-fullstack @TBD-techlead
+docs/fullstack/**     @TBD-fullstack
+docs/tech-lead/**     @TBD-techlead
+docs/security/**      @TBD-techlead
+backend/**            @TBD-backend
+frontend/**           @TBD-frontend
+mobile/**             @TBD-mobile
+docs/qa/**            @TBD-qa
+docs/devops/**        @TBD-devops
+infra/**              @TBD-devops
+.github/workflows/**  @TBD-devops

@@ -1,0 +1,11 @@
+# Placeholder pipeline — DevOps owns. See infra/deploy.md for the runbook.
+name: ci
+on:
+  push: { branches: [ main ] }
+  pull_request: {}
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "TODO: build backend + web, run tests, build Flutter AAB. See infra/deploy.md"

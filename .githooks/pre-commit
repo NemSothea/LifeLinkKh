@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Enable with: git config core.hooksPath .githooks
+set -euo pipefail
+if [ -f .capybara/validate.sh ]; then bash .capybara/validate.sh || {
+  echo "capybara validate failed — fix violations above or commit with --no-verify"; exit 1; }
+fi
