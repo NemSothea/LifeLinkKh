@@ -88,7 +88,7 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 
 | Member | Role | Owns |
 |--------|------|------|
-| **Nem Sothea** | Tech Lead / Flutter (Senior) | Architecture, Flutter mobile app, FCM push, GPS/maps, Android build & Play Store release. Reviews all PRs. |
+| **Nem Sothea** | Tech Lead / Flutter + PO (Senior) | Architecture, Flutter mobile app, FCM push, GPS/maps, Android build & Play Store release. Reviews all PRs. Also acts as PO — owns `docs/po/` (PRD, briefs, prototypes, FRs). |
 | **Suon Pisey** | Backend / Database (Senior) | Spring Boot API, PostgreSQL schema, Flyway migrations, auth, blood-type/distance matching logic. |
 | **Sourn SAVOURN** | Frontend (Senior) | Next.js web portal (hospital/admin), API client, forms, Khmer/English i18n. |
 | **Moeun Nithvaraman** | Infra (Senior) | Docker / docker-compose, CI, environments, release pipeline. |
