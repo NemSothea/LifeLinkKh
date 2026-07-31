@@ -54,27 +54,36 @@ location-aware push alerts** to matching donors' phones — something a website 
 ## Repository layout
 
 ```
-backend/    Spring Boot + PostgreSQL API
-frontend/   Next.js web portal (hospital/admin)
-mobile/     Flutter app (donors/patients)
-infra/      Deploy runbook (docs only; pipeline in .github/workflows/)
-docs/       Capybara multi-role docs (see below)
-.capybara/  Framework state — brief.md, setup.md, validate.sh
+backend/            Spring Boot + PostgreSQL API        (scaffolded at M2)
+frontend/           Next.js web portal, hospital/admin  (scaffolded at M2)
+mobile/             Flutter app, donors/patients        (scaffolded at M2)
+infra/              Deploy runbook (docs only; CI pipeline in .github/workflows/)
+docker-compose.yml  postgres + backend + web, local dev only (owned by Fullstack)
+docs/               Capybara multi-role docs (see below)
+.capybara/          Framework state — brief.md, setup.md, validate.sh
 ```
 
 ## Getting started
 
-> Prerequisites: Docker + docker-compose, JDK 17+, Node 20+, Flutter SDK.
+> Prerequisites: Docker (Compose v2), **JDK 21**, Node 20+, Flutter SDK.
 
 ```bash
-# Backend + web portal + database
-docker-compose up          # → API on :8080, web on :3000, postgres on :5432
+# Backend + web portal + database — all ports bound to 127.0.0.1
+docker compose up          # → API on :8080, web on :3000, postgres on :5432
 
 # Flutter app (device or emulator, against the local API)
-cd mobile && flutter run
+cd mobile
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/api
 ```
 
-_(Concrete run commands land as `/capybara-adk:dev` scaffolds each module.)_
+`--dart-define=API_BASE_URL` is **required** — the app fails fast with a clear error rather than
+falling back to a default host. `10.0.2.2` is the Android emulator's alias for your machine, where
+Compose publishes the backend.
+
+Layer-by-layer setup, including the Flyway schema and the Compose service definitions, is specified in
+[`docs/fullstack/specs/foundation/`](docs/fullstack/specs/foundation/).
+
+_(The three code directories are empty until M2 scaffolds them.)_
 
 ---
 
@@ -82,27 +91,25 @@ _(Concrete run commands land as `/capybara-adk:dev` scaffolds each module.)_
 
 | Name | Role |
 |------|------|
-| Nem Sothea | Tech Lead / Mobile (Flutter) |
+| Nem Sothea | Tech Lead / Mobile (Flutter) · also PO, PM, Security |
 | Suon Pisey | Backend / Database |
 | Sourn SAVOURN | Frontend (Next.js) |
 | Moeun Nithvaraman | DevOps / Infra |
 | Oun Sreynich | QA |
 
-See [`docs/team.md`](docs/team.md).
+See [`docs/team.md`](docs/team.md) for write scopes (R2) and the acting-role overlays.
 
-## Milestones (M1 → M7)
+> One person holding PO, PM, Tech Lead and Security collapses Definition of Done step 1 into
+> self-approval, leaving QA sign-off as the only independent gate. Logged in
+> [`docs/pm/risks.md`](docs/pm/risks.md).
 
-| # | Week | Deliverable |
-|---|------|-------------|
-| M1 | W3-4 | PRD, wireframes, DB schema/ERD, API spec, Docker skeleton |
-| M2 | W5-6 | Backend + web + Flutter init; `docker-compose up` runs the stack |
-| M3 | W7-8 | Auth (OTP) + donor register end-to-end |
-| M4 | W9-10 | Urgent request + matching |
-| M5 | W11-12 | History + cooldown + FCM push |
-| M6 | W13 | GPS/maps, Khmer/English i18n, Android build |
-| M7 | W14-15 | **Published to Play Store internal testing** |
+## Milestones
 
-Full plan in [`CLAUDE.md`](CLAUDE.md).
+M1 → M7, ending with the Flutter app published to Play Store internal testing by Week 15.
+
+The milestone table lives in **[`CLAUDE.md`](CLAUDE.md) section 4 and nowhere else** — it is not
+copied here. Milestone assignments change (see [`docs/pm/decisions.md`](docs/pm/decisions.md)), and a
+second copy would silently go stale.
 
 ## Development framework
 
@@ -111,7 +118,19 @@ This repo runs the **Capybara** multi-role framework (KOSIGN ADK). Start here:
 - [`ONBOARDING.md`](ONBOARDING.md) — Day 1/2/3 for new contributors
 - [`docs/roles-and-flows.md`](docs/roles-and-flows.md) — who owns what + how work flows
 - [`docs/cheat-sheet.md`](docs/cheat-sheet.md) — lifecycle, IDs, Definition of Done
-- [`docs/po/prd.md`](docs/po/prd.md) — product requirements
+
+**Picking up work — start here:**
+
+| File | What it holds |
+|---|---|
+| [`docs/po/features/index.md`](docs/po/features/index.md) | **Feature registry** — all 19 FRs with area, priority, status, milestone, and which are blocked |
+| [`docs/po/prd.md`](docs/po/prd.md) | Product requirements and acceptance criteria for FR-01..FR-12 |
+| [`docs/fullstack/specs/foundation/`](docs/fullstack/specs/foundation/) | Per-layer M2 build specs, each with a binary done-when checklist |
+| [`docs/po/briefs/roadmap.md`](docs/po/briefs/roadmap.md) | Product decisions still open, and the milestone each one blocks |
+| [`docs/po/prototypes/roadmap.md`](docs/po/prototypes/roadmap.md) | Which screens get wireframed by which milestone |
+| [`docs/pm/decisions.md`](docs/pm/decisions.md) | Decisions taken (DEC), with rationale |
+| [`docs/pm/risks.md`](docs/pm/risks.md) | Open risks and agreed mitigations |
+| [`docs/tech-lead/adr/`](docs/tech-lead/adr/) | Architecture decision records |
 
 Lifecycle: `init → project → plan → dev → review → deploy`. Check status any time with
 `/capybara-adk:status`.
