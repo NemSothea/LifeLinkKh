@@ -78,11 +78,16 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 |-----------|--------|-------------|
 | M1 | W3-4   | PRD + wireframes, DB schema/ERD, API spec, repo + Docker skeleton |
 | M2 | W5-6   | Spring Boot init (PostgreSQL, Flyway), Flutter + Next.js init, `docker-compose up` runs backend+web+db |
-| M3 | W7-8   | Auth (phone/OTP) + donor register: API, Flutter screen, web portal (feature 1) end-to-end |
-| M4 | W9-10  | Urgent request create + matching query by blood type/distance (feature 2) |
-| M5 | W11-12 | History + 56-day cooldown (feature 3), FCM push notifications in Flutter app |
+| M3 | W7-8   | Auth (phone/OTP) + donor register incl. FCM token registration: API, Flutter screen, web portal (feature 1) end-to-end |
+| M4 | W9-10  | Urgent request create + matching by blood type/distance + 56-day eligibility computation + FCM request-alert push (feature 2) end-to-end |
+| M5 | W11-12 | Donation history + donor eligibility status + eligibility reminder push (feature 3) |
 | M6 | W13    | GPS/maps in Flutter, Khmer/English i18n, web portal polish, Android build |
 | M7 | W14-15 | Test pass, signed AAB, **Flutter app published to Play Store internal testing** |
+
+> M3–M5 rows amended 2026-07-31 by DEC-001, DEC-002, DEC-003 (`docs/pm/decisions.md`) — eligibility
+> computation and request-alert push moved earlier so each milestone can satisfy its own acceptance
+> criteria. From M3 onward, every milestone's Definition of Done also includes recording that
+> feature's metric events (DEC-003).
 
 ## 5. Team — responsibilities
 
