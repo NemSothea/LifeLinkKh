@@ -9,7 +9,7 @@ and `docs/cheat-sheet.md` first.
 - Run `/capybara-adk:status` to see the current stage and next command.
 
 ## Day 2 — Your scope
-- **PO:** open FRs in `docs/po/features/` (thin FR → prototype → finalize). Log every FR in `changelog.md`.
+- **PO:** briefs in `docs/po/briefs/`, wireframes in `docs/po/prototypes/`, FRs in `docs/po/features/` (brief → prototype → finalize). Log every FR in `changelog.md`.
 - **Fullstack (Pisey/Sourn):** specs in `docs/fullstack/specs/`, API in `docs/fullstack/api-contract/`. Build `backend/` + `frontend/`.
 - **Tech Lead (Sothea):** architecture + ADRs in `docs/tech-lead/`. Sign off specs.
 - **Security (overlay):** `docs/security/security-checklist.md` — run the R6 gate on auth/PII/secrets/integration changes.
