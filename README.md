@@ -134,6 +134,8 @@ This repo runs the **Capybara** multi-role framework (KOSIGN ADK). Start here:
 
 Lifecycle: `init → project → plan → dev → review → deploy`. Check status any time with
 `/capybara-adk:status`.
+## Google Drive
+### Cross-Platform Mobile Application Development ៖ https://drive.google.com/drive/folders/1hdO18bbErVAlMxPNut1zn1_rcU6RVyFu?usp=drive_link
 
 ## License
 
