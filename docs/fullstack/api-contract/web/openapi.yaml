@@ -1,13 +1,211 @@
 openapi: 3.1.0
 info:
   title: LifeLink KH — Web API
-  version: 0.1.0
+  version: 0.2.0
+  description: |
+    Hospital portal (Next.js). Machine twin of contract.md — this file wins on conflict.
+
+    Three endpoints only. FR-PORTAL-001 was trimmed by DEC-004 to one page: open requests
+    plus confirm-donation. FR-PORTAL-002 (admin dashboard) is deferred, so there is no
+    metrics endpoint here.
+
+    Sign-in reuses POST /auth/google from the mobile contract. Hospital accounts already
+    exist with role HOSPITAL, seeded by migration; the endpoint honours a client-sent role
+    only on first sign-in, so a privileged account cannot be created through it
+    (TM-AUTH-001 E1).
 servers:
   - url: http://localhost:8080/api
-paths: {}
+
+tags:
+  - name: portal
+
+paths:
+  /portal/requests:
+    get:
+      tags: [portal]
+      summary: Open requests table
+      description: |
+        HOSPITAL sees its own hospital's requests; ADMIN sees all. Scope comes from the JWT,
+        never from a query parameter. A DONOR JWT gets 403.
+
+        acceptedDonors lists only donors who accepted — the alerted-but-silent list is 11
+        people's blood type and district for no operational reason (TM-AUTH-001 I1).
+        No latitude, longitude, or distance appears anywhere in this response (ADR 0003).
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [OPEN, FULFILLED, CANCELLED]
+            default: OPEN
+      responses:
+        '200':
+          description: Requests visible to this caller
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PortalRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /portal/requests/{id}/confirm-donation:
+    post:
+      tags: [portal]
+      summary: Record a donation against a request
+      description: |
+        The only write path to `donations` in the whole product. FR-DONATION-001 (donor
+        history) and FR-DONOR-002 (56-day cooldown) both read from it — skip this at M5 and
+        the history screen is permanently empty and every donor stays eligible forever.
+
+        One transaction, three effects:
+          1. insert donations (donor, hospital, request, donatedOn, confirmedBy)
+          2. update donor_profiles.last_donation_date — it caches MAX(donations.donated_on)
+             and must not drift from the row just written
+          3. set blood_requests.status = FULFILLED once unitsNeeded is met
+
+        matchId must belong to this request and be ACCEPTED. Confirming a donation from a
+        donor who never accepted would silently start their 56-day cooldown.
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [matchId, donatedOn]
+              properties:
+                matchId: { type: string, format: uuid }
+                donatedOn:
+                  type: string
+                  format: date
+                  description: Must not be in the future.
+      responses:
+        '201':
+          description: Donation recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DonationConfirmation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { description: Unknown request, or not visible to this caller }
+        '409': { description: Match already confirmed, or request already closed }
+        '422':
+          description: matchId not ACCEPTED or not on this request; donatedOn in the future
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+  parameters:
+    PathId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    BadRequest:
+      description: Malformed body or bad enum value
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: Missing, invalid, or expired JWT
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Authenticated but not HOSPITAL or ADMIN
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    BloodType:
+      type: string
+      enum: ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+']
+
+    Urgency:
+      type: string
+      enum: [CRITICAL, URGENT, ROUTINE]
+
+    RequestStatus:
+      type: string
+      description: EXPIRED is unreachable in this build — FR-REQUEST-005 deferred (DEC-004).
+      enum: [OPEN, FULFILLED, CANCELLED]
+
+    Hospital:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, example: Calmette Hospital }
+
+    AcceptedDonor:
+      type: object
+      description: |
+        Only donors whose match response is ACCEPTED. No phone number here — staff coordinate
+        through the requester, and no coordinates ever (ADR 0003).
+      required: [matchId, displayName, bloodType, respondedAt]
+      properties:
+        matchId: { type: string, format: uuid }
+        displayName: { type: string }
+        bloodType: { $ref: '#/components/schemas/BloodType' }
+        districtName: { type: string }
+        respondedAt: { type: string, format: date-time }
+
+    PortalRequest:
+      type: object
+      required: [id, patientBloodType, unitsNeeded, urgency, status, hospital, alertedCount, acceptedCount, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        patientBloodType: { $ref: '#/components/schemas/BloodType' }
+        unitsNeeded: { type: integer }
+        urgency: { $ref: '#/components/schemas/Urgency' }
+        status: { $ref: '#/components/schemas/RequestStatus' }
+        hospital: { $ref: '#/components/schemas/Hospital' }
+        alertedCount: { type: integer }
+        acceptedCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+        acceptedDonors:
+          type: array
+          items: { $ref: '#/components/schemas/AcceptedDonor' }
+
+    DonationConfirmation:
+      type: object
+      required: [id, donorDisplayName, donatedOn, requestStatus]
+      properties:
+        id: { type: string, format: uuid }
+        donorDisplayName: { type: string }
+        donatedOn: { type: string, format: date }
+        requestStatus: { $ref: '#/components/schemas/RequestStatus' }
+        donorNextEligibleOn:
+          type: string
+          format: date
+          description: |
+            donatedOn + 56 days. Returned so staff can tell the donor when to come back —
+            the thing the donor actually wants to know at that moment.
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string, example: MATCH_NOT_ACCEPTED }
+            message: { type: string }
+
+security:
+  - bearerAuth: []

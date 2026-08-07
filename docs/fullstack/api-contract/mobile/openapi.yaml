@@ -1,13 +1,511 @@
 openapi: 3.1.0
 info:
   title: LifeLink KH — Mobile API
-  version: 0.1.0
+  version: 0.2.0
+  description: |
+    Flutter donor/requester app. Machine twin of contract.md — this file wins on conflict.
+    Scope: the 8 core FRs only (docs/scope.md). Deferred FRs have no endpoints here.
+
+    Three response rules enforced across every schema below:
+      1. No donor-facing response contains latitude or longitude (ADR 0003).
+      2. distanceKm is server-rounded to 0.5.
+      3. Contact details appear only after a donor has ACCEPTED (TM-AUTH-001 I1).
 servers:
   - url: http://localhost:8080/api
-paths: {}
+
+tags:
+  - name: auth
+  - name: donor
+  - name: request
+  - name: match
+  - name: donation
+  - name: reference
+
+paths:
+  /health:
+    get:
+      tags: [reference]
+      summary: Liveness probe (M2, unauthenticated by design)
+      security: []
+      responses:
+        '200':
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: UP }
+
+  /auth/google:
+    post:
+      tags: [auth]
+      summary: Exchange a Google ID token for our JWT
+      description: |
+        Only unauthenticated endpoint besides /health. Identity is taken solely from the
+        verified token's `sub` claim; no user identifier is ever accepted from the client
+        (TM-AUTH-001 S1). Signature, aud, iss and expiry are all verified (S2).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idToken]
+              properties:
+                idToken:
+                  type: string
+                  description: Google ID token from the Firebase SDK
+                role:
+                  $ref: '#/components/schemas/SelfServiceRole'
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422':
+          description: |
+            Semantically invalid — includes role HOSPITAL or ADMIN, which is rejected and
+            never silently downgraded (TM-AUTH-001 E1).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /auth/fcm-token:
+    post:
+      tags: [auth]
+      summary: Register or refresh this device's FCM token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fcmToken]
+              properties:
+                fcmToken: { type: string }
+      responses:
+        '204': { description: Stored }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /donors/me:
+    get:
+      tags: [donor]
+      summary: Own donor profile with computed eligibility
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DonorProfile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No donor profile yet for this user }
+    put:
+      tags: [donor]
+      summary: Create or update own donor profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DonorProfileWrite' }
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DonorProfile' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422':
+          description: Unknown blood type, or lastDonationDate in the future
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /hospitals:
+    get:
+      tags: [reference]
+      summary: Hospital list for the request form
+      responses:
+        '200':
+          description: Hospitals
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Hospital' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /requests:
+    post:
+      tags: [request]
+      summary: Create an urgent request — runs matching and push synchronously
+      description: |
+        prd.md FR-04 requires notification on creation, so matching and FCM send happen
+        inside this call. alertedCount is the number of request_matches rows written.
+        Matching order: ABO/Rh compatibility join (ADR 0004), isAvailable, 56-day
+        eligibility, then distance ascending NULLS LAST.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RequestCreate' }
+      responses:
+        '201':
+          description: Created, donors alerted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BloodRequest' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422':
+          description: unitsNeeded < 1, unknown blood type, unknown hospital
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /requests/me:
+    get:
+      tags: [request]
+      summary: Requester's own requests
+      responses:
+        '200':
+          description: Requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/BloodRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /requests/{id}:
+    get:
+      tags: [request]
+      summary: Request detail
+      description: |
+        Visible to the creator and to donors matched to it. requesterContact is present
+        only when the caller is a donor whose match response is ACCEPTED.
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        '200':
+          description: Request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BloodRequestDetail' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Unknown, or not visible to this caller }
+
+  /requests/{id}/cancel:
+    post:
+      tags: [request]
+      summary: Creator closes the request
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        '200':
+          description: Cancelled
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BloodRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Not the creator }
+        '409': { description: Already closed }
+
+  /matches/me:
+    get:
+      tags: [match]
+      summary: Donor inbox — requests this donor is matched to
+      responses:
+        '200':
+          description: Matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Match' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /matches/{id}/respond:
+    post:
+      tags: [match]
+      summary: Accept or decline
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [response]
+              properties:
+                response:
+                  type: string
+                  enum: [ACCEPTED, DECLINED]
+      responses:
+        '200':
+          description: |
+            Recorded. requesterContact is returned only for ACCEPTED, and phoneVerified is
+            always false in this build (ADR 0002).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MatchResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Not this donor's match }
+        '409': { description: Already responded }
+
+  /donations/me:
+    get:
+      tags: [donation]
+      summary: Own donation history
+      responses:
+        '200':
+          description: Donations, most recent first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Donation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+  parameters:
+    PathId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    BadRequest:
+      description: Malformed body or bad enum value
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: Missing, invalid, expired, or foreign-project token
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    BloodType:
+      type: string
+      description: The 8 ABO/Rh values. No "unknown" — it has no blood_compatibility row.
+      enum: ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+']
+
+    SelfServiceRole:
+      type: string
+      description: |
+        Only these two are assignable by self-service sign-up. HOSPITAL and ADMIN are
+        admin-provisioned and rejected with 422 here (TM-AUTH-001 E1).
+      enum: [DONOR, REQUESTER]
+
+    Urgency:
+      type: string
+      enum: [CRITICAL, URGENT, ROUTINE]
+
+    RequestStatus:
+      type: string
+      description: EXPIRED is unreachable in this build — FR-REQUEST-005 deferred (DEC-004).
+      enum: [OPEN, FULFILLED, CANCELLED]
+
+    DistanceKm:
+      type: number
+      description: Server-rounded to 0.5 km (ADR 0003). Null when the donor has no coordinates.
+      multipleOf: 0.5
+      nullable: true
+      example: 2.5
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token: { type: string, description: Our JWT. The Google ID token is not reusable. }
+        user:
+          type: object
+          required: [id, role, isNewAccount]
+          properties:
+            id: { type: string, format: uuid }
+            role: { type: string, enum: [DONOR, REQUESTER, HOSPITAL, ADMIN] }
+            displayName: { type: string }
+            isNewAccount: { type: boolean }
+
+    Eligibility:
+      type: object
+      description: Computed server-side. The client never calculates the 56-day window.
+      required: [isEligible]
+      properties:
+        isEligible: { type: boolean }
+        daysRemaining: { type: integer, nullable: true, example: 12 }
+        eligibleOn: { type: string, format: date, nullable: true }
+
+    DonorProfileWrite:
+      type: object
+      required: [fullName, bloodType, districtCode]
+      properties:
+        fullName: { type: string, maxLength: 120 }
+        bloodType: { $ref: '#/components/schemas/BloodType' }
+        districtCode:
+          type: string
+          description: Required. The only location value ever shown to another user.
+        latitude:
+          type: number
+          nullable: true
+          description: Optional. Ranking only — never returned by any endpoint (ADR 0003).
+        longitude:
+          type: number
+          nullable: true
+        lastDonationDate:
+          type: string
+          format: date
+          nullable: true
+          description: Null means never donated. Must not be in the future.
+        isAvailable: { type: boolean, default: true }
+
+    DonorProfile:
+      type: object
+      description: Read model. Note the deliberate absence of latitude and longitude.
+      required: [id, bloodType, districtCode, districtName, isAvailable, eligibility]
+      properties:
+        id: { type: string, format: uuid }
+        fullName: { type: string }
+        bloodType: { $ref: '#/components/schemas/BloodType' }
+        districtCode: { type: string }
+        districtName: { type: string, example: Toul Kork }
+        lastDonationDate: { type: string, format: date, nullable: true }
+        isAvailable: { type: boolean }
+        eligibility: { $ref: '#/components/schemas/Eligibility' }
+
+    Hospital:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, example: Calmette Hospital }
+        districtName: { type: string }
+
+    RequestCreate:
+      type: object
+      required: [patientBloodType, unitsNeeded, hospitalId, urgency]
+      properties:
+        patientBloodType: { $ref: '#/components/schemas/BloodType' }
+        unitsNeeded: { type: integer, minimum: 1, default: 1 }
+        hospitalId: { type: string, format: uuid }
+        urgency: { $ref: '#/components/schemas/Urgency' }
+
+    BloodRequest:
+      type: object
+      required: [id, status, patientBloodType, unitsNeeded, urgency, hospital, alertedCount, acceptedCount, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        status: { $ref: '#/components/schemas/RequestStatus' }
+        patientBloodType: { $ref: '#/components/schemas/BloodType' }
+        unitsNeeded: { type: integer }
+        urgency: { $ref: '#/components/schemas/Urgency' }
+        hospital: { $ref: '#/components/schemas/Hospital' }
+        alertedCount:
+          type: integer
+          description: request_matches rows written. The number the waiting screen shows.
+        acceptedCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+
+    RequesterContact:
+      type: object
+      description: |
+        Returned only to a donor whose match response is ACCEPTED (TM-AUTH-001 I1).
+        Never present before acceptance, on any endpoint.
+      required: [displayName, phone, phoneVerified]
+      properties:
+        displayName: { type: string }
+        phone: { type: string }
+        phoneVerified:
+          type: boolean
+          description: |
+            Always false in this build. Phone numbers stopped being verified when auth moved
+            to Google Sign-In (ADR 0002); the client must show the caveat.
+
+    BloodRequestDetail:
+      allOf:
+        - $ref: '#/components/schemas/BloodRequest'
+        - type: object
+          properties:
+            districtName: { type: string }
+            distanceKm: { $ref: '#/components/schemas/DistanceKm' }
+            requesterContact:
+              allOf:
+                - $ref: '#/components/schemas/RequesterContact'
+              nullable: true
+
+    Match:
+      type: object
+      required: [matchId, request, myBloodType]
+      properties:
+        matchId: { type: string, format: uuid }
+        request: { $ref: '#/components/schemas/BloodRequestDetail' }
+        myBloodType:
+          $ref: '#/components/schemas/BloodType'
+        response:
+          type: string
+          enum: [ACCEPTED, DECLINED]
+          nullable: true
+        notifiedAt: { type: string, format: date-time, nullable: true }
+
+    MatchResponse:
+      type: object
+      required: [matchId, response, respondedAt]
+      properties:
+        matchId: { type: string, format: uuid }
+        response: { type: string, enum: [ACCEPTED, DECLINED] }
+        respondedAt: { type: string, format: date-time }
+        requesterContact:
+          allOf:
+            - $ref: '#/components/schemas/RequesterContact'
+          nullable: true
+
+    Donation:
+      type: object
+      required: [id, donatedOn, hospital]
+      properties:
+        id: { type: string, format: uuid }
+        donatedOn: { type: string, format: date }
+        hospital: { $ref: '#/components/schemas/Hospital' }
+        bloodRequestId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Null for a walk-in donation with no originating request (FR-08).
+
+    Error:
+      type: object
+      description: |
+        Messages never contain a phone number, blood type, token, or coordinate
+        (TM-AUTH-001 I2).
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string, example: ROLE_NOT_ALLOWED }
+            message: { type: string, example: Role must be DONOR or REQUESTER }
+
+security:
+  - bearerAuth: []
