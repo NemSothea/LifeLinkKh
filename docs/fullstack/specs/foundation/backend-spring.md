@@ -68,7 +68,7 @@ DTOs arrive with the milestone that needs them. Do not create empty service or c
   in a merged migration is fixed by a new migration, not by rewriting history.
 - `spring.jpa.hibernate.ddl-auto=validate`. Hibernate never generates schema — Flyway owns it, per
   `.capybara/setup.md` ("DB schema ownership: app migrations").
-- Rollback is not automated. A destructive migration needs a backup first; coordinate with DevOps.
+- Rollback is not automated. A destructive migration needs a backup first; coordinate with Tech Lead (there is no DevOps role).
 
 ## Initial schema — `V1__init.sql`
 

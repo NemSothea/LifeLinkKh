@@ -19,7 +19,7 @@ Next number lives in each registry index.md; bump it. index.md merge conflict = 
 5. no open/in-progress bugs
 
 ## Commit / PR prefixes
-feat fix spec adr sec brief qa infra chore refactor docs
+feat fix spec adr sec brief qa ci chore refactor docs
 
 ## Casing (R8)
 lowercase-hyphen meta docs; UPPERCASE: CLAUDE README ONBOARDING LICENSE CHANGELOG

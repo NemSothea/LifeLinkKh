@@ -2,11 +2,17 @@
 id: FR-PORTAL-002-admin-dashboard
 title: Admin dashboard (web)
 area: PORTAL
-status: accepted
+status: deferred
 priority: Should Have
 owner: PO
 brief_ref: ../prd.md — FR-11
 ---
+
+> **DEFERRED 2026-08-07 by the scope cut (DEC-004).** Not cancelled, not built. See
+> [`docs/scope.md`](../../scope.md) for what was cut and why, and treat this FR as documented
+> future work for the project defence.
+>
+> **Why this one:** A second web surface with charts. FR-PORTAL-001's request list already satisfies the Next.js requirement.
 
 ## Problem
 Nobody can onboard a hospital, disable a compromised account, remove an abusive request, or say

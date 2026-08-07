@@ -2,6 +2,21 @@
 
 Every new/changed FR gets an entry. What + Why are mandatory.
 
+## 2026-08-07 — scope cut to a buildable core (DEC-004)
+- **What:** Eight FRs deferred (`FR-REQUEST-003/004/005`, `FR-MATCH-002`, `FR-NOTIFY-002`,
+  `FR-PORTAL-002`, `FR-GLOBAL-002`, `FR-SECURITY-001`), each with a banner and a per-FR reason.
+  `FR-PORTAL-001` trimmed to one open-requests page; GPS is `geolocator` only, no map widget.
+  Milestone table rewritten — M3 and M4 get three weeks each. New [`../scope.md`](../scope.md) records
+  what was cut and why. DEC-003 withdrawn with `FR-GLOBAL-002`.
+  **Why:** 19 FRs across 7 milestones does not fit 13 part-time weeks. The cut was made against what
+  the course grades — auth, push, GPS, relational DB, Play Store release — not against how interesting
+  each feature is. Cutting evenly would have left every feature at 60% and no working core loop to
+  demo. Deferred documents are kept deliberately: they are the defence's future-work section, and a
+  documented cut answers "why isn't X here" better than a half-built X.
+  **Flagged:** `FR-SECURITY-001` (account and data deletion) is a privacy obligation, not a feature.
+  Deferring it is only defensible while the pilot uses team-created test accounts, and it must be
+  built before any real donor uses the app.
+
 ## 2026-08-07 — donor location precision and compatibility rule decided
 - **What:** [ADR 0003](../tech-lead/adr/0003-donor-location-precision.md) accepted — `donor_profiles`
   gains `district_code NOT NULL` plus nullable `NUMERIC(8,5)` coordinates that **no API response ever
@@ -66,7 +81,7 @@ Every new/changed FR gets an entry. What + Why are mandatory.
   never turned into requirements — an unimplemented promise is worse than no promise, because users
   act on it. Mapping also surfaced two scheduling conflicts and one FR overlap, recorded in
   `features/index.md`.
-- **What:** Reassigned three FR milestones per DEC-001/002/003 (`../pm/decisions.md`):
+- **What:** Reassigned three FR milestones per DEC-001/002/003 (`../decisions.md`):
   `FR-DONOR-002` eligibility computation to M4, `FR-NOTIFY-001` request push to M4 with token
   registration at M3, `FR-GLOBAL-002` capture to M3–M5 with the dashboard at M6. Root `CLAUDE.md`
   section 4 amended to match.

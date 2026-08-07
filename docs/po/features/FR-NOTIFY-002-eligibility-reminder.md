@@ -2,11 +2,17 @@
 id: FR-NOTIFY-002-eligibility-reminder
 title: Eligibility reminder when cooldown ends
 area: NOTIFY
-status: accepted
+status: deferred
 priority: Should Have
 owner: PO
 brief_ref: ../prd.md — FR-09
 ---
+
+> **DEFERRED 2026-08-07 by the scope cut (DEC-004).** Not cancelled, not built. See
+> [`docs/scope.md`](../../scope.md) for what was cut and why, and treat this FR as documented
+> future work for the project defence.
+>
+> **Why this one:** Requires a scheduled job (Spring @Scheduled + FCM batch) that nothing else in the build needs. The 56-day status is still visible in-app at M5 — only the unprompted push is cut.
 
 ## Problem
 Fifty-six days is long enough to forget. A donor who gave once, meant to give again, and heard nothing

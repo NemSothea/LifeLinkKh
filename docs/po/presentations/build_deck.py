@@ -7,9 +7,8 @@ Run from anywhere:
 Output: docs/po/presentations/LifeLinkKH-v1.pptx
 
 The milestone slide is parsed from CLAUDE.md section 4 at generation time rather than
-hardcoded. Milestone assignments already changed once (DEC-001/002/003; that register was
-removed with docs/pm/ - see git history); a hardcoded copy here would be another place that
-table lives and the first to go stale. Re-run this script after any milestone change.
+hardcoded. Milestone assignments already changed once (DEC-001/002/003 in docs/decisions.md);
+a hardcoded copy here would be another place that table lives and the first to go stale. Re-run this script after any milestone change.
 """
 
 import re
@@ -158,7 +157,7 @@ def notes(slide, text):
     slide.notes_slide.notes_text_frame.text = text.strip()
 
 
-FOOT = "LifeLink KH · Track B team product · Week 2 of 16"
+FOOT = "LifeLink KH · Group 2 · Track B · Week 2 of 16"
 
 
 # --- Slides ------------------------------------------------------------------
@@ -189,7 +188,7 @@ def slide_01_title(prs):
     style(r, 16, INK)
     p2 = tf2.add_paragraph()
     r2 = p2.add_run()
-    r2.text = "Cross-Platform Mobile App Development · Track B · Week 2 of 16"
+    r2.text = "Group 2 · Cross-Platform Mobile App Development · Track B · Week 2 of 16"
     style(r2, 14, MUTED)
 
     notes(s, """
@@ -351,7 +350,7 @@ def slide_06_architecture(prs):
         ("Mobile", "Flutter → native Android"),
         ("Push", "Firebase Cloud Messaging"),
         ("Location", "Google Maps · geolocator"),
-        ("Infra", "Docker Compose · GitHub Actions"),
+        ("Local dev + CI", "Docker Compose · GitHub Actions"),
     ]
     for i, (k, v) in enumerate(rows):
         p = tf2.paragraphs[0] if i == 0 else tf2.add_paragraph()
@@ -384,20 +383,32 @@ def slide_07_scope(prs):
     s = blank(prs)
     heading(s, "ការគ្រប់គ្រងវិសាលភាព", "How We Manage Scope", kicker="How")
     bullets(s, [
-        "19 features registered, each with an ID, area, priority, milestone",
-        "12 accepted from the PRD · 7 added to close documented gaps",
+        "19 features registered — 8 in the build, 8 deliberately deferred",
+        "Cut against what the course grades, not what interests us",
         "Definition of Done: spec signed off, merged, QA verified, no open bugs",
         "Every architecture choice recorded as a decision record",
-        "Open product questions tracked as briefs, with the milestone each blocks",
+        "Deferred features keep their documents — that is our future work",
     ])
     footer(s, FOOT)
     notes(s, """
 This slide answers a question the audience has not asked yet: is this a plan or a wish?
 
-The seven added features are the strongest evidence. Each one closes a promise the PRD made
-in prose but never turned into a requirement — for example, the PRD says users may request
-deletion of their data, and no feature provided it. We found those by reading our own
-document adversarially.
+Two things to say here, in this order.
+
+First, we read our own PRD adversarially and found seven promises it made in prose but never
+turned into requirements — for example, it said users may request deletion of their data, and
+no feature provided it. That is how the registry got to 19.
+
+Second, we then cut it to 8. Nineteen features across thirteen part-time weeks does not fit,
+and a plan that does not fit produces eight half-finished features instead of eight working
+ones. So we cut against the five things the course grades — authentication, push, GPS, a
+relational database, a Play Store release — not against what we personally found interesting.
+
+LIKELY QUESTION: "Why isn't feature X in your app?"
+ANSWER: It probably is in docs/scope.md, with the reason. Name one deliberately: account and
+data deletion is deferred, and we flag it as a privacy obligation rather than a feature — it
+is only acceptable because the pilot runs on our own test accounts, and it comes back first
+if a real donor ever uses this.
 
 If asked how we track work: features have stable IDs, so a bug, a test case and a commit can
 all point at the same identifier. QA signs off against acceptance criteria, not against a
@@ -493,9 +504,10 @@ Note that hospital-verified matters in the fourth metric. A self-reported donati
 evidence; a donation confirmed by hospital staff is.
 
 LIKELY QUESTION: "How will you measure these?"
-ANSWER: We registered a feature specifically for it — event capture is a delivery
-requirement on every milestone from M3 onward, not something bolted on at the end. Events
-we do not record while they happen are gone.
+ANSWER: With SQL COUNT queries against the pilot database at demo time. We originally planned
+event-capture instrumentation on every milestone and cut it — for a pilot this size the
+queries give the same five numbers for none of the build cost. Be honest about the limit: if
+pilot data is thin, these stay targets rather than results.
 """)
     return s
 
@@ -504,11 +516,11 @@ def slide_11_risks(prs):
     s = blank(prs)
     heading(s, "ហានិភ័យ និងការសម្រេចចិត្ត", "Risks + Open Decisions", kicker="Honest")
     bullets(s, [
-        "7 product decisions still open — 3 of them gate M4 matching",
-        "Donor location precision undecided: privacy versus matching accuracy",
-        "M4 is now our heaviest milestone; cut order agreed in advance",
-        "Low donor density early — mitigated by campus and NGO drives",
-        "Auth switched to Google Sign-In — donor phone numbers now unverified",
+        "Two decisions still open: notified-donor count, deploy runbook",
+        "M4 still heaviest — now three weeks, cut order agreed",
+        "Low donor density — zero-match fallback deferred, so unmitigated",
+        "Auth switched to Google Sign-In — phone numbers now unverified",
+        "Data deletion deferred — must ship before any real donor",
     ])
     footer(s, FOOT)
     notes(s, """
@@ -538,8 +550,8 @@ def slide_12_team(prs):
 
     tf = textbox(s, Inches(0.9), Inches(2.6), Inches(11.5), Inches(2.9))
     team = [
-        ("Nem Sothea", "Tech Lead · Flutter · also PO, Security · CI"),
-        ("Suon Pisey", "Backend · PostgreSQL · Flyway · matching logic · docker-compose"),
+        ("Nem Sothea", "Tech Lead · Flutter · also PO, Security · Docker, CI, release"),
+        ("Suon Pisey", "Backend · PostgreSQL · Flyway · matching logic"),
         ("Sourn SAVOURN", "Frontend · Next.js portal · API client · i18n"),
         ("Moeun Nithvaraman", "PO · PRD · briefs · wireframes · feature registry"),
         ("Oun Sreynich", "QA · test plan · milestone acceptance · bug tracking"),
@@ -581,8 +593,9 @@ composition or how the work is graded, and it is cheaper to know in Week 2 than 
 If the answer is "split into teams of 3": our roles already divide along clean boundaries —
 each person owns a directory and a document set, so a split is a reassignment, not a rewrite.
 
-If asked who does what day to day: there is no separate DevOps or PM role. Infra is split —
-docker-compose sits with Fullstack, CI with Tech Lead — and Definition-of-Done tracking sits with QA.
+If asked who does what day to day: there is no separate DevOps or PM role. Tech Lead absorbed that
+work — Docker, CI, deploy, release. Definition-of-Done tracking deliberately stayed with QA, because
+with Tech Lead also holding Security and co-PO, QA is the only gate outside one person.
 We know the gap: there is no deploy runbook yet, and it has to exist before the M7 release. Product definition is co-held by Moeun and Sothea, so PRD and FR sign-off is
 not one person's signature. Tech Lead still holds Security, which concentrates approval there;
 QA sign-off is kept independent for exactly that reason.

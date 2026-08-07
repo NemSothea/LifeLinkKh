@@ -1,6 +1,6 @@
 # LifeLink KH (ជីវិត) — Blood Donor Matching App
 
-> Track B team product for **Cross-Platform Mobile App Development** (16-week course).
+> **Group 2** — Track B team product for **Cross-Platform Mobile App Development** (16-week course).
 > This file is the source of truth for the project plan. Update it as decisions change.
 >
 > **Framework:** this repo runs the **Capybara** multi-role framework (always `full` tier).
@@ -45,9 +45,10 @@ https://capybara.kosign.dev/en/docs/overview
 | Database      | PostgreSQL |
 | Mobile app    | **Flutter** — donor/patient app, builds native Android → Play Store |
 | Web portal    | Next.js (App Router, TypeScript, Tailwind CSS) — hospital/admin portal |
-| Infra         | Docker / docker-compose (postgres + backend + web) |
+| Local dev     | Docker / docker-compose (postgres + backend + web) |
+| CI            | GitHub Actions — owned by Tech Lead; there is no infra role |
 | Push          | Firebase Cloud Messaging (FCM) — `firebase_messaging` (Flutter) |
-| Location      | `geolocator` / `google_maps_flutter` (Flutter) |
+| Location      | `geolocator` (Flutter). **No map widget** — coordinates satisfy the GPS requirement; rendering a map is a week for no marks (DEC-004) |
 | i18n          | Khmer + English (both clients) |
 
 ### Why this stack
@@ -76,20 +77,24 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 
 | Milestone | Week   | Deliverable |
 |-----------|--------|-------------|
-| M1 | W3-4   | PRD + wireframes, DB schema/ERD, API spec, repo + Docker skeleton |
+| M1 | W3-4   | ERD (done), wireframes for the 4 core screens only, API spec for the 8 core FRs |
 | M2 | W5-6   | Spring Boot init (PostgreSQL, Flyway), Flutter + Next.js init, `docker-compose up` runs backend+web+db |
-| M3 | W7-8   | Auth (Google Sign-In) + donor register incl. FCM token registration: API, Flutter screen, web portal (feature 1) end-to-end |
-| M4 | W9-10  | Urgent request create + matching by blood type/distance + 56-day eligibility computation + FCM request-alert push (feature 2) end-to-end |
-| M5 | W11-12 | Donation history + donor eligibility status + eligibility reminder push (feature 3) |
-| M6 | W13    | GPS/maps in Flutter, Khmer/English i18n, web portal polish, Android build |
-| M7 | W14-15 | Test pass, signed AAB, **Flutter app published to Play Store internal testing** |
+| M3 | W7-9   | Google Sign-In + donor register + FCM token registration end-to-end (feature 1) |
+| M4 | W10-12 | Request create + ABO/Rh and distance matching + eligibility computation + request-alert push + accept/decline end-to-end (feature 2) |
+| M5 | W13    | Donation history list + 56-day eligibility status + the single hospital web page (feature 3) |
+| M6 | W14    | GPS via `geolocator`, Khmer/English i18n, Android build, bug fix |
+| M7 | W15    | Test pass, signed AAB, **Flutter app published to Play Store internal testing** |
 
-> M3–M5 rows amended 2026-07-31 by DEC-001, DEC-002, DEC-003 (register removed with `docs/pm/` — see git history) — eligibility
-> computation and request-alert push moved earlier so each milestone can satisfy its own acceptance
-> criteria. From M3 onward, every milestone's Definition of Done also includes recording that
-> feature's metric events (DEC-003).
+> Amended 2026-07-31 by DEC-001, DEC-002, DEC-003 (`docs/decisions.md`) — eligibility computation and
+> request-alert push moved earlier so each milestone can satisfy its own acceptance criteria.
+>
+> **Rescheduled 2026-08-07 by DEC-004 (scope cut).** M3 and M4 get three weeks each, because that is
+> where a project of this shape actually slips; the slack comes from collapsing the old M5 and M6.
+> Eight FRs are deferred — see `docs/scope.md`. DEC-003's per-milestone metric capture is **withdrawn**
+> with `FR-GLOBAL-002`: the five PRD metrics come from SQL `COUNT` queries against pilot data at demo
+> time instead.
 
-## 5. Team — responsibilities
+## 5. Team — responsibilities (Group 2)
 
 | Member | Role | Owns |
 |--------|------|------|
@@ -102,9 +107,9 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 > Note: original assignment says teams of 3; this team is 5 — confirm with the instructor.
 >
 > Amended 2026-08-07: the DevOps/Infra and PM roles were dropped. Moeun Nithvaraman moved to PO.
-> `infra/` was removed; `docker-compose.yml` is Fullstack scope, CI (`.github/workflows/`) is Tech
-> Lead scope, DoD tracking moved to QA. No deploy runbook exists — write one before M7.
-> See `docs/team.md`.
+> `infra/` was removed. Tech Lead absorbs `docker-compose.yml`, CI (`.github/workflows/`), the deploy
+> runbook and the release. DoD tracking moved to QA and stays there — it is the only gate outside
+> Tech Lead. No deploy runbook exists yet; write one before M7. See `docs/team.md`.
 
 ## 6. Course context
 

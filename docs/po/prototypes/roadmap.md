@@ -19,7 +19,8 @@ Status: `todo` | `drafting` | `in review` | `frozen` | `dropped`
 ## M1 — wireframes deliverable (due now)
 
 M1 explicitly lists "PRD + wireframes". These are the M1 set — the four flows from
-[`../prd.md`](../prd.md) section 7, enough to defend the concept:
+[`../prd.md`](../prd.md) section 7, enough to defend the concept. **DEC-004 fixed the M1 set at these
+four and nothing else** ([`../../scope.md`](../../scope.md)); dropped rows below keep their reason.
 
 | Flow | Client | Screens | Question it settles |
 |---|---|---|---|
@@ -37,8 +38,7 @@ Freeze `AUTH-google-signin` and `DONOR-profile-setup` before build week. Add:
 
 | Flow | Client | Question it settles |
 |---|---|---|
-| `DONOR-eligibility-status` | mobile | How the 56-day countdown reads to a donor (`FR-03`) — days remaining vs. eligible-on date. |
-| `AUTH-portal-signin` | web | Whether hospital staff use Google Sign-In or admin-issued credentials. Blocks `FR-AUTH-004` scope for web. |
+| ~~`AUTH-portal-signin`~~ | web | **Dropped (DEC-004).** One admin is seeded by migration; there is no portal sign-in flow to design. |
 
 ## M4 — request + matching build
 
@@ -47,25 +47,26 @@ Freeze `REQUEST-create-urgent`. Add:
 | Flow | Client | Question it settles |
 |---|---|---|
 | `REQUEST-responders-list` | mobile | What a requester sees as donors accept (`FR-07`) — contact reveal, order, count. |
-| `MATCH-no-donors-found` | mobile | The zero-match screen. Depends on the zero-match fallback brief (`../briefs/roadmap.md`). |
-| `PORTAL-hospital-requests` | web | Hospital request list + confirm-donation action (`FR-10`). |
+| `PORTAL-open-requests` | web | The single web page: open-requests table (`FR-PORTAL-001`, trimmed by DEC-004). |
+| ~~`MATCH-no-donors-found`~~ | mobile | **Dropped (DEC-004)** with `FR-MATCH-002`. A zero-match shows a plain "none found" message. |
 
-## M5 — history + cooldown + push build
+## M5 — history + eligibility status
 
 Freeze `NOTIFY-donor-alert`. Add:
 
 | Flow | Client | Question it settles |
 |---|---|---|
 | `DONATION-history` | mobile | Whether history is a list or an impact summary (`FR-08` user story is about feeling impact). |
-| `NOTIFY-eligibility-reminder` | mobile | Reminder push copy and where it lands (`FR-09`). |
+| `DONOR-eligibility-status` | mobile | Moved here from M3 — the 56-day countdown, now that there is no reminder push. |
+| ~~`NOTIFY-eligibility-reminder`~~ | mobile | **Dropped (DEC-004)** with `FR-NOTIFY-002`. Status is shown in-app; no unprompted push. |
 
-## M6 — GPS, i18n, portal polish
+## M6 — GPS, i18n, Android build
 
 | Flow | Client | Question it settles |
 |---|---|---|
 | `GLOBAL-language-switch` | both | Where the Khmer/English toggle lives and how it persists (`FR-12`). |
-| `MOBILE-map-picker` | mobile | Map vs. district dropdown for location. Depends on the location-precision brief. |
-| `PORTAL-admin-dashboard` | web | Which of the section-1 success metrics are actually shown (`FR-11`). |
+| ~~`MOBILE-map-picker`~~ | mobile | **Dropped (DEC-004).** No map widget — `geolocator` reads coordinates, a district dropdown is the input. |
+| ~~`PORTAL-admin-dashboard`~~ | web | **Dropped (DEC-004)** with `FR-PORTAL-002`. |
 
 **Khmer pass at M6:** every frozen prototype gets re-checked with real Khmer strings.
 Khmer runs longer than English and taller per line — layouts that passed in English can break.
@@ -79,6 +80,6 @@ roadmap item.
 ## Cadence
 
 - Review this table at each milestone boundary alongside `../briefs/roadmap.md`.
-- A flow still `drafting` when its build week opens is a blocker — escalate to PM
-  (`docs/pm/risks.md`), don't let the client role guess the screen.
+- A flow still `drafting` when its build week opens is a blocker — log it in `docs/risks.md` and raise
+  it with QA (who tracks Definition of Done), don't let the client role guess the screen.
 - Dropped flows keep their row. The reason a screen was never built is worth as much as the screen.

@@ -2,11 +2,17 @@
 id: FR-GLOBAL-002-metrics-instrumentation
 title: Success-metric event capture
 area: GLOBAL
-status: requested
+status: deferred
 priority: Must Have
 owner: PO
 brief_ref: ../prd.md — section 1, success metrics
 ---
+
+> **DEFERRED 2026-08-07 by the scope cut (DEC-004).** Not cancelled, not built. See
+> [`docs/scope.md`](../../scope.md) for what was cut and why, and treat this FR as documented
+> future work for the project defence.
+>
+> **Why this one:** Event capture across M3-M5 plus a dashboard. Replaced by running SQL COUNT queries against the live pilot data at demo time - same numbers for the defence, none of the instrumentation.
 
 ## Problem
 `prd.md` section 1 commits to five numbers, and the product cannot compute a single one of them. There

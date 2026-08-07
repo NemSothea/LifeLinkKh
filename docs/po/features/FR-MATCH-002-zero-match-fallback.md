@@ -2,11 +2,17 @@
 id: FR-MATCH-002-zero-match-fallback
 title: No-donors-found handling
 area: MATCH
-status: requested
+status: deferred
 priority: Should Have
 owner: PO
 brief_ref: ../briefs/roadmap.md — zero-match fallback (open brief)
 ---
+
+> **DEFERRED 2026-08-07 by the scope cut (DEC-004).** Not cancelled, not built. See
+> [`docs/scope.md`](../../scope.md) for what was cut and why, and treat this FR as documented
+> future work for the project defence.
+>
+> **Why this one:** Real mitigation for low donor density, but it needs radius widening and retry logic. During the pilot a zero-match is handled by telling the requester none were found.
 
 ## Problem
 Early in a pilot, most requests will match nobody — there simply are not enough registered donors in
@@ -24,7 +30,7 @@ not.
 radius or retries; hospital notified" — but FR-05's criteria stop at ranking matched donors. Nothing
 covers the empty result, which during the pilot is the *most likely* result.
 
-This is also the direct mitigation for the top risk in `docs/pm/risks.md`: low donor density early.
+This is also the direct mitigation for the top risk in `docs/risks.md`: low donor density early.
 The feature that handles zero matches gracefully is what keeps the product credible while the donor
 base is still being built.
 

@@ -1,4 +1,5 @@
-# Placeholder pipeline — DevOps owns. See infra/deploy.md for the runbook.
+# Placeholder pipeline — owned by Tech Lead. There is no DevOps role and no deploy
+# runbook yet; writing one is a blocker for the M7 signed-AAB release (docs/risks.md).
 name: ci
 on:
   push: { branches: [ main ] }
@@ -8,4 +9,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "TODO: build backend + web, run tests, build Flutter AAB. See infra/deploy.md"
+      - run: echo "TODO: build backend + web, run tests, build Flutter AAB. Real steps land at M2 once backend/ frontend/ mobile/ are scaffolded."

@@ -2,11 +2,17 @@
 id: FR-REQUEST-005-request-expiry
 title: Request expiry rule
 area: REQUEST
-status: requested
+status: deferred
 priority: Should Have
 owner: PO
 brief_ref: ../briefs/roadmap.md — request expiry rule (open brief)
 ---
+
+> **DEFERRED 2026-08-07 by the scope cut (DEC-004).** Not cancelled, not built. See
+> [`docs/scope.md`](../../scope.md) for what was cut and why, and treat this FR as documented
+> future work for the project defence.
+>
+> **Why this one:** Needs a scheduled job and a rule nobody has written. `status = 'EXPIRED'` stays a dead value; requests are closed manually.
 
 ## Problem
 Requests never end. A need from three weeks ago — long since met, or the patient long since

@@ -2,11 +2,17 @@
 id: FR-REQUEST-004-withdraw-acceptance
 title: Donor withdraws acceptance
 area: REQUEST
-status: requested
+status: deferred
 priority: Should Have
 owner: PO
 brief_ref: ../briefs/roadmap.md — withdrawn acceptance (open brief)
 ---
+
+> **DEFERRED 2026-08-07 by the scope cut (DEC-004).** Not cancelled, not built. See
+> [`docs/scope.md`](../../scope.md) for what was cut and why, and treat this FR as documented
+> future work for the project defence.
+>
+> **Why this one:** Withdrawal can be handled by phone between donor and requester during the pilot. Building the state transition, the re-notify path, and the UI is a week for an edge case.
 
 ## Problem
 A donor accepts in good faith, then cannot go — traffic, work, a change of mind. Right now their

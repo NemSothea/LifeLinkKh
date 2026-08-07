@@ -1,6 +1,6 @@
 ---
 id: SPEC-FOUNDATION-INFRA-DOCKER
-owner: Fullstack
+owner: Tech Lead
 status: draft
 milestone: M2
 ---
@@ -17,14 +17,14 @@ donor phone numbers and blood types.
 
 ## Ownership
 
-`docker-compose.yml` at the repo root is owned by **Fullstack**.
+`docker-compose.yml` at the repo root is owned by **Tech Lead**.
 
-> **Resolved 2026-08-07.** The DevOps role was dropped (`docs/team.md`), so the old contradiction
-> with `docs/devops/CLAUDE.md` is moot — that file is read-only history and no longer claims an
-> active scope. `docker-compose.yml` is Fullstack, unambiguously.
+> **Resolved 2026-08-07.** The DevOps role was dropped and Tech Lead absorbed everything it held
+> (`docs/team.md`), so the old two-roles-claim-one-file contradiction is gone. This spec stays in
+> `docs/fullstack/` because Fullstack builds against it, but the file itself is Tech Lead's.
 
-CI (`.github/workflows/`) is **Tech Lead**. `infra/` was removed and no deployment runbook exists —
-one must be written before the M7 release.
+CI (`.github/workflows/`), the deploy runbook and the release are also **Tech Lead**. `infra/` was
+removed and no runbook exists — one must be written before M7.
 
 ## Services
 

@@ -26,6 +26,7 @@ Milestones reference root `CLAUDE.md` section 4, which is the only place milesto
 `status: accepted` means the feature comes from `prd.md` and is approved.
 `status: requested` means it was added to close a documented gap and is **not yet approved** —
 its priority is a proposal.
+`status: deferred` means cut from this build by DEC-004 — documented, not started.
 `status: superseded` / `retired` means it is history — do not build against it. Rows kept so old
 cross-references still resolve.
 
@@ -38,21 +39,30 @@ cross-references still resolve.
 | [FR-DONOR-002-eligibility-check](FR-DONOR-002-eligibility-check.md) | Eligibility check — 56-day cooldown | DONOR | Must Have | accepted | M4 computation, M5 donor status |
 | [FR-REQUEST-001-create-urgent-request](FR-REQUEST-001-create-urgent-request.md) | Create urgent blood request | REQUEST | Must Have | accepted | M4 |
 | [FR-REQUEST-002-respond-accept-decline](FR-REQUEST-002-respond-accept-decline.md) | Respond to a request — accept or decline | REQUEST | Must Have | accepted | M4 |
-| [FR-REQUEST-003-duplicate-request-warning](FR-REQUEST-003-duplicate-request-warning.md) | Warn on duplicate open request | REQUEST | Should Have | requested | M4 |
-| [FR-REQUEST-004-withdraw-acceptance](FR-REQUEST-004-withdraw-acceptance.md) | Donor withdraws acceptance | REQUEST | Should Have | requested | M5 🔒 |
-| [FR-REQUEST-005-request-expiry](FR-REQUEST-005-request-expiry.md) | Request expiry rule | REQUEST | Should Have | requested | M5 🔒 |
+| [FR-REQUEST-003-duplicate-request-warning](FR-REQUEST-003-duplicate-request-warning.md) | Warn on duplicate open request | REQUEST | Should Have | **deferred** — DEC-004 | — |
+| [FR-REQUEST-004-withdraw-acceptance](FR-REQUEST-004-withdraw-acceptance.md) | Donor withdraws acceptance | REQUEST | Should Have | **deferred** — DEC-004 | — |
+| [FR-REQUEST-005-request-expiry](FR-REQUEST-005-request-expiry.md) | Request expiry rule | REQUEST | Should Have | **deferred** — DEC-004 | — |
 | [FR-MATCH-001-donor-matching](FR-MATCH-001-donor-matching.md) | Donor matching by compatibility and distance | MATCH | Must Have | accepted | M4 🔒 |
-| [FR-MATCH-002-zero-match-fallback](FR-MATCH-002-zero-match-fallback.md) | No-donors-found handling | MATCH | Should Have | requested | M4 🔒 |
+| [FR-MATCH-002-zero-match-fallback](FR-MATCH-002-zero-match-fallback.md) | No-donors-found handling | MATCH | Should Have | **deferred** — DEC-004 | — |
 | [FR-DONATION-001-donation-history](FR-DONATION-001-donation-history.md) | Donation history | DONATION | Should Have | accepted | M5 |
 | [FR-NOTIFY-001-request-push-alert](FR-NOTIFY-001-request-push-alert.md) | Push alert for a matched request | NOTIFY | Must Have | accepted | M4 (tokens M3) |
-| [FR-NOTIFY-002-eligibility-reminder](FR-NOTIFY-002-eligibility-reminder.md) | Eligibility reminder when cooldown ends | NOTIFY | Should Have | accepted | M5 |
+| [FR-NOTIFY-002-eligibility-reminder](FR-NOTIFY-002-eligibility-reminder.md) | Eligibility reminder when cooldown ends | NOTIFY | Should Have | **deferred** — DEC-004 | — |
 | [FR-PORTAL-001-hospital-request-management](FR-PORTAL-001-hospital-request-management.md) | Hospital request management (web) | PORTAL | Should Have | accepted | M4 |
-| [FR-PORTAL-002-admin-dashboard](FR-PORTAL-002-admin-dashboard.md) | Admin dashboard (web) | PORTAL | Should Have | accepted | M6 |
+| [FR-PORTAL-002-admin-dashboard](FR-PORTAL-002-admin-dashboard.md) | Admin dashboard (web) | PORTAL | Should Have | **deferred** — DEC-004 | — |
 | [FR-GLOBAL-001-localization-km-en](FR-GLOBAL-001-localization-km-en.md) | Khmer and English localization | GLOBAL | Should Have | accepted | M6 |
-| [FR-GLOBAL-002-metrics-instrumentation](FR-GLOBAL-002-metrics-instrumentation.md) | Success-metric event capture | GLOBAL | Must Have | requested | M3–M5 capture, M6 dashboard |
-| [FR-SECURITY-001-account-data-deletion](FR-SECURITY-001-account-data-deletion.md) | Account and personal data deletion | SECURITY | Must Have | requested | M6 |
+| [FR-GLOBAL-002-metrics-instrumentation](FR-GLOBAL-002-metrics-instrumentation.md) | Success-metric event capture | GLOBAL | Must Have | **deferred** — DEC-004 | — |
+| [FR-SECURITY-001-account-data-deletion](FR-SECURITY-001-account-data-deletion.md) | Account and personal data deletion | SECURITY | Must Have | **deferred** — DEC-004 | — |
 
-**19 features.** 12 from `prd.md` FR-01..FR-12, 7 added to close documented gaps.
+**19 features, 8 in the build.** 12 from `prd.md` FR-01..FR-12, 7 added to close documented gaps.
+
+> **Scope cut 2026-08-07 (DEC-004).** This is a 13-week course case study, not a product. Eight FRs
+> form the buildable core; eight are `deferred`; three are `superseded`/`retired` from the auth
+> change. Deferred FRs keep their documents — they are the "future work" section of the defence, and
+> a deliberate cut reads better than eight half-built features. Rationale: [`../../scope.md`](../../scope.md).
+
+**The build (8):** FR-AUTH-003 · FR-DONOR-001 · FR-DONOR-002 · FR-REQUEST-001 · FR-MATCH-001 ·
+FR-REQUEST-002 · FR-NOTIFY-001 · FR-DONATION-001.
+Plus FR-PORTAL-001 trimmed to a single open-requests page, and FR-GLOBAL-001 (km/en) at M6.
 
 🔒 = blocked on an open brief in [../briefs/roadmap.md](../briefs/roadmap.md).
 The MATCH rows' location-precision and compatibility blockers were cleared on 2026-08-07 by
@@ -73,17 +83,17 @@ remaining max-notified-count brief.
 ## Scheduling conflicts — resolved
 
 Mapping features against `CLAUDE.md` section 4 exposed three ordering problems. All are now decided;
-full rationale in [../../pm/decisions.md](../../pm/decisions.md), and section 4 has been amended to
+full rationale in [../../decisions.md](../../decisions.md), and section 4 has been amended to
 match.
 
 | Was | Now | Decision |
 |---|---|---|
-| 56-day cooldown scheduled M5, but M4 matching must filter ineligible donors | Eligibility **computation** at M4; donor-facing status stays M5 | [DEC-001](../../pm/decisions.md) |
-| FCM push scheduled M5, but FR-04 requires notification on request creation at M4 | Request-alert push at **M4**; FCM **token registration at M3**; eligibility reminder stays M5 | [DEC-002](../../pm/decisions.md) |
-| Metrics capture registered against M5, but its events occur from M3 onward | Capture is a **per-milestone delivery requirement** M3–M5; dashboard at M6 | [DEC-003](../../pm/decisions.md) |
+| 56-day cooldown scheduled M5, but M4 matching must filter ineligible donors | Eligibility **computation** at M4; donor-facing status stays M5 | [DEC-001](../../decisions.md) |
+| FCM push scheduled M5, but FR-04 requires notification on request creation at M4 | Request-alert push at **M4**; FCM **token registration at M3**; eligibility reminder stays M5 | [DEC-002](../../decisions.md) |
+| Metrics capture registered against M5, but its events occur from M3 onward | Capture is a **per-milestone delivery requirement** M3–M5; dashboard at M6 | [DEC-003](../../decisions.md) |
 
 Net effect: **M4 is now the heaviest milestone** — request creation, matching, eligibility computation
-and push in two weeks. Recorded as a schedule risk in [../../pm/risks.md](../../pm/risks.md).
+and push in two weeks. Recorded as a schedule risk in [../../risks.md](../../risks.md).
 
 ## Overlap resolved
 

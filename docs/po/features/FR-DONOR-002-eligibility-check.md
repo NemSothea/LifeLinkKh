@@ -22,7 +22,7 @@ eligible again.
 This is the filter that makes every alert credible. FR-05 matching states plainly that only eligible
 donors are matched, so matching cannot be correct until eligibility is computable.
 
-**Split across two milestones by DEC-001** (`../../pm/decisions.md`). `CLAUDE.md` section 4 originally
+**Split across two milestones by DEC-001** (`../../decisions.md`). `CLAUDE.md` section 4 originally
 scheduled the 56-day cooldown in M5, but matching lands in M4 and depends on it. The **computation**
 now sits in M4 with matching; the **donor-facing status display** stays in M5 with donation history.
 QA should verify the M4 half through matching results, not through a screen — there is no screen until

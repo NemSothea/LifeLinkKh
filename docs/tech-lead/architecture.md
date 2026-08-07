@@ -12,8 +12,9 @@
 - **Auth:** Google Sign-In (Firebase) → backend verifies the Google ID token → own JWT bearer tokens;
   RBAC roles: donor, requester, hospital, admin. Phone number is an unverified profile field.
 - **Matching:** server computes ABO/Rh-compatible + eligible + available donors ranked by distance.
-- **Notifications:** FCM push to matched donors; scheduled eligibility reminders.
-- **Infra:** docker-compose (postgres, backend, web); Flutter runs on device/emulator.
+- **Notifications:** FCM push to matched donors. Scheduled eligibility reminders are deferred (DEC-004) — the 56-day status is shown in-app instead.
+- **Local dev:** docker-compose (postgres, backend, web); Flutter runs on device/emulator.
+- **CI:** GitHub Actions, owned by Tech Lead. No infra role, no deploy runbook yet.
 - **Secrets:** Firebase (Auth + FCM) and Maps keys via env — never committed (see docs/security).
   No SMS provider.
 

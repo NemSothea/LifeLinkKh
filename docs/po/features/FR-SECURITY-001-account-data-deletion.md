@@ -2,11 +2,17 @@
 id: FR-SECURITY-001-account-data-deletion
 title: Account and personal data deletion
 area: SECURITY
-status: requested
+status: deferred
 priority: Must Have
 owner: PO
 brief_ref: ../prd.md — section 6, data retention
 ---
+
+> **DEFERRED 2026-08-07 by the scope cut (DEC-004).** Not cancelled, not built. See
+> [`docs/scope.md`](../../scope.md) for what was cut and why, and treat this FR as documented
+> future work for the project defence.
+>
+> **Why this one:** A privacy obligation, deferred only because the pilot runs on team-created test accounts with no member of the public involved. **Must be built before any real donor uses this.**
 
 ## Problem
 `prd.md` section 6 states that users may request deletion of their account and personal data. No

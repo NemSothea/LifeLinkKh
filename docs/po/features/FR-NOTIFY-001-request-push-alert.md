@@ -22,14 +22,14 @@ This is the single feature that justifies building a mobile app rather than a we
 section 1 says exactly that: a website cannot push a time-critical alert to a donor's phone.
 `prd.md` section 5 requires under 10 seconds from request to first notification.
 
-**Moved to M4 by DEC-002** (`../../pm/decisions.md`). FR-04's acceptance criteria say that on request
+**Moved to M4 by DEC-002** (`../../decisions.md`). FR-04's acceptance criteria say that on request
 creation "matching + notification runs automatically", and request creation is M4 — but `CLAUDE.md`
 section 4 originally scheduled FCM in M5, which would have closed M4 with FR-04's own criteria unmet.
 This FR now lands in M4, and **FCM token registration moves earlier still, into M3** with
 `FR-DONOR-001`, so M4 adds a send path to tokens that already exist rather than building the whole
 integration under pressure. `FR-NOTIFY-002`'s reminder push stays in M5.
 
-Never cut this FR to relieve M4 — see the cut order in `../../pm/risks.md`. Dropping it returns to the
+Never cut this FR to relieve M4 — see the cut order in `../../risks.md`. Dropping it returns to the
 unmet-criteria problem DEC-002 exists to avoid.
 
 **Scope correction.** FR-06's third acceptance criterion in `prd.md` covers reminder notifications

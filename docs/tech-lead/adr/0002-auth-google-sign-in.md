@@ -74,6 +74,7 @@ out — the Telegram fallback above is the answer if that turns out to be common
 
 ## Note on where decisions are recorded
 
-DEC-001..003 lived in `docs/pm/decisions.md`, which no longer exists (the PM role was dropped on
-2026-08-07 and the directory was removed). This decision is recorded as an ADR instead. Until a
-replacement register exists, hard-to-reverse choices go in `docs/tech-lead/adr/`.
+DEC-001..003 lived in `docs/pm/decisions.md`. The PM role was dropped on 2026-08-07 and that directory
+removed; the register was relocated to [`docs/decisions.md`](../../decisions.md), since a decision
+register belongs to the project rather than to a role. From that date, hard-to-reverse **technical**
+choices are ADRs in `docs/tech-lead/adr/` and are indexed from that register.

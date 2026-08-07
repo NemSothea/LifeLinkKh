@@ -2,11 +2,17 @@
 id: FR-REQUEST-003-duplicate-request-warning
 title: Warn on duplicate open request
 area: REQUEST
-status: requested
+status: deferred
 priority: Should Have
 owner: PO
 brief_ref: ../prd.md — section 7, error / edge cases
 ---
+
+> **DEFERRED 2026-08-07 by the scope cut (DEC-004).** Not cancelled, not built. See
+> [`docs/scope.md`](../../scope.md) for what was cut and why, and treat this FR as documented
+> future work for the project defence.
+>
+> **Why this one:** A requester creating a genuine second request is a rarer failure than the cost of building the check. Duplicate requests are visible to the hospital in the list.
 
 ## Problem
 A panicking family will post the same need twice — the first post seemed to do nothing, so they try

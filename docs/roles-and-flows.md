@@ -12,17 +12,17 @@ flowchart TD
   QA --> TL
 ```
 
-No DevOps role and no PM overlay. `docs/devops/` and `docs/pm/` remain as read-only history
-(DEC-### and CR-DEVOPS records are still cited by FRs and specs).
+No DevOps role and no PM overlay; `docs/devops/` and `docs/pm/` are deleted. The decision and risk
+registers moved to the project level: `decisions.md` and `risks.md`.
 
 ## Feature flow
 PO writes FR (docs/po/features) → Tech Lead + Security sign off spec →
 Fullstack/Mobile build slice → QA verifies vs acceptance criteria →
 Security sign-off (R5) → DoD met → done. Forward signal = docs/po/changelog.md.
 
-## Infra flow
-Fullstack owns `docker-compose.yml` (see docs/fullstack/specs/foundation/infra-docker.md).
-Tech Lead owns CI (.github/workflows/). `infra/` is removed — no deploy runbook exists yet.
+## Build + CI flow
+Tech Lead owns `docker-compose.yml` (spec: docs/fullstack/specs/foundation/infra-docker.md), CI
+(.github/workflows/), the deploy runbook, and the release. No infra role; no runbook written yet.
 
 ## Security flow (R5)
 Any change to auth / PII / secrets / external integrations → threat model

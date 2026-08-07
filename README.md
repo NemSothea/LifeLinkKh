@@ -4,7 +4,7 @@ Connecting patients and families who urgently need blood with nearby eligible
 voluntary donors in Cambodia — replacing the slow, ad-hoc Facebook-post approach
 hospitals use today.
 
-> **Track B team product** · Cross-Platform Mobile App Development (16-week course).
+> **Group 2** · Track B team product · Cross-Platform Mobile App Development (16-week course).
 > Course milestone **M7** = published to Google Play internal testing by Week 15.
 
 ---
@@ -48,8 +48,9 @@ location-aware push alerts** to matching donors' phones — something a website 
 | Web portal | Next.js (App Router, TypeScript, Tailwind) |
 | Mobile     | Flutter (native Android → Play Store) |
 | Push       | Firebase Cloud Messaging (FCM) |
-| Location   | Google Maps / geolocator |
-| Infra      | Docker · docker-compose · GitHub Actions |
+| Location   | geolocator (no map widget — see `docs/scope.md`) |
+| Local dev  | Docker · docker-compose (postgres + backend + web) |
+| CI         | GitHub Actions (owned by Tech Lead) |
 
 ## Repository layout
 
@@ -58,7 +59,7 @@ backend/            Spring Boot + PostgreSQL API        (scaffolded at M2)
 frontend/           Next.js web portal, hospital/admin  (scaffolded at M2)
 mobile/             Flutter app, donors/patients        (scaffolded at M2)
 .github/workflows/  CI pipeline (owned by Tech Lead)
-docker-compose.yml  postgres + backend + web, local dev only (owned by Fullstack)
+docker-compose.yml  postgres + backend + web, local dev only (owned by Tech Lead)
 docs/               Capybara multi-role docs (see below)
 .capybara/          Framework state — brief.md, setup.md, validate.sh
 ```
@@ -87,7 +88,7 @@ _(The three code directories are empty until M2 scaffolds them.)_
 
 ---
 
-## Team
+## Team — Group 2
 
 | Name | Role |
 |------|------|
@@ -100,20 +101,20 @@ _(The three code directories are empty until M2 scaffolds them.)_
 See [`docs/team.md`](docs/team.md) for write scopes (R2) and the acting-role overlays.
 
 > There is no separate DevOps/Infra role, and `infra/` has been removed. CI
-> (`.github/workflows/`) falls to Tech Lead; `docker-compose.yml` stays with Fullstack per
-> [`docs/fullstack/specs/foundation/infra-docker.md`](docs/fullstack/specs/foundation/infra-docker.md).
-> No deploy runbook exists — it must be written before M7 release.
+> Tech Lead absorbs all of it: `docker-compose.yml`, CI (`.github/workflows/`), the deploy runbook,
+> and the Play Store release. **QA keeps Definition-of-Done tracking**, so one signature on a merge
+> still comes from outside Tech Lead. No deploy runbook exists yet — needed before M7.
 
 > Tech Lead also holding Security, and co-holding PO, collapses Definition of Done step 1 toward
 > self-approval — Moeun as second PO restores an independent product-sign-off voice, but QA remains
-> the only independent gate on Security. Logged in [`docs/pm/risks.md`](docs/pm/risks.md).
+> the only independent gate on Security. Logged in [`docs/risks.md`](docs/risks.md).
 
 ## Milestones
 
 M1 → M7, ending with the Flutter app published to Play Store internal testing by Week 15.
 
 The milestone table lives in **[`CLAUDE.md`](CLAUDE.md) section 4 and nowhere else** — it is not
-copied here. Milestone assignments change (see [`docs/pm/decisions.md`](docs/pm/decisions.md)), and a
+copied here. Milestone assignments change (see [`docs/decisions.md`](docs/decisions.md)), and a
 second copy would silently go stale.
 
 ## Development framework
@@ -133,8 +134,8 @@ This repo runs the **Capybara** multi-role framework (KOSIGN ADK). Start here:
 | [`docs/fullstack/specs/foundation/`](docs/fullstack/specs/foundation/) | Per-layer M2 build specs, each with a binary done-when checklist |
 | [`docs/po/briefs/roadmap.md`](docs/po/briefs/roadmap.md) | Product decisions still open, and the milestone each one blocks |
 | [`docs/po/prototypes/roadmap.md`](docs/po/prototypes/roadmap.md) | Which screens get wireframed by which milestone |
-| [`docs/pm/decisions.md`](docs/pm/decisions.md) | Decisions taken (DEC), with rationale |
-| [`docs/pm/risks.md`](docs/pm/risks.md) | Open risks and agreed mitigations |
+| [`docs/decisions.md`](docs/decisions.md) | Decisions taken (DEC), with rationale |
+| [`docs/risks.md`](docs/risks.md) | Open risks and agreed mitigations |
 | [`docs/tech-lead/adr/`](docs/tech-lead/adr/) | Architecture decision records |
 
 Lifecycle: `init → project → plan → dev → review → deploy`. Check status any time with
