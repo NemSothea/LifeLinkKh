@@ -7,9 +7,9 @@ Run from anywhere:
 Output: docs/po/presentations/LifeLinkKH-v1.pptx
 
 The milestone slide is parsed from CLAUDE.md section 4 at generation time rather than
-hardcoded. Milestone assignments already changed once (DEC-001/002/003 in
-docs/pm/decisions.md); a hardcoded copy here would be the fourth place that table lives
-and the first to go stale. Re-run this script after any milestone change.
+hardcoded. Milestone assignments already changed once (DEC-001/002/003; that register was
+removed with docs/pm/ - see git history); a hardcoded copy here would be another place that
+table lives and the first to go stale. Re-run this script after any milestone change.
 """
 
 import re
@@ -508,7 +508,7 @@ def slide_11_risks(prs):
         "Donor location precision undecided: privacy versus matching accuracy",
         "M4 is now our heaviest milestone; cut order agreed in advance",
         "Low donor density early — mitigated by campus and NGO drives",
-        "SMS OTP cost and deliverability — fallback provider identified",
+        "Auth switched to Google Sign-In — donor phone numbers now unverified",
     ])
     footer(s, FOOT)
     notes(s, """
@@ -538,10 +538,10 @@ def slide_12_team(prs):
 
     tf = textbox(s, Inches(0.9), Inches(2.6), Inches(11.5), Inches(2.9))
     team = [
-        ("Nem Sothea", "Tech Lead · Flutter · also PO, PM, Security"),
-        ("Suon Pisey", "Backend · PostgreSQL · Flyway · matching logic"),
+        ("Nem Sothea", "Tech Lead · Flutter · also PO, Security · CI"),
+        ("Suon Pisey", "Backend · PostgreSQL · Flyway · matching logic · docker-compose"),
         ("Sourn SAVOURN", "Frontend · Next.js portal · API client · i18n"),
-        ("Moeun Nithvaraman", "DevOps · Docker · CI · release pipeline"),
+        ("Moeun Nithvaraman", "PO · PRD · briefs · wireframes · feature registry"),
         ("Oun Sreynich", "QA · test plan · milestone acceptance · bug tracking"),
     ]
     for i, (name, role) in enumerate(team):
@@ -581,8 +581,11 @@ composition or how the work is graded, and it is cheaper to know in Week 2 than 
 If the answer is "split into teams of 3": our roles already divide along clean boundaries —
 each person owns a directory and a document set, so a split is a reassignment, not a rewrite.
 
-If asked who does what day to day: one person holds several roles right now, which we know
-concentrates approval in one place. QA sign-off is kept independent for exactly that reason.
+If asked who does what day to day: there is no separate DevOps or PM role. Infra is split —
+docker-compose sits with Fullstack, CI with Tech Lead — and Definition-of-Done tracking sits with QA.
+We know the gap: there is no deploy runbook yet, and it has to exist before the M7 release. Product definition is co-held by Moeun and Sothea, so PRD and FR sign-off is
+not one person's signature. Tech Lead still holds Security, which concentrates approval there;
+QA sign-off is kept independent for exactly that reason.
 """)
     return s
 

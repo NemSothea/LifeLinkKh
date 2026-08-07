@@ -8,10 +8,12 @@ flowchart TD
   TL[Tech Lead · docs/tech-lead] -. signs off .-> FS
   SEC[Security overlay · docs/security] -. gate on R5 .-> FS
   FS --> MOB[Mobile · mobile/ docs/mobile]
-  FS --> QA[QA · docs/qa]
-  QA --> DEVOPS[DevOps · docs/devops infra/]
-  PM[PM overlay · docs/pm] -. tracks DoD .-> QA
+  FS --> QA[QA · docs/qa · tracks DoD]
+  QA --> TL
 ```
+
+No DevOps role and no PM overlay. `docs/devops/` and `docs/pm/` remain as read-only history
+(DEC-### and CR-DEVOPS records are still cited by FRs and specs).
 
 ## Feature flow
 PO writes FR (docs/po/features) → Tech Lead + Security sign off spec →
@@ -19,7 +21,8 @@ Fullstack/Mobile build slice → QA verifies vs acceptance criteria →
 Security sign-off (R5) → DoD met → done. Forward signal = docs/po/changelog.md.
 
 ## Infra flow
-DevOps owns pipeline (repo root) + infra/deploy.md runbook. Asks via CR-DEVOPS.
+Fullstack owns `docker-compose.yml` (see docs/fullstack/specs/foundation/infra-docker.md).
+Tech Lead owns CI (.github/workflows/). `infra/` is removed — no deploy runbook exists yet.
 
 ## Security flow (R5)
 Any change to auth / PII / secrets / external integrations → threat model

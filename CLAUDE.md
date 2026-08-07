@@ -78,13 +78,13 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 |-----------|--------|-------------|
 | M1 | W3-4   | PRD + wireframes, DB schema/ERD, API spec, repo + Docker skeleton |
 | M2 | W5-6   | Spring Boot init (PostgreSQL, Flyway), Flutter + Next.js init, `docker-compose up` runs backend+web+db |
-| M3 | W7-8   | Auth (phone/OTP) + donor register incl. FCM token registration: API, Flutter screen, web portal (feature 1) end-to-end |
+| M3 | W7-8   | Auth (Google Sign-In) + donor register incl. FCM token registration: API, Flutter screen, web portal (feature 1) end-to-end |
 | M4 | W9-10  | Urgent request create + matching by blood type/distance + 56-day eligibility computation + FCM request-alert push (feature 2) end-to-end |
 | M5 | W11-12 | Donation history + donor eligibility status + eligibility reminder push (feature 3) |
 | M6 | W13    | GPS/maps in Flutter, Khmer/English i18n, web portal polish, Android build |
 | M7 | W14-15 | Test pass, signed AAB, **Flutter app published to Play Store internal testing** |
 
-> M3–M5 rows amended 2026-07-31 by DEC-001, DEC-002, DEC-003 (`docs/pm/decisions.md`) — eligibility
+> M3–M5 rows amended 2026-07-31 by DEC-001, DEC-002, DEC-003 (register removed with `docs/pm/` — see git history) — eligibility
 > computation and request-alert push moved earlier so each milestone can satisfy its own acceptance
 > criteria. From M3 onward, every milestone's Definition of Done also includes recording that
 > feature's metric events (DEC-003).
@@ -93,13 +93,18 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 
 | Member | Role | Owns |
 |--------|------|------|
-| **Nem Sothea** | Tech Lead / Flutter + PO (Senior) | Architecture, Flutter mobile app, FCM push, GPS/maps, Android build & Play Store release. Reviews all PRs. Also acts as PO — owns `docs/po/` (PRD, briefs, prototypes, FRs). |
+| **Nem Sothea** | Tech Lead / Flutter + PO (Senior) | Architecture, Flutter mobile app, FCM push, GPS/maps, Android build & Play Store release. Reviews all PRs. Co-PO with Moeun Nithvaraman. Also holds Security overlay and CI (`.github/workflows/`). |
 | **Suon Pisey** | Backend / Database (Senior) | Spring Boot API, PostgreSQL schema, Flyway migrations, auth, blood-type/distance matching logic. |
 | **Sourn SAVOURN** | Frontend (Senior) | Next.js web portal (hospital/admin), API client, forms, Khmer/English i18n. |
-| **Moeun Nithvaraman** | Infra (Senior) | Docker / docker-compose, CI, environments, release pipeline. |
+| **Moeun Nithvaraman** | PO (Senior) | `docs/po/` — PRD, briefs, prototypes, FRs, changelog. Co-PO with Nem Sothea. |
 | **Oun Sreynich** | QA (Senior) | Test plan, e2e/integration tests, milestone acceptance, bug tracking. |
 
 > Note: original assignment says teams of 3; this team is 5 — confirm with the instructor.
+>
+> Amended 2026-08-07: the DevOps/Infra and PM roles were dropped. Moeun Nithvaraman moved to PO.
+> `infra/` was removed; `docker-compose.yml` is Fullstack scope, CI (`.github/workflows/`) is Tech
+> Lead scope, DoD tracking moved to QA. No deploy runbook exists — write one before M7.
+> See `docs/team.md`.
 
 ## 6. Course context
 

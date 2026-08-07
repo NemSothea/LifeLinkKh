@@ -12,7 +12,8 @@ flutter
 
 ## Acting user roles (R2) — Nem Sothea (solo driver this session)
 - primary: Tech Lead
-- also: Fullstack, Mobile, PO, QA, DevOps
+- also: Fullstack, Mobile, PO, QA
+- note: no DevOps or PM role on this team; CI (.github/workflows/) is Tech Lead scope, infra/ removed
 - Security: overlay held by Tech Lead
 
 > The full 5-person team org chart is in docs/team.md. Acting-user roles above

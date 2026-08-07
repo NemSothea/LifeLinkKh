@@ -20,7 +20,7 @@ A Spring Boot project in `backend/` that:
 - has Spring Security on the classpath configured permissively, so M3 can tighten it rather than
   introduce it.
 
-No OTP. No JWT. No matching. No business endpoints.
+No authentication. No JWT. No matching. No business endpoints.
 
 ## Project identity
 
@@ -72,7 +72,12 @@ DTOs arrive with the milestone that needs them. Do not create empty service or c
 
 ## Initial schema — `V1__init.sql`
 
-Covers the six entities in `prd.md` section 6 and nothing beyond them.
+Covers the six entities in `prd.md` section 6, plus the `blood_compatibility` lookup table seeded per
+[ADR 0004](../../../tech-lead/adr/0004-abo-rh-compatibility-lookup-table.md), and nothing beyond them.
+Entity relationships and their rationale: [`docs/tech-lead/data-model.md`](../../../tech-lead/data-model.md).
+
+> **Amended 2026-08-07** — `users` reshaped for Google Sign-In (ADR 0002, `SEC-REVIEW-001` F1/F4).
+> `phone` is no longer the credential and is no longer verified.
 
 **Primary keys are UUID**, not sequential integers. Sequential IDs in API paths would let anyone
 enumerate donors and requests, and donor phone numbers plus blood type are the sensitive data this
@@ -90,10 +95,11 @@ cooldown arithmetic wrong at boundaries.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | `UUID PK DEFAULT gen_random_uuid()` | |
-| `phone` | `VARCHAR(20) NOT NULL UNIQUE` | E.164, Cambodian numbers |
-| `role` | `VARCHAR(16) NOT NULL` | `CHECK (role IN ('DONOR','REQUESTER','HOSPITAL','ADMIN'))` |
+| `firebase_uid` | `VARCHAR(128) NOT NULL UNIQUE` | Google `sub` from the verified ID token. **The credential.** Written server-side only — never from a request body (`TM-AUTH-001` S1) |
+| `phone` | `VARCHAR(20) NULL UNIQUE` | E.164, Cambodian numbers. **Unverified** since auth moved off OTP (ADR 0002). Nullable — PostgreSQL permits multiple NULLs under `UNIQUE` |
+| `role` | `VARCHAR(16) NOT NULL` | `CHECK (role IN ('DONOR','REQUESTER','HOSPITAL','ADMIN'))`. Self-service sign-up may only produce `DONOR` or `REQUESTER` — enforced server-side, see `TM-AUTH-001` E1 |
 | `language` | `CHAR(2) NOT NULL DEFAULT 'km'` | `CHECK (language IN ('km','en'))` |
-| `fcm_token` | `TEXT NULL` | populated at M5 |
+| `fcm_token` | `TEXT NULL` | registered at M3 per DEC-002 |
 | `created_at` | `TIMESTAMPTZ NOT NULL DEFAULT now()` | |
 | `updated_at` | `TIMESTAMPTZ NOT NULL DEFAULT now()` | |
 
@@ -107,9 +113,23 @@ cooldown arithmetic wrong at boundaries.
 | `blood_type` | `VARCHAR(3) NOT NULL` | `CHECK (blood_type IN ('A+','A-','B+','B-','AB+','AB-','O+','O-'))` |
 | `last_donation_date` | `DATE NULL` | NULL means never donated; drives FR-03 eligibility |
 | `is_available` | `BOOLEAN NOT NULL DEFAULT true` | FR-02 availability toggle |
+| `district_code` | `VARCHAR(16) NOT NULL` | The **only** location value ever returned to another user (ADR 0003) |
+| `latitude` | `NUMERIC(8,5) NULL` | Distance ranking only. ~1 m resolution — deliberately coarser than `hospitals` |
+| `longitude` | `NUMERIC(8,5) NULL` | Distance ranking only |
 | `created_at` / `updated_at` | `TIMESTAMPTZ NOT NULL DEFAULT now()` | |
 
-> **Location columns are BLOCKED and deliberately absent.** See "Blocked schema decisions" below.
+> **Location per [ADR 0003](../../../tech-lead/adr/0003-donor-location-precision.md), accepted
+> 2026-08-07.** Three rules travel with these columns and are not optional:
+>
+> 1. `latitude`/`longitude` **never appear in any API response** — not to the portal, not to the
+>    requester, not to admin. Distance is returned pre-computed and rounded to 0.5 km; location is
+>    described by district. Donor DTOs are explicit allow-lists, never entity serialisation.
+> 2. Coordinates are **nullable on purpose**. A donor who declines GPS still registers, still gets
+>    district alerts, and ranks after donors that can be ranked by distance. `NULLS LAST`.
+> 3. Coordinates are dropped with the profile row on account deletion (`prd.md` §6). No separate
+>    retention.
+>
+> Verified by `docs/qa/test-cases/TC-AUTH-001-google-sign-in-security.md` case 12.
 
 ### `hospitals`
 
@@ -168,27 +188,34 @@ acceptance — but no FR covers it. Tracked as a brief (see blockers).
 
 ### Indexes in `V1__init.sql`
 
+- `users(firebase_uid)` — unique, already implied by the constraint. This is the sign-in lookup on
+  every request, so it must exist from `V1`.
 - `users(phone)` — unique, already implied by the constraint.
 - `donor_profiles(blood_type, is_available)` — the matching query's first filter (FR-05).
+- `donor_profiles(district_code)` — district alerting, and the fallback ordering for donors with no
+  coordinates.
 - `blood_requests(status, created_at DESC)` — open-request listings.
 - `request_matches(donor_profile_id)` — a donor's inbox.
 - `donations(donor_profile_id, donated_on DESC)` — cooldown lookup and history (FR-03, FR-08).
 
-No spatial index at M2 — distance ranking depends on a blocked decision.
+No spatial index at M2. Distance ranking over a pilot-sized pool (1,000 donors, `prd.md` §5) is fine
+as a computed ordering; PostGIS or a `geography` column is an M4 optimisation if measurement says so,
+not an M2 dependency (ADR 0003).
 
 ## Blocked schema decisions
 
-These are **not** designed here. Both are open briefs in `docs/po/briefs/roadmap.md`, and inventing
-a column to work around either would mean rewriting a merged migration later.
+One remains. Inventing a column to work around it would mean rewriting a merged migration later.
+
+> Donor location precision was resolved on 2026-08-07 by
+> [ADR 0003](../../../tech-lead/adr/0003-donor-location-precision.md) and is no longer blocked — the
+> columns are specified in `donor_profiles` above.
 
 | Blocked | What is missing | Consequence for M2 |
 |---|---|---|
 | **Request expiry** | FR-04 defines the `EXPIRED` status but no rule for how long an open request lives, whether urgency changes it, or who is notified. No `expires_at` column, no scheduled job. | `blood_requests.status` can never become `EXPIRED`. Ships as a known dead value, resolved in a later `V<n>__add_request_expiry.sql`. |
-| **Donor location precision** | Undecided whether to store exact lat/lng or a district centroid. This changes column types *and* is simultaneously a privacy decision (`prd.md` §6 calls precise location sensitive) and a matching-accuracy decision (FR-05 ranks by distance). | `donor_profiles` has **no location columns at all**. Donor matching cannot be implemented until this is decided — it blocks M4, not just M2. |
 
-Resolve both before M4 build. They are also the two items named in `docs/pm/risks.md` under
-concentrated sign-off authority, because the same person writes the requirement and approves the
-migration.
+Resolve before M4 build. It sits under concentrated sign-off authority — the same person writes the
+requirement and approves the migration — so QA acceptance is the only outside check.
 
 ## Spring Security at M2
 
@@ -207,7 +234,7 @@ M3 spec replaces this file wholesale.
 
 | Deferred | Milestone |
 |---|---|
-| OTP issue/verify, JWT issuing + filter, RBAC on endpoints | M3 |
+| Google ID-token verification, JWT issuing + filter, RBAC on endpoints | M3 |
 | Donor CRUD endpoints, eligibility computation | M3 |
 | Request create, ABO/Rh compatibility + distance matching query | M4 |
 | FCM send, scheduled eligibility reminder job | M5 |

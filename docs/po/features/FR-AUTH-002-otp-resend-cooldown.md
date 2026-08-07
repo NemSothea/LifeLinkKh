@@ -2,11 +2,18 @@
 id: FR-AUTH-002-otp-resend-cooldown
 title: OTP resend with cooldown
 area: AUTH
-status: requested
+status: retired
 priority: Should Have
 owner: PO
 brief_ref: ../prd.md — section 7, error / edge cases
+retired_date: 2026-08-07
+retired_reason: no OTP to resend — auth moved to Google Sign-In (FR-AUTH-003)
 ---
+
+> **RETIRED 2026-08-07.** This FR existed only to make phone OTP safe and affordable. Auth moved to
+> Google Sign-In ([FR-AUTH-003](FR-AUTH-003-google-sign-in.md), [ADR 0002](../../tech-lead/adr/0002-auth-google-sign-in.md)),
+> so there is no code to resend, no SMS budget to drain, and no cooldown to design.
+> Never approved, never built. Kept for history.
 
 ## Problem
 SMS in Cambodia is not reliably instant. A donor who never receives the code has no way forward and

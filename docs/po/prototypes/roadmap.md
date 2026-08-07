@@ -23,7 +23,7 @@ M1 explicitly lists "PRD + wireframes". These are the M1 set — the four flows 
 
 | Flow | Client | Screens | Question it settles |
 |---|---|---|---|
-| `AUTH-otp-signin` | mobile | phone entry → OTP entry → role pick | How many taps to a usable account. Resend-OTP placement. |
+| `AUTH-google-signin` | mobile | Google account picker → role pick | How many taps to a usable account. What the screen says before the account picker appears. |
 | `DONOR-profile-setup` | mobile | blood type → location → last donation | Whether blood type is a picker or a grid. Whether last-donation is skippable. |
 | `REQUEST-create-urgent` | mobile | form → confirm → waiting-for-responders | Can a panicking family finish it in under a minute (`FR-04` user story). |
 | `NOTIFY-donor-alert` | mobile | push → request detail → accept/decline | What a donor sees before accepting, and what accepting reveals (`FR-07`). |
@@ -33,12 +33,12 @@ decided before Flutter routing is written.
 
 ## M3 — auth + donor register build
 
-Freeze `AUTH-otp-signin` and `DONOR-profile-setup` before build week. Add:
+Freeze `AUTH-google-signin` and `DONOR-profile-setup` before build week. Add:
 
 | Flow | Client | Question it settles |
 |---|---|---|
 | `DONOR-eligibility-status` | mobile | How the 56-day countdown reads to a donor (`FR-03`) — days remaining vs. eligible-on date. |
-| `AUTH-portal-signin` | web | Whether hospital staff use OTP or admin-issued credentials. Blocks `FR-01` scope for web. |
+| `AUTH-portal-signin` | web | Whether hospital staff use Google Sign-In or admin-issued credentials. Blocks `FR-AUTH-004` scope for web. |
 
 ## M4 — request + matching build
 
