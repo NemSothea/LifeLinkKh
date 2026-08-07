@@ -57,7 +57,7 @@ location-aware push alerts** to matching donors' phones — something a website 
 backend/            Spring Boot + PostgreSQL API        (scaffolded at M2)
 frontend/           Next.js web portal, hospital/admin  (scaffolded at M2)
 mobile/             Flutter app, donors/patients        (scaffolded at M2)
-infra/              Deploy runbook (docs only; CI pipeline in .github/workflows/)
+.github/workflows/  CI pipeline (owned by Tech Lead)
 docker-compose.yml  postgres + backend + web, local dev only (owned by Fullstack)
 docs/               Capybara multi-role docs (see below)
 .capybara/          Framework state — brief.md, setup.md, validate.sh
@@ -91,17 +91,22 @@ _(The three code directories are empty until M2 scaffolds them.)_
 
 | Name | Role |
 |------|------|
-| Nem Sothea | Tech Lead / Mobile (Flutter) · also PO, PM, Security |
+| Nem Sothea | Tech Lead / Mobile (Flutter) · also PO, Security |
 | Suon Pisey | Backend / Database |
 | Sourn SAVOURN | Frontend (Next.js) |
-| Moeun Nithvaraman | DevOps / Infra |
+| Moeun Nithvaraman | PO |
 | Oun Sreynich | QA |
 
 See [`docs/team.md`](docs/team.md) for write scopes (R2) and the acting-role overlays.
 
-> One person holding PO, PM, Tech Lead and Security collapses Definition of Done step 1 into
-> self-approval, leaving QA sign-off as the only independent gate. Logged in
-> [`docs/pm/risks.md`](docs/pm/risks.md).
+> There is no separate DevOps/Infra role, and `infra/` has been removed. CI
+> (`.github/workflows/`) falls to Tech Lead; `docker-compose.yml` stays with Fullstack per
+> [`docs/fullstack/specs/foundation/infra-docker.md`](docs/fullstack/specs/foundation/infra-docker.md).
+> No deploy runbook exists — it must be written before M7 release.
+
+> Tech Lead also holding Security, and co-holding PO, collapses Definition of Done step 1 toward
+> self-approval — Moeun as second PO restores an independent product-sign-off voice, but QA remains
+> the only independent gate on Security. Logged in [`docs/pm/risks.md`](docs/pm/risks.md).
 
 ## Milestones
 
