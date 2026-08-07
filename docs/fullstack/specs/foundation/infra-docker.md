@@ -19,14 +19,12 @@ donor phone numbers and blood types.
 
 `docker-compose.yml` at the repo root is owned by **Fullstack**.
 
-> **Unresolved contradiction.** `docs/fullstack/CLAUDE.md` claims "root configs" and
-> `docs/devops/CLAUDE.md` claims "pipeline files at repo root". Both currently cover this file. The
-> decision above narrows it to Fullstack, but **`docs/devops/CLAUDE.md` has not been updated** —
-> that file is outside this spec's write scope. Until it is amended, two roles still believe they
-> own one file. Fix before M2 build starts.
+> **Resolved 2026-08-07.** The DevOps role was dropped (`docs/team.md`), so the old contradiction
+> with `docs/devops/CLAUDE.md` is moot — that file is read-only history and no longer claims an
+> active scope. `docker-compose.yml` is Fullstack, unambiguously.
 
-DevOps retains CI (`.github/workflows/`) and the deployment runbook (`infra/deploy.md`), per
-`ONBOARDING.md`.
+CI (`.github/workflows/`) is **Tech Lead**. `infra/` was removed and no deployment runbook exists —
+one must be written before the M7 release.
 
 ## Services
 
@@ -97,7 +95,7 @@ All values live in a root `.env` file that is **gitignored and never committed**
 
 `docker-compose.yml` references variables by interpolation (`${POSTGRES_PASSWORD}`) and contains no
 literal credential, password, or connection string. Per `docs/security/security-checklist.md`,
-secrets are referenced by name only. The R5 secret set for this project — FCM, SMS/OTP provider, and
+secrets are referenced by name only. The R5 secret set for this project — Firebase (Auth + FCM) and
 Maps keys — is **not needed at M2** and must not be added to the compose file speculatively.
 
 Every port binds to `127.0.0.1`. Docker's default `0.0.0.0` binding can bypass a host firewall and
@@ -107,10 +105,10 @@ publish an unauthenticated M2 backend to the local network.
 
 | Deferred | Owner |
 |---|---|
-| CI pipeline (`.github/workflows/`) | DevOps |
-| Staging and production environments, image registry, deploy automation | DevOps |
-| FCM / SMS / Maps secret injection | Fullstack + Security, at the milestone that needs them |
-| Nightly Postgres backup (`prd.md` §5 availability target) | DevOps |
+| CI pipeline (`.github/workflows/`) | Tech Lead |
+| Staging and production environments, image registry, deploy automation | Tech Lead |
+| Firebase / Maps secret injection | Fullstack + Security, at the milestone that needs them |
+| Nightly Postgres backup (`prd.md` §5 availability target) | Tech Lead |
 | Observability, log aggregation, metrics | not scoped for this course project |
 
 ## Done when
@@ -129,8 +127,8 @@ publish an unauthenticated M2 backend to the local network.
 
 ## Follow-ups this spec does not resolve
 
-- **`docs/devops/CLAUDE.md` must be narrowed** so it no longer claims `docker-compose.yml`. Outside
-  this spec's write scope; do it before M2 build.
+- **A deploy runbook must be written.** `infra/` was deleted with the DevOps role; the M7 release
+  has no documented promotion path. Tech Lead owns it.
 - Postgres and image minor versions must be pinned and recorded here at init.
 - `GET /api/health` must exist in both API contracts — the backend and web healthchecks both depend
   on it.

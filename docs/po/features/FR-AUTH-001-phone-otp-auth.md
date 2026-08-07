@@ -2,11 +2,21 @@
 id: FR-AUTH-001-phone-otp-auth
 title: Phone authentication via OTP
 area: AUTH
-status: accepted
+status: superseded
 priority: Must Have
 owner: PO
 brief_ref: ../prd.md — FR-01
+superseded_by: FR-AUTH-003-google-sign-in
+superseded_date: 2026-08-07
 ---
+
+> **SUPERSEDED 2026-08-07 by [FR-AUTH-003](FR-AUTH-003-google-sign-in.md).**
+> Auth moved from phone OTP to Google Sign-In: SMS costs money per message on the one path every
+> user must cross, and OTP put code generation, expiry, brute-force defence and resend limiting into
+> our own code. Rationale and rejected alternatives in
+> [ADR 0002](../../tech-lead/adr/0002-auth-google-sign-in.md).
+> Kept for history — do not build against this FR. The Problem statement below still holds; only the
+> mechanism changed.
 
 ## Problem
 A donor in an emergency cannot be reached unless they have an account, but asking a Cambodian
@@ -23,9 +33,9 @@ without asking again.
 Every other feature depends on identity. Matching, notifications, donation history, and the privacy
 rule that hides donor contact until acceptance all need a known user. Nothing ships before this.
 
-Open question, not blocking: hospital and admin sign-in may not use OTP at all — see the portal
-sign-in question in `docs/fullstack/specs/foundation/frontend-nextjs.md`. If the portal diverges it
-becomes `FR-AUTH-003`, not a change to this FR.
+Open question, not blocking: hospital and admin sign-in may not use the donor mechanism at all — see
+the portal sign-in question in `docs/fullstack/specs/foundation/frontend-nextjs.md`. That question
+moved to `FR-AUTH-004` when `FR-AUTH-003` was allocated to Google Sign-In.
 
 ## Scope
 **In:** <to be filled after prototyping — see ../prototypes/mobile/AUTH-otp-signin/>

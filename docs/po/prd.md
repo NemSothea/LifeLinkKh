@@ -44,7 +44,7 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 ### 2.1 In Scope
 
 **Module A — Accounts & Auth**
-- Phone-number registration with OTP verification.
+- Google Sign-In registration (Firebase Auth); phone number collected as an unverified profile field.
 - Donor profile: name, blood type, location, last donation date.
 - Role selection (donor / requester); hospital & admin accounts provisioned by admin.
 
@@ -107,23 +107,30 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 
 ## 4. Functional Requirements
 
-### FR-01: Phone Authentication (OTP)
+### FR-01: Authentication (Google Sign-In)
 
 | Field | Detail |
 |---|---|
 | Priority | Must Have |
 | User Role | Donor, Requester, Hospital Staff, Admin |
-| Description | Register and sign in with a phone number verified by a one-time password. |
+| Description | Register and sign in with the Google account already on the device, via Firebase Auth. |
+
+> **Amended 2026-08-07** — was "Phone Authentication (OTP)". Phone OTP required a paid SMS provider on
+> the one path every user must cross, and put code expiry, brute-force defence and resend limiting
+> into our own code. See [ADR 0002](../tech-lead/adr/0002-auth-google-sign-in.md) and
+> `features/FR-AUTH-003-google-sign-in.md`. Phone number is now an unverified profile field.
 
 **User Stories:**
-- As a donor, I want to sign up with my phone number, so that I don't need to remember a password.
-- As a user, I want to verify via OTP, so that my account is tied to a real phone.
+- As a donor, I want to sign up with one tap using my Google account, so that I don't need to remember a password or wait for a code.
+- As a user, I want to stay signed in, so that an emergency alert is never blocked by a login screen.
 
 **Acceptance Criteria:**
-- [ ] User enters a Cambodian phone number and receives an OTP.
-- [ ] Correct OTP within the validity window creates/authenticates the account.
-- [ ] Wrong or expired OTP is rejected with a clear message.
-- [ ] A session token is issued on success and used for subsequent API calls.
+- [ ] User signs in with Google and an account is created on first sign-in.
+- [ ] The backend verifies the Google ID token server-side (signature, audience, issuer, expiry) and rejects any client-supplied user identifier.
+- [ ] A session token (JWT) is issued on success and used for subsequent API calls.
+- [ ] Sign-in failure or a cancelled Google flow returns the user to the sign-in screen with a clear message and no partial account.
+- [ ] Session persists across app restarts; sign-out invalidates it.
+- [ ] A self-service sign-up can only result in role `DONOR` or `REQUESTER`. A request asking for `HOSPITAL` or `ADMIN` is **rejected**, not silently downgraded (§2.1 says those are admin-provisioned).
 
 ### FR-02: Donor Registration & Profile
 
@@ -310,7 +317,7 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 | Area | Definition |
 |---|---|
 | **Performance** | Request-to-first-notification < 10 s; API p95 < 500 ms; supports 1,000 registered donors, 100 concurrent users in pilot. |
-| **Security** | OTP auth, JWT session tokens, HTTPS/TLS everywhere, role-based access control. Donor contact details revealed only after accepting a request. |
+| **Security** | Google Sign-In (server-verified ID token), JWT session tokens, HTTPS/TLS everywhere, role-based access control. Donor contact details revealed only after accepting a request. |
 | **Scalability** | Design for 10,000 donors and multiple provinces without schema change. |
 | **Availability** | 99% uptime target during pilot; nightly PostgreSQL backups. |
 | **Compatibility** | Mobile: Android 8.0+ (Play Store). Web: latest Chrome, Firefox, Edge, Safari. |
@@ -349,9 +356,9 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 ## 7. User Flows
 
 #### Flow: Donor Onboarding
-1. User opens app, enters phone number.
-2. System sends OTP; user enters it.
-3. System verifies, creates account.
+1. User opens app, taps "Continue with Google", picks an account.
+2. App sends the Google ID token to the backend.
+3. Backend verifies the token, creates the account on first sign-in, returns a JWT.
 4. User picks role "Donor", enters blood type + location + last donation date.
 5. User sees own eligibility status and dashboard.
 
@@ -370,7 +377,7 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 
 #### Flow: Error / Edge Cases
 - **No matching donors:** requester is told none found now; system widens radius or retries; hospital notified.
-- **OTP fails/expires:** clear error, allow resend after a short cooldown.
+- **Sign-in cancelled or fails:** clear error, return to sign-in screen, no partial account created.
 - **Donor accepts but can't come:** donor can withdraw acceptance; requester notified.
 - **Duplicate request:** system warns if an identical open request exists.
 
@@ -380,18 +387,19 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 
 ### Assumptions
 - Donors have Android smartphones with data/Wi-Fi and can receive push.
-- Users have Cambodian phone numbers that can receive SMS OTP.
+- Donors have a Google account on their Android device (Play Store access implies one).
 - Hospitals will designate staff to use the web portal.
 - The 56-day interval is the eligibility rule used for whole-blood donation.
 
 ### Dependencies
-- Firebase Cloud Messaging (push) and an SMS/OTP provider.
+- Firebase — Auth (Google Sign-In) and Cloud Messaging (push). No SMS provider.
 - Google Maps / geocoding for distance and district lookup.
 - Google Play Console for Play Store internal-testing release.
 
 ### Risks
 - **Low donor density early** → mitigate with campus/NGO onboarding drives.
-- **SMS OTP cost/deliverability** → mitigate by evaluating providers early; fallback to Firebase phone auth.
+- **Donor phone numbers are unverified** (no OTP) → an accepted request may reach an unreachable donor. Mitigate by coordinating through FCM push in-app rather than by phone call; if a callable number is still needed, verify lazily at acceptance time only (ADR 0002).
+- **Donors without a Google account** → fallback is Telegram bot OTP, free and widely used in Cambodia (ADR 0002).
 - **False/abusive requests** → mitigate with admin moderation and hospital confirmation.
 - **Privacy concern over location** → mitigate by exposing contact only after acceptance and storing minimal data.
 
@@ -405,7 +413,8 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 | **Compatibility** | A recipient of type X can receive from specific donor types (e.g., O− is universal donor; AB+ universal recipient). Matching uses this, not exact-type only. |
 | **Eligibility** | Whether a donor may donate now; here, ≥ 56 days since last donation. |
 | **Cooldown** | The 56-day rest period after donating whole blood. |
-| **OTP** | One-Time Password sent to a phone for verification. |
+| **Google Sign-In** | Firebase Auth flow where the device's Google account proves identity; the backend verifies the resulting ID token. |
+| **ID token** | Signed token from Google asserting who the user is. Verified server-side — never trusted from the client unchecked. |
 | **FCM** | Firebase Cloud Messaging — push notification service. |
 | **Match** | A donor selected by the system as compatible + eligible + nearby for a request. |
 | **Requester** | Person creating a blood request (patient/family). |

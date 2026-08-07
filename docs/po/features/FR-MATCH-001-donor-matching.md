@@ -27,13 +27,18 @@ Compatibility is not exact-type matching. `prd.md` section 9 is explicit: an O�
 almost anyone, an AB+ patient can receive from anyone. Matching on exact type alone would discard
 most of the available supply.
 
-**Blocked on two open briefs** in `../briefs/roadmap.md`:
-- **Location precision** — exact coordinates or district centroid. Distance ranking cannot be
-  specified until this is decided, and it is simultaneously a privacy decision.
+**Blocked on one open brief** in `../briefs/roadmap.md`:
 - **Max notified count** — FR-05 calls it configurable but gives no default. Too few and the request
   goes unanswered; too many and donors learn to ignore alerts.
 
-Both must be resolved before M4 build.
+Must be resolved before M4 build.
+
+Two blockers were resolved on 2026-08-07:
+- **Location precision** — [ADR 0003](../../tech-lead/adr/0003-donor-location-precision.md).
+  Rank on coarse coordinates the API never returns; show district and a distance rounded to 0.5 km.
+  Donors with no coordinates still match and sort `NULLS LAST`.
+- **Compatibility rule** — [ADR 0004](../../tech-lead/adr/0004-abo-rh-compatibility-lookup-table.md).
+  A seeded 27-row `blood_compatibility` table, joined in the matching query, not branching code.
 
 ## Scope
 **In:** <to be filled after prototyping>

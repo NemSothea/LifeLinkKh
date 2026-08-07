@@ -99,7 +99,7 @@ only, per `docs/security/security-checklist.md`.
 
 | Deferred | Milestone |
 |---|---|
-| OTP sign-in + JWT storage, donor profile screens | M3 |
+| Google Sign-In + JWT storage, donor profile screens | M3 |
 | Urgent request create, responders list | M4 |
 | FCM integration, notification deep links, donation history | M5 |
 | `geolocator` / `google_maps_flutter`, full Khmer/English string sweep | M6 |
