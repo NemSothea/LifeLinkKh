@@ -1,0 +1,23 @@
+{
+    "@@locale": "en",
+    "appTitle": "LifeLink KH",
+    "@appTitle": {
+        "description": "Application name shown on the home screen and in the app bar"
+    },
+    "homeTagline": "Connecting blood donors with those who need them",
+    "@homeTagline": {
+        "description": "Stub home screen subtitle at M2"
+    },
+    "apiStatusUp": "API is up",
+    "@apiStatusUp": {
+        "description": "Shown when the health ping succeeds"
+    },
+    "apiStatusUnreachable": "Cannot reach the API",
+    "@apiStatusUnreachable": {
+        "description": "Shown when the health ping fails for any reason"
+    },
+    "apiStatusChecking": "Checking API…",
+    "@apiStatusChecking": {
+        "description": "Shown while the health ping is in flight"
+    }
+}

@@ -26,8 +26,10 @@ No feature screens. No auth. No network calls beyond an optional health ping.
 | Field | Value |
 |---|---|
 | Flutter package (pubspec `name`) | `lifelink_kh` |
-| Android application ID | `kh.lifelink.app` |
-| Dart SDK | pin the version `flutter create` installs; record it in `pubspec.yaml` |
+| Android application ID | `kh.lifelink.app` — `flutter create --org kh.lifelink` produced `kh.lifelink.lifelink_kh`, so the Gradle `namespace` + `applicationId` and the Kotlin `MainActivity` package were all rewritten to match this spec at init |
+| Flutter / Dart SDK | **Flutter 3.44.6 · Dart 3.12.2** — pinned at init 2026-08-10, `environment: sdk: ^3.12.2` |
+| Platforms generated | `--platforms=android` only. iOS is deferred (`../../../../CLAUDE.md`), so no `ios/` directory exists to maintain |
+| Pinned deps | `flutter_riverpod ^3.4.2`, `go_router ^17.4.0`, `dio ^5.11.0`, `intl 0.20.2` (exact — see below), `flutter_localizations` from SDK |
 
 The Android application ID is effectively permanent — it is the Play Store identity and cannot be
 changed after the first upload to internal testing (M7). Confirm it before the first build.
@@ -133,6 +135,19 @@ edit them. Mobile requests changes via CR-MAPI
 ## Follow-ups this spec does not resolve
 
 - **ADR owed** for state management (Riverpod) and routing (go_router). Decided here to keep M2
-  buildable; the record needs to catch up.
-- **Application ID `kh.lifelink.app` needs confirming** before the first Play Store upload.
-- `GET /api/health` must reach the mobile API contract before M2 build starts.
+  buildable; the record needs to catch up. Still owed as of 2026-08-10 — both are now in the code.
+- **Application ID `kh.lifelink.app` needs confirming** before the first Play Store upload. Now set
+  in `android/app/build.gradle.kts`; it is permanent after the first internal-testing upload.
+- ~~`GET /api/health` must reach the mobile API contract~~ — it was already there.
+
+### Learned at init, 2026-08-10
+
+- **`intl` must be pinned exactly to `0.20.2`.** `flutter_localizations` from the SDK depends on
+  exactly that version, so `intl: ^0.20.3` makes version solving fail outright. Do not "upgrade" it.
+- **Riverpod 3 retries a failed provider automatically.** An error state therefore flips back to
+  loading on its own, which makes it untestable by default — widget tests pass
+  `ProviderScope(retry: (_, _) => null)`. Worth knowing before M4, where request submission has a
+  real failure path a user must see.
+- Android build verified: `flutter build apk --debug --dart-define=API_BASE_URL=…` produces
+  `app-debug.apk`. Launch on an emulator is still a **manual** check — QA records it, per
+  `../../../qa/test-strategy.md`.
