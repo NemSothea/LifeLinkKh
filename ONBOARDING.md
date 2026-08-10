@@ -21,6 +21,16 @@ and `docs/cheat-sheet.md` first.
 - Never edit another role's folder — file a change request (R4): CR-PO / CR-MAPI / CR-SEC. (CR-DEVOPS is retired with the role; old records stay readable.)
 - Cross-link IDs (R7) everywhere: `FR-`, `BUG-`, `adr/####`, `CR-`, `DEC-`.
 
+## Before your first commit
+- `git config core.hooksPath .githooks` — **required**. The hook is opt-in per clone, so without this
+  the capybara validate and Java format checks silently do nothing.
+- `cp .env.example .env` and fill it in. `.env` is gitignored and must never be committed.
+- `bash scripts/verify-all.sh` — runs every scaffolded client's checks. `bash scripts/dev-up.sh`
+  brings up the local stack (needs Docker installed).
+- Read `docs/tech-lead/coding-standards.md` before writing code, `docs/qa/test-strategy.md` before
+  writing tests, and `docs/security/asvs-baseline.md` (ASVS Level 1, ADR 0005) before touching auth,
+  PII or secrets.
+
 ## Security first (R5)
 Auth, PII (phone/location/blood type), secrets, and external integrations are in scope.
 Any change to those needs a threat model + review note before merge. See `docs/security/`.

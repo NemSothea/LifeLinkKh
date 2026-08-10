@@ -1,0 +1,74 @@
+# LifeLink KH — LOCAL DEVELOPMENT ONLY. Not a deployment artifact.
+#
+# The M2 backend has no authentication, so every port binds to 127.0.0.1. Docker's
+# default 0.0.0.0 binding can bypass a host firewall and publish an unauthenticated
+# API over donor phone numbers and blood types to the local network.
+#
+# Spec: docs/fullstack/specs/foundation/infra-docker.md   Owner: Tech Lead.
+# All values come from a gitignored root .env — see .env.example. No credential
+# literal appears in this file.
+#
+# Until frontend/ is scaffolded (M2 step 3), the `web` service has nothing to build:
+#   docker compose up postgres backend
+# brings up what exists today.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # Named volume, never a bind mount into the repo: a bind mount risks
+      # committing the data directory and breaks on macOS file permissions.
+      - lifelink_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      # Host is the compose service name, not localhost — inside the backend
+      # container localhost is the backend itself.
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        # service_healthy, not a bare depends_on. Without it the backend starts
+        # before Postgres accepts connections, Flyway fails, the container exits.
+        # That is the most common first-run failure on this stack.
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/api/health || exit 1"]
+      interval: 10s
+      retries: 12
+      start_period: 30s
+
+  web:
+    build: ./frontend
+    environment:
+      API_BASE_URL: http://backend:8080/api
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3000/ || exit 1"]
+      interval: 10s
+      retries: 12
+
+# The Flutter app is NOT a compose service. It runs on a device or emulator and
+# reaches the published host port — http://10.0.2.2:8080/api on the Android emulator.
+
+volumes:
+  lifelink_pgdata:
