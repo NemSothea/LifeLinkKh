@@ -49,12 +49,18 @@ jobs:
       - uses: actions/setup-node@v4
         if: steps.scaffolded.outputs.yes == 'true'
         with:
-          node-version: '20'
+          # 22, matching frontend/Dockerfile. Node 20 trips EBADENGINE on deps that
+          # require >=22.
+          node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - if: steps.scaffolded.outputs.yes == 'true'
         working-directory: frontend
-        run: npm ci
+        # `npm ci` and not `npm install` would be the stricter choice, but the lockfile
+        # is generated on macOS arm64 and npm omits the Linux-only optional packages
+        # (@emnapi/*, @swc/helpers) that a Linux runner then demands. `npm ci` fails on
+        # that mismatch. Revisit if npm fixes cross-platform optional resolution.
+        run: npm install --no-audit --no-fund
       - if: steps.scaffolded.outputs.yes == 'true'
         working-directory: frontend
         run: npm run lint

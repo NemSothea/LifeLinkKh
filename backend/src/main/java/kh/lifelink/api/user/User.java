@@ -7,6 +7,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
 import kh.lifelink.api.common.audit.Auditable;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * An account. Constrained string values are validated by CHECK constraints in {@code V1__init.sql}
@@ -41,7 +43,13 @@ public class User extends Auditable {
     @Column(name = "role", nullable = false, length = 16)
     private String role;
 
-    @Column(name = "language", nullable = false, columnDefinition = "char(2)")
+    /**
+     * PostgreSQL reports a {@code CHAR(2)} column as {@code bpchar}, which Hibernate reads as
+     * {@code Types.CHAR}. Without this annotation Hibernate expects {@code VARCHAR} and {@code
+     * ddl-auto=validate} refuses to start. Caught by SchemaIntegrationTest in CI.
+     */
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "language", nullable = false, length = 2)
     private String language = "km";
 
     /** Registered at M3 (DEC-002). */
