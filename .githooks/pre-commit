@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 # Enable with: git config core.hooksPath .githooks
 set -euo pipefail
+
 if [ -f .capybara/validate.sh ]; then bash .capybara/validate.sh || {
   echo "capybara validate failed — fix violations above or commit with --no-verify"; exit 1; }
+fi
+
+# Format check, only when Java files are staged — keeps the hook fast otherwise.
+if git diff --cached --name-only --diff-filter=ACM | grep -q '^backend/.*\.java$'; then
+  if [ -z "${JAVA_HOME:-}" ] && [ -x /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home/bin/java ]; then
+    export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+  fi
+  (cd backend && ./mvnw -B -q spotless:check) || {
+    echo "spotless found formatting violations — run: cd backend && ./mvnw spotless:apply"; exit 1; }
 fi

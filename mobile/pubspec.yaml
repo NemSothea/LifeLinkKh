@@ -1,0 +1,38 @@
+name: lifelink_kh
+description: "LifeLink KH (ជីវិត) — blood donor matching app for Cambodia."
+# Never published to pub.dev — this is an application, not a package.
+publish_to: 'none'
+
+# versionName / versionCode for the Play Store. Bump before each M7 upload.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # Architecture choices recorded in docs/fullstack/specs/foundation/mobile-flutter.md.
+  # Riverpod and go_router still owe an ADR — see that spec's follow-ups.
+  flutter_riverpod: ^3.4.2
+  go_router: ^17.4.0
+  dio: ^5.11.0
+
+  # Pinned exactly: flutter_localizations from the SDK depends on intl 0.20.2, so a
+  # caret range above that makes version solving fail outright.
+  intl: 0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  # Generates lib/l10n/app_localizations.dart from the ARB files (see l10n.yaml).
+  generate: true

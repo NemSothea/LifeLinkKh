@@ -1,0 +1,8 @@
+{
+    "app": {
+        "title": "LifeLink KH",
+        "healthHeading": "API status",
+        "healthUp": "API is up",
+        "healthUnreachable": "Cannot reach the API"
+    }
+}

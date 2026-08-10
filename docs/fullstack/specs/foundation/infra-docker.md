@@ -129,6 +129,11 @@ publish an unauthenticated M2 backend to the local network.
 
 - **A deploy runbook must be written.** `infra/` was deleted with the DevOps role; the M7 release
   has no documented promotion path. Tech Lead owns it.
-- Postgres and image minor versions must be pinned and recorded here at init.
+- Postgres and image minor versions must be pinned and recorded here at init. **Still open as of
+  2026-08-10:** `docker-compose.yml` uses `postgres:16-alpine` and the Dockerfile uses
+  `maven:3.9-eclipse-temurin-21` / `eclipse-temurin:21-jre`. Docker is not installed on the build
+  machine, so no tag has been pulled and no minor could be verified — pinning a minor that turns out
+  not to exist fails the first run. Pin all three on the first successful `docker compose up` and
+  record them here.
 - `GET /api/health` must exist in both API contracts — the backend and web healthchecks both depend
   on it.

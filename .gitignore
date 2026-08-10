@@ -4,7 +4,13 @@
 # Secrets / env
 .env
 .env.*
+# ...but the template of variable NAMES is committed on purpose. Without this negation
+# the `.env.*` rule above silently swallows it.
+!.env.example
 *.local
+
+# Local Claude Code permissions — machine-specific, not team state.
+.claude/settings.local.json
 
 # Backend (Spring Boot / Gradle / Maven)
 backend/build/
@@ -26,6 +32,8 @@ mobile/.flutter-plugins
 mobile/.flutter-plugins-dependencies
 mobile/ios/Pods/
 mobile/**/GeneratedPluginRegistrant.*
+# Generated from the .arb files by `flutter pub get` (pubspec `generate: true`).
+mobile/lib/l10n/app_localizations*.dart
 
 # IDE
 .idea/

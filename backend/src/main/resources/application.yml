@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: lifelink-api
+
+  datasource:
+    # No credential literals in committed files. docker-compose supplies these
+    # under the standard Spring names (infra-docker.md); the default URL is for
+    # running the backend outside compose against a local Postgres.
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/lifelink}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  jpa:
+    hibernate:
+      # Flyway owns the schema. Hibernate never generates it — boot fails if
+      # entities and migrations disagree.
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+
+server:
+  servlet:
+    context-path: /api
+
+logging:
+  level:
+    org.flywaydb: info

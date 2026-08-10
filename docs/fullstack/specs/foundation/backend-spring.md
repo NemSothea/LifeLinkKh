@@ -257,8 +257,12 @@ contract entry.
 - [ ] `./mvnw clean verify` passes.
 - [ ] `docker compose up` brings the backend up healthy against the `postgres` service.
 - [ ] Flyway applies `V1__init.sql` on first boot; `flyway_schema_history` shows one row.
-- [ ] `psql` shows all six tables with the columns, CHECK constraints, and foreign keys above.
-- [ ] `donor_profiles` has **no** location column and `blood_requests` has **no** expiry column.
+- [ ] `psql` shows all **seven** tables (six entities + `blood_compatibility`) with the columns, CHECK
+      constraints, and foreign keys above.
+- [ ] `donor_profiles` **has** `district_code`, `latitude`, `longitude` per ADR 0003, and no API
+      response returns the coordinates. `blood_requests` has **no** expiry column.
+      *(Corrected 2026-08-10 — this line previously said `donor_profiles` has no location column,
+      written before ADR 0003 was accepted. It could never pass as written.)*
 - [ ] `GET /api/health` returns 200 without a token.
 - [ ] `spring.jpa.hibernate.ddl-auto=validate` — boot fails if entities and schema disagree.
 - [ ] No credential, connection string, or key literal appears in any committed file.

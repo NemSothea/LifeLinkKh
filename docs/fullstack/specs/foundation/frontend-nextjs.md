@@ -29,10 +29,11 @@ No portal features. No auth. No forms.
 | Field | Value |
 |---|---|
 | Package name | `lifelink-web` |
-| Next.js | 15.x App Router — pin the version at init |
-| React | 19.x (whatever Next 15 installs) |
+| Next.js | **15.5.23** — pinned at init 2026-08-10 |
+| React | **19.1.0** |
 | TypeScript | `strict: true`, no `any` escape hatches in committed code |
-| Styling | Tailwind CSS — pin whichever major `create-next-app` installs and record it here |
+| Styling | **Tailwind CSS 4** via `@tailwindcss/postcss`. Tailwind 4 is CSS-first: there is **no `tailwind.config.ts`** — configuration lives in `src/app/globals.css` and `postcss.config.mjs`. The layout below is otherwise as built |
+| i18n | **next-intl 4.13.x** |
 | Package manager | npm, so one lockfile format is reviewed |
 
 ## Directory layout
@@ -128,6 +129,18 @@ spec does not edit the contract.
 
 ## Follow-ups this spec does not resolve
 
-- **ADR owed** for next-intl as the i18n approach.
-- `GET /api/health` must reach the web API contract before M2 build starts.
-- Tailwind major version must be pinned and recorded in this spec once `create-next-app` runs.
+- **ADR owed** for next-intl as the i18n approach. Still owed as of 2026-08-10 — the library is
+  installed and wired, so the ADR now documents a decision already in the code.
+- ~~`GET /api/health` must reach the web API contract~~ — added to
+  `../../api-contract/web/openapi.yaml` on 2026-08-10. The mobile contract already had it.
+- ~~Tailwind major version must be pinned~~ — Tailwind 4, recorded above.
+- **Error-shape conflict, unresolved.** The web contract's `Error` schema is
+  `{ error: { code, message } }`; the backend's `common/error/ErrorResponse` is
+  `{ code, message, timestamp }`. `docs/fullstack/CLAUDE.md` says openapi wins on conflict, so the
+  backend record needs reshaping — but that touches every future client, so it is Tech Lead's call,
+  not a silent fix. No endpoint returns an error body yet, so nothing is broken today; M3 is the
+  deadline.
+- **3 high-severity npm audit findings**, both transitive through `next`: `postcss` and `sharp`
+  (libvips CVEs). `npm audit fix --force` wants a Next major change and was **not** run. Both are
+  build-time or image-optimisation paths, not request handling. Re-check at M6 when Next is next
+  bumped.

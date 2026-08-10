@@ -1,12 +1,96 @@
-# Placeholder pipeline — owned by Tech Lead. There is no DevOps role and no deploy
-# runbook yet; writing one is a blocker for the M7 signed-AAB release (docs/risks.md).
+# Owned by Tech Lead. There is no DevOps role.
+#
+# Deliberately does NOT run docker compose: the compose file is local-development
+# only (infra-docker.md) and the M2 backend has no authentication.
+#
+# Backend integration tests use Testcontainers. GitHub runners provide Docker, so
+# the tests that SKIP on a machine without Docker actually run here — CI is
+# currently the only place the schema gets verified.
 name: ci
 on:
   push: { branches: [ main ] }
   pull_request: {}
+
 jobs:
-  placeholder:
+  backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "TODO: build backend + web, run tests, build Flutter AAB. Real steps land at M2 once backend/ frontend/ mobile/ are scaffolded."
+      - uses: actions/setup-java@v4
+        with:
+          # Must match <java.version> in backend/pom.xml.
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+      - name: verify (spotless check, tests, coverage gate)
+        working-directory: backend
+        run: ./mvnw -B verify
+      - name: upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: backend/target/site/jacoco/
+          if-no-files-found: ignore
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: check whether frontend/ is scaffolded
+        id: scaffolded
+        run: |
+          if [ -f frontend/package.json ]; then
+            echo "yes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "yes=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::frontend/ not scaffolded yet (M2 step 3) — nothing to check."
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.scaffolded.outputs.yes == 'true'
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - if: steps.scaffolded.outputs.yes == 'true'
+        working-directory: frontend
+        run: npm ci
+      - if: steps.scaffolded.outputs.yes == 'true'
+        working-directory: frontend
+        run: npm run lint
+      - if: steps.scaffolded.outputs.yes == 'true'
+        working-directory: frontend
+        run: npx tsc --noEmit
+      - if: steps.scaffolded.outputs.yes == 'true'
+        working-directory: frontend
+        run: npm test -- --run
+
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: check whether mobile/ is scaffolded
+        id: scaffolded
+        run: |
+          if [ -f mobile/pubspec.yaml ]; then
+            echo "yes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "yes=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::mobile/ not scaffolded yet (M2 step 4) — nothing to check."
+          fi
+      - uses: subosito/flutter-action@v2
+        if: steps.scaffolded.outputs.yes == 'true'
+        with:
+          channel: stable
+      - if: steps.scaffolded.outputs.yes == 'true'
+        working-directory: mobile
+        run: flutter pub get
+      - if: steps.scaffolded.outputs.yes == 'true'
+        working-directory: mobile
+        run: flutter analyze
+      - if: steps.scaffolded.outputs.yes == 'true'
+        working-directory: mobile
+        run: flutter test
+
+  # The signed AAB build lands at M7 and needs the upload keystore in repository
+  # secrets plus a written deploy runbook. Neither exists — docs/risks.md.

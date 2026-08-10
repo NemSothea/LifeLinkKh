@@ -20,6 +20,26 @@ tags:
   - name: portal
 
 paths:
+  /health:
+    get:
+      tags: [portal]
+      summary: Liveness check
+      description: |
+        Unauthenticated. Added at M2 — the compose healthchecks for both `backend` and `web`
+        depend on it, and the M2 portal page renders its result to prove the browser →
+        Next server → backend container chain end to end.
+      security: []
+      responses:
+        '200':
+          description: The API is up
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, example: UP }
+
   /portal/requests:
     get:
       tags: [portal]
