@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -29,12 +30,11 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         ErrorResponse body = response.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.code()).isEqualTo("INTERNAL_ERROR");
-        assertThat(body.message())
+        assertThat(body.error().code()).isEqualTo("INTERNAL_ERROR");
+        assertThat(body.error().message())
                 .doesNotContain("postgres")
                 .doesNotContain("IllegalStateException")
                 .doesNotContain("5432");
-        assertThat(body.timestamp()).isNotNull();
     }
 
     @Test
@@ -49,8 +49,8 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().code()).isEqualTo("VALIDATION_FAILED");
-        assertThat(response.getBody().message()).isEqualTo("bloodType must not be blank");
+        assertThat(response.getBody().error().code()).isEqualTo("VALIDATION_FAILED");
+        assertThat(response.getBody().error().message()).isEqualTo("bloodType must not be blank");
     }
 
     @Test
@@ -64,15 +64,24 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().message()).isEqualTo("request is invalid");
+        assertThat(response.getBody().error().message()).isEqualTo("request is invalid");
     }
 
+    /**
+     * The contract test: the serialized JSON must be exactly the envelope declared by {@code
+     * components/schemas/Error}, with no timestamp and no other top-level key.
+     */
     @Test
-    void errorResponse_carriesCodeMessageAndTimestamp() {
-        ErrorResponse error = ErrorResponse.of("VALIDATION_FAILED", "bloodType must not be blank");
+    void serializesToTheEnvelopeTheOpenApiContractDeclares() throws Exception {
+        String json =
+                new ObjectMapper()
+                        .writeValueAsString(
+                                ErrorResponse.of(
+                                        "VALIDATION_FAILED", "bloodType must not be blank"));
 
-        assertThat(error.code()).isEqualTo("VALIDATION_FAILED");
-        assertThat(error.message()).isEqualTo("bloodType must not be blank");
-        assertThat(error.timestamp()).isNotNull();
+        assertThat(json)
+                .isEqualTo(
+                        "{\"error\":{\"code\":\"VALIDATION_FAILED\","
+                                + "\"message\":\"bloodType must not be blank\"}}");
     }
 }
