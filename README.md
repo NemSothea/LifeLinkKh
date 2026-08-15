@@ -66,16 +66,26 @@ docs/               Capybara multi-role docs (see below)
 
 ## Getting started
 
-> Prerequisites: Docker (Compose v2), **JDK 21**, Node 20+, Flutter SDK.
+> Prerequisites: Docker Desktop (Compose v2), **JDK 21**, **Node 22**, Flutter SDK.
+> Node 20 trips `EBADENGINE` — CI and both Dockerfiles pin 22.
 
 ```bash
-# Backend + web portal + database — all ports bound to 127.0.0.1
-docker compose up          # → API on :8080, web on :3000, postgres on :5432
+cp .env.example .env       # then fill it in — see the runbook. NEVER commit .env
+bash scripts/dev-up.sh     # → API on :8080, web on :3000, postgres on :5432
+                           #   all bound to 127.0.0.1
 
 # Flutter app (device or emulator, against the local API)
 cd mobile
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/api
 ```
+
+**Full runbook — install, `.env` values, and every failure we have actually hit:
+[`docs/tech-lead/local-development.md`](docs/tech-lead/local-development.md).** Read it before your
+first run. `POSTGRES_DB` and `POSTGRES_USER` are a shared team convention documented there; only
+`POSTGRES_PASSWORD` is yours alone.
+
+Use `scripts/dev-up.sh` rather than a bare `docker compose up` — it waits for health and then prints
+the applied Flyway migrations, which is the evidence QA signs each milestone against.
 
 `--dart-define=API_BASE_URL` is **required** — the app fails fast with a clear error rather than
 falling back to a default host. `10.0.2.2` is the Android emulator's alias for your machine, where
@@ -84,7 +94,7 @@ Compose publishes the backend.
 Layer-by-layer setup, including the Flyway schema and the Compose service definitions, is specified in
 [`docs/fullstack/specs/foundation/`](docs/fullstack/specs/foundation/).
 
-_(The three code directories are empty until M2 scaffolds them.)_
+_(All three code directories were scaffolded at M2 — see `docs/decisions.md`.)_
 
 ---
 
