@@ -49,7 +49,12 @@ else
 fi
 
 echo "   Flyway applied:"
-docker compose exec -T postgres psql -U "${POSTGRES_USER:-lifelink}" \
-    -d "${POSTGRES_DB:-lifelink}" \
-    -c "SELECT version, description, success FROM flyway_schema_history;" 2>/dev/null \
-    || echo "   (could not query flyway_schema_history — check POSTGRES_USER/POSTGRES_DB in .env)"
+# Expanded inside the container, not here. docker compose reads .env for its own
+# substitution but never exports those names back to this shell, so a host-side
+# ${POSTGRES_USER} is always empty — it would silently connect as the fallback role
+# and print the error branch instead of the migration table QA signs off against.
+# The postgres container already has both names in its environment.
+docker compose exec -T postgres sh -c \
+    'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+     -c "SELECT version, description, success FROM flyway_schema_history;"' \
+    || echo "   (could not query flyway_schema_history — is the postgres service up?)"

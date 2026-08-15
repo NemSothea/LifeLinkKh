@@ -4,7 +4,12 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# `npm ci` would be the stricter choice, but the lockfile is generated on macOS
+# arm64 and npm omits the Linux-only optional packages (@emnapi/*, @swc/helpers)
+# that a Linux image then demands — and this image is always built for Linux.
+# `npm ci` fails on that mismatch; CI hit exactly this and made the same swap
+# (.github/workflows/ci.yml). Revisit if npm fixes cross-platform optional resolution.
+RUN npm install --no-audit --no-fund
 
 FROM node:22-alpine AS build
 WORKDIR /app
