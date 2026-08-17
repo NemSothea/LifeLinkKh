@@ -20,7 +20,11 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "127.0.0.1:5432:5432"
+      # Host side is 5433, not 5432: a host PostgreSQL install owns 5432 on at
+      # least one dev machine and the bind fails outright. Nothing in the stack
+      # uses this — backend reaches the DB at postgres:5432 over the compose
+      # network. It exists only for psql/GUI clients on the host.
+      - "127.0.0.1:5433:5432"
     volumes:
       # Named volume, never a bind mount into the repo: a bind mount risks
       # committing the data directory and breaks on macOS file permissions.

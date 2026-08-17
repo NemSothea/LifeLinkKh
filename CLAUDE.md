@@ -98,10 +98,10 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 
 | Member | Role | Owns |
 |--------|------|------|
-| **Nem Sothea** | Tech Lead / Flutter + PO (Senior) | Architecture, Flutter mobile app, FCM push, GPS/maps, Android build & Play Store release. Reviews all PRs. Co-PO with Moeun Nithvaraman. Also holds Security overlay and CI (`.github/workflows/`). |
-| **Suon Pisey** | Backend / Database (Senior) | Spring Boot API, PostgreSQL schema, Flyway migrations, auth, blood-type/distance matching logic. |
-| **Sourn SAVOURN** | Frontend (Senior) | Next.js web portal (hospital/admin), API client, forms, Khmer/English i18n. |
-| **Moeun Nithvaraman** | PO (Senior) | `docs/po/` — PRD, briefs, prototypes, FRs, changelog. Co-PO with Nem Sothea. |
+| **Nem Sothea** | Tech Lead / Flutter + PO (Senior) | Architecture, Flutter mobile app, FCM push, GPS/maps, Android build & Play Store release. Reviews all PRs. Co-PO with Sourn SAVOURN. Also holds Security overlay and CI (`.github/workflows/`). |
+| **Moeun Nithvaraman** | Backend / Database (Senior) | Spring Boot API, PostgreSQL schema, Flyway migrations, auth, blood-type/distance matching logic. |
+| **Suon Pisey** | Frontend (Senior) | Next.js web portal (hospital/admin), API client, forms, Khmer/English i18n. |
+| **Sourn SAVOURN** | PO (Senior) | `docs/po/` — PRD, briefs, prototypes, FRs, changelog. Co-PO with Nem Sothea. |
 | **Oun Sreynich** | QA (Senior) | Test plan, e2e/integration tests, milestone acceptance, bug tracking. |
 
 > Note: original assignment says teams of 3; this team is 5 — confirm with the instructor.
@@ -110,6 +110,10 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 > `infra/` was removed. Tech Lead absorbs `docker-compose.yml`, CI (`.github/workflows/`), the deploy
 > runbook and the release. DoD tracking moved to QA and stays there — it is the only gate outside
 > Tech Lead. No deploy runbook exists yet; write one before M7. See `docs/team.md`.
+>
+> Amended 2026-08-17: three-way role rotation. Moeun Nithvaraman → Backend/Database,
+> Suon Pisey → Frontend (Next.js), Sourn SAVOURN → PO (co-PO with Nem Sothea).
+> Write scopes (R2) move with the roles; nothing else changes.
 
 ## 6. Course context
 

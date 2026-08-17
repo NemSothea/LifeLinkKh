@@ -22,6 +22,11 @@ FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
+# Docker sets HOSTNAME to the container ID, and the standalone server.js reads
+# `process.env.HOSTNAME || '0.0.0.0'` — so without this it binds to the container
+# ID alone. The published port still works, but 127.0.0.1 inside the container
+# does not, which is exactly what the compose healthcheck curls.
+ENV HOSTNAME=0.0.0.0
 # curl is required by the compose healthcheck, which runs inside this container.
 RUN apk add --no-cache curl
 # node:alpine already ships a non-root `node` user (uid 1000).

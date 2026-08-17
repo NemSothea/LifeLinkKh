@@ -3,14 +3,14 @@
 | Name | Primary role | Also | Owns (R2) |
 |------|--------------|------|-----------|
 | Nem Sothea | Tech Lead / Mobile | PO (co), Security | docs/tech-lead/, mobile/, architecture + ADRs, `docker-compose.yml`, CI (.github/workflows/), deploy runbook, Play Store release |
-| Suon Pisey | Fullstack (Backend/DB) | — | backend/, docs/fullstack/ (specs, API contract), PostgreSQL + Flyway |
-| Sourn SAVOURN | Fullstack (Frontend) | — | frontend/ (Next.js web portal), API client, i18n |
-| Moeun Nithvaraman | PO | — | docs/po/ (PRD, briefs, prototypes, FRs), changelog |
+| Moeun Nithvaraman | Fullstack (Backend/DB) | — | backend/, docs/fullstack/ (specs, API contract), PostgreSQL + Flyway |
+| Suon Pisey | Fullstack (Frontend) | — | frontend/ (Next.js web portal), API client, i18n |
+| Sourn SAVOURN | PO | — | docs/po/ (PRD, briefs, prototypes, FRs), changelog |
 | Oun Sreynich | QA | — | docs/qa/, test cases, bug registry, DoD sign-off |
 
 ## Role index (R2)
-- **PO** — product defs (docs/po/). Moeun primary; Tech Lead co-holds and drives in tooling.
-- **Fullstack** — backend/ + frontend/ + docs/fullstack/. Pisey (backend), Sourn (web).
+- **PO** — product defs (docs/po/). Sourn primary; Tech Lead co-holds and drives in tooling.
+- **Fullstack** — backend/ + frontend/ + docs/fullstack/. Moeun (backend), Pisey (web).
 - **Tech Lead** — docs/tech-lead/ (architecture, ADRs) + `docker-compose.yml` + CI + deploy runbook + release. Sothea.
 - **Security** — overlay on Tech Lead (docs/security/). Sothea.
 - **Mobile** — mobile/ + docs/mobile/. Sothea (Flutter).
@@ -25,5 +25,10 @@
 > relocated to the `docs/` root, because a decision register and a risk register belong to the project,
 > not to a role: [`docs/decisions.md`](decisions.md) (DEC-001..003) and [`docs/risks.md`](risks.md).
 > CR-DEVOPS records were not kept — recoverable from git history at `3e93e6b` if ever needed.
+
+> **Rotation 2026-08-17.** Three roles swapped hands: Moeun Nithvaraman took Backend/DB,
+> Suon Pisey took Frontend, Sourn SAVOURN took PO. Write scopes (R2) followed the roles.
+> Anything signed before this date was signed by the previous holder — check the date on a
+> sign-off before attributing it.
 
 > Original assignment says teams of 3; this team is 5 — confirm with instructor.
