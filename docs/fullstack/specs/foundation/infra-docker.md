@@ -35,7 +35,7 @@ Three services. No others at M2 — no cache, no reverse proxy, no mail catcher,
 | Setting | Value |
 |---|---|
 | Image | `postgres:16-alpine` — pin the minor at init |
-| Published port | `5432:5432`, bound to `127.0.0.1` only |
+| Published port | `5433:5432`, bound to `127.0.0.1` only — host side is 5433 because a host PostgreSQL install already owns 5432 and Docker fails the whole `up` rather than picking another port. Inside the network the DB is still `postgres:5432`. |
 | Volume | named volume `lifelink_pgdata` → `/var/lib/postgresql/data` |
 | Healthcheck | `pg_isready -U $POSTGRES_USER -d $POSTGRES_DB`, 5 s interval, 10 retries |
 | Env vars (names only) | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` |

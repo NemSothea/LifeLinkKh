@@ -100,7 +100,16 @@ Success looks like `✅ backend healthy` followed by a `flyway_schema_history` t
 the evidence QA signs the milestone against, so if it does not print, the run did not succeed —
 regardless of what the health line says.
 
-Ports, all on `127.0.0.1`: API `:8080` (context path `/api`), web `:3000`, postgres `:5432`.
+Ports, all on `127.0.0.1`: API `:8080` (context path `/api`), web `:3000`, postgres **`:5433`**.
+
+Postgres is deliberately not on 5432. A host PostgreSQL install (`/Library/PostgreSQL/17` on this
+Mac) already listens there, and Docker fails the whole `up` with `bind: address already in use`
+rather than picking another port. The container still listens on 5432 internally and the backend
+reaches it at `postgres:5432` over the compose network — only host clients use 5433:
+
+```bash
+psql -h 127.0.0.1 -p 5433 -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+```
 
 Tear down with `docker compose down`. Add `-v` only if you want the database wiped — that drops the
 `lifelink_pgdata` volume and every row in it.

@@ -71,8 +71,9 @@ docs/               Capybara multi-role docs (see below)
 
 ```bash
 cp .env.example .env       # then fill it in — see the runbook. NEVER commit .env
-bash scripts/dev-up.sh     # → API on :8080, web on :3000, postgres on :5432
-                           #   all bound to 127.0.0.1
+bash scripts/dev-up.sh     # → API on :8080, web on :3000, postgres on :5433
+                           #   all bound to 127.0.0.1 (5433, not 5432: a host
+                           #   PostgreSQL install already owns 5432)
 
 # Flutter app (device or emulator, against the local API)
 cd mobile

@@ -19,6 +19,14 @@
 
     <properties>
         <java.version>21</java.version>
+        <!-- Docker Engine API version Testcontainers talks. docker-java 3.4.2
+             defaults to 1.32, which Docker Engine 29 rejects with HTTP 400 —
+             it reports MinAPIVersion 1.40. Testcontainers reads that 400 as
+             "no Docker here" and *skips* the schema tests instead of failing,
+             so the build stays green while testing nothing. 1.44 is Docker
+             25.0 and up. Override for an older engine:
+             ./mvnw verify -Ddocker.api.version=1.43 -->
+        <docker.api.version>1.44</docker.api.version>
     </properties>
 
     <dependencies>
@@ -109,6 +117,19 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- `api.version` is read by docker-java, which Testcontainers uses to
+                 reach the daemon. It has to be set on the forked test JVM, not the
+                 Maven one. argLine is deliberately not set here — JaCoCo owns it. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <api.version>${docker.api.version}</api.version>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
 
             <!-- Enforces the coverage floor from docs/qa/test-strategy.md: 70% line
