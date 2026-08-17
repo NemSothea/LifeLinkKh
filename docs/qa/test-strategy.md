@@ -125,3 +125,70 @@ indistinguishable from a skipped one.
 | Milestone | Date | Evidence | Verdict |
 |---|---|---|---|
 | M2 | — | pending: `docker compose up`, Flyway history, 7 tables in `psql` | **not signed — Docker absent, `docker-compose.yml` absent** |
+| M2 | 2026-08-17 | See [M2 evidence](#m2-evidence-2026-08-17) below | **signed — pass** |
+
+### M2 evidence (2026-08-17)
+
+M2's deliverable (root `CLAUDE.md` §4): Spring Boot init with PostgreSQL + Flyway, Flutter and
+Next.js init, and `docker-compose up` running backend + web + db. No FR is in scope — M2 is
+foundation, so there is nothing to test at the acceptance layer and no manual push or GPS result to
+record. Every line below was run on 2026-08-17 against Docker Engine 29.7.2 / Compose v5.3.1.
+
+**1. Stack comes up — `bash scripts/dev-up.sh`**
+
+```
+backend    Up 25 seconds (healthy)   127.0.0.1:8080->8080/tcp
+postgres   Up 3 minutes (healthy)    127.0.0.1:5433->5432/tcp
+web        Up 20 seconds (healthy)   127.0.0.1:3000->3000/tcp
+```
+
+All three healthy. This is the first run in which `web` reached `healthy` at all.
+
+**2. Migration applied — `flyway_schema_history`**
+
+```
+ version | description | success
+---------+-------------+---------
+ 1       | init        | t
+```
+
+**3. Schema is real — `psql \dt`**
+
+Eight relations: the seven domain tables (`users`, `donor_profiles`, `hospitals`, `blood_requests`,
+`request_matches`, `donations`, `blood_compatibility`) plus `flyway_schema_history`.
+`select count(*) from blood_compatibility` returns **27**, the full ABO/Rh matrix.
+
+**4. Endpoints answer**
+
+| Request | Result |
+|---|---|
+| `GET :8080/api/health` | `200` `{"status":"UP"}` |
+| `GET :3000/km` | `200` |
+| `GET :3000/` | `307` → `http://127.0.0.1:3000/km` |
+
+**5. Backend gate — `cd backend && ./mvnw verify`**
+
+```
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0 -- in kh.lifelink.api.schema.SchemaIntegrationTest
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0
+All coverage checks have been met.
+BUILD SUCCESS
+```
+
+`Skipped: 0` on `SchemaIntegrationTest` is the line that matters. It is annotated
+`@Testcontainers(disabledWithoutDocker = true)`, so before today it skipped and the build still
+printed `BUILD SUCCESS` — which is how the broken `users.language` column reached `main`. This is
+the first local run where the schema was actually asserted.
+
+**6. All three clients — `bash scripts/verify-all.sh`**
+
+Ends `All checks passed.` — backend as above; web lint + typecheck + 6 vitest tests; Flutter
+`No issues found!` and 4 tests.
+
+**Three defects were found and fixed during this verification**, logged as `BUG-INFRA-001`,
+`BUG-WEB-002` and `BUG-BUILD-003` in [`bugs/`](bugs/) and closed in `d1f5efd`. All six checks above
+were re-run after the fixes; nothing here is pre-fix output.
+
+**Verdict: pass.** Caveat carried forward, not blocking M2: `disabledWithoutDocker = true` still
+means a developer without Docker gets a green build that proves nothing. CI covers it, but the
+local signal is misleading — see the Tech Lead decision noted in `BUG-BUILD-003`.
