@@ -43,6 +43,14 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      # M3 auth. The first two have no fallback on purpose: application.yml
+      # declares them without defaults, so a missing one exits the container at
+      # startup instead of running with a known signing key or an unpinned token
+      # audience. Same rule as the datasource credentials above.
+      JWT_SECRET: ${JWT_SECRET}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      # Only the local web portal. Never '*' — see SecurityConfig.
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:

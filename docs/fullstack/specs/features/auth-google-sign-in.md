@@ -197,13 +197,29 @@ merging.
 | Env var | Purpose | Absent → |
 |---|---|---|
 | `FIREBASE_PROJECT_ID` | The `aud`/`iss` value to pin | **Startup fails** |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Admin SDK service account | **Startup fails** |
 | `JWT_SECRET` | HS256 signing key | **Startup fails** |
-| `CORS_ALLOWED_ORIGINS` | Portal origin allow-list | **Startup fails** |
+| `CORS_ALLOWED_ORIGINS` | Portal origin allow-list | Defaults to the local portal origin in compose only |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Admin SDK service account | App boots; `POST /auth/google` answers **503 `AUTH_PROVIDER_UNCONFIGURED`** |
 
-All four fail startup when unset. None gets a development default. A default here is a control that
+No development default on a secret or on the pinned audience. A default there is a control that
 silently disables itself in the one environment where it matters — and `.env` is gitignored, so a
-missing variable is a normal, expected condition to hit.
+missing variable is a normal condition to hit, not an edge case.
+
+**The credentials row is deliberately different, and the split is the point.** `FIREBASE_PROJECT_ID`
+is configuration we know today, so a missing one is a mistake and should stop the process.
+The service-account JSON is a file that *cannot* exist yet — the Firebase project has not been
+created. Failing startup on it would take the whole API down, including the endpoints that have
+nothing to do with sign-in, for a blocker already tracked elsewhere.
+
+So the SDK is initialised once, its outcome recorded, and sign-in reports 503 while everything else
+serves normally. 503 rather than 500 because nothing is broken: the deployment is incomplete, and an
+operator reading that line should add credentials, not debug code.
+
+What this does **not** do is install a stub verifier that accepts tokens when unconfigured. That is
+the footgun this arrangement exists to avoid; mocking lives in `src/test/` only.
+
+`JWT_LIFETIME` (default `PT1H`) and the two `AUTH_RATE_LIMIT_*` values do carry defaults — they are
+tuning, not controls, and a wrong value degrades service rather than removing a protection.
 
 The service-account JSON is never committed. `.gitignore` and `docs/tech-lead/local-development.md`
 both need a line for it.
