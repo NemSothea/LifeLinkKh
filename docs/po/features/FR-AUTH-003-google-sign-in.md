@@ -31,19 +31,43 @@ the identity proof, so there is no code to generate, expire, rate-limit, or prot
 Full rationale and rejected alternatives in [ADR 0002](../../tech-lead/adr/0002-auth-google-sign-in.md).
 
 ## Scope
-**In:** <to be filled after prototyping — see ../prototypes/mobile/AUTH-google-signin/>
+Finalized 2026-08-17 from [`AUTH-google-signin`](../prototypes/mobile/AUTH-google-signin/), which is
+now frozen for the M3 build.
+
+**In:**
+- A welcome screen stating, before any account picker appears, what the app does with the account.
+  One line. No skip, no guest mode — every downstream feature needs a known user.
+- **Continue with Google** → the system account sheet (rendered by Play Services, not by us) →
+  a role screen. Three taps from cold start to a usable account.
+- Role selection as two cards, worded by intent ("I want to donate" / "I need blood for someone"),
+  not by the database values `DONOR` / `REQUESTER`. `HOSPITAL` and `ADMIN` never appear.
+- Account creation on first sign-in, from the verified ID token alone.
+- A session that survives app restarts, and a sign-out that ends it.
+- Cancelling the Google sheet returns to the welcome screen with no account and no error dialog.
 
 **Out:**
+- Role *change* after sign-up. The screen says "You can change this later" because that is the
+  intended product, but the settings path that delivers it is not in M3 and has no FR yet. Do not
+  read the wireframe caption as scope.
+- Terms and privacy acceptance — deferred with `FR-SECURITY-001` (`docs/scope.md`), not an oversight.
+- Showing the user's email back to them. Google gives it to us; there is no reason to display it.
 - Phone-number verification. Phone becomes an unverified profile field (see FR-DONOR-001).
 - Hospital and admin portal sign-in, which may not use Google at all — that is `FR-AUTH-004`, not a
   change to this FR. See the portal sign-in question in
   `docs/fullstack/specs/foundation/frontend-nextjs.md`.
 
 ## Acceptance criteria
-Criteria live in `../prd.md` under FR-01 and are not duplicated here. Finalize this section after
-the prototype settles the flow.
+The five product criteria live in `../prd.md` under FR-01 and are not duplicated here. What follows
+is what the prototype settled and the PRD does not say — these are additional, not a replacement.
 
-- [ ] <to be filled after prototyping>
+- [ ] Cold start to a usable account is **three taps**: Continue with Google → account → role.
+- [ ] The welcome screen states what the account is used for *before* the picker opens, in Khmer and
+      English (`FR-GLOBAL-001`).
+- [ ] Role is chosen on the sign-in flow, not deferred to a settings screen — it decides which home
+      screen the user lands on, so routing cannot complete without it.
+- [ ] Cancelling the Google sheet leaves **no** partial account and shows **no** error dialog. A
+      cancel is a choice, not a failure (`prd.md` §7).
+- [ ] A returning user reaches their home screen without seeing the role screen again.
 
 ### Criteria added by security review (do not defer to prototyping)
 `SEC-REVIEW-001` finding F2 — these are controls, not UX, so they are stated here rather than waiting

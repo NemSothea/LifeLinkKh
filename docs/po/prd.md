@@ -145,10 +145,17 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 - As a donor, I want to set an availability toggle, so that I'm not contacted when I can't donate.
 
 **Acceptance Criteria:**
-- [ ] Required fields: name, blood type (A/B/AB/O × +/−), location (GPS or district), phone.
+- [ ] Required fields: name, blood type (A/B/AB/O × +/−), location (district required, GPS optional).
 - [ ] Optional: last donation date.
 - [ ] Availability toggle defaults to available.
 - [ ] Profile is editable at any time.
+
+> **Amended 2026-08-17** — **phone removed from the required fields**, and "GPS or district" tightened
+> to "district required, GPS optional". Phone went unverified the moment ADR 0002 replaced phone OTP
+> with Google Sign-In, and M3–M4 coordination runs over FCM push rather than phone calls, so the app
+> never reads it. The location wording predates [ADR 0003](../tech-lead/adr/0003-donor-location-precision.md),
+> which made district the required half and coordinates the optional ranking hint. Rationale and the
+> carried reachability risk: `features/FR-DONOR-001-donor-profile.md` § Conflict with the PRD.
 
 ### FR-03: Eligibility Check (56-day cooldown)
 

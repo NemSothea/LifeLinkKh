@@ -2,6 +2,33 @@
 
 Every new/changed FR gets an entry. What + Why are mandatory.
 
+## 2026-08-17 — the two M3 FRs finalized; phone dropped from the donor profile
+- **What:** `FR-AUTH-003` and `FR-DONOR-001` had `<to be filled after prototyping>` in both Scope and
+  Acceptance criteria. Both are now filled from their frozen prototypes, so M3 has something
+  signable. `FR-DONOR-001`'s stale location blocker is struck — ADR 0003 answered it on 2026-08-07.
+  **Phone number is removed** from `FR-DONOR-001`'s scope and from `prd.md` FR-02's required fields,
+  and FR-02's "GPS or district" is tightened to "district required, GPS optional".
+  **Why:** Definition of Done step 1 is a signed spec, and a placeholder cannot be signed — this was
+  the actual thing blocking M3, not any code. Phone went unverified the moment ADR 0002 replaced
+  phone OTP with Google Sign-In, and M3–M4 coordination runs over FCM push, so the app would never
+  read the field. Collecting it would be inventing data.
+  **Flagged:** dropping phone means nothing guarantees a donor is reachable by voice — the carried
+  risk already named in `FR-AUTH-003`. If `FR-REQUEST-002`'s accept flow needs a callable number,
+  phone comes back as a lazy step at acceptance only (ADR 0002, mitigation 2), as a **new FR**.
+  Do not reopen `FR-DONOR-001` for it.
+
+## 2026-08-17 — Phnom Penh district list written
+- **What:** New [`reference/phnom-penh-districts.md`](reference/phnom-penh-districts.md) — 14 districts
+  with Khmer labels and national geocodes, plus the seeding rules (own Flyway migration, Khmer as the
+  primary label, sorted by name not code, no "other" option in the pilot).
+  **Why:** `district_code` is the required half of a donor's location and the only location another
+  user ever sees (ADR 0003), and the list behind that dropdown did not exist anywhere. The wireframe
+  did not need it; the build cannot start without it.
+  **Flagged:** the codes for the five districts renumbered after the 2019 reorganisation
+  (`1210`–`1214`) are **unverified** and marked ⚠️ in the file. They must be checked against an
+  official NCDD/MoI list before the seed migration is written. `district_code` lands in
+  `donor_profiles` rows, so fixing it after donors exist is a data migration, not an edit.
+
 ## 2026-08-07 — scope cut to a buildable core (DEC-004)
 - **What:** Eight FRs deferred (`FR-REQUEST-003/004/005`, `FR-MATCH-002`, `FR-NOTIFY-002`,
   `FR-PORTAL-002`, `FR-GLOBAL-002`, `FR-SECURITY-001`), each with a banner and a per-FR reason.
