@@ -19,6 +19,32 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(ErrorResponse.of("VALIDATION_FAILED", detail));
     }
 
+    /**
+     * The only path by which a message we wrote reaches a client. Not logged at error level — a 404
+     * or a rejected blood type is the API working, not a fault.
+     */
+    @ExceptionHandler(ApiException.class)
+    ResponseEntity<ErrorResponse> onApiException(ApiException ex) {
+        return ResponseEntity.status(ex.getStatus())
+                .body(ErrorResponse.of(ex.getCode(), ex.getMessage()));
+    }
+
+    /**
+     * A rejected write that violates a database constraint — the district foreign key is the one
+     * that fires in this build. The constraint name and the SQL are deliberately not returned; they
+     * describe the server (TM-AUTH-001 I2).
+     */
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    ResponseEntity<ErrorResponse> onConstraintViolation(
+            org.springframework.dao.DataIntegrityViolationException ex) {
+        org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class)
+                .warn("Constraint violation on write", ex);
+        return ResponseEntity.unprocessableEntity()
+                .body(
+                        ErrorResponse.of(
+                                "CONSTRAINT_VIOLATED", "A referenced value does not exist."));
+    }
+
     @ExceptionHandler(Exception.class)
     ResponseEntity<ErrorResponse> onUnexpected(Exception ex) {
         // The cause is logged, never returned — an error body must not describe the server.

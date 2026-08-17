@@ -26,6 +26,27 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: false
 
+lifelink:
+  # No defaults on the three below, following the same rule as the datasource
+  # credentials above: the value must be supplied by the environment, and a
+  # missing one fails startup. A development default is a control that silently
+  # disables itself in the environment where it matters.
+  firebase:
+    project-id: ${FIREBASE_PROJECT_ID}
+  jwt:
+    secret: ${JWT_SECRET}
+    # Short-lived, per the ASVS baseline. The exact value and what expiry does to
+    # a signed-in donor are an open Tech Lead decision recorded in
+    # docs/fullstack/specs/features/auth-google-sign-in.md — this is a starting
+    # point, not a settled one.
+    lifetime: ${JWT_LIFETIME:PT1H}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  auth:
+    rate-limit:
+      max-attempts: ${AUTH_RATE_LIMIT_MAX_ATTEMPTS:20}
+      window: ${AUTH_RATE_LIMIT_WINDOW:PT1M}
+
 server:
   servlet:
     context-path: /api

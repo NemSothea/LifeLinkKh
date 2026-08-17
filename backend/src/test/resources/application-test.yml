@@ -1,0 +1,19 @@
+# Test-only values for the properties application.yml deliberately leaves without
+# defaults. Additive on top of application.yml (profile files win), so the main
+# configuration is still the one under test — nothing here shadows it.
+#
+# These are not secrets and are not credentials for anything: the Firebase project
+# id is never contacted (GoogleTokenVerifier is mocked in tests), and the JWT
+# secret only has to be 32 bytes so HS256 accepts it.
+lifelink:
+  firebase:
+    project-id: test-project
+  jwt:
+    secret: test-secret-that-is-long-enough-for-hs256
+    lifetime: PT1H
+  cors:
+    allowed-origins: http://localhost:3000
+  auth:
+    rate-limit:
+      max-attempts: 20
+      window: PT1M

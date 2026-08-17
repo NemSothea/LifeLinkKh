@@ -23,6 +23,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  */
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
+@org.springframework.test.context.ActiveProfiles("test")
 class SchemaIntegrationTest {
 
     @Container @ServiceConnection
@@ -31,15 +32,15 @@ class SchemaIntegrationTest {
     @Autowired private JdbcTemplate jdbc;
 
     @Test
-    void flywayAppliesExactlyOneMigration() {
+    void flywayAppliesEveryMigration() {
         Integer applied =
                 jdbc.queryForObject(
                         "SELECT count(*) FROM flyway_schema_history WHERE success", Integer.class);
-        assertThat(applied).isEqualTo(1);
+        assertThat(applied).isEqualTo(2);
     }
 
     @Test
-    void allSevenTablesExist() {
+    void allEightTablesExist() {
         List<String> tables =
                 jdbc.queryForList(
                         "SELECT table_name FROM information_schema.tables"
@@ -53,7 +54,44 @@ class SchemaIntegrationTest {
                         "blood_requests",
                         "request_matches",
                         "donations",
-                        "blood_compatibility");
+                        "blood_compatibility",
+                        "districts");
+    }
+
+    /**
+     * V2 seeds nothing on purpose — five of the fourteen district codes are still unverified and
+     * docs/po/reference/phnom-penh-districts.md forbids seeding while any are. Asserted rather than
+     * assumed, so that whoever writes V3__seed_districts.sql sees this test fail and updates it
+     * deliberately instead of discovering the rule afterwards.
+     */
+    @Test
+    void districtsIsCreatedButDeliberatelyUnseeded() {
+        // Matched on the national geocode pattern rather than on count(*), because other tests in
+        // this class insert their own synthetic districts into the shared container. What is being
+        // asserted is that the *migration* seeded nothing, not that the table is untouched.
+        Integer seeded =
+                jdbc.queryForObject(
+                        "SELECT count(*) FROM districts WHERE code ~ '^12[0-9]{2}$'",
+                        Integer.class);
+        assertThat(seeded).isZero();
+    }
+
+    /**
+     * Without this foreign key {@code district_code} is free text that accepts 'toul kork', 'TK'
+     * and 'Toul Kork' as three different districts, and a district-filtered match query silently
+     * returns nothing.
+     */
+    @Test
+    void donorProfileDistrictMustExist() {
+        jdbc.update("INSERT INTO users (firebase_uid, role) VALUES ('uid-fk-test', 'DONOR')");
+        assertThatThrownBy(
+                        () ->
+                                jdbc.update(
+                                        "INSERT INTO donor_profiles"
+                                                + " (user_id, full_name, blood_type, district_code)"
+                                                + " SELECT id, 'Test Donor', 'A+', 'no-such-code' FROM users"
+                                                + " WHERE firebase_uid = 'uid-fk-test'"))
+                .hasMessageContaining("donor_profiles_district_fk");
     }
 
     /**
@@ -91,12 +129,18 @@ class SchemaIntegrationTest {
     @Test
     void bloodTypeCheckConstraintRejectsAnInvalidType() {
         jdbc.update("INSERT INTO users (firebase_uid, role) VALUES ('uid-check-test', 'DONOR')");
+        // The district has to exist now, or this fails on the V2 foreign key and proves the wrong
+        // thing. A synthetic code, not a real geocode: districtsIsCreatedButDeliberatelyUnseeded
+        // asserts no real one exists, and these tests share one container.
+        jdbc.update(
+                "INSERT INTO districts (code, name_km, name_en)"
+                        + " VALUES ('test-dist', 'តេស្ត', 'Test') ON CONFLICT DO NOTHING");
         assertThatThrownBy(
                         () ->
                                 jdbc.update(
                                         "INSERT INTO donor_profiles"
                                                 + " (user_id, full_name, blood_type, district_code)"
-                                                + " SELECT id, 'Test Donor', 'C+', '1201' FROM users"
+                                                + " SELECT id, 'Test Donor', 'C+', 'test-dist' FROM users"
                                                 + " WHERE firebase_uid = 'uid-check-test'"))
                 .hasMessageContaining("donor_profiles_blood_type_check");
     }

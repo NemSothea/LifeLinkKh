@@ -1,29 +1,101 @@
 package kh.lifelink.api.config;
 
+import java.util.List;
+import kh.lifelink.api.auth.JwtAuthFilter;
+import kh.lifelink.api.common.error.ErrorResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
- * M2 has NO authentication. Everything is permitted.
+ * M3 replaces M2's {@code anyRequest().permitAll()} wholesale, as that class said it would.
  *
- * <p>This class exists only so that M3 tightens an existing configuration instead of introducing
- * security into a running system. It MUST NOT reach a deployed environment — docker-compose is
- * local-only, and the M3 spec replaces this file wholesale.
- *
- * <p>CSRF is disabled because this is a stateless REST API consumed by a Flutter app and a Next.js
- * server, not a session-cookie form app.
+ * <p><strong>Deny by default.</strong> Three things are permitted without a token and everything
+ * else is authenticated — written as {@code anyRequest().authenticated()}, never as an enumerated
+ * deny-list. An endpoint added later must be deliberately opened rather than accidentally left
+ * open, because that mistake fails open and every existing test still passes.
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final JwtAuthFilter jwtAuthFilter;
+    private final List<String> allowedOrigins;
+    private final com.fasterxml.jackson.databind.ObjectMapper json;
+
+    SecurityConfig(
+            JwtAuthFilter jwtAuthFilter,
+            @Value("${lifelink.cors.allowed-origins}") List<String> allowedOrigins,
+            com.fasterxml.jackson.databind.ObjectMapper json) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.allowedOrigins = allowedOrigins;
+        this.json = json;
+    }
+
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http.csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+        return http
+                // CSRF is irrelevant to a stateless bearer-token API with no cookie to forge — and
+                // now disabled for that stated reason rather than by inheritance from M2.
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // No JSESSIONID, no server-side session. The JWT is the session.
+                .sessionManagement(
+                        session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(
+                        auth ->
+                                auth.requestMatchers(HttpMethod.OPTIONS, "/**")
+                                        .permitAll()
+                                        .requestMatchers(HttpMethod.GET, "/health")
+                                        .permitAll()
+                                        .requestMatchers(HttpMethod.POST, "/auth/google")
+                                        .permitAll()
+                                        .anyRequest()
+                                        .authenticated())
+                .exceptionHandling(
+                        handling ->
+                                handling.authenticationEntryPoint(
+                                        (request, response, ex) -> {
+                                            // Same envelope as every other error, serialised the
+                                            // same way. A caller cannot tell "no token" from "bad
+                                            // token", which is deliberate.
+                                            response.setStatus(401);
+                                            response.setContentType(
+                                                    MediaType.APPLICATION_JSON_VALUE);
+                                            json.writeValue(
+                                                    response.getOutputStream(),
+                                                    ErrorResponse.of(
+                                                            "UNAUTHENTICATED",
+                                                            "Not authenticated."));
+                                        }))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
+    }
+
+    /**
+     * An explicit allow-list (ASVS baseline, API row). Never {@code *} — which would also be
+     * incompatible with credentialed requests, so a wildcard here is both a finding and a bug.
+     */
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(allowedOrigins);
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }

@@ -61,6 +61,36 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Verifies Google ID tokens. Deliberately not a hand-rolled JWT parse: the
+             Admin SDK pins RS256, fetches and caches Google's JWKS, honours key
+             rotation and checks exp/iat. Hand-rolling that is where TM-AUTH-001 T1
+             (algorithm confusion, alg:none) comes from. -->
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>9.4.3</version>
+        </dependency>
+
+        <!-- Our own session JWT. Separate concern from the above: that library reads
+             Google's tokens, this one issues ours. -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.6</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
