@@ -78,16 +78,37 @@ public class AuthService {
     /** Writes the caller's FCM token. The target is the JWT subject, never a body field. */
     @Transactional
     public void registerFcmToken(UUID userId, String fcmToken) {
-        User user =
-                users.findById(userId)
-                        .orElseThrow(
-                                () ->
-                                        ApiException.unauthorized(
-                                                "INVALID_TOKEN", "Not authenticated."));
+        User user = requireCaller(userId);
         // Idempotent by nature: the Firebase SDK rotates tokens on its own schedule and the client
         // re-posts whatever it currently holds, so the same value twice is a no-op, not an error.
         user.setFcmToken(fcmToken);
         log.info("fcm token registered user={}", userId);
+    }
+
+    /**
+     * Clears the caller's FCM token at sign-out. Without this the session ends on the device while
+     * the server keeps pushing urgent requests to it — the alert reaches whoever now holds the
+     * phone (I2) and, worse, counts as a notified donor who will never answer.
+     *
+     * <p>Idempotent: signing out twice, or with no token ever registered, is a 204 either way. A
+     * 404 would leak whether a row had a token, and there is nothing the client could do
+     * differently.
+     */
+    @Transactional
+    public void clearFcmToken(UUID userId) {
+        User user = requireCaller(userId);
+        user.setFcmToken(null);
+        log.info("fcm token cleared user={}", userId);
+    }
+
+    /**
+     * The JWT verified, but its subject has no row — the account was deleted mid-session. 401, not
+     * 404: the token is no longer a valid credential, which is what the client has to act on.
+     */
+    private User requireCaller(UUID userId) {
+        return users.findById(userId)
+                .orElseThrow(
+                        () -> ApiException.unauthorized("INVALID_TOKEN", "Not authenticated."));
     }
 
     private AuthResponse respond(User user, String displayName, boolean isNewAccount) {

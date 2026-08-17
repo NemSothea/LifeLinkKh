@@ -91,6 +91,21 @@ paths:
       responses:
         '204': { description: Stored }
         '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [auth]
+      summary: Clear this device's FCM token at sign-out
+      description: |
+        Sign-out half that has to happen server-side. The session JWT is disposed of by the
+        client — there is no server-side revocation (ADR 0007) — but the FCM token must be
+        cleared here, or a signed-out device keeps receiving urgent-request pushes: an alert
+        to whoever now holds the phone, and a notified donor who will never answer.
+
+        No body. The row cleared is the JWT subject's, never a body field. Idempotent —
+        signing out twice, or with no token ever registered, is 204 either way. A 404 would
+        leak whether a row had a token and there is nothing the client could do differently.
+      responses:
+        '204': { description: Cleared, or already empty }
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /donors/me:
     get:

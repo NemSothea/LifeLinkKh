@@ -8,6 +8,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,6 +21,7 @@ import kh.lifelink.api.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -171,7 +175,13 @@ class AuthServiceTest {
                 .isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
-    /** S2, at the seam. A token the verifier refuses never reaches the user table. */
+    /**
+     * S2 / TC-AUTH-001 case 3, at the seam. A genuine token minted for another Firebase project is
+     * the failure that looks like success: it verifies cryptographically, so only the {@code aud}
+     * and {@code iss} checks reject it. Those live in {@link FirebaseGoogleTokenVerifier} against
+     * the real SDK; here the contract asserted is that a refusal produces no account and no session
+     * at all.
+     */
     @Test
     void aTokenTheVerifierRejectsCreatesNoAccount() {
         when(verifier.verify("foreign-project-token"))
@@ -181,5 +191,134 @@ class AuthServiceTest {
                 .isInstanceOf(ApiException.class);
 
         verify(users, never()).save(any(User.class));
+    }
+
+    /**
+     * TC-AUTH-001 case 5 — the FCM token written belongs to the caller and to nobody else. The
+     * endpoint takes no user field, so this asserts the other half: a second user's row is
+     * untouched.
+     */
+    @Test
+    void registeringAnFcmTokenLeavesOtherUsersRowsAlone() {
+        UUID callerId = UUID.randomUUID();
+        User caller = new User();
+        User other = new User();
+        other.setFcmToken("fcm-other-device");
+        when(users.findById(callerId)).thenReturn(Optional.of(caller));
+
+        auth.registerFcmToken(callerId, "fcm-caller-device");
+
+        assertThat(caller.getFcmToken()).isEqualTo("fcm-caller-device");
+        assertThat(other.getFcmToken()).isEqualTo("fcm-other-device");
+    }
+
+    /** Sign-out. Clearing is what stops a signed-out device receiving urgent-request pushes. */
+    @Test
+    void clearingTheFcmTokenNullsTheCallersOwnRow() {
+        UUID callerId = UUID.randomUUID();
+        User caller = new User();
+        caller.setFcmToken("fcm-abc");
+        when(users.findById(callerId)).thenReturn(Optional.of(caller));
+
+        auth.clearFcmToken(callerId);
+
+        assertThat(caller.getFcmToken()).isNull();
+    }
+
+    /** Idempotent: signing out twice, or having never registered, is not an error. */
+    @Test
+    void clearingAnAlreadyEmptyFcmTokenIsNotAnError() {
+        UUID callerId = UUID.randomUUID();
+        User caller = new User();
+        when(users.findById(callerId)).thenReturn(Optional.of(caller));
+
+        auth.clearFcmToken(callerId);
+
+        assertThat(caller.getFcmToken()).isNull();
+    }
+
+    @Test
+    void clearingTheFcmTokenForAnUnknownSubjectIsUnauthorized() {
+        UUID unknown = UUID.randomUUID();
+        when(users.findById(unknown)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> auth.clearFcmToken(unknown))
+                .isInstanceOf(ApiException.class)
+                .extracting(ex -> ((ApiException) ex).getStatus())
+                .isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    /**
+     * I2 / TC-AUTH-001 case 10, and the one non-negotiable test that had no coverage at all.
+     *
+     * <p>QA's version of this case greps the deployed logs by hand after running the other cases.
+     * That catches a leak once, on one machine, after someone remembers to look. This runs every
+     * build instead, and it is written as "nothing sensitive appears" rather than "these lines look
+     * right", because the leak that actually happens is not a deliberate {@code log.info(token)} —
+     * it is a stack trace, a {@code toString()} on a DTO, or a helpful new log line added six
+     * months from now by someone who has never read TM-AUTH-001.
+     *
+     * <p>Every logging path in this service is exercised: returning sign-in, new sign-up, rejected
+     * role, refused token, FCM register, FCM clear.
+     */
+    @Test
+    void noAuthLogLineEverContainsATokenOrAnEmail() {
+        ListAppender<ILoggingEvent> captured = new ListAppender<>();
+        captured.start();
+        Logger authLogger = (Logger) LoggerFactory.getLogger(AuthService.class);
+        authLogger.addAppender(captured);
+
+        String idToken = "eyJhbGciOiJSUzI1NiJ9.super-secret-google-id-token.sig";
+        String email = "donor@example.com";
+        String fcm = "fcm-device-capability-token";
+        UUID callerId = UUID.randomUUID();
+
+        try {
+            when(verifier.verify(idToken))
+                    .thenReturn(new GoogleTokenVerifier.VerifiedIdentity(UID, email));
+            when(users.findById(callerId)).thenReturn(Optional.of(existingUser("DONOR")));
+
+            // Returning sign-in, then a fresh sign-up — display name carries the email, which is
+            // the realistic shape of a Google profile and the value most likely to be logged.
+            when(users.findByFirebaseUid(UID)).thenReturn(Optional.of(existingUser("DONOR")));
+            String issuedJwt = auth.signIn(idToken, null).token();
+
+            when(users.findByFirebaseUid(UID)).thenReturn(Optional.empty());
+            auth.signIn(idToken, "DONOR");
+
+            assertThatThrownBy(() -> auth.signIn(idToken, "ADMIN"))
+                    .isInstanceOf(ApiException.class);
+
+            when(verifier.verify("bad-token"))
+                    .thenThrow(ApiException.unauthorized("INVALID_ID_TOKEN", "Sign-in failed."));
+            assertThatThrownBy(() -> auth.signIn("bad-token", "DONOR"))
+                    .isInstanceOf(ApiException.class);
+
+            auth.registerFcmToken(callerId, fcm);
+            auth.clearFcmToken(callerId);
+
+            assertThat(captured.list).isNotEmpty();
+            for (ILoggingEvent event : captured.list) {
+                String line = event.getFormattedMessage();
+                assertThat(line)
+                        .as("log line must not carry the Google ID token: %s", line)
+                        .doesNotContain(idToken)
+                        .as("log line must not carry our session JWT: %s", line)
+                        .doesNotContain(issuedJwt)
+                        .as("log line must not carry an email: %s", line)
+                        .doesNotContain(email)
+                        .as("log line must not carry an FCM token: %s", line)
+                        .doesNotContain(fcm);
+                // A truncated secret is still a secret, and prefixing is how "safe" logging is
+                // usually attempted. 12 characters of a JWT header is not identifying, so the
+                // window starts past it.
+                assertThat(line)
+                        .as("log line must not carry a fragment of the ID token: %s", line)
+                        .doesNotContain(idToken.substring(12, 32));
+            }
+        } finally {
+            authLogger.detachAppender(captured);
+            captured.stop();
+        }
     }
 }

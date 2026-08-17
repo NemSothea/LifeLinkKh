@@ -22,6 +22,7 @@ Base URL `/api`. All responses JSON. All errors use the shape in "Errors" below.
 | GET  | `/health` | Liveness. No auth by design | — | — | M2 |
 | POST | `/auth/google` | Exchange a Google ID token for our JWT; create the account on first sign-in | none | FR-AUTH-003 | M3 |
 | POST | `/auth/fcm-token` | Register/refresh this device's FCM token | JWT | FR-NOTIFY-001 | M3 |
+| DELETE | `/auth/fcm-token` | Sign-out: stop pushing to this device. No body | JWT | FR-AUTH-003, FR-NOTIFY-001 | M3 |
 | GET  | `/donors/me` | Own donor profile + computed eligibility | JWT | FR-DONOR-001/002 | M3 |
 | PUT  | `/donors/me` | Create or update own donor profile | JWT | FR-DONOR-001 | M3 |
 | GET  | `/hospitals` | Hospital list for the request form dropdown | JWT | FR-REQUEST-001 | M4 |
