@@ -35,10 +35,10 @@ lifelink:
     project-id: ${FIREBASE_PROJECT_ID}
   jwt:
     secret: ${JWT_SECRET}
-    # Short-lived, per the ASVS baseline. The exact value and what expiry does to
-    # a signed-in donor are an open Tech Lead decision recorded in
-    # docs/fullstack/specs/features/auth-google-sign-in.md — this is a starting
-    # point, not a settled one.
+    # One hour, and that is now the decision rather than a placeholder: ADR 0007.
+    # Expiry is repaired client-side — the Flutter app re-authenticates silently
+    # through Firebase on a 401 and retries once. There is no refresh token and no
+    # revocation list, so this value IS the blast radius of a leaked JWT.
     lifetime: ${JWT_LIFETIME:PT1H}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS}

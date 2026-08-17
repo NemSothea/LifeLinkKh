@@ -108,18 +108,25 @@ Role changes are not a self-service operation in this build.
 | Signing | HS256, secret from an environment variable | No key distribution problem at this scale; the secret is the asset `TM-AUTH-001` lists |
 | Subject | internal `users.id` UUID | Not the Google `sub`. Our tokens address our identity space |
 | Claims | `sub`, `role`, `iat`, `exp` | Nothing else. No phone, no email, no name — a JWT is readable by anyone holding it |
-| Lifetime | short — pin the exact value with Tech Lead at sign-off | ASVS baseline: "signed, short-lived" |
+| Lifetime | **one hour** (`JWT_LIFETIME`, default `PT1H`) — settled 2026-08-17 by ADR 0007 | ASVS baseline: "signed, short-lived" |
 
-**Open, and deliberately not decided here:** the exact lifetime, and what happens when it expires.
+**Settled 2026-08-17 — [ADR 0007](../../../tech-lead/adr/0007-session-lifetime-and-expiry.md).**
+One hour. Expiry is repaired by the client re-authenticating silently through Firebase on a 401 and
+retrying once — the proposal below was accepted as written, with the client rules (single-flight
+re-auth, one retry, secure storage, `/auth/google` 401 is terminal) pinned in the ADR. No refresh
+table, no revocation list. The ADR also names **`DELETE /auth/fcm-token`** as owed before M3 sign-off:
+`FcmTokenRequest.fcmToken` is `@NotBlank`, so a signed-out device cannot currently stop receiving pushes.
+
+The original open question, kept for the reasoning: the exact lifetime, and what happens when it expires.
 A short lifetime with no refresh path means a donor is silently signed out — unacceptable against
 `FR-AUTH-003`'s "session persists across app restarts" and the PRD's "an emergency alert is never
 blocked by a login screen". A long lifetime with no revocation means a stolen token stays valid.
 
 The cheapest resolution that satisfies both: the Flutter client holds the Google refresh token via
 the Firebase SDK (which it already does) and silently re-calls `/auth/google` when our JWT expires.
-No refresh-token table, no rotation logic, no new endpoint. **This is a proposal for Tech Lead, not a
-decision.** Whatever is chosen must be written into ADR 0002 or a new ADR before the code merges,
-because "how does the session end" is exactly the kind of thing that gets decided by accident.
+No refresh-token table, no rotation logic, no new endpoint. **Accepted by Tech Lead as ADR 0007** —
+it is a decision now, not a proposal, which is the point: "how does the session end" is exactly the
+kind of thing that otherwise gets decided by accident.
 
 Sign-out (`FR-AUTH-003` criterion) is client-side token disposal plus clearing the FCM token
 server-side. With short-lived stateless JWTs there is no server-side revocation list, and adding one
@@ -252,7 +259,8 @@ second Firebase project for a test.
    time that blocks M3, and Google Sign-In fails *silently* without the fingerprint. Tech Lead's, and
    nothing here can be verified end-to-end until it exists. Unit tests against a mocked verifier can
    proceed in parallel.
-2. **JWT lifetime and expiry behaviour** — the open question above. Needs an ADR line before merge.
+2. ~~**JWT lifetime and expiry behaviour**~~ — cleared 2026-08-17 by ADR 0007. It leaves one piece of
+   backend work behind: `DELETE /auth/fcm-token`, so sign-out can stop the pushes.
 
 ## Sign-off required
 

@@ -1,5 +1,5 @@
 # ADR Index
-next: 0007
+next: 0008
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
@@ -9,3 +9,4 @@ next: 0007
 | 0004 | ABO/Rh compatibility lookup table | accepted | 2026-08-07 |
 | 0005 | Security verification targets OWASP ASVS Level 1 | accepted | 2026-08-10 |
 | 0006 | Flutter follows the course architecture; Riverpod 2.x with codegen | accepted | 2026-08-17 |
+| 0007 | Session JWT lives one hour; expiry repaired by silent re-authentication | accepted | 2026-08-17 |
