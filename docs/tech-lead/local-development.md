@@ -74,8 +74,19 @@ LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32
 
 `SPRING_PROFILES_ACTIVE=local` stays as shipped.
 
-Firebase (Auth + FCM) secrets are **not** needed before M3 and must not be added speculatively —
-see `docs/security/security-checklist.md`.
+Two more values are required from M3 onward, because `application.yml` declares them with no default
+and the backend container exits at startup without them:
+
+```
+JWT_SECRET=$(openssl rand -base64 32)   # at least 32 bytes — HS256 refuses a shorter key
+FIREBASE_PROJECT_ID=<from the Firebase console>
+```
+
+`JWT_SECRET` is per-developer and secret. `FIREBASE_PROJECT_ID` is not secret, but it must be the
+**real** project id: it is pinned as the `aud`/`iss` the backend accepts, so a wrong one means a token
+minted for somebody else's Firebase project would verify (`TM-AUTH-001` S2).
+
+`GOOGLE_APPLICATION_CREDENTIALS` is Step 5 — leave it commented out until the key file exists.
 
 ### Why `POSTGRES_DB` and `POSTGRES_USER` are written down and the password is not
 
@@ -138,6 +149,95 @@ Still seeing `Skipped: 6` means Testcontainers cannot reach the daemon — go ba
 
 ---
 
+## Step 5 — Firebase credentials (M3 onward)
+
+Until this step is done, `POST /api/auth/google` answers **503 `AUTH_PROVIDER_UNCONFIGURED`** and
+every other endpoint serves normally. That is the designed behaviour (see the auth build spec), not a
+fault to debug — the deployment is incomplete, and the fix is credentials, not code.
+
+Verify where you are before starting:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:8080/api/auth/google \
+  -H 'Content-Type: application/json' -d '{"idToken":"junk","role":"DONOR"}'
+```
+
+`503` means unconfigured. `401` means configured and the token was correctly rejected — that is the
+success signal at the end of this step.
+
+### 5a. Create the project and register the Android app
+
+1. Firebase console → new project. Note the **project id** (not the display name) → `FIREBASE_PROJECT_ID`.
+2. Authentication → Sign-in method → enable **Google**.
+3. Add an **Android** app with package name **`kh.lifelink.app`** (must match `applicationId`).
+4. Add the **debug SHA-1 fingerprint**:
+
+```bash
+cd mobile/android && ./gradlew signingReport
+```
+
+Take the SHA1 from the `debug` variant. **Google Sign-In fails silently without it** — no exception,
+no error dialog, the sign-in sheet simply returns nothing. This one costs teams a full day, and the
+symptom looks like a bug in your Flutter code.
+
+5. Download `google-services.json` → `mobile/android/app/google-services.json`. This file **is
+   committed on purpose**: it is client configuration, its Android API key is restricted by package
+   name plus the fingerprint above, and the CI release build needs it present. The `.gitignore` block
+   for keys carries a note saying so, so nobody "helpfully" ignores it later.
+
+A release SHA-1 is also needed before M7, from the upload keystore. Not now.
+
+### 5b. The service-account key — read this before downloading it
+
+Project settings → Service accounts → **Generate new private key**. The download is an RSA private key
+that can mint credentials for the entire Firebase project. Treat it like a password, not like config.
+
+```bash
+mv ~/Downloads/<project>-firebase-adminsdk-*.json secrets/firebase-service-account.json
+```
+
+`secrets/` is gitignored wholesale, and `*firebase-adminsdk*.json`, `*service-account*.json` and
+`*serviceAccount*.json` are ignored anywhere in the tree, so the file is invisible to git even if you
+drop it in the wrong directory. Confirm, rather than trust:
+
+```bash
+git status --porcelain -uall secrets/    # must list only secrets/README.md
+```
+
+**If a key ever reaches a commit, it is compromised.** Revoke it in the console (Service accounts →
+delete the key) and generate a new one. Removing the file in a later commit, or amending the commit,
+does not help: the object stays in the repository and in every clone and fork that already fetched it.
+
+Then point `.env` at it with an **absolute** path:
+
+```
+GOOGLE_APPLICATION_CREDENTIALS=/Users/you/Desktop/LifeLinkKh/secrets/firebase-service-account.json
+```
+
+### 5c. Bring the stack up with the key mounted
+
+```bash
+bash scripts/dev-up.sh
+```
+
+`dev-up.sh` reads that variable out of `.env`, checks the file exists, and adds
+`docker-compose.firebase.yml`, which bind-mounts it read-only at
+`/run/secrets/firebase-service-account.json`. You should see `🔑 Firebase service account will be
+mounted read-only`. Doing it by hand is the same thing:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.firebase.yml up -d
+```
+
+The mount lives in an overlay rather than in `docker-compose.yml` for one reason: a bind mount whose
+source is missing does not fail cleanly. Docker creates a **directory** at the source path, and the
+backend then tries to parse a directory as JSON. Keeping it opt-in means the everyday `up` cannot hit
+that, and the overlay aborts with a message instead of half-starting.
+
+Now re-run the `curl` from the top of this step. **`401`, not `503`**, is the proof.
+
+---
+
 ## The Flutter app
 
 Not a Compose service. It runs on a device or emulator and reaches the published host port:
@@ -164,6 +264,10 @@ Each of these has actually happened on this project.
 | Backend container exits right after start | Flyway ran before Postgres accepted connections | Already handled — `depends_on: condition: service_healthy`. If you edit Compose, keep it |
 | `npm ci` fails in the frontend image | Lockfile generated on macOS arm64; npm omits Linux-only optional packages (`@emnapi/*`, `@swc/helpers`) that a Linux image then demands | Already handled — the Dockerfile and CI both use `npm install`. Revisit if npm fixes cross-platform optional resolution |
 | `(could not query flyway_schema_history …)` | `${POSTGRES_USER}` expanded in the host shell, where Compose never exports it | Already handled — `dev-up.sh` expands it inside the container instead |
+| Backend container exits at startup with an env-var error | `JWT_SECRET` or `FIREBASE_PROJECT_ID` missing from `.env` | Add them (Step 2). No defaults exist on purpose — a default signing key is a control that disables itself |
+| `POST /auth/google` answers `503 AUTH_PROVIDER_UNCONFIGURED` | No service-account key mounted | Step 5. Expected before the Firebase project exists |
+| Google Sign-In returns nothing at all, no error | Debug SHA-1 not registered in the Firebase console | Step 5a. This failure is silent by design on Google's side |
+| `required variable GOOGLE_APPLICATION_CREDENTIALS is missing a value` | The firebase overlay was used without the variable set | Set it in `.env` as an absolute path, or drop the `-f docker-compose.firebase.yml` |
 
 ---
 

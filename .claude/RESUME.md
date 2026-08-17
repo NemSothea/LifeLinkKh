@@ -24,7 +24,48 @@ otherwise propose and hand back. Mine: `mobile/`, `docs/tech-lead/`, `docs/secur
 One persona per block. Personas disagree openly instead of silently picking a winner. Never claim a
 check, test or sign-off passed without showing its output.
 
-## Where the project stands (2026-08-10)
+## Current state — 2026-08-17, late session. **Read this section. Everything below it is history.**
+
+`main` is clean and pushed. M2 is signed off. **M3 is half built: the backend exists, the client does not.**
+
+Last five commits on `main`:
+`3a9b1f4` PO finalized the two M3 FRs (phone dropped, district list written) ·
+`c83d527` the two M3 build specs ·
+`55003c6` M3 backend — Google Sign-In, session JWT, donor profile ·
+`078f66c` the three M3 auth env vars into compose ·
+`1ac5579` Flutter rebuilt to the course architecture (`lib/src/`, ADR 0006).
+
+**What the M3 backend actually shipped** (`55003c6`): `POST /auth/google`, `POST /auth/fcm-token`,
+`PUT /donors/me`, `GET /donors/me`, `V2__districts.sql`, `JwtService` (HS256, claims `sub`/`role`/`iat`/`exp`),
+`SignInRateLimiter` (Bucket4j, per-IP), `EligibilityCalculator`, `FirebaseGoogleTokenVerifier`.
+11 auth/donor unit tests plus the schema tests.
+
+**The four gaps that still stand between here and M3 sign-off:**
+
+1. **Mobile has no M3 code at all.** `pubspec.yaml` carries no `firebase_core`, `google_sign_in`,
+   `firebase_messaging`, and no secure storage. Sign-in screen, donor profile form, router guard, FCM
+   registration, and the auth interceptor ADR 0007 now specifies are all unwritten. Biggest chunk left.
+2. **`SEC-REVIEW-002` is still unscheduled** against the implementation. R5 requires Security sign-off
+   and the backend merged without it.
+3. **QA gap, specific.** `TC-AUTH-001` lists six non-negotiable tests. `AuthServiceTest` has eleven
+   tests but **#6 is absent** — nothing asserts that no log line carries the ID token, the JWT, or an
+   email. #2 (a token whose `aud` is another Firebase project is rejected) is only covered indirectly,
+   by `aTokenTheVerifierRejectsCreatesNoAccount`.
+4. **The Firebase project does not exist.** Register the Android app, add the **debug SHA-1**
+   (Google Sign-In fails *silently* without it), produce the service-account JSON. Sothea's, external
+   lead time, and nothing in M3 verifies end-to-end until it lands. The backend answers
+   503 `AUTH_PROVIDER_UNCONFIGURED` in the meantime, by design.
+   **The plumbing for it is now in place** — `docs/tech-lead/local-development.md` Step 5 is the
+   procedure, `secrets/` plus three filename patterns are gitignored, `docker-compose.firebase.yml`
+   mounts the key read-only, and `dev-up.sh` adds that overlay by itself when `.env` names a key.
+   Success signal: `POST /api/auth/google` with a junk token answers **401 instead of 503**.
+
+**Closed this session:** ADR 0007 settles the JWT lifetime question the build spec left open —
+one hour, expiry repaired by silent Firebase re-auth plus a one-shot retry, no refresh table, no
+revocation list. It also names **`DELETE /auth/fcm-token`** as owed to Backend/DB before M3 sign-off:
+`FcmTokenRequest.fcmToken` is `@NotBlank`, so a signed-out device currently cannot stop receiving pushes.
+
+## History — where the project stood at 2026-08-10
 M2 merged to `main` (merge commit `1736157`, pushed):
 - `backend/` — Spring Boot 3.5.6 / Java 21, `V1__init.sql` with 7 tables + 27 ABO/Rh rows, Spotless,
   JaCoCo 70 %, Testcontainers. `./mvnw verify` green.
@@ -46,9 +87,9 @@ macOS-generated lockfile omits Linux-only optional deps.
 **Rule this proves:** until Docker is installed here, a green local `verify-all.sh` does not mean the
 schema is right. Only CI can say that.
 
-## Session of 2026-08-17 — M2 signed off. Read this section; the two below it are history.
+## History — M2 sign-off, earlier on 2026-08-17
 
-Branch `chore/role-rotation-2026-08-17`, three commits, **not merged, not pushed**:
+Branch `chore/role-rotation-2026-08-17`, three commits — **since merged into `main` as `430f83d`**:
 `ed2db08` role rotation docs · `d1f5efd` the three stack fixes · `8492425` QA evidence + bug registry.
 
 Steps 1 and 2 below both pass now. `docker compose ps` shows all three services `healthy`;
@@ -91,21 +132,27 @@ re-run it.
 | `README.md` | Node 20 → 22; removed the stale "directories are empty until M2" line |
 
 ## Resume here
-1. `bash scripts/dev-up.sh` — must end with `✅ backend healthy` **and** a printed
-   `flyway_schema_history` table. No table means it did not really succeed.
-2. `cd backend && ./mvnw verify` — the gate is `SchemaIntegrationTest` reporting **`Skipped: 0`**.
-   `BUILD SUCCESS` alone means nothing; it passes with Docker absent, which is exactly how
-   `users.language` shipped broken.
-3. QA (Oun Sreynich) records M2 evidence — `docs/qa/` still has **no milestone evidence file**.
-4. Then M3 — Google Sign-In + donor register + FCM token registration. Backend specs are not written
-   (`docs/fullstack/specs/features/` is empty).
+1. `bash scripts/verify-all.sh` — fastest true picture. The gate inside it is
+   `SchemaIntegrationTest` reporting **`Skipped: 0`**; `BUILD SUCCESS` alone means nothing, it passes
+   with Docker absent, which is exactly how `users.language` shipped broken.
+2. Pick one of the four gaps above. They are ordered by how much they unblock, not by size:
+   the Firebase project (4) is the only one with external lead time, so starting it early costs
+   nothing and starting it late stalls everything.
+3. The mobile M3 build (gap 1) is buildable and unit-testable **now**, against a mocked auth
+   surface — it does not have to wait for Firebase. Its contract is ADR 0007: secure storage, 401
+   triggers re-auth, single-flight, one retry, `/auth/google` 401 lands on the sign-in route.
+4. `DELETE /auth/fcm-token` (owed to Backend/DB per ADR 0007) is small and blocks sign-out being
+   correct. Cheap to clear alongside the QA test gap.
 
 ## Decisions still open
-1. ~~**Error-shape conflict**~~ — **closed 2026-08-15**, fix uncommitted. Openapi won per
-   `docs/fullstack/CLAUDE.md`.
-2. **ADRs owed** — next-intl, Riverpod, go_router (all now in the code).
-3. **Max notified donor count** — unset, blocks `FR-MATCH-001`.
-4. **Deploy runbook** — local half written (`docs/tech-lead/local-development.md`); the deploy half
+1. ~~**Error-shape conflict**~~ — **closed 2026-08-15**. Openapi won per `docs/fullstack/CLAUDE.md`.
+2. ~~**JWT lifetime and expiry behaviour**~~ — **closed 2026-08-17**, ADR 0007.
+3. **ADRs owed** — next-intl only. Riverpod and go_router were discharged by ADR 0006.
+4. **Max notified donor count** — unset, blocks `FR-MATCH-001` at M4.
+5. **Deploy runbook** — local half written (`docs/tech-lead/local-development.md`); the deploy half
    still blocks M7.
-5. `npm audit`: 3 high findings transitive through `next` (postcss, sharp). Not force-fixed.
-6. **`SEC-REVIEW-002`** against the M3 implementation — required, still unscheduled.
+6. `npm audit`: 3 high findings transitive through `next` (postcss, sharp). Not force-fixed.
+7. **`SEC-REVIEW-002`** against the M3 implementation — required, still unscheduled.
+8. **`disabledWithoutDocker = true`** still turns a stopped daemon into a green build. `BUG-BUILD-003`
+   made the tests run; it did not remove the trap. Fail instead of skip, or a CI assertion on
+   `Skipped: 0` in the surefire report — undecided.

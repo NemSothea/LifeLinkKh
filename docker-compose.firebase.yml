@@ -1,0 +1,26 @@
+# Opt-in overlay: mounts the Firebase service-account key into the backend so
+# POST /auth/google can actually verify a Google ID token.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.firebase.yml up -d
+#
+# or just `bash scripts/dev-up.sh`, which adds this file automatically when
+# GOOGLE_APPLICATION_CREDENTIALS is set in .env.
+#
+# Why an overlay instead of another line in docker-compose.yml: the key file does
+# not exist until someone creates the Firebase project, and a bind mount whose
+# source is missing does not fail cleanly — Docker creates a *directory* at the
+# source path and the container gets a directory where it expects JSON. Keeping
+# the mount out of the base file means the everyday `docker compose up` cannot
+# hit that, and the overlay refuses to start rather than half-working.
+services:
+  backend:
+    environment:
+      # The path INSIDE the container, fixed. The host path is the .env value and
+      # only appears in the volume below, so nothing about one developer's
+      # filesystem layout leaks into the container's configuration.
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/firebase-service-account.json
+    volumes:
+      # `:?` — compose aborts with this message if the variable is unset, instead
+      # of mounting something surprising. Must be an ABSOLUTE host path.
+      # `:ro` — the backend only ever reads it.
+      - ${GOOGLE_APPLICATION_CREDENTIALS:?set GOOGLE_APPLICATION_CREDENTIALS in .env to the absolute path of the Firebase service-account JSON, e.g. /Users/you/Desktop/LifeLinkKh/secrets/firebase-service-account.json}:/run/secrets/firebase-service-account.json:ro

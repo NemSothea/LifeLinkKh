@@ -18,6 +18,26 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
+# Firebase service-account key: mounted only when .env names one. Grepped out of
+# .env rather than read from the environment, because docker compose reads .env
+# for its own substitution but never exports those names into this shell.
+compose_files=(-f docker-compose.yml)
+cred_path=$(sed -n 's/^[[:space:]]*GOOGLE_APPLICATION_CREDENTIALS[[:space:]]*=[[:space:]]*//p' .env | tail -n1)
+if [ -n "$cred_path" ]; then
+    if [ ! -f "$cred_path" ]; then
+        echo "❌ GOOGLE_APPLICATION_CREDENTIALS is set in .env but no file is there:"
+        echo "   $cred_path"
+        echo "   Use an absolute path. Bind-mounting a missing file makes Docker create"
+        echo "   a directory at that path, and the backend then reads a directory as JSON."
+        exit 1
+    fi
+    compose_files+=(-f docker-compose.firebase.yml)
+    echo "🔑 Firebase service account will be mounted read-only"
+else
+    echo "⏭  no GOOGLE_APPLICATION_CREDENTIALS in .env — POST /auth/google will answer"
+    echo "   503 AUTH_PROVIDER_UNCONFIGURED. Everything else serves normally."
+fi
+
 # frontend/ is scaffolded at M2 step 3. Until then `web` has nothing to build.
 services=(postgres backend)
 if [ -f frontend/package.json ] && [ -f frontend/Dockerfile ]; then
@@ -27,7 +47,7 @@ else
 fi
 
 echo "Starting: ${services[*]}"
-docker compose up -d --build "${services[@]}"
+docker compose "${compose_files[@]}" up -d --build "${services[@]}"
 
 echo "Waiting for health…"
 for _ in $(seq 1 40); do

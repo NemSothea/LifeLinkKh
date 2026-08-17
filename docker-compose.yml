@@ -51,6 +51,11 @@ services:
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       # Only the local web portal. Never '*' — see SecurityConfig.
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      # GOOGLE_APPLICATION_CREDENTIALS is deliberately absent here. The service
+      # account is a file, not a string, and it does not exist until the Firebase
+      # project does — so it lives in docker-compose.firebase.yml as an opt-in
+      # overlay. Without it the API serves normally and POST /auth/google answers
+      # 503 AUTH_PROVIDER_UNCONFIGURED, which is the designed behaviour, not a bug.
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:

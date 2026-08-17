@@ -9,6 +9,27 @@
 !.env.example
 *.local
 
+# Firebase service-account keys. These carry an RSA private key that can mint
+# credentials for the whole project, so this block exists BEFORE the Firebase
+# project does — a key committed once is compromised for good and has to be
+# revoked in the console, not merely deleted from the tree.
+# Console downloads land as `<project>-firebase-adminsdk-<hash>-<hash>.json`;
+# the other two patterns catch the names people rename them to.
+*firebase-adminsdk*.json
+*service-account*.json
+*serviceAccount*.json
+# Where the runbook tells you to put it. Ignored wholesale, so anything dropped
+# here is safe by default even if it is named something unexpected. `secrets/*`
+# rather than `secrets/`: git does not descend into an ignored directory, so the
+# trailing-slash form makes the README negation below unreachable.
+secrets/*
+!secrets/README.md
+
+# NOTE: mobile/android/app/google-services.json is deliberately NOT ignored. It is
+# client configuration, not a secret — the Android API key in it is restricted by
+# package name and SHA-1 fingerprint, and the release build in CI needs the file
+# present. The private key above is the file that must never be committed.
+
 # Local Claude Code permissions — machine-specific, not team state.
 .claude/settings.local.json
 
