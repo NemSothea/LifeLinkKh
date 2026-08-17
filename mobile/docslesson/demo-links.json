@@ -1,0 +1,8 @@
+{
+  "project": "projectdemo",
+  "updates": [
+    { "week": 1, "demo_url": null, "last_updated": null, "notes": "" },
+    { "week": 2, "demo_url": null, "last_updated": null, "notes": "" },
+    { "week": 3, "demo_url": null, "last_updated": null, "notes": "" }
+  ]
+}

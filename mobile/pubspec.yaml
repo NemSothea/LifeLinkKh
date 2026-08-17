@@ -17,9 +17,15 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
-  # Architecture choices recorded in docs/fullstack/specs/foundation/mobile-flutter.md.
-  # Riverpod and go_router still owe an ADR — see that spec's follow-ups.
-  flutter_riverpod: ^3.4.2
+  # Architecture choices recorded in docs/tech-lead/adr/0006-flutter-course-architecture.md.
+  #
+  # Riverpod 2.x, not 3.x. Two reasons, and the second is the hard one: the course
+  # prescribes 2.x (Week 4), and riverpod_generator cannot be solved against
+  # flutter_riverpod 3.x on Flutter 3.44.6 — the generator needs matcher <0.12.19
+  # and this SDK's flutter_test pins 0.12.19 exactly. Code generation is a Week 4
+  # requirement, so the runtime moved to meet it.
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
   go_router: ^17.4.0
   dio: ^5.11.0
 
@@ -31,6 +37,16 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+
+  # Turns @riverpod annotations into *.g.dart provider plumbing.
+  # Dev loop: dart run build_runner watch -d
+  riverpod_generator: ^2.6.3
+  build_runner: ^2.4.13
+
+  # custom_lint + riverpod_lint are deliberately absent. The course lists them as
+  # recommended rather than required (Week 4), and they cannot be solved on this
+  # Flutter SDK — custom_lint pulls an analyzer that wants the removed `_macros`
+  # SDK package. Revisit when the toolchain moves.
 
 flutter:
   uses-material-design: true

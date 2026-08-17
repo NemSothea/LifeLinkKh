@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../l10n/app_localizations.dart';
-import '../data/health_repository.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../application/health_providers.dart';
 
 /// M2 stub home screen: app name in the active locale, plus the live health result.
 /// No features, no auth.
+///
+/// One feature import, and it points at `application/`. The Week 3 version reached into
+/// `data/` for the concrete repository; removing that import is the Week 4 deliverable.
+/// The domain entity's fields are read through type inference, which is permitted —
+/// `domain/` points inward.
 class HomeScreen extends ConsumerWidget {
     const HomeScreen({super.key});
 
     @override
     Widget build(BuildContext context, WidgetRef ref) {
         final l10n = AppLocalizations.of(context)!;
+        // ref.watch, because this is build() and the widget should rebuild when the
+        // check resolves.
         final health = ref.watch(healthStatusProvider);
 
         return Scaffold(
@@ -44,8 +51,8 @@ class HomeScreen extends ConsumerWidget {
                                         color: Theme.of(context).colorScheme.error,
                                     ),
                                 ),
-                                data: (status) => Text(
-                                    '${l10n.apiStatusUp} ($status)',
+                                data: (health) => Text(
+                                    '${l10n.apiStatusUp} (${health.status})',
                                     key: const Key('health-up'),
                                 ),
                             ),

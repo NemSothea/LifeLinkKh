@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lifelink_kh/core/config/env.dart';
+import 'package:lifelink_kh/src/core/config/env.dart';
 
 void main() {
     // Tests run without --dart-define, so this is the unconfigured case. A silent

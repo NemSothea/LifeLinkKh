@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../config/env.dart';
+
+part 'api_client.g.dart';
 
 /// The single Dio instance. Interceptors for the JWT bearer token arrive at M3 —
 /// this exists now so that adding one is a change in one place.
@@ -18,4 +20,5 @@ Dio createApiClient() {
     );
 }
 
-final apiClientProvider = Provider<Dio>((ref) => createApiClient());
+@Riverpod(keepAlive: true)
+Dio apiClient(ApiClientRef ref) => createApiClient();

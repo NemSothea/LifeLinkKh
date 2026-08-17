@@ -1,5 +1,5 @@
 # ADR Index
-next: 0006
+next: 0007
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
@@ -8,3 +8,4 @@ next: 0006
 | 0003 | Donor location precision | accepted | 2026-08-07 |
 | 0004 | ABO/Rh compatibility lookup table | accepted | 2026-08-07 |
 | 0005 | Security verification targets OWASP ASVS Level 1 | accepted | 2026-08-10 |
+| 0006 | Flutter follows the course architecture; Riverpod 2.x with codegen | accepted | 2026-08-17 |
