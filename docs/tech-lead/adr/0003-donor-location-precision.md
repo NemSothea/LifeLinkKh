@@ -9,9 +9,12 @@ unblocks: V1__init.sql donor_profiles location columns; FR-MATCH-001 distance ra
 
 > **ACCEPTED 2026-08-07** as proposed, all three questions answered yes / 0.5 km / yes.
 > Decided by Nem Sothea as Tech Lead. **Not an independent sign-off** — the same person holds PO and
-> Security, so QA is the only outside gate. Moeun Nithvaraman is primary PO and did not sign this;
-> if he disagrees, it is a schema change, and after `V1__init.sql` merges that costs a second
-> migration.
+> Security, so QA is the only outside gate. Moeun Nithvaraman was primary PO on this date and did not
+> sign this; if the PO disagrees, it is a schema change, and after `V1__init.sql` merges that costs a
+> second migration.
+>
+> Roster note (2026-08-17): PO moved to Sourn SAVOURN in the role rotation. Any re-review of this
+> decision needs Sourn's signature, not Moeun's.
 
 ## Context
 

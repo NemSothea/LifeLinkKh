@@ -184,7 +184,7 @@ def slide_01_title(prs):
     tf2 = textbox(s, Inches(0.9), Inches(5.4), Inches(11.5), Inches(1.2))
     p = tf2.paragraphs[0]
     r = p.add_run()
-    r.text = "Nem Sothea · Suon Pisey · Sourn SAVOURN · Moeun Nithvaraman · Oun Sreynich"
+    r.text = "Nem Sothea · Moeun Nithvaraman · Suon Pisey · Sourn SAVOURN · Oun Sreynich"
     style(r, 16, INK)
     p2 = tf2.add_paragraph()
     r2 = p2.add_run()
@@ -551,9 +551,9 @@ def slide_12_team(prs):
     tf = textbox(s, Inches(0.9), Inches(2.6), Inches(11.5), Inches(2.9))
     team = [
         ("Nem Sothea", "Tech Lead · Flutter · also PO, Security · Docker, CI, release"),
-        ("Suon Pisey", "Backend · PostgreSQL · Flyway · matching logic"),
-        ("Sourn SAVOURN", "Frontend · Next.js portal · API client · i18n"),
-        ("Moeun Nithvaraman", "PO · PRD · briefs · wireframes · feature registry"),
+        ("Moeun Nithvaraman", "Backend · PostgreSQL · Flyway · matching logic"),
+        ("Suon Pisey", "Frontend · Next.js portal · API client · i18n"),
+        ("Sourn SAVOURN", "PO · PRD · briefs · wireframes · feature registry"),
         ("Oun Sreynich", "QA · test plan · milestone acceptance · bug tracking"),
     ]
     for i, (name, role) in enumerate(team):
@@ -596,7 +596,7 @@ each person owns a directory and a document set, so a split is a reassignment, n
 If asked who does what day to day: there is no separate DevOps or PM role. Tech Lead absorbed that
 work — Docker, CI, deploy, release. Definition-of-Done tracking deliberately stayed with QA, because
 with Tech Lead also holding Security and co-PO, QA is the only gate outside one person.
-We know the gap: there is no deploy runbook yet, and it has to exist before the M7 release. Product definition is co-held by Moeun and Sothea, so PRD and FR sign-off is
+We know the gap: there is no deploy runbook yet, and it has to exist before the M7 release. Product definition is co-held by Sourn and Sothea, so PRD and FR sign-off is
 not one person's signature. Tech Lead still holds Security, which concentrates approval there;
 QA sign-off is kept independent for exactly that reason.
 """)

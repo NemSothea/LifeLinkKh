@@ -125,3 +125,12 @@ spend and no provider to evaluate. The replacement risk is the unverified phone 
 table above. This is a genuine trade, not a removal: cost and code went away, reachability got worse.
 
 **PM role removed.** The DoD tracking this register was part of now sits with QA.
+
+## Changes on 2026-08-17
+
+**Role rotation — no risk change.** Three roles swapped hands: Moeun Nithvaraman took Backend/DB,
+Suon Pisey took Frontend, Sourn SAVOURN took PO (co-PO with Nem Sothea). The concentrated-sign-off
+risk is unaffected — a second PO voice still exists, only the person holding it changed, and Security
+still sits on Tech Lead. Read the 2026-08-07 section as history: sign-offs dated before today belong
+to the previous holder, so **Moeun** in that section and in ADR 0003 means the then-PO, not the
+current one.

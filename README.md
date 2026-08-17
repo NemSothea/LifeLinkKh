@@ -103,9 +103,9 @@ _(All three code directories were scaffolded at M2 — see `docs/decisions.md`.)
 | Name | Role |
 |------|------|
 | Nem Sothea | Tech Lead / Mobile (Flutter) · also PO, Security |
-| Suon Pisey | Backend / Database |
-| Sourn SAVOURN | Frontend (Next.js) |
-| Moeun Nithvaraman | PO |
+| Moeun Nithvaraman | Backend / Database |
+| Suon Pisey | Frontend (Next.js) |
+| Sourn SAVOURN | PO |
 | Oun Sreynich | QA |
 
 See [`docs/team.md`](docs/team.md) for write scopes (R2) and the acting-role overlays.
@@ -116,7 +116,7 @@ See [`docs/team.md`](docs/team.md) for write scopes (R2) and the acting-role ove
 > still comes from outside Tech Lead. No deploy runbook exists yet — needed before M7.
 
 > Tech Lead also holding Security, and co-holding PO, collapses Definition of Done step 1 toward
-> self-approval — Moeun as second PO restores an independent product-sign-off voice, but QA remains
+> self-approval — Sourn as second PO restores an independent product-sign-off voice, but QA remains
 > the only independent gate on Security. Logged in [`docs/risks.md`](docs/risks.md).
 
 ## Milestones
