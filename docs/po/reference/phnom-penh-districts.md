@@ -2,7 +2,7 @@
 id: REF-DISTRICTS-PP
 title: Phnom Penh districts — the donor location list
 owner: PO
-status: draft — codes need one official check before seeding
+status: accepted — 1201–1212 verified against NCDD; 1213–1214 provisional (DEC-005)
 fr_ref: ../features/FR-DONOR-001-donor-profile.md
 adr_ref: ../../tech-lead/adr/0003-donor-location-precision.md
 ---
@@ -34,29 +34,45 @@ Code follows the national geocode scheme: province `12` (Phnom Penh) + a two-dig
 | `1207` | រុស្សីកែវ | Russey Keo | ✅ |
 | `1208` | សែនសុខ | Sen Sok | ✅ |
 | `1209` | ពោធិ៍សែនជ័យ | Pou Senchey | ✅ |
-| `1210` | ជ្រោយចង្វារ | Chroy Changvar | ⚠️ |
-| `1211` | ព្រែកព្នៅ | Prek Pnov | ⚠️ |
-| `1212` | ច្បារអំពៅ | Chbar Ampov | ⚠️ |
-| `1213` | បឹងកេងកង | Boeng Keng Kang | ⚠️ |
-| `1214` | កំបូល | Kamboul | ⚠️ |
+| `1210` | ជ្រោយចង្វារ | Chroy Changvar | ✅ |
+| `1211` | ព្រែកព្នៅ | Prek Pnov | ✅ |
+| `1212` | ច្បារអំពៅ | Chbar Ampov | ✅ |
+| `1213` | បឹងកេងកង | Boeng Keng Kang | 🟡 provisional |
+| `1214` | កំបូល | Kamboul | 🟡 provisional |
 
-## What "verified" means, and what still has to happen
+## The check, and what it found — 2026-08-18
 
-The fourteen names are right and the set is complete. **The numeric codes for the last five are
-not confirmed** — they are the ones assigned after the 2019 reorganisation, and their ordering in
-the official geocode tables is exactly the kind of detail that is easy to get subtly wrong from
-memory. `1201`–`1209` are long-standing and safe.
+Checked against the **NCDD Gazetteer for Phnom Penh** (`library.ncdd.gov.kh/detail/9649`), which is
+the official source this file asked for. Result in two parts, because the answer was not uniform.
 
-Before the seed migration is written, someone must check `1210`–`1214` against an official source —
-the NCDD or MoI geocode list — and correct this table. This is a ten-minute task that gets
-expensive later: `district_code` lands in `donor_profiles` rows, so a wrong code is a data migration
-after donors exist, not an edit.
+**`1201`–`1212` are confirmed exactly as listed.** The gazetteer's khan (ខណ្ឌ) rows carry these
+twelve codes and no others, each with the sub-decree that created it — `1210` Chraoy Chongvar
+(អនុក្រឹត្យ ៥៧៧), `1211` Praek Pnov (៥៧៨), `1212` Chbar Ampov (៥៧៩). The three that were the main
+worry are right. Cross-checked against a published province/district/commune dataset that agrees on
+all twelve.
 
-Two things make a wrong code survivable but ugly: nothing in the matching logic parses the code (it
-is compared, not decoded), and the dropdown shows the name, not the number. So a mis-numbered
-district still works end to end — it just stops matching any external dataset we later join against.
+**`1213` and `1214` are not in the gazetteer at all**, and the reason is dates, not error: Boeng Keng
+Kang and Kamboul were created by **sub-decree 03 of 8 January 2019**, after that document was
+published. So there is no official code to copy, and the two rows above are LifeLink-assigned,
+following the same `12` + two-digit pattern. Their agreement with the postal prefixes for those two
+khan is supporting evidence, not proof — postal codes and gazetteer geocodes are separate schemes,
+and at least one third-party source lists Boeng Keng Kang's geocode as `1206`, which is Mean Chey's
+and cannot be right.
 
-**Do not seed this table while any row still reads ⚠️.**
+**The Latin column is our own transliteration, not the gazetteer's.** NCDD writes *Prampir
+Meakkakra*, *Saensokh*, *Pur SenChey*, *Chraoy Chongvar*, *Praek Pnov*; this table keeps the spellings
+a Phnom Penh reader recognises, because the Latin label is UI copy. The Khmer column and the code are
+the parts that must match the source.
+
+Two things make a provisional code survivable: nothing in the matching logic parses the code (it is
+compared, not decoded), and the dropdown shows the name, not the number. A mis-numbered district
+still works end to end — it just stops matching an external dataset we later join against, and we
+join against none.
+
+**Seeding is now unblocked for all fourteen** — see [DEC-005](../../decisions.md). Correcting `1213`
+or `1214` later is a two-row `UPDATE` plus the same update on `donor_profiles.district_code`, which
+is why they ship marked rather than withheld: the alternative was a pilot where a donor in Boeng Keng
+Kang — one of the densest areas in the city — has no district to pick.
 
 ## Rules for whoever seeds it
 

@@ -141,6 +141,25 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
 
+  /districts:
+    get:
+      tags: [donor]
+      summary: Phnom Penh districts for the donor-registration dropdown
+      description: >
+        Reference data. Sorted by Khmer name, because code order is administrative history and
+        means nothing to a donor looking for their own khan. The client must not bundle its own
+        copy: districtCode is a foreign key, so a stale list produces a 422 on save that the
+        donor cannot act on.
+      responses:
+        '200':
+          description: All districts, Khmer-alphabetical
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/District' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /hospitals:
     get:
       tags: [reference]
@@ -404,10 +423,28 @@ components:
         fullName: { type: string }
         bloodType: { $ref: '#/components/schemas/BloodType' }
         districtCode: { type: string }
-        districtName: { type: string, example: Toul Kork }
+        districtName: { $ref: '#/components/schemas/DistrictName' }
         lastDonationDate: { type: string, format: date, nullable: true }
         isAvailable: { type: boolean }
         eligibility: { $ref: '#/components/schemas/Eligibility' }
+
+    DistrictName:
+      type: object
+      description: >
+        Both labels, not one. The app switches language at runtime (FR-GLOBAL-001), so a server
+        that picked a language would force a re-fetch on every locale change.
+      required: [km, en]
+      properties:
+        km: { type: string, example: ទួលគោក }
+        en: { type: string, example: Tuol Kouk }
+
+    District:
+      type: object
+      required: [code, nameKm, nameEn]
+      properties:
+        code: { type: string, example: '1204', description: What districtCode expects. }
+        nameKm: { type: string, example: ទួលគោក }
+        nameEn: { type: string, example: Tuol Kouk }
 
     Hospital:
       type: object

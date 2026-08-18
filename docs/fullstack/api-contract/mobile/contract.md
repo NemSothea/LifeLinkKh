@@ -23,6 +23,7 @@ Base URL `/api`. All responses JSON. All errors use the shape in "Errors" below.
 | POST | `/auth/google` | Exchange a Google ID token for our JWT; create the account on first sign-in | none | FR-AUTH-003 | M3 |
 | POST | `/auth/fcm-token` | Register/refresh this device's FCM token | JWT | FR-NOTIFY-001 | M3 |
 | DELETE | `/auth/fcm-token` | Sign-out: stop pushing to this device. No body | JWT | FR-AUTH-003, FR-NOTIFY-001 | M3 |
+| GET  | `/districts` | Districts for the registration dropdown, Khmer-sorted | JWT | FR-DONOR-001 | M3 |
 | GET  | `/donors/me` | Own donor profile + computed eligibility | JWT | FR-DONOR-001/002 | M3 |
 | PUT  | `/donors/me` | Create or update own donor profile | JWT | FR-DONOR-001 | M3 |
 | GET  | `/hospitals` | Hospital list for the request form dropdown | JWT | FR-REQUEST-001 | M4 |
@@ -66,8 +67,8 @@ All other endpoints: `Authorization: Bearer <our JWT>`.
 These are the contract, not style guidance. `TC-AUTH-001` case 12 tests them.
 
 1. **No donor endpoint ever returns `latitude` or `longitude`** — not to a requester, not to a
-   matched donor, not in an admin view. Location is `districtName`; proximity is `distanceKm`
-   (ADR 0003).
+   matched donor, not in an admin view. Location is `districtName` (both labels, CR-MAPI-001);
+   proximity is `distanceKm` (ADR 0003).
 2. **`distanceKm` is server-rounded to 0.5** — `2.5`, not `2.4713`. Rounding in the client leaks the
    precise value it was rounded from.
 3. **Contact details appear only after acceptance.** `requesterContact` is populated on
@@ -78,11 +79,12 @@ These are the contract, not style guidance. `TC-AUTH-001` case 12 tests them.
 
 ```
 PUT /donors/me
-{ "fullName": "Nem Sothea", "bloodType": "O-", "districtCode": "PP-TK",
+{ "fullName": "Nem Sothea", "bloodType": "O-", "districtCode": "1204",
   "latitude": 11.5730, "longitude": 104.8920,      // optional, nullable
   "lastDonationDate": "2026-06-14" }                // null = never donated
 
-200 { "id": "uuid", "bloodType": "O-", "districtCode": "PP-TK", "districtName": "Toul Kork",
+200 { "id": "uuid", "bloodType": "O-", "districtCode": "1204",
+      "districtName": { "km": "ទួលគោក", "en": "Tuol Kouk" },
       "lastDonationDate": "2026-06-14", "isAvailable": true,
       "eligibility": { "isEligible": false, "daysRemaining": 12, "eligibleOn": "2026-08-09" } }
 ```
@@ -90,6 +92,8 @@ PUT /donors/me
 - `bloodType` must be one of the 8 ABO/Rh values. No "unknown" — an unknown type has no row in
   `blood_compatibility` and would create a profile that silently never matches.
 - `districtCode` required; coordinates optional. Declining GPS must not exclude a donor (ADR 0003).
+  Valid codes come from `GET /districts` (CR-MAPI-002) — they are national geocodes such as `1204`,
+  and `districts.code` is a foreign key, so an invented code is a 422 (`UNKNOWN_DISTRICT`).
 - `lastDonationDate` must not be in the future — a future date makes the donor permanently ineligible.
 - **`eligibility` is computed server-side and returned.** The client never calculates the 56-day
   window; two implementations of one rule will disagree.

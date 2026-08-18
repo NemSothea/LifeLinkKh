@@ -22,6 +22,7 @@ next: 005
 | DEC-002 | FCM request-alert push moves from M5 to M4; FCM token registration moves to M3 | 2026-07-31 |
 | DEC-003 | Metrics event capture is a per-milestone delivery requirement, not a milestone item | 2026-07-31 |
 | DEC-004 | Scope cut to 8 buildable FRs; 8 deferred; M3/M4 given 3 weeks each | 2026-08-07 |
+| DEC-005 | Seed all 14 Phnom Penh districts; `1213`/`1214` ship provisional rather than withheld | 2026-08-18 |
 
 ---
 
@@ -156,3 +157,47 @@ eight partial flows cannot show the core loop working end to end. Better eight t
 - `blood_requests.status = 'EXPIRED'` stays permanently unreachable in this build.
 - The deferred set is the defence's "future work" section. A documented deliberate cut is a better
   answer than a burndown that flatlines in Week 12.
+
+---
+
+## DEC-005 — All 14 districts are seeded; two codes ship provisional
+
+**Date:** 2026-08-18 · **Decided by:** PO (Sourn SAVOURN) with Tech Lead (Nem Sothea)
+
+### Context
+`V2__districts.sql` created the `districts` table, added the foreign key from
+`donor_profiles.district_code`, and **deliberately seeded nothing** — because
+[`REF-DISTRICTS-PP`](po/reference/phnom-penh-districts.md) said not to seed while any code was
+unverified. That rule was right and it also blocked M3 outright: with no rows, the foreign key makes
+`PUT /donors/me` answer 422 for every `districtCode`, so donor registration cannot work at all.
+
+The verification was done on 2026-08-18 against the NCDD Phnom Penh gazetteer. It confirmed
+`1201`–`1212` exactly, including the three post-2019 codes that were the main worry. It could not
+confirm `1213` (Boeng Keng Kang) or `1214` (Kamboul), for a reason that is not going to resolve
+itself: both khan were created by sub-decree 03 of 8 January 2019, after that gazetteer was published.
+There is no official code to copy.
+
+### Decision
+Seed **all fourteen** in `V3__seed_districts.sql`. `1213` and `1214` are marked provisional in the
+reference doc and in the migration comment.
+
+### Why this and not the alternative
+Seeding only the twelve confirmed rows was the obvious safe option, and it is worse. Boeng Keng Kang
+is one of the densest parts of the city; a pilot where those donors have no district to pick either
+loses them or files them under Chamkar Mon, which is silent bad data rather than a marked code.
+
+The cost of being wrong is bounded and was already written down before this decision: nothing in the
+matching logic parses `district_code` — it is compared, never decoded — and the dropdown shows the
+name, not the number. A wrong code costs a two-row `UPDATE` plus the same update on any
+`donor_profiles` rows carrying it. Waiting instead costs M3.
+
+Holding the whole seed for two codes was also rejected on process grounds: the blocking rule exists to
+prevent a data migration, and it was being read as preventing any seed at all.
+
+### Consequence
+- `PUT /donors/me` accepts district codes from this milestone on. The 422 in `V2`'s comment block no
+  longer describes the system.
+- The dropdown carries 14 options, sorted by Khmer name (`REF-DISTRICTS-PP` rule), with no "other"
+  option — the pilot is Phnom Penh.
+- If an official code for either khan surfaces, correcting it is a `V<n>` migration and a profile
+  update, not a schema change. Whoever does it must update `donor_profiles` in the same migration.
