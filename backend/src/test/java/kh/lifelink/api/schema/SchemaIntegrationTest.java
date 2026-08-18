@@ -36,7 +36,7 @@ class SchemaIntegrationTest {
         Integer applied =
                 jdbc.queryForObject(
                         "SELECT count(*) FROM flyway_schema_history WHERE success", Integer.class);
-        assertThat(applied).isEqualTo(2);
+        assertThat(applied).isEqualTo(3);
     }
 
     @Test
@@ -59,21 +59,40 @@ class SchemaIntegrationTest {
     }
 
     /**
-     * V2 seeds nothing on purpose — five of the fourteen district codes are still unverified and
-     * docs/po/reference/phnom-penh-districts.md forbids seeding while any are. Asserted rather than
-     * assumed, so that whoever writes V3__seed_districts.sql sees this test fail and updates it
-     * deliberately instead of discovering the rule afterwards.
+     * V3 seeds all fourteen (DEC-005). This replaces the earlier assertion that the table was
+     * deliberately empty — that test existed so whoever seeded it would have to update this file
+     * on purpose, which is what happened.
+     *
+     * <p>Matched on the national geocode pattern rather than on {@code count(*)}, because other
+     * tests in this class insert their own synthetic districts into the shared container.
      */
     @Test
-    void districtsIsCreatedButDeliberatelyUnseeded() {
-        // Matched on the national geocode pattern rather than on count(*), because other tests in
-        // this class insert their own synthetic districts into the shared container. What is being
-        // asserted is that the *migration* seeded nothing, not that the table is untouched.
-        Integer seeded =
+    void flywaySeedsAllFourteenDistricts() {
+        List<String> codes =
+                jdbc.queryForList(
+                        "SELECT code FROM districts WHERE code ~ '^12[0-9]{2}$' ORDER BY code",
+                        String.class);
+        assertThat(codes)
+                .containsExactly(
+                        "1201", "1202", "1203", "1204", "1205", "1206", "1207", "1208", "1209",
+                        "1210", "1211", "1212",
+                        // Provisional — no official code exists yet for either khan. See DEC-005.
+                        "1213", "1214");
+    }
+
+    /**
+     * Khmer is the primary label: the app defaults to km (FR-GLOBAL-001) and the dropdown is sorted
+     * by this column. A row seeded with an empty or Latin-only name would render a dropdown a donor
+     * cannot read, and no constraint would catch it.
+     */
+    @Test
+    void everySeededDistrictHasBothLabels() {
+        Integer incomplete =
                 jdbc.queryForObject(
-                        "SELECT count(*) FROM districts WHERE code ~ '^12[0-9]{2}$'",
+                        "SELECT count(*) FROM districts WHERE code ~ '^12[0-9]{2}$'"
+                                + " AND (name_km = '' OR name_en = '' OR name_km = name_en)",
                         Integer.class);
-        assertThat(seeded).isZero();
+        assertThat(incomplete).isZero();
     }
 
     /**
