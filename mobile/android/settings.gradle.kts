@@ -21,6 +21,10 @@ plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
     id("com.android.application") version "9.0.1" apply false
     id("org.jetbrains.kotlin.android") version "2.3.20" apply false
+    // Reads android/app/google-services.json at build time and turns it into Android
+    // resources — including `default_web_client_id`, which is how google_sign_in gets an
+    // ID token on Android without the client id being written into Dart source.
+    id("com.google.gms.google-services") version "4.4.4" apply false
 }
 
 include(":app")

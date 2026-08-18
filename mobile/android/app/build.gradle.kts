@@ -2,6 +2,10 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Must come after the Android plugin. The build fails outright if
+    // android/app/google-services.json is missing, which is the failure we want: Google
+    // Sign-In failing silently at runtime is the alternative, and it is much worse.
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -19,6 +23,9 @@ android {
         applicationId = "kh.lifelink.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // Pinned rather than inherited: firebase_auth requires API 23, and a Flutter SDK
+        // whose default drops below that would break the build in a way that reads as a
+        // Firebase problem.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

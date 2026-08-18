@@ -11,6 +11,30 @@ app is built to, so they are kept here next to the code they govern.
 
 ## Run it
 
+Two things are needed before the app will build, and one of them is not in this repo.
+
+**1. `android/app/google-services.json`.** Download it from the Firebase console —
+Project settings → the Android app registered as `kh.lifelink.app` → `google-services.json`
+— and drop it in `mobile/android/app/`. Without it the build fails outright at
+`:app:processDebugGoogleServices`, which is the failure we want: the alternative is Google
+Sign-In failing silently at runtime.
+
+The file is **committed on purpose** (see the note in the root `.gitignore`). It is client
+configuration, not a secret: the Android API key inside it is restricted by package name
+and SHA-1 fingerprint. The file that must never be committed is the backend's
+service-account key.
+
+**2. The debug SHA-1 fingerprint, registered on that Android app.** Sign-In fails with no
+useful error if it is missing — `docs/scope.md` calls it the single most common wasted
+afternoon on a project of this shape.
+
+```bash
+keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore \
+  -storepass android -keypass android | grep SHA1
+```
+
+Then:
+
 ```bash
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/api
 ```
@@ -110,18 +134,27 @@ Three levels, and the level is chosen by what is being proven:
   the **repository** seam rather than at the provider nearest the widget. Everything
   above the transport is therefore exercised for real.
 - `env_test.dart` — the unconfigured case, since tests run without `--dart-define`.
+- `auth_interceptor_test.dart` — the four client rules of
+  [`ADR 0007`](../docs/tech-lead/adr/0007-session-lifetime-and-expiry.md), including the
+  concurrent-401 case QA treats as non-negotiable. A scripted `HttpClientAdapter` stands in
+  for the server; no mock package and no local port.
+- `sign_in_flow_test.dart` — screen, controller, service and router redirect together, with
+  fakes only at the plugin and transport seams. It runs with **no Firebase and no
+  emulator**, which is the payoff for `GoogleCredentials` and `SessionStore` being abstract.
 
 ## Deliberate gaps
 
 Recorded so they read as decisions rather than oversights. Full rationale in
 [`ADR 0006`](../docs/tech-lead/adr/0006-flutter-course-architecture.md).
 
-- **`AsyncNotifier` and the four-state render** (Week 5) — the screen currently
-  distinguishes loading, data and error, but has no retry, no skeleton and no empty
-  state. It lands with the M3 auth and donor screens, which have something to retry and
-  a list that can be empty. A health check that returns one string cannot demonstrate
-  it honestly.
-- **`Result<T>` and sealed `Failure`** (Week 6) — the repository still throws.
+- ~~**`AsyncNotifier` and the four-state render** (Week 5)~~ — landed with M3 sign-in:
+  `AuthController` is an `AsyncNotifier`, and the sign-in screen renders idle, in-flight,
+  signed-in and failed, with the retry the health check could not justify. The `home`
+  feature still uses a plain `FutureProvider`, because a health string has no empty state
+  and nothing worth retrying.
+- ~~**`Result<T>` and sealed `Failure`** (Week 6)~~ — landed in `core/error/`. The `home`
+  feature's repository still throws; converting it buys nothing until it has a failure a
+  user can act on.
 - **`custom_lint` + `riverpod_lint`** — recommended, not required, and unsolvable on
   this Flutter SDK.
 

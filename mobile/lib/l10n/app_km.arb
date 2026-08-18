@@ -4,5 +4,16 @@
     "homeTagline": "ភ្ជាប់អ្នកបរិច្ចាគឈាមជាមួយអ្នកដែលត្រូវការ",
     "apiStatusUp": "API ដំណើរការធម្មតា",
     "apiStatusUnreachable": "មិនអាចភ្ជាប់ទៅ API បានទេ",
-    "apiStatusChecking": "កំពុងពិនិត្យ API…"
+    "apiStatusChecking": "កំពុងពិនិត្យ API…",
+    "signInTitle": "ចូលទៅ LifeLink",
+    "signInTagline": "ចុចម្តងជាមួយ Google។ គ្មានពាក្យសម្ងាត់ត្រូវចងចាំពេលមានអាសន្នទេ។",
+    "signInWithGoogle": "បន្តជាមួយ Google",
+    "signInSigningIn": "កំពុងចូល…",
+    "signInFailedNetwork": "គ្មានការតភ្ជាប់។ សូមពិនិត្យបណ្តាញ ហើយព្យាយាមម្តងទៀត។",
+    "signInFailedRejected": "Google មិនអាចបញ្ជាក់គណនីនេះបានទេ។ សូមចូលម្តងទៀត។",
+    "signInFailedRateLimited": "ព្យាយាមច្រើនដងពេក។ សូមរង់ចាំមួយនាទីមុនព្យាយាមម្តងទៀត។",
+    "signInFailedServer": "LifeLink មិនឆ្លើយតបទេឥឡូវនេះ។ សូមព្យាយាមម្តងទៀតឆាប់ៗ។",
+    "signInFailedUnknown": "មានបញ្ហាកើតឡើង។ សូមព្យាយាមម្តងទៀត។",
+    "retry": "ព្យាយាមម្តងទៀត",
+    "signOut": "ចេញពីគណនី"
 }

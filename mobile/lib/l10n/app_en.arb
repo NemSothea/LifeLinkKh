@@ -19,5 +19,49 @@
     "apiStatusChecking": "Checking API…",
     "@apiStatusChecking": {
         "description": "Shown while the health ping is in flight"
+    },
+    "signInTitle": "Sign in to LifeLink",
+    "@signInTitle": {
+        "description": "Sign-in screen heading"
+    },
+    "signInTagline": "One tap with Google. No password to remember in an emergency.",
+    "@signInTagline": {
+        "description": "Sign-in screen subtitle explaining why Google Sign-In is the only method"
+    },
+    "signInWithGoogle": "Continue with Google",
+    "@signInWithGoogle": {
+        "description": "Label of the only sign-in button"
+    },
+    "signInSigningIn": "Signing in…",
+    "@signInSigningIn": {
+        "description": "Shown while the token exchange is in flight"
+    },
+    "signInFailedNetwork": "No connection. Check the network and try again.",
+    "@signInFailedNetwork": {
+        "description": "Sign-in error for NetworkFailure"
+    },
+    "signInFailedRejected": "Google could not confirm this account. Try signing in again.",
+    "@signInFailedRejected": {
+        "description": "Sign-in error for UnauthorizedFailure"
+    },
+    "signInFailedRateLimited": "Too many attempts. Wait a minute before trying again.",
+    "@signInFailedRateLimited": {
+        "description": "Sign-in error for RateLimitedFailure — no retry button, waiting is the fix"
+    },
+    "signInFailedServer": "LifeLink is not answering right now. Try again shortly.",
+    "@signInFailedServer": {
+        "description": "Sign-in error for ServerFailure"
+    },
+    "signInFailedUnknown": "Something went wrong. Try again.",
+    "@signInFailedUnknown": {
+        "description": "Sign-in error for any remaining Failure variant"
+    },
+    "retry": "Try again",
+    "@retry": {
+        "description": "Retry button on a failed sign-in"
+    },
+    "signOut": "Sign out",
+    "@signOut": {
+        "description": "Sign-out action in the home screen app bar"
     }
 }

@@ -32,6 +32,11 @@ dependencies:
   # Pinned exactly: flutter_localizations from the SDK depends on intl 0.20.2, so a
   # caret range above that makes version solving fail outright.
   intl: 0.20.2
+  firebase_core: ^4.13.0
+  firebase_auth: ^6.5.7
+  google_sign_in: ^7.2.0
+  firebase_messaging: ^16.5.0
+  flutter_secure_storage: ^10.0.0
 
 dev_dependencies:
   flutter_test:

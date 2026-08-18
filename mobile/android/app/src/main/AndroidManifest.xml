@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The API, Google Sign-In and FCM all need the network. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Android 13+. Without it, notification permission is never asked for and every
+         urgent-request alert is dropped by the system with no error (FR-NOTIFY-001). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="lifelink_kh"
         android:name="${applicationName}"
@@ -30,6 +35,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Where a tapped notification is delivered. `flutter_local_notifications` is not
+             used, so this is FCM's own click action and the app handles the payload in
+             Dart via getInitialMessage/onMessageOpenedApp. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="lifelink_urgent_requests" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

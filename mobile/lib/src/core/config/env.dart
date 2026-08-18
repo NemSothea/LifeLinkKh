@@ -27,4 +27,16 @@ class Env {
 
     /// Lets UI decide what to show without triggering the throw above.
     static bool get isConfigured => _apiBaseUrl.isNotEmpty;
+
+    static const String _googleServerClientId =
+        String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
+
+    /// The OAuth **web** client id, for builds that cannot carry
+    /// `android/app/google-services.json`.
+    ///
+    /// Normally null: the `google-services` Gradle plugin generates a
+    /// `default_web_client_id` resource from that file and `google_sign_in` uses it. Not a
+    /// secret either way — it is restricted by package name and SHA-1 fingerprint.
+    static String? get googleServerClientId =>
+        _googleServerClientId.isEmpty ? null : _googleServerClientId;
 }
