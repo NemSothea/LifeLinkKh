@@ -5,6 +5,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../features/auth/application/auth_providers.dart';
 import '../features/auth/presentation/sign_in_screen.dart';
+import '../features/donor/presentation/donor_profile_screen.dart';
+import '../features/donor/presentation/donor_setup_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 
 part 'app_router.g.dart';
@@ -46,6 +48,15 @@ GoRouter appRouter(AppRouterRef ref) {
             GoRoute(
                 path: HomeScreen.path,
                 builder: (context, state) => const HomeScreen(),
+            ),
+            // Both behind the redirect above: a donor profile belongs to a session.
+            GoRoute(
+                path: DonorProfileScreen.path,
+                builder: (context, state) => const DonorProfileScreen(),
+            ),
+            GoRoute(
+                path: DonorSetupScreen.path,
+                builder: (context, state) => const DonorSetupScreen(),
             ),
         ],
     );

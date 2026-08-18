@@ -141,6 +141,10 @@ Three levels, and the level is chosen by what is being proven:
 - `sign_in_flow_test.dart` — screen, controller, service and router redirect together, with
   fakes only at the plugin and transport seams. It runs with **no Firebase and no
   emulator**, which is the payoff for `GoogleCredentials` and `SessionStore` being abstract.
+- `donor_registration_flow_test.dart` — the three setup steps and the profile screen against a
+  fake `DonorRepository`. Each test names the `FR-DONOR-001` criterion it holds: eight blood
+  types visible at once, saving refused without a blood type or district but **not** without a
+  date, and both the day count and the calendar date on the result.
 
 ## Deliberate gaps
 

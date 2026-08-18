@@ -63,5 +63,149 @@
     "signOut": "Sign out",
     "@signOut": {
         "description": "Sign-out action in the home screen app bar"
+    },
+    "donorSetupTitle": "Become a donor",
+    "@donorSetupTitle": {
+        "description": "Title of the three-step donor setup flow"
+    },
+    "donorEditTitle": "Edit your profile",
+    "@donorEditTitle": {
+        "description": "Title of the same flow opened on an existing profile"
+    },
+    "donorStepOf": "Step {current} of {total}",
+    "@donorStepOf": {
+        "description": "Progress label above the setup progress bar",
+        "placeholders": {
+                "current": {
+                        "type": "int"
+                },
+                "total": {
+                        "type": "int"
+                }
+        }
+    },
+    "donorIdentityStepTitle": "Your name and blood type",
+    "@donorIdentityStepTitle": {
+        "description": "Heading of setup step 1"
+    },
+    "donorFullNameLabel": "Full name",
+    "@donorFullNameLabel": {
+        "description": "Text field label on setup step 1"
+    },
+    "donorBloodTypeLabel": "Blood type",
+    "@donorBloodTypeLabel": {
+        "description": "Label above the 8-value blood type grid"
+    },
+    "donorBloodTypeUnknownHelp": "Do not know your blood type? A hospital can test it. We cannot match you to a patient without it.",
+    "@donorBloodTypeUnknownHelp": {
+        "description": "Help text under the blood type grid. There is deliberately no 'unknown' option"
+    },
+    "donorLocationStepTitle": "Where are you?",
+    "@donorLocationStepTitle": {
+        "description": "Heading of setup step 2"
+    },
+    "donorDistrictLabel": "District (khan)",
+    "@donorDistrictLabel": {
+        "description": "Dropdown label on setup step 2"
+    },
+    "donorDistrictHint": "Choose your district",
+    "@donorDistrictHint": {
+        "description": "Empty-state text inside the district dropdown"
+    },
+    "donorLocationPrivacy": "Other people only ever see your district \u2014 never your exact location.",
+    "@donorLocationPrivacy": {
+        "description": "The user-facing half of ADR 0003, shown on the location step"
+    },
+    "donorDistrictsFailed": "Could not load the district list.",
+    "@donorDistrictsFailed": {
+        "description": "Error state of the district dropdown"
+    },
+    "donorDonationStepTitle": "Your last donation",
+    "@donorDonationStepTitle": {
+        "description": "Heading of setup step 3"
+    },
+    "donorLastDonationLabel": "Date of your last donation",
+    "@donorLastDonationLabel": {
+        "description": "Label of the optional date field"
+    },
+    "donorNeverDonated": "I have never donated",
+    "@donorNeverDonated": {
+        "description": "Equally weighted button that writes a null date"
+    },
+    "donorPickDate": "Choose a date",
+    "@donorPickDate": {
+        "description": "Button that opens the date picker"
+    },
+    "donorBack": "Back",
+    "@donorBack": {
+        "description": "Back button in the setup flow"
+    },
+    "donorContinue": "Continue",
+    "@donorContinue": {
+        "description": "Advance button in the setup flow"
+    },
+    "donorSave": "Save",
+    "@donorSave": {
+        "description": "Final button of the setup flow"
+    },
+    "donorSaving": "Saving\u2026",
+    "@donorSaving": {
+        "description": "Shown while PUT /donors/me is in flight"
+    },
+    "donorSavedTitle": "You are registered",
+    "@donorSavedTitle": {
+        "description": "Heading of the save result screen"
+    },
+    "donorEligibleNow": "You can donate now",
+    "@donorEligibleNow": {
+        "description": "Result screen, eligible case"
+    },
+    "donorEligibleIn": "Eligible in {days} days ({date})",
+    "@donorEligibleIn": {
+        "description": "Result screen, cooldown case \u2014 both the count and the absolute date, per FR-DONOR-001",
+        "placeholders": {
+                "days": {
+                        "type": "int"
+                },
+                "date": {
+                        "type": "String"
+                }
+        }
+    },
+    "donorDone": "Done",
+    "@donorDone": {
+        "description": "Dismisses the result screen"
+    },
+    "donorProfileTitle": "My donor profile",
+    "@donorProfileTitle": {
+        "description": "App bar title of the donor profile screen"
+    },
+    "donorProfileCta": "Complete your donor profile",
+    "@donorProfileCta": {
+        "description": "Home screen prompt when no profile exists yet"
+    },
+    "donorProfileFailed": "Could not load your profile.",
+    "@donorProfileFailed": {
+        "description": "Error state of the donor profile screen"
+    },
+    "donorSaveFailed": "Could not save. Check your details and try again.",
+    "@donorSaveFailed": {
+        "description": "Error shown when PUT /donors/me is refused"
+    },
+    "donorAvailableLabel": "Available for requests",
+    "@donorAvailableLabel": {
+        "description": "Availability toggle label"
+    },
+    "donorAvailableHint": "Turn this off to stop receiving requests without deleting your profile.",
+    "@donorAvailableHint": {
+        "description": "Help text under the availability toggle"
+    },
+    "donorEdit": "Edit",
+    "@donorEdit": {
+        "description": "Opens the setup flow on an existing profile"
+    },
+    "donorNoDonationYet": "No donation recorded",
+    "@donorNoDonationYet": {
+        "description": "Shown on the profile where the last donation date would be"
     }
 }

@@ -11,6 +11,12 @@ import 'package:lifelink_kh/src/features/auth/domain/user_role.dart';
 import 'package:lifelink_kh/src/features/home/domain/health_repository.dart';
 import 'package:lifelink_kh/src/features/home/domain/health_status.dart';
 import 'package:lifelink_kh/src/features/notify/domain/fcm_token_repository.dart';
+import 'package:lifelink_kh/src/features/donor/domain/blood_type.dart';
+import 'package:lifelink_kh/src/features/donor/domain/district.dart';
+import 'package:lifelink_kh/src/features/donor/domain/donor_profile.dart';
+import 'package:lifelink_kh/src/features/donor/domain/donor_profile_draft.dart';
+import 'package:lifelink_kh/src/features/donor/domain/donor_repository.dart';
+import 'package:lifelink_kh/src/features/donor/domain/eligibility.dart';
 import 'package:lifelink_kh/src/features/notify/domain/push_token_source.dart';
 
 /// Fakes at every seam the M3 auth flow crosses, so a widget test drives the real
@@ -115,4 +121,66 @@ final class FakePushTokenSource implements PushTokenSource {
 final class FakeHealthRepository implements HealthRepository {
     @override
     Future<HealthStatus> fetchStatus() async => const HealthStatus('UP');
+}
+
+/// A donor profile with a live cooldown, so eligibility rendering has both numbers to show.
+DonorProfile testProfile({
+    bool isAvailable = true,
+    bool isEligible = false,
+    DateTime? lastDonationDate,
+}) => DonorProfile(
+    id: '22222222-2222-2222-2222-222222222222',
+    fullName: 'Nem Sothea',
+    bloodType: BloodType.oNegative,
+    districtCode: '1204',
+    districtNameKm: 'ទួលគោក',
+    districtNameEn: 'Tuol Kouk',
+    lastDonationDate: lastDonationDate ?? DateTime(2026, 6, 14),
+    isAvailable: isAvailable,
+    eligibility: isEligible
+        ? const Eligibility(isEligible: true)
+        : Eligibility(
+            isEligible: false,
+            daysRemaining: 12,
+            eligibleOn: DateTime(2026, 8, 30),
+        ),
+);
+
+final class FakeDonorRepository implements DonorRepository {
+    /// `null` is a real answer — a 404, which is where every donor starts.
+    DonorProfile? profile;
+
+    Failure? profileFailure;
+    Failure? saveFailure;
+    Failure? districtsFailure;
+
+    final List<DonorProfileDraft> saves = [];
+
+    @override
+    Future<Result<DonorProfile?>> fetchProfile() async {
+        final failure = profileFailure;
+        if (failure != null) return Failed(failure);
+        return Success(profile);
+    }
+
+    @override
+    Future<Result<DonorProfile>> saveProfile(DonorProfileDraft draft) async {
+        saves.add(draft);
+        final failure = saveFailure;
+        if (failure != null) return Failed(failure);
+        final saved = testProfile(isAvailable: draft.isAvailable);
+        profile = saved;
+        return Success(saved);
+    }
+
+    @override
+    Future<Result<List<District>>> fetchDistricts() async {
+        final failure = districtsFailure;
+        if (failure != null) return Failed(failure);
+        // Khmer-alphabetical, as the server sends it.
+        return const Success([
+            District(code: '1201', nameKm: 'ចំការមន', nameEn: 'Chamkar Mon'),
+            District(code: '1204', nameKm: 'ទួលគោក', nameEn: 'Tuol Kouk'),
+        ]);
+    }
 }

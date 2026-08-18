@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../../../l10n/app_localizations.dart';
 import '../../auth/application/auth_providers.dart';
+import '../../donor/application/donor_providers.dart';
+import '../../donor/presentation/donor_profile_screen.dart';
+import '../../donor/presentation/donor_setup_screen.dart';
 import '../application/health_providers.dart';
 
 /// Home screen: app name in the active locale, the live health result, and sign-out.
@@ -56,6 +61,8 @@ class HomeScreen extends ConsumerWidget {
                             const SizedBox(height: 8),
                             Text(l10n.homeTagline, textAlign: TextAlign.center),
                             const SizedBox(height: 32),
+                            const _DonorEntryPoint(),
+                            const SizedBox(height: 32),
                             health.when(
                                 loading: () => Text(
                                     l10n.apiStatusChecking,
@@ -80,5 +87,39 @@ class HomeScreen extends ConsumerWidget {
                 ),
             ),
         );
+    }
+}
+
+/// The one thing the home screen does besides the health ping: get a signed-in user to their
+/// donor profile, or into setup if they have none.
+///
+/// Watches the profile rather than routing on `isNewAccount`, because the two can disagree —
+/// a donor who abandoned setup on their first run is not a new account any more, and would
+/// otherwise never be asked again.
+class _DonorEntryPoint extends ConsumerWidget {
+    const _DonorEntryPoint();
+
+    @override
+    Widget build(BuildContext context, WidgetRef ref) {
+        final l10n = AppLocalizations.of(context)!;
+        final profile = ref.watch(donorProfileControllerProvider);
+
+        return switch (profile) {
+            AsyncValue(hasValue: true, value: final loaded?) => FilledButton.tonalIcon(
+                key: const Key('home-donor-profile'),
+                icon: const Icon(Icons.badge_outlined),
+                onPressed: () => context.push(DonorProfileScreen.path),
+                label: Text('${l10n.donorProfileTitle} · ${loaded.bloodType.wireValue}'),
+            ),
+            AsyncValue(hasValue: true) => FilledButton.icon(
+                key: const Key('home-donor-setup'),
+                icon: const Icon(Icons.person_add_alt),
+                onPressed: () => context.push(DonorSetupScreen.path),
+                label: Text(l10n.donorProfileCta),
+            ),
+            // A failed profile load must not block the rest of the screen; the profile screen
+            // owns the retry.
+            _ => const SizedBox.shrink(),
+        };
     }
 }
