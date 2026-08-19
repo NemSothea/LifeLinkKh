@@ -14,7 +14,7 @@ app is built to, so they are kept here next to the code they govern.
 Two things are needed before the app will build, and one of them is not in this repo.
 
 **1. `android/app/google-services.json`.** Download it from the Firebase console —
-Project settings → the Android app registered as `kh.lifelink.app` → `google-services.json`
+Project settings → the Android app registered as `com.kosign.lifelinkkh` → `google-services.json`
 — and drop it in `mobile/android/app/`. Without it the build fails outright at
 `:app:processDebugGoogleServices`, which is the failure we want: the alternative is Google
 Sign-In failing silently at runtime.

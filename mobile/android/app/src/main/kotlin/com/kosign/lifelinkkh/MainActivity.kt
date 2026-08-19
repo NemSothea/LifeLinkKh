@@ -1,4 +1,4 @@
-package kh.lifelink.app
+package com.kosign.lifelinkkh
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "kh.lifelink.app"
+    namespace = "com.kosign.lifelinkkh"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "kh.lifelink.app"
+        applicationId = "com.kosign.lifelinkkh"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // Pinned rather than inherited: firebase_auth requires API 23, and a Flutter SDK
