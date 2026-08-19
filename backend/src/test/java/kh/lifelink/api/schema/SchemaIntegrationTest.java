@@ -36,7 +36,7 @@ class SchemaIntegrationTest {
         Integer applied =
                 jdbc.queryForObject(
                         "SELECT count(*) FROM flyway_schema_history WHERE success", Integer.class);
-        assertThat(applied).isEqualTo(6);
+        assertThat(applied).isEqualTo(7);
     }
 
     @Test
@@ -186,6 +186,61 @@ class SchemaIntegrationTest {
                                                 + " VALUES (gen_random_uuid(), gen_random_uuid(), 'A+', 0,"
                                                 + " 'URGENT', 'Test', '012000000')"))
                 .isNotNull();
+    }
+
+    /**
+     * V7 seeds the five pilot hospitals. Every one must have a coordinate: they are the origin
+     * point for every distance in FR-MATCH-001, and a NULL would not fail the NOT NULL constraint
+     * by accident — the constraint is the whole reason to check the seed rather than trust it.
+     *
+     * <p>Matched by name rather than by {@code count(*)}, because other tests in this class insert
+     * their own rows into the shared container.
+     */
+    @Test
+    void flywaySeedsTheFivePilotHospitals() {
+        List<String> names =
+                jdbc.queryForList(
+                        "SELECT name FROM hospitals WHERE latitude IS NOT NULL ORDER BY name",
+                        String.class);
+        assertThat(names)
+                .contains(
+                        "Calmette Hospital",
+                        "Khmer-Soviet Friendship Hospital",
+                        "National Blood Transfusion Center",
+                        "National Pediatric Hospital",
+                        "Preah Kossamak Hospital");
+    }
+
+    /**
+     * Every seeded hospital sits inside a generous box around Phnom Penh. This catches the failure
+     * that has no other detector: a transposed or mistyped coordinate still satisfies NUMERIC(9,6)
+     * and still produces 25 ranked donors, just the wrong ones. Swapping latitude and longitude —
+     * the classic version — lands at 104°N, which is off the planet.
+     */
+    @Test
+    void everySeededHospitalIsActuallyInPhnomPenh() {
+        Integer outside =
+                jdbc.queryForObject(
+                        "SELECT count(*) FROM hospitals"
+                                + " WHERE latitude NOT BETWEEN 11.4 AND 11.8"
+                                + "    OR longitude NOT BETWEEN 104.7 AND 105.1",
+                        Integer.class);
+        assertThat(outside).isZero();
+    }
+
+    /**
+     * The foreign key added by V4. Without it a hospital's district is free text, and
+     * Hospital.districtName resolves to nothing on the request form.
+     */
+    @Test
+    void hospitalDistrictMustExist() {
+        assertThatThrownBy(
+                        () ->
+                                jdbc.update(
+                                        "INSERT INTO hospitals (name, latitude, longitude, district_code)"
+                                                + " VALUES ('Nowhere Hospital', 11.55, 104.91,"
+                                                + " 'no-such-code')"))
+                .hasMessageContaining("hospitals_district_fk");
     }
 
     private List<String> donorsFor(String recipient) {

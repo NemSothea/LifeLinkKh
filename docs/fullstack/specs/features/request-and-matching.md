@@ -32,7 +32,11 @@ Depends on M3 — there is no requester and no matchable donor before `auth-goog
 (`blood_requests`, `request_matches`, `hospitals`, `blood_compatibility`) with a repository each.
 **No new table is required.** One column is.
 
-## The blocker that has to close first: there are no hospitals
+## The blocker that had to close first: there were no hospitals
+
+> **Closed 2026-08-19.** `V7__seed_hospitals.sql` seeds five. The section is kept because the reasoning
+> is still the standing rule for anyone adding a sixth.
+
 
 `POST /requests` requires a `hospitalId` and `hospitals` is **empty**. Nothing seeds it — not a
 migration, not a fixture. `GET /hospitals` returns `[]` today, the request form has an empty
@@ -100,10 +104,24 @@ moved would watch their alert list re-rank itself, and the order they were notif
 be reconstructible for the pilot's own metrics. `request_matches.distance_km NUMERIC(4,1) NULL`,
 written once, never recomputed.
 
-### `V7__seed_hospitals.sql`
+### `V7__seed_hospitals.sql` — **unblocked 2026-08-19**
 
 Reference data in its own migration, as `blood_compatibility` and `V3__seed_districts.sql` were.
-Blocked on the PO file above. It is the last thing merged in M4, not the first.
+PO delivered [`phnom-penh-hospitals.md`](../../../po/reference/phnom-penh-hospitals.md): five
+hospitals, every coordinate from the OpenStreetMap Nominatim hospital object, three of the five
+cross-checked against Wikipedia to within ~50 m.
+
+Two rows carry a ⚠️ on their **district** and ship anyway. That is not a relaxation of the rule above
+— the rule was about coordinates, and it is the coordinates that corrupt ranking silently.
+`district_code` on a hospital is display only: nothing in matching reads it, it feeds
+`Hospital.districtName` on the request form, and correcting it is one `UPDATE` with nothing to
+cascade into. Both uncertain rows sit on Street 271, which is an administrative boundary, and both are
+downstream of the same 2019 redistricting that made `1213` provisional in DEC-005.
+
+`SchemaIntegrationTest` now asserts the five names, the district foreign key, and a bounding box over
+Phnom Penh. The box exists for the failure with no other detector: a transposed coordinate satisfies
+`NUMERIC(9,6)` and still returns 25 plausibly-ranked donors. Swapping latitude and longitude — the
+classic version — lands at 104°N, off the planet.
 
 ## `POST /requests` — the whole chain in one call
 
