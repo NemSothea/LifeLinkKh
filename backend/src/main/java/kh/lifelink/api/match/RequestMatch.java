@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -39,6 +40,14 @@ public class RequestMatch {
 
     @Column(name = "responded_at")
     private OffsetDateTime respondedAt;
+
+    /**
+     * How far this donor was when they were matched, rounded to 0.5 km (ADR 0003). NULL when the
+     * donor had no coordinates. Written once and never recomputed — a donor who has since moved
+     * would otherwise see their alert list re-rank itself under them.
+     */
+    @Column(name = "distance_km", precision = 4, scale = 1)
+    private BigDecimal distanceKm;
 
     public UUID getId() {
         return id;
@@ -82,5 +91,13 @@ public class RequestMatch {
 
     public void setRespondedAt(OffsetDateTime respondedAt) {
         this.respondedAt = respondedAt;
+    }
+
+    public BigDecimal getDistanceKm() {
+        return distanceKm;
+    }
+
+    public void setDistanceKm(BigDecimal distanceKm) {
+        this.distanceKm = distanceKm;
     }
 }

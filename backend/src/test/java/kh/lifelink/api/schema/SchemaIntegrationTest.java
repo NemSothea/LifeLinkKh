@@ -36,7 +36,7 @@ class SchemaIntegrationTest {
         Integer applied =
                 jdbc.queryForObject(
                         "SELECT count(*) FROM flyway_schema_history WHERE success", Integer.class);
-        assertThat(applied).isEqualTo(3);
+        assertThat(applied).isEqualTo(6);
     }
 
     @Test
@@ -181,9 +181,10 @@ class SchemaIntegrationTest {
                         () ->
                                 jdbc.update(
                                         "INSERT INTO blood_requests (created_by_user_id, hospital_id,"
-                                                + " patient_blood_type, units_needed, urgency)"
+                                                + " patient_blood_type, units_needed, urgency,"
+                                                + " contact_name, contact_phone)"
                                                 + " VALUES (gen_random_uuid(), gen_random_uuid(), 'A+', 0,"
-                                                + " 'URGENT')"))
+                                                + " 'URGENT', 'Test', '012000000')"))
                 .isNotNull();
     }
 

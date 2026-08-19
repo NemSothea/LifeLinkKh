@@ -78,7 +78,29 @@ empty table that a later seed must satisfy is the same constraint expressed less
 in the contract marks `districtName` optional (only `id` and `name` are required), so a hospital
 without a district still serializes.
 
-### `V5__seed_hospitals.sql`
+### `V5__request_contact.sql` — the accept flow had nobody to call
+
+Found while wiring the accept path, and it is not a detail. `RequesterContact` requires a
+`displayName` and a `phone`, and **nothing in the database could produce either**: the display name
+arrives inside the Google ID token and is never stored, and phone was dropped from sign-up when auth
+moved to Google Sign-In (ADR 0002). A donor who accepted would have reached the one screen the whole
+accept flow exists to produce, and found it blank.
+
+`blood_requests` gains `contact_name` and `contact_phone`, both NOT NULL with no default — the table
+is empty, so there is nothing to back-fill, and a default would let a future insert omit the field the
+flow depends on. The contact belongs to the request rather than the account because the person posting
+may be posting for someone else. See CR-MAPI-003.
+
+### `V6__match_distance.sql` — the distance that ranked this donor, kept
+
+`Match.request.distanceKm` means `GET /matches/me` has to answer a distance for a match created
+earlier. Recomputing from the donor's current coordinates answers a different question: distance is a
+fact *about the match* — how far away this donor was when they were chosen. A donor who has since
+moved would watch their alert list re-rank itself, and the order they were notified in would no longer
+be reconstructible for the pilot's own metrics. `request_matches.distance_km NUMERIC(4,1) NULL`,
+written once, never recomputed.
+
+### `V7__seed_hospitals.sql`
 
 Reference data in its own migration, as `blood_compatibility` and `V3__seed_districts.sql` were.
 Blocked on the PO file above. It is the last thing merged in M4, not the first.
@@ -136,21 +158,34 @@ index, and pulling 200 donor rows into the JVM to sort them there would put dono
 application memory for no gain (ADR 0003's exposure argument applies to logs and heap dumps too).
 
 ```sql
-SELECT dp.id,
-       ROUND((<haversine>)::numeric * 2, 0) / 2 AS distance_km
-FROM donor_profiles dp
-JOIN blood_compatibility bc
-  ON bc.donor_type = dp.blood_type
- AND bc.recipient_type = :patientBloodType          -- ADR 0004: joined, never branched
-JOIN users u ON u.id = dp.user_id
-WHERE dp.is_available = true
-  AND (dp.last_donation_date IS NULL                -- 56-day cooldown, FR-DONOR-002
-       OR dp.last_donation_date <= :today - 56)
-  AND (dp.latitude IS NULL                          -- no coordinates: still matches (ADR 0003)
-       OR <haversine> <= :radiusKm)
-ORDER BY distance_km ASC NULLS LAST, dp.id ASC      -- ADR 0008: deterministic
+SELECT c.id                                    AS "donorProfileId",
+       ROUND(c.distance_km::numeric * 2, 0) / 2 AS "distanceKm"    -- 0.5 km steps (ADR 0003)
+FROM (
+    SELECT dp.id,
+           dp.latitude,
+           CASE WHEN dp.latitude IS NULL OR dp.longitude IS NULL THEN NULL
+                ELSE 6371 * acos(least(1,
+                    cos(radians(:hospitalLat)) * cos(radians(dp.latitude))
+                      * cos(radians(dp.longitude) - radians(:hospitalLng))
+                  + sin(radians(:hospitalLat)) * sin(radians(dp.latitude))
+                ))
+           END AS distance_km
+    FROM donor_profiles dp
+    JOIN blood_compatibility bc
+      ON bc.donor_type     = dp.blood_type
+     AND bc.recipient_type = :patientBloodType      -- ADR 0004: joined, never branched
+    WHERE dp.is_available = true
+      AND (dp.last_donation_date IS NULL            -- 56-day cooldown, FR-DONOR-002
+           OR dp.last_donation_date <= :eligibleCutoff)
+) c
+WHERE c.latitude IS NULL OR c.distance_km <= :radiusKm  -- no coordinates: still matches (ADR 0003)
+ORDER BY "distanceKm" ASC NULLS LAST, c.id ASC          -- ADR 0008: deterministic
 LIMIT :maxNotified
 ```
+
+The haversine appears once, in a subquery, rather than three times inline. Aliases are quoted so
+Postgres preserves their case and the projection getters bind — an unquoted `AS distanceKm` folds to
+`distancekm` and silently fails to map.
 
 Points that are decisions, not style:
 
@@ -167,12 +202,22 @@ Points that are decisions, not style:
 - **56 days is `EligibilityCalculator.COOLDOWN_DAYS`, not a literal `56` in SQL.** Bind it.
 - **`NULLS LAST` is load-bearing.** Postgres sorts NULL first on `ASC` by default, which would put
   every GPS-declining donor at the front of the alert list. The one word inverts the whole ranking.
+- **`least` needs an explicit NULL guard, and this was a real bug.** Postgres' `least` *skips* NULL
+  arguments rather than propagating them, so `least(1, NULL)` is `1`, `acos(1)` is `0`, and a donor
+  with no coordinates comes back at **0.0 km — first in the alert list**. It is the same inversion
+  `NULLS LAST` exists to prevent, arriving by a different route, and `NULLS LAST` cannot catch it
+  because the value is no longer null. Hence the `CASE ... IS NULL` wrapper. The first implementation
+  had this bug and `MatchingIntegrationTest` caught it, which is the whole argument for testing the
+  ranking rules against a real PostgreSQL instead of a mock. (The `least` itself still has to stay:
+  floating-point can push the `acos` argument a hair above 1 for two points at the same place, which
+  is a domain error rather than a distance of zero.)
 - **Radius default 10 km** (`prd.md` FR-05), `lifelink.matching.radius-km`. Cap 25,
   `lifelink.matching.max-notified` / `MATCHING_MAX_NOTIFIED` (ADR 0008).
 - **No spatial index.** ADR 0003 settled this: a computed ordering over pilot size is fine. Revisit
   only with a measurement, not a hunch.
-- **Distance is rounded server-side to 0.5 km** and that rounded value is what is stored in the
-  response DTO. There is no code path that produces an unrounded distance outside this query.
+- **Distance is rounded server-side to 0.5 km** in the query itself, and that rounded value is what
+  is written to `request_matches.distance_km` and returned. There is no code path in the product that
+  produces an unrounded donor distance.
 
 ## `POST /matches/{id}/respond` — `FR-REQUEST-002`
 

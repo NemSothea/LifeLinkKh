@@ -37,6 +37,14 @@ public class Hospital extends Auditable {
     @Column(name = "longitude", nullable = false, precision = 9, scale = 6)
     private BigDecimal longitude;
 
+    /**
+     * Nullable, and the nullability is the interesting part. {@code V4__hospitals_district.sql}
+     * added the column while the table was still empty, so there was no row to satisfy a NOT NULL.
+     * References {@code districts(code)} — the foreign key is what stops it becoming free text.
+     */
+    @Column(name = "district_code", length = 16)
+    private String districtCode;
+
     public UUID getId() {
         return id;
     }
@@ -79,5 +87,13 @@ public class Hospital extends Auditable {
 
     public void setLongitude(BigDecimal longitude) {
         this.longitude = longitude;
+    }
+
+    public String getDistrictCode() {
+        return districtCode;
+    }
+
+    public void setDistrictCode(String districtCode) {
+        this.districtCode = districtCode;
     }
 }

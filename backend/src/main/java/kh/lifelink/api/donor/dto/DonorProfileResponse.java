@@ -2,6 +2,7 @@ package kh.lifelink.api.donor.dto;
 
 import java.time.LocalDate;
 import java.util.UUID;
+import kh.lifelink.api.district.dto.DistrictName;
 
 /**
  * The donor read model — an explicit allow-list, built field by field from the entity.
@@ -15,7 +16,9 @@ import java.util.UUID;
  * leak nothing today. The rule is absolute anyway: this is the DTO {@code GET /matches/me} will
  * reach for at M4, and at that point the coordinates belong to someone else.
  *
- * @param districtName the district in both languages — see {@link DistrictName}
+ * @param districtName the district in both languages (CR-MAPI-001). The record moved to {@code
+ *     district.dto.DistrictName} at M4 when hospitals and request details needed the same shape —
+ *     one record, because two identical ones drift.
  */
 public record DonorProfileResponse(
         UUID id,
@@ -25,15 +28,4 @@ public record DonorProfileResponse(
         DistrictName districtName,
         LocalDate lastDonationDate,
         boolean isAvailable,
-        EligibilityResponse eligibility) {
-
-    /**
-     * Both labels, rather than the server picking one.
-     *
-     * <p>The contract's {@code districtName} is a single string and does not say which language.
-     * Returning both keeps a presentation decision out of the API; the alternative is the server
-     * reading {@code users.language} and choosing for the client. Either way this needs a CR-MAPI,
-     * since it changes a response schema — flagged in the spec, not settled here.
-     */
-    public record DistrictName(String km, String en) {}
-}
+        EligibilityResponse eligibility) {}

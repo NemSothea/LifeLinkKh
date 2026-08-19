@@ -16,13 +16,18 @@ import kh.lifelink.api.donor.dto.EligibilityResponse;
  * conflict (docs/fullstack/CLAUDE.md), so it is here. The milestone tables still disagree and that
  * is flagged for Tech Lead and PO in the spec — not resolved by this class.
  */
-final class EligibilityCalculator {
+public final class EligibilityCalculator {
 
-    static final int COOLDOWN_DAYS = 56;
+    /**
+     * Public because the M4 matching query filters on the same window and must bind this value
+     * rather than write {@code 56} in SQL. One number, one place — a literal in the query would be
+     * a second definition that nothing keeps in step with this one.
+     */
+    public static final int COOLDOWN_DAYS = 56;
 
     private EligibilityCalculator() {}
 
-    static EligibilityResponse forLastDonation(LocalDate lastDonationDate, LocalDate today) {
+    public static EligibilityResponse forLastDonation(LocalDate lastDonationDate, LocalDate today) {
         // NULL means never donated — the correct state for a first-time donor, and eligible.
         if (lastDonationDate == null) {
             return EligibilityResponse.eligible();

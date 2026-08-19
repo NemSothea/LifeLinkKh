@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: LifeLink KH — Mobile API
-  version: 0.2.0
+  version: 0.3.0
   description: |
     Flutter donor/requester app. Machine twin of contract.md — this file wins on conflict.
     Scope: the 8 core FRs only (docs/scope.md). Deferred FRs have no endpoints here.
@@ -197,7 +197,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422':
-          description: unitsNeeded < 1, unknown blood type, unknown hospital
+          description: unitsNeeded < 1, unknown blood type, unknown urgency, unknown hospital
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
@@ -452,16 +452,31 @@ components:
       properties:
         id: { type: string, format: uuid }
         name: { type: string, example: Calmette Hospital }
-        districtName: { type: string }
+        districtName:
+          allOf:
+            - $ref: '#/components/schemas/DistrictName'
+          nullable: true
+          description: Both labels (CR-MAPI-003). Null until the hospital seed assigns a district.
 
     RequestCreate:
       type: object
-      required: [patientBloodType, unitsNeeded, hospitalId, urgency]
+      description: |
+        contactName and contactPhone are CR-MAPI-003. RequesterContact requires a name and a
+        phone, and nothing in the database could supply either: the display name arrives inside
+        the Google ID token and is never stored, and phone was dropped from sign-up when auth
+        moved to Google Sign-In (ADR 0002). The contact belongs to the request rather than the
+        account — the person posting may be posting for someone else.
+      required: [patientBloodType, unitsNeeded, hospitalId, urgency, contactName, contactPhone]
       properties:
         patientBloodType: { $ref: '#/components/schemas/BloodType' }
         unitsNeeded: { type: integer, minimum: 1, default: 1 }
         hospitalId: { type: string, format: uuid }
         urgency: { $ref: '#/components/schemas/Urgency' }
+        contactName: { type: string, maxLength: 120, description: Who the donor asks for on arrival. }
+        contactPhone:
+          type: string
+          maxLength: 20
+          description: Callback number. Revealed only to a donor whose match response is ACCEPTED.
 
     BloodRequest:
       type: object
@@ -499,7 +514,8 @@ components:
         - $ref: '#/components/schemas/BloodRequest'
         - type: object
           properties:
-            districtName: { type: string }
+            # districtName was removed here in CR-MAPI-003 — hospital.districtName already
+            # carries it, and two fields holding the same value drift.
             distanceKm: { $ref: '#/components/schemas/DistanceKm' }
             requesterContact:
               allOf:

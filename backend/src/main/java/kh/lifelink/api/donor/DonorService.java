@@ -7,6 +7,7 @@ import java.util.UUID;
 import kh.lifelink.api.common.error.ApiException;
 import kh.lifelink.api.district.District;
 import kh.lifelink.api.district.DistrictRepository;
+import kh.lifelink.api.district.dto.DistrictName;
 import kh.lifelink.api.donor.dto.DonorProfileResponse;
 import kh.lifelink.api.donor.dto.DonorProfileWriteRequest;
 import org.springframework.stereotype.Service;
@@ -107,8 +108,7 @@ public class DonorService {
                 profile.getDistrictCode(),
                 district == null
                         ? null
-                        : new DonorProfileResponse.DistrictName(
-                                district.getNameKm(), district.getNameEn()),
+                        : new DistrictName(district.getNameKm(), district.getNameEn()),
                 profile.getLastDonationDate(),
                 profile.isAvailable(),
                 EligibilityCalculator.forLastDonation(profile.getLastDonationDate(), today()));

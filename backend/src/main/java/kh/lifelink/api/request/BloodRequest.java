@@ -12,8 +12,10 @@ import kh.lifelink.api.common.audit.Auditable;
  * An urgent need posted by a family or by hospital staff.
  *
  * <p>{@code status} accepts EXPIRED because FR-04 lists it, but <strong>nothing in the system can
- * set it at M2</strong> — the expiry rule is undecided, there is no {@code expires_at} column and
- * no scheduled job. Requests are closed manually. Resolve before M4.
+ * set it</strong>, and that is now a settled answer rather than an open one: FR-REQUEST-005 is
+ * deferred (docs/scope.md, DEC-004), so there is no expiry rule, no {@code expires_at} column and
+ * no scheduled job. Requests are closed manually. EXPIRED stays a dead value, like WITHDRAWN on
+ * {@code request_matches}.
  */
 @Entity
 @Table(name = "blood_requests")
@@ -45,6 +47,19 @@ public class BloodRequest extends Auditable {
     /** OPEN, FULFILLED, CANCELLED or EXPIRED (unreachable at M2). */
     @Column(name = "status", nullable = false, length = 16)
     private String status = "OPEN";
+
+    /**
+     * The two contact fields are the payoff of the whole accept flow, and they are shown to a donor
+     * <strong>only</strong> once that donor's own match response is ACCEPTED (TM-AUTH-001 I1). They
+     * live on the request rather than on the account because the person posting may be posting for
+     * someone else — see {@code V5__request_contact.sql}.
+     */
+    @Column(name = "contact_name", nullable = false, length = 120)
+    private String contactName;
+
+    /** Unverified. Nothing in this build verifies a phone number (ADR 0002). */
+    @Column(name = "contact_phone", nullable = false, length = 20)
+    private String contactPhone;
 
     public UUID getId() {
         return id;
@@ -96,5 +111,21 @@ public class BloodRequest extends Auditable {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getContactName() {
+        return contactName;
+    }
+
+    public void setContactName(String contactName) {
+        this.contactName = contactName;
+    }
+
+    public String getContactPhone() {
+        return contactPhone;
+    }
+
+    public void setContactPhone(String contactPhone) {
+        this.contactPhone = contactPhone;
     }
 }
