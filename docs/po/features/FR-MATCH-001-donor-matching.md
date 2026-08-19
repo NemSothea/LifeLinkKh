@@ -27,13 +27,16 @@ Compatibility is not exact-type matching. `prd.md` section 9 is explicit: an O�
 almost anyone, an AB+ patient can receive from anyone. Matching on exact type alone would discard
 most of the available supply.
 
-**Blocked on one open brief** in `../briefs/roadmap.md`:
-- **Max notified count** — FR-05 calls it configurable but gives no default. Too few and the request
-  goes unanswered; too many and donors learn to ignore alerts.
+**No longer blocked.** All three blockers are resolved — the M4 build can start.
 
-Must be resolved before M4 build.
+Resolved 2026-08-19:
+- **Max notified count** — [ADR 0008](../../tech-lead/adr/0008-max-notified-donor-count.md).
+  **25**, flat, configurable via `MATCHING_MAX_NOTIFIED`. Set at the pessimistic end of the
+  acceptance-rate range so the PRD's 70%-within-60-minutes target survives an unmeasured donor
+  population. `units_needed` does not scale it. Only notified donors get a `request_matches` row.
+  Ranking is deterministic: distance ascending `NULLS LAST`, then `donor_profiles.id`.
 
-Two blockers were resolved on 2026-08-07:
+Resolved on 2026-08-07:
 - **Location precision** — [ADR 0003](../../tech-lead/adr/0003-donor-location-precision.md).
   Rank on coarse coordinates the API never returns; show district and a distance rounded to 0.5 km.
   Donors with no coordinates still match and sort `NULLS LAST`.
@@ -41,10 +44,32 @@ Two blockers were resolved on 2026-08-07:
   A seeded 27-row `blood_compatibility` table, joined in the matching query, not branching code.
 
 ## Scope
-**In:** <to be filled after prototyping>
-**Out:** <...>
+
+**In:**
+- Matching runs automatically on request creation — never a separate call the client can forget.
+- Candidate filter, all four conditions, `AND`-ed: ABO/Rh compatible with `patient_blood_type` via
+  the seeded `blood_compatibility` join (ADR 0004); `is_available = true`; eligible under the 56-day
+  cooldown (`FR-DONOR-002` computation half); within the 10 km radius when coordinates exist.
+- Ranking by distance ascending, `NULLS LAST`, tie-broken by `donor_profiles.id` (ADR 0003, ADR 0008).
+- Top 25 candidates are written to `request_matches` and handed to `FR-NOTIFY-001` (ADR 0008).
+- A donor with no coordinates still matches and sorts last — declining GPS must never cost a match.
+
+**Out:**
+- Widening the radius or retrying on zero matches — `FR-MATCH-002`, deferred in `../../scope.md`.
+- Re-matching an already-created request. Matching runs once, at creation.
+- Scaling the cap by `units_needed`, or by `urgency` — both declined in ADR 0008.
+- Returning `latitude`/`longitude`, or an unrounded distance, in any response (ADR 0003).
 
 ## Acceptance criteria
 Criteria live in `../prd.md` under FR-05 and are not duplicated here.
 
-- [ ] <to be filled after prototyping>
+- [ ] An incompatible donor is never matched — verified against all 8 recipient types, not just one.
+- [ ] An ineligible donor (donated < 56 days ago) is never matched, even if available and nearby.
+- [ ] An unavailable donor (`is_available = false`) is never matched.
+- [ ] With 30 qualifying candidates, exactly 25 `request_matches` rows exist; the 26th-ranked donor
+      has no row at all.
+- [ ] With fewer than 25 qualifying candidates, every one of them is matched — the cap never pads.
+- [ ] The same request matched twice produces the same 25 donors in the same order.
+- [ ] A donor with `latitude`/`longitude` NULL is matched and sorts after every ranked donor.
+- [ ] No response body from any endpoint in this FR contains `latitude`, `longitude`, or a distance
+      that is not rounded to 0.5 km (shared test case with `TM-AUTH-001` finding I1, per ADR 0003).

@@ -42,7 +42,7 @@ cross-references still resolve.
 | [FR-REQUEST-003-duplicate-request-warning](FR-REQUEST-003-duplicate-request-warning.md) | Warn on duplicate open request | REQUEST | Should Have | **deferred** — DEC-004 | — |
 | [FR-REQUEST-004-withdraw-acceptance](FR-REQUEST-004-withdraw-acceptance.md) | Donor withdraws acceptance | REQUEST | Should Have | **deferred** — DEC-004 | — |
 | [FR-REQUEST-005-request-expiry](FR-REQUEST-005-request-expiry.md) | Request expiry rule | REQUEST | Should Have | **deferred** — DEC-004 | — |
-| [FR-MATCH-001-donor-matching](FR-MATCH-001-donor-matching.md) | Donor matching by compatibility and distance | MATCH | Must Have | accepted | M4 🔒 |
+| [FR-MATCH-001-donor-matching](FR-MATCH-001-donor-matching.md) | Donor matching by compatibility and distance | MATCH | Must Have | accepted | M4 |
 | [FR-MATCH-002-zero-match-fallback](FR-MATCH-002-zero-match-fallback.md) | No-donors-found handling | MATCH | Should Have | **deferred** — DEC-004 | — |
 | [FR-DONATION-001-donation-history](FR-DONATION-001-donation-history.md) | Donation history | DONATION | Should Have | accepted | M5 |
 | [FR-NOTIFY-001-request-push-alert](FR-NOTIFY-001-request-push-alert.md) | Push alert for a matched request | NOTIFY | Must Have | accepted | M4 (tokens M3) |
@@ -65,20 +65,25 @@ FR-REQUEST-002 · FR-NOTIFY-001 · FR-DONATION-001.
 Plus FR-PORTAL-001 trimmed to a single open-requests page, and FR-GLOBAL-001 (km/en) at M6.
 
 🔒 = blocked on an open brief in [../briefs/roadmap.md](../briefs/roadmap.md).
-The MATCH rows' location-precision and compatibility blockers were cleared on 2026-08-07 by
+**No FR in the build carries a 🔒 as of 2026-08-19.** `FR-MATCH-001`'s three blockers cleared in two
+rounds: location precision and compatibility on 2026-08-07 by
 [ADR 0003](../../tech-lead/adr/0003-donor-location-precision.md) and
-[ADR 0004](../../tech-lead/adr/0004-abo-rh-compatibility-lookup-table.md); both stay 🔒 on the
-remaining max-notified-count brief.
+[ADR 0004](../../tech-lead/adr/0004-abo-rh-compatibility-lookup-table.md), then max-notified count on
+2026-08-19 by [ADR 0008](../../tech-lead/adr/0008-max-notified-donor-count.md).
 
 ## Blocked on open briefs
 
-| FR | Blocking brief | Must resolve before |
-|---|---|---|
-| `FR-MATCH-001` | Location precision; max notified count | M4 |
-| `FR-MATCH-002` | Zero-match fallback | M4 |
-| `FR-REQUEST-005` | Request expiry rule | M4 (shapes schema) |
-| `FR-REQUEST-004` | Withdrawn acceptance | M5 |
-| `FR-DONOR-001`, `FR-DONOR-002`, `FR-DONATION-001`, `FR-SECURITY-001` | Location precision / walk-in donation | M4–M6 |
+| FR | Blocking brief | Must resolve before | State |
+|---|---|---|---|
+| `FR-MATCH-001` | Location precision; max notified count | M4 | **cleared** — ADR 0003, ADR 0004, ADR 0008 |
+| `FR-MATCH-002` | Zero-match fallback | M4 | **moot** — FR deferred in [../../scope.md](../../scope.md) |
+| `FR-REQUEST-005` | Request expiry rule | M4 (shapes schema) | **moot** — FR deferred; `EXPIRED` stays a dead value |
+| `FR-DONOR-001`, `FR-DONOR-002` | Location precision | M4 | **cleared** — ADR 0003 |
+| `FR-REQUEST-004` | Withdrawn acceptance | M5 | **moot** — FR deferred |
+| `FR-DONATION-001` | Walk-in donation (does it count toward the cooldown, who records it) | M5 | **open** |
+| `FR-SECURITY-001` | — | — | **moot** — FR deferred, see the privacy warning in [../../scope.md](../../scope.md) |
+
+Nothing in the M4 build is blocked. The one live brief, walk-in donations, is due before M5.
 
 ## Scheduling conflicts — resolved
 

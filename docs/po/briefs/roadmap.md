@@ -34,16 +34,21 @@ FR-01..FR-12 in [`../prd.md`](../prd.md) are already scoped, so they do **not** 
 These are the gaps that do — each one is an unresolved product decision that blocks or
 weakens an FR.
 
-### Due before M4 (urgent request + matching)
+### Due before M4 (urgent request + matching) — all three closed 2026-08-19
 
-- **Request expiry rule** — `FR-04` declares a status `expired` but defines no timer.
-  Needs: how long an open request lives, whether urgency level changes that, who gets
-  told on expiry. Blocks the `BloodRequest` state machine.
-- **Zero-match fallback** — `FR-05` sets a 10 km default radius; the PRD edge case says the
-  system "widens radius or retries" without saying by how much, how often, or when it gives up.
-  Blocks matching logic.
-- **Max-notified count** — `FR-05` says "configurable max notified count" with no default.
-  Needs a number and the reasoning (notification fatigue vs. fill rate).
+**Nothing here blocks the M4 build any more.**
+
+- ~~**Request expiry rule**~~ — **closed as deferred.** `FR-REQUEST-005` is cut in `../../scope.md`.
+  `status = 'EXPIRED'` stays the dead value `V1__init.sql` already documents; open requests are
+  closed manually. The `BloodRequest` state machine is OPEN → FULFILLED | CANCELLED and nothing sets
+  EXPIRED. If the FR ever returns, it returns with a timer decision first.
+- ~~**Zero-match fallback**~~ — **closed as deferred.** `FR-MATCH-002` is cut in `../../scope.md`.
+  The 10 km radius does not widen and matching does not retry; a zero-match is reported to the
+  requester as "no donors found". Matching logic is unblocked on that basis.
+- ~~**Max-notified count**~~ — **resolved.**
+  [ADR 0008](../../tech-lead/adr/0008-max-notified-donor-count.md) — **25**, flat, configurable via
+  `MATCHING_MAX_NOTIFIED`. `units_needed` deliberately does not scale it. Only notified donors get a
+  `request_matches` row, and ranking is deterministic (distance `NULLS LAST`, then donor id).
 
 ### Due before M5 (history + cooldown + push)
 
