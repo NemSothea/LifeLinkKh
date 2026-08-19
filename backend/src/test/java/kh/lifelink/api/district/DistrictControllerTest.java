@@ -55,8 +55,8 @@ class DistrictControllerTest {
     }
 
     /**
-     * Not an exemption in the deny-by-default chain. The list is 14 public place names, so this is not
-     * about secrecy — it is that the chain permits exactly three things, and a fourth added for
+     * Not an exemption in the deny-by-default chain. The list is 14 public place names, so this is
+     * not about secrecy — it is that the chain permits exactly three things, and a fourth added for
      * convenience is how that property erodes.
      */
     @Test

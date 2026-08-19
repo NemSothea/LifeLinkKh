@@ -60,8 +60,8 @@ class SchemaIntegrationTest {
 
     /**
      * V3 seeds all fourteen (DEC-005). This replaces the earlier assertion that the table was
-     * deliberately empty — that test existed so whoever seeded it would have to update this file
-     * on purpose, which is what happened.
+     * deliberately empty — that test existed so whoever seeded it would have to update this file on
+     * purpose, which is what happened.
      *
      * <p>Matched on the national geocode pattern rather than on {@code count(*)}, because other
      * tests in this class insert their own synthetic districts into the shared container.
@@ -74,10 +74,21 @@ class SchemaIntegrationTest {
                         String.class);
         assertThat(codes)
                 .containsExactly(
-                        "1201", "1202", "1203", "1204", "1205", "1206", "1207", "1208", "1209",
-                        "1210", "1211", "1212",
+                        "1201",
+                        "1202",
+                        "1203",
+                        "1204",
+                        "1205",
+                        "1206",
+                        "1207",
+                        "1208",
+                        "1209",
+                        "1210",
+                        "1211",
+                        "1212",
                         // Provisional — no official code exists yet for either khan. See DEC-005.
-                        "1213", "1214");
+                        "1213",
+                        "1214");
     }
 
     /**
