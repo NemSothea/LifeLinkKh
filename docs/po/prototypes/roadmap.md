@@ -12,7 +12,14 @@ The Flutter or Next.js work starts from a settled screen, never from a blank fil
 
 | Flow | Client | Area | Due by | Status | FR |
 |---|---|---|---|---|---|
-| _(none yet)_ | | | | | |
+| `AUTH-google-signin` | mobile | AUTH | M1 | frozen (M3 build shipped) | `FR-AUTH-003` |
+| `DONOR-profile-setup` | mobile | DONOR | M1 | frozen (M3 build shipped) | `FR-DONOR-001` |
+| `REQUEST-create-urgent` | mobile | REQUEST | M1 | frozen (M4 build shipped) | `FR-REQUEST-001` |
+| `NOTIFY-donor-alert` | mobile | NOTIFY | M1 | frozen, corrected 2026-08-22 by `REQUEST-responders-list` | `FR-NOTIFY-001` |
+| `REQUEST-responders-list` | mobile | REQUEST | M4 | drafted 2026-08-22, late — written after M4 build, matches what shipped | `FR-REQUEST-002` |
+| `PORTAL-open-requests` | web | PORTAL | M4 | frozen 2026-08-22, build shipped same day | `FR-PORTAL-001` |
+| `DONOR-eligibility-status` | mobile | DONOR | M5 | drafted 2026-08-22, late — matches what shipped at M3 | `FR-DONOR-002` |
+| `DONATION-history` | mobile | DONATION | M5 | drafted 2026-08-22, build starting now | `FR-DONATION-001` |
 
 Status: `todo` | `drafting` | `in review` | `frozen` | `dropped`
 

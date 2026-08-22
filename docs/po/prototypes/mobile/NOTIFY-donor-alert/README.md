@@ -15,8 +15,13 @@
 1. Blood type, hospital, urgency, rounded distance, units. **Not** the patient's name and not the
    requester's contact — a donor decides on the medical and logistical facts, and nothing else is
    theirs to see yet.
-2. **Mutual reveal, one direction at a time.** On accept, the requester's contact becomes visible to
-   this donor, and this donor becomes visible to the requester. Before accept, neither.
+2. **One-directional.** On accept, the requester's contact becomes visible to this donor. Before
+   accept, nothing. **Corrected 2026-08-22 by
+   [`REQUEST-responders-list`](../REQUEST-responders-list/README.md):** the requester never sees
+   this donor back — no name, no phone, no blood type. The donor already has the requester's number
+   and can call; the requester learns only that `acceptedCount` went up. The original "mutual
+   reveal, this donor becomes visible to the requester" line in this section was never backed by an
+   endpoint and should not have shipped as the answer.
 3. **In-app, through the request thread.** This is the mitigation the auth change created a debt for
    (ADR 0002) — phone numbers are unverified, so the app cannot promise a call connects. Contact
    details are shown as a convenience; the push channel is the guarantee.
