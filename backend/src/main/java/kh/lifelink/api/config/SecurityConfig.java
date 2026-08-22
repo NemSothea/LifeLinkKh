@@ -60,24 +60,49 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers(HttpMethod.POST, "/auth/google")
                                         .permitAll()
+                                        // FR-PORTAL-001. RBAC scoped by hospital happens in
+                                        // PortalService; this is the role half — a DONOR or
+                                        // REQUESTER JWT gets 403 before the controller runs.
+                                        .requestMatchers("/portal/**")
+                                        .hasAnyRole("HOSPITAL", "ADMIN")
                                         .anyRequest()
                                         .authenticated())
                 .exceptionHandling(
                         handling ->
-                                handling.authenticationEntryPoint(
-                                        (request, response, ex) -> {
-                                            // Same envelope as every other error, serialised the
-                                            // same way. A caller cannot tell "no token" from "bad
-                                            // token", which is deliberate.
-                                            response.setStatus(401);
-                                            response.setContentType(
-                                                    MediaType.APPLICATION_JSON_VALUE);
-                                            json.writeValue(
-                                                    response.getOutputStream(),
-                                                    ErrorResponse.of(
-                                                            "UNAUTHENTICATED",
-                                                            "Not authenticated."));
-                                        }))
+                                handling
+                                        .authenticationEntryPoint(
+                                                (request, response, ex) -> {
+                                                    // Same envelope as every other error,
+                                                    // serialised the same way. A caller cannot
+                                                    // tell "no token" from "bad token", which is
+                                                    // deliberate.
+                                                    response.setStatus(401);
+                                                    response.setContentType(
+                                                            MediaType.APPLICATION_JSON_VALUE);
+                                                    json.writeValue(
+                                                            response.getOutputStream(),
+                                                            ErrorResponse.of(
+                                                                    "UNAUTHENTICATED",
+                                                                    "Not authenticated."));
+                                                })
+                                        // The `.hasAnyRole("HOSPITAL", "ADMIN")` rule on
+                                        // /portal/** is refused here, in the filter chain,
+                                        // before any controller runs — GlobalExceptionHandler
+                                        // never sees it. Without this, a DONOR JWT hitting the
+                                        // portal gets Spring's default 403 page instead of the
+                                        // one error envelope every other endpoint returns.
+                                        .accessDeniedHandler(
+                                                (request, response, ex) -> {
+                                                    response.setStatus(403);
+                                                    response.setContentType(
+                                                            MediaType.APPLICATION_JSON_VALUE);
+                                                    json.writeValue(
+                                                            response.getOutputStream(),
+                                                            ErrorResponse.of(
+                                                                    "ROLE_NOT_ALLOWED",
+                                                                    "Not allowed for this "
+                                                                            + "account's role."));
+                                                }))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

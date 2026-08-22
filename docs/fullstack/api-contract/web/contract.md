@@ -31,6 +31,14 @@ This works because `POST /auth/google` honours the `role` field only on first si
 account returns its stored role and ignores anything the client sends. So a privileged account cannot
 be created through the front door (`TM-AUTH-001` E1), and a seeded one signs in with no extra code.
 
+> **Not wired yet.** No Firebase Web app is registered, so `frontend/` has no Google Sign-In button
+> and cannot call `POST /auth/google` itself
+> (`docs/po/prototypes/web/PORTAL-open-requests/README.md`). Until it is, the portal page reads a
+> session minted directly for the seeded `HOSPITAL` account via `PORTAL_DEV_JWT`
+> (`frontend/src/lib/api/portal.ts`) — same token shape, same one-hour expiry (ADR 0007), just no
+> sign-in screen producing it. Registering the Web app and building the button does not change this
+> contract; it only changes how the bearer token in every `/portal/*` call gets minted.
+
 > **The seeding itself is an unreviewed privileged path.** Creating the first `HOSPITAL`/`ADMIN` rows
 > in `V1__init.sql` bypasses every check in the application. Flagged in `TM-AUTH-001` residual risk;
 > it needs its own security review when the migration is written, not after.

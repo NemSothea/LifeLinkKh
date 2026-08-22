@@ -57,8 +57,10 @@ class MatchingIntegrationTest {
         jdbc.update("DELETE FROM request_matches");
         jdbc.update("DELETE FROM blood_requests");
         jdbc.update("DELETE FROM donor_profiles");
-        jdbc.update("DELETE FROM hospitals");
+        // users before hospitals: V8 added users.hospital_id, so a seeded HOSPITAL row now
+        // references a hospital and must go first.
         jdbc.update("DELETE FROM users");
+        jdbc.update("DELETE FROM hospitals");
 
         Hospital h = new Hospital();
         h.setName("Test Hospital");

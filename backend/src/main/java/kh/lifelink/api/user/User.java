@@ -56,6 +56,13 @@ public class User extends Auditable {
     @Column(name = "fcm_token", columnDefinition = "text")
     private String fcmToken;
 
+    /**
+     * Which hospital a HOSPITAL-role account is staff for (FR-PORTAL-001). NULL for every other
+     * role, and for ADMIN — an admin is not scoped to one hospital.
+     */
+    @Column(name = "hospital_id")
+    private UUID hospitalId;
+
     public UUID getId() {
         return id;
     }
@@ -98,5 +105,13 @@ public class User extends Auditable {
 
     public void setFcmToken(String fcmToken) {
         this.fcmToken = fcmToken;
+    }
+
+    public UUID getHospitalId() {
+        return hospitalId;
+    }
+
+    public void setHospitalId(UUID hospitalId) {
+        this.hospitalId = hospitalId;
     }
 }

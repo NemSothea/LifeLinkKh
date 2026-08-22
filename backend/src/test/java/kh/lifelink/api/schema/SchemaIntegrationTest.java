@@ -36,7 +36,7 @@ class SchemaIntegrationTest {
         Integer applied =
                 jdbc.queryForObject(
                         "SELECT count(*) FROM flyway_schema_history WHERE success", Integer.class);
-        assertThat(applied).isEqualTo(7);
+        assertThat(applied).isEqualTo(8);
     }
 
     @Test

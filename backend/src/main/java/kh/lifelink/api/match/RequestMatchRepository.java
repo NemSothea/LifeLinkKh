@@ -12,6 +12,9 @@ public interface RequestMatchRepository extends JpaRepository<RequestMatch, UUID
 
     List<RequestMatch> findByBloodRequestId(UUID bloodRequestId);
 
+    /** The portal's `acceptedDonors` list — only donors who answered, never the silent majority. */
+    List<RequestMatch> findByBloodRequestIdAndResponse(UUID bloodRequestId, String response);
+
     /** Backs {@code alertedCount} — rows written, which is not the same as pushes delivered. */
     int countByBloodRequestId(UUID bloodRequestId);
 
