@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../donation/presentation/donation_history_screen.dart';
 import '../application/donor_providers.dart';
 import '../domain/donor_profile.dart';
 import 'donor_setup_screen.dart';
@@ -64,6 +65,17 @@ class DonorProfileScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(24),
             children: [
                 EligibilityCard(eligibility: profile.eligibility),
+                const SizedBox(height: 12),
+                Card(
+                    margin: EdgeInsets.zero,
+                    child: ListTile(
+                        key: const Key('donor-donation-history'),
+                        leading: const Icon(Icons.volunteer_activism_outlined),
+                        title: Text(l10n.donationHistoryTitle),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push(DonationHistoryScreen.path),
+                    ),
+                ),
                 const SizedBox(height: 24),
                 _Field(label: l10n.donorFullNameLabel, value: profile.fullName),
                 _Field(

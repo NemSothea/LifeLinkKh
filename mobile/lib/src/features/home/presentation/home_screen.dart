@@ -8,6 +8,9 @@ import '../../auth/application/auth_providers.dart';
 import '../../donor/application/donor_providers.dart';
 import '../../donor/presentation/donor_profile_screen.dart';
 import '../../donor/presentation/donor_setup_screen.dart';
+import '../../match/presentation/donor_inbox_screen.dart';
+import '../../request/presentation/my_requests_screen.dart';
+import '../../request/presentation/request_form_screen.dart';
 import '../application/health_providers.dart';
 
 /// Home screen: app name in the active locale, the live health result, and sign-out.
@@ -62,6 +65,8 @@ class HomeScreen extends ConsumerWidget {
                             Text(l10n.homeTagline, textAlign: TextAlign.center),
                             const SizedBox(height: 32),
                             const _DonorEntryPoint(),
+                            const SizedBox(height: 16),
+                            const _RequestEntryPoints(),
                             const SizedBox(height: 32),
                             health.when(
                                 loading: () => Text(
@@ -121,5 +126,44 @@ class _DonorEntryPoint extends ConsumerWidget {
             // owns the retry.
             _ => const SizedBox.shrink(),
         };
+    }
+}
+
+/// M4's three entry points. Deliberately not gated on having a donor profile —
+/// `RequestController` allows any authenticated user to post a request (a donor
+/// whose relative needs blood is the most likely requester in the pilot), and the
+/// inbox screen itself handles the no-profile case rather than hiding its button.
+class _RequestEntryPoints extends StatelessWidget {
+    const _RequestEntryPoints();
+
+    @override
+    Widget build(BuildContext context) {
+        final l10n = AppLocalizations.of(context)!;
+
+        return Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+                FilledButton.icon(
+                    key: const Key('home-request-new'),
+                    icon: const Icon(Icons.bloodtype_outlined),
+                    onPressed: () => context.push(RequestFormScreen.path),
+                    label: Text(l10n.requestNewCta),
+                ),
+                OutlinedButton.icon(
+                    key: const Key('home-my-requests'),
+                    icon: const Icon(Icons.list_alt),
+                    onPressed: () => context.push(MyRequestsScreen.path),
+                    label: Text(l10n.myRequestsCta),
+                ),
+                OutlinedButton.icon(
+                    key: const Key('home-inbox'),
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () => context.push(DonorInboxScreen.path),
+                    label: Text(l10n.inboxCta),
+                ),
+            ],
+        );
     }
 }

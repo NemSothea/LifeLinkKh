@@ -33,6 +33,30 @@ final class UnauthorizedFailure extends Failure {
     const UnauthorizedFailure({super.message = 'session could not be renewed'});
 }
 
+/// 403. A valid session that is not entitled to this specific resource — e.g.
+/// `NOT_YOUR_MATCH`, `NOT_REQUEST_CREATOR`. Distinct from [UnauthorizedFailure]:
+/// this is not a session problem, and must not route to sign-in.
+final class ForbiddenFailure extends Failure {
+    const ForbiddenFailure({
+        super.message = 'not allowed on this resource',
+        this.code = 'FORBIDDEN',
+    });
+
+    final String code;
+}
+
+/// 409. The request was understood but conflicts with the resource's current
+/// state — `ALREADY_RESPONDED`, `REQUEST_ALREADY_CLOSED`. Retrying the same call
+/// again will not help; the screen should show what already happened instead.
+final class ConflictFailure extends Failure {
+    const ConflictFailure({
+        super.message = 'that has already happened',
+        this.code = 'CONFLICT',
+    });
+
+    final String code;
+}
+
 /// 400 or 422 — the request was understood and rejected. [code] is the backend's
 /// stable `error.code`, which is what the client switches on; the message beside it is
 /// prose and may change without notice.

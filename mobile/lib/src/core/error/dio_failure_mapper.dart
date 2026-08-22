@@ -16,8 +16,10 @@ Failure failureFromDio(DioException error) {
     if (status != null) {
         final code = _errorCode(error.response?.data);
         return switch (status) {
-            401 || 403 => const UnauthorizedFailure(),
+            401 => const UnauthorizedFailure(),
+            403 => ForbiddenFailure(code: code ?? 'FORBIDDEN'),
             404 => const NotFoundFailure(),
+            409 => ConflictFailure(code: code ?? 'CONFLICT'),
             429 => const RateLimitedFailure(),
             400 || 422 => ValidationFailure(code: code ?? 'VALIDATION_FAILED'),
             >= 500 => const ServerFailure(),

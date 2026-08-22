@@ -207,5 +207,254 @@
     "donorNoDonationYet": "No donation recorded",
     "@donorNoDonationYet": {
         "description": "Shown on the profile where the last donation date would be"
+    },
+    "requestNewCta": "Request blood",
+    "@requestNewCta": {
+        "description": "Home screen entry point into the request form"
+    },
+    "myRequestsCta": "My requests",
+    "@myRequestsCta": {
+        "description": "Home screen entry point into the requester's own request list"
+    },
+    "inboxCta": "Donor inbox",
+    "@inboxCta": {
+        "description": "Home screen entry point into the donor alert inbox"
+    },
+    "requestFormTitle": "Request blood",
+    "@requestFormTitle": {
+        "description": "App bar title of the urgent-request form"
+    },
+    "requestPatientBloodTypeLabel": "Patient blood type",
+    "@requestPatientBloodTypeLabel": {
+        "description": "Label above the 8-value blood type grid on the request form"
+    },
+    "requestUnitsLabel": "Units needed",
+    "@requestUnitsLabel": {
+        "description": "Label above the units stepper"
+    },
+    "requestHospitalLabel": "Hospital",
+    "@requestHospitalLabel": {
+        "description": "Hospital dropdown label"
+    },
+    "requestHospitalHint": "Choose a hospital",
+    "@requestHospitalHint": {
+        "description": "Empty-state text inside the hospital dropdown"
+    },
+    "requestHospitalsFailed": "Could not load the hospital list.",
+    "@requestHospitalsFailed": {
+        "description": "Error state of the hospital dropdown"
+    },
+    "requestUrgencyLabel": "Urgency",
+    "@requestUrgencyLabel": {
+        "description": "Label above the urgency segmented control"
+    },
+    "requestUrgencyCritical": "Critical",
+    "@requestUrgencyCritical": {
+        "description": "Urgency segment: CRITICAL"
+    },
+    "requestUrgencyUrgent": "Urgent",
+    "@requestUrgencyUrgent": {
+        "description": "Urgency segment: URGENT"
+    },
+    "requestUrgencyRoutine": "Routine",
+    "@requestUrgencyRoutine": {
+        "description": "Urgency segment: ROUTINE"
+    },
+    "requestContactNameLabel": "Who should the donor ask for?",
+    "@requestContactNameLabel": {
+        "description": "Contact name field on the request form"
+    },
+    "requestContactPhoneLabel": "Callback phone number",
+    "@requestContactPhoneLabel": {
+        "description": "Contact phone field on the request form — revealed only after a donor accepts"
+    },
+    "requestConfirmTitle": "Confirm request",
+    "@requestConfirmTitle": {
+        "description": "Title of the confirmation dialog before sending"
+    },
+    "requestConfirmCompat": "We will alert donors who can give {type} blood and are nearby, including compatible types — not only {type}.",
+    "@requestConfirmCompat": {
+        "description": "Confirmation dialog body explaining ABO/Rh compatibility (ADR 0004) made visible",
+        "placeholders": {
+                "type": {
+                        "type": "String"
+                }
+        }
+    },
+    "requestConfirmEdit": "Edit",
+    "@requestConfirmEdit": {
+        "description": "Confirmation dialog: go back to the form"
+    },
+    "requestConfirmSend": "Send",
+    "@requestConfirmSend": {
+        "description": "Confirmation dialog: proceed with POST /requests"
+    },
+    "requestSendCta": "Send request",
+    "@requestSendCta": {
+        "description": "Primary button on the request form"
+    },
+    "requestCreating": "Sending…",
+    "@requestCreating": {
+        "description": "Shown while POST /requests is in flight"
+    },
+    "requestCreateFailed": "Could not send the request. Try again.",
+    "@requestCreateFailed": {
+        "description": "Error shown when POST /requests is refused or fails"
+    },
+    "myRequestsTitle": "My requests",
+    "@myRequestsTitle": {
+        "description": "App bar title of the requester's own request list"
+    },
+    "myRequestsEmpty": "You have not posted a request yet.",
+    "@myRequestsEmpty": {
+        "description": "Empty state of the requester's own request list"
+    },
+    "myRequestsFailed": "Could not load your requests.",
+    "@myRequestsFailed": {
+        "description": "Error state of the requester's own request list"
+    },
+    "requestDetailTitle": "Your request",
+    "@requestDetailTitle": {
+        "description": "App bar title of a single request's detail screen"
+    },
+    "requestDetailFailed": "Could not load this request.",
+    "@requestDetailFailed": {
+        "description": "Error state of the request detail screen"
+    },
+    "requestAlertedCount": "{count} donors alerted",
+    "@requestAlertedCount": {
+        "description": "The single most important number on the waiting screen — request_matches rows written",
+        "placeholders": {
+                "count": {
+                        "type": "int"
+                }
+        }
+    },
+    "requestAcceptedCount": "{count} accepted",
+    "@requestAcceptedCount": {
+        "description": "Count of donors who have accepted so far, computed on read",
+        "placeholders": {
+                "count": {
+                        "type": "int"
+                }
+        }
+    },
+    "requestWaitingForResponders": "Waiting for the first donor to accept",
+    "@requestWaitingForResponders": {
+        "description": "Shown while acceptedCount is zero"
+    },
+    "requestStatusOpen": "Open",
+    "@requestStatusOpen": {
+        "description": "blood_requests.status = OPEN"
+    },
+    "requestStatusFulfilled": "Fulfilled",
+    "@requestStatusFulfilled": {
+        "description": "blood_requests.status = FULFILLED"
+    },
+    "requestStatusCancelled": "Cancelled",
+    "@requestStatusCancelled": {
+        "description": "blood_requests.status = CANCELLED (and the unreachable EXPIRED)"
+    },
+    "requestCancelCta": "Cancel request",
+    "@requestCancelCta": {
+        "description": "Button that calls POST /requests/{id}/cancel"
+    },
+    "requestCancelling": "Cancelling…",
+    "@requestCancelling": {
+        "description": "Shown while the cancel call is in flight"
+    },
+    "requestCancelFailed": "Could not cancel. Try again.",
+    "@requestCancelFailed": {
+        "description": "Error shown when cancelling fails"
+    },
+    "requestCancelConfirmTitle": "Cancel this request?",
+    "@requestCancelConfirmTitle": {
+        "description": "Confirmation dialog title before cancelling"
+    },
+    "requestCancelConfirmMessage": "Donors already alerted will no longer be able to accept.",
+    "@requestCancelConfirmMessage": {
+        "description": "Confirmation dialog body before cancelling"
+    },
+    "inboxTitle": "Donor inbox",
+    "@inboxTitle": {
+        "description": "App bar title of the donor alert inbox"
+    },
+    "inboxEmpty": "No alerts right now.",
+    "@inboxEmpty": {
+        "description": "Empty state of the donor alert inbox"
+    },
+    "inboxFailed": "Could not load your alerts.",
+    "@inboxFailed": {
+        "description": "Error state of the donor alert inbox"
+    },
+    "inboxNoDonorProfile": "Become a donor to receive blood requests near you.",
+    "@inboxNoDonorProfile": {
+        "description": "Shown instead of an error when the account has no donor profile yet"
+    },
+    "inboxYourBloodTypeCompatible": "Your {type} blood is compatible",
+    "@inboxYourBloodTypeCompatible": {
+        "description": "Reassures a donor that an alert for a different patient type is not a mistake",
+        "placeholders": {
+                "type": {
+                        "type": "String"
+                }
+        }
+    },
+    "matchDeclineCta": "Decline",
+    "@matchDeclineCta": {
+        "description": "Decline button on a match's detail screen"
+    },
+    "matchAcceptCta": "Accept",
+    "@matchAcceptCta": {
+        "description": "Accept button on a match's detail screen"
+    },
+    "matchRespondFailed": "Could not send your response. Try again.",
+    "@matchRespondFailed": {
+        "description": "Error shown when POST /matches/{id}/respond fails"
+    },
+    "matchAcceptedTitle": "Thank you — you accepted",
+    "@matchAcceptedTitle": {
+        "description": "Heading shown after accepting"
+    },
+    "matchDeclinedTitle": "You declined this request",
+    "@matchDeclinedTitle": {
+        "description": "Heading shown after declining"
+    },
+    "matchContactTitle": "Contact family",
+    "@matchContactTitle": {
+        "description": "Heading above the requester's contact details"
+    },
+    "matchContactUnverified": "This number is not verified. If it does not connect, try again later.",
+    "@matchContactUnverified": {
+        "description": "ADR 0002's caveat — phone numbers are not verified since auth moved to Google Sign-In"
+    },
+    "matchCopyPhoneCta": "Copy number",
+    "@matchCopyPhoneCta": {
+        "description": "Copies the requester's phone number to the clipboard"
+    },
+    "matchPhoneCopied": "Phone number copied",
+    "@matchPhoneCopied": {
+        "description": "Snackbar confirmation after copying the phone number"
+    },
+    "donationHistoryTitle": "My donations",
+    "@donationHistoryTitle": {
+        "description": "App bar title of the donation history screen, and its entry point on the donor profile screen"
+    },
+    "donationHistoryFailed": "Could not load your donation history.",
+    "@donationHistoryFailed": {
+        "description": "Error state of the donation history screen"
+    },
+    "donationHistoryEmpty": "No donations yet — when you do, they'll show up here.",
+    "@donationHistoryEmpty": {
+        "description": "Empty state — the normal starting point for every donor, not an error"
+    },
+    "donationHistoryImpact": "{count, plural, =0{You have not donated yet} =1{You have donated once} other{You have donated {count} times}}",
+    "@donationHistoryImpact": {
+        "description": "The impact line under the count circle — FR-08's 'feel their impact' user story",
+        "placeholders": {
+                "count": {
+                        "type": "int"
+                }
+        }
     }
 }
