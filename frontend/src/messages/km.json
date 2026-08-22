@@ -4,5 +4,23 @@
         "healthHeading": "ស្ថានភាព API",
         "healthUp": "API ដំណើរការធម្មតា",
         "healthUnreachable": "មិនអាចភ្ជាប់ទៅ API បានទេ"
+    },
+    "portal": {
+        "title": "ការស្នើសុំបើកចំហ",
+        "openLabel": "បើកចំហ",
+        "criticalLabel": "បន្ទាន់បំផុត",
+        "unreachable": "មិនអាចទាញបញ្ជីការស្នើសុំបានទេ។",
+        "empty": "គ្មានការស្នើសុំបើកចំហឥឡូវនេះទេ។",
+        "confirmFailed": "មិនអាចបញ្ជាក់ការបរិច្ចាគនោះបានទេ។ វាអាចត្រូវបានបញ្ជាក់រួចហើយ។",
+        "confirmSuccess": "បានបញ្ជាក់ការបរិច្ចាគសម្រាប់ {name}។",
+        "confirmDialogTitle": "បញ្ជាក់ការបរិច្ចាគនេះ?",
+        "confirmDialogBody": "នេះនឹងកត់ត្រាថា '{name}' បានបរិច្ចាគឈាមនៅថ្ងៃ '{date}'។ មិនអាចមិនធ្វើវិញបានទេ។",
+        "cancelCta": "បោះបង់",
+        "confirmDialogCta": "បាទ/ចាស៎ បញ្ជាក់",
+        "unitsNeeded": "ត្រូវការ {count} ឯកតា",
+        "alertedAccepted": "ជូនដំណឹង {alerted} · យល់ព្រម {accepted}",
+        "noAcceptedDonors": "គ្មានករណីរង់ចាំការបញ្ជាក់ទេ។",
+        "donatedOnLabel": "បរិច្ចាគនៅថ្ងៃ",
+        "confirmDonationCta": "បញ្ជាក់ការបរិច្ចាគ"
     }
 }

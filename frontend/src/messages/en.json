@@ -4,5 +4,23 @@
         "healthHeading": "API status",
         "healthUp": "API is up",
         "healthUnreachable": "Cannot reach the API"
+    },
+    "portal": {
+        "title": "Open requests",
+        "openLabel": "open",
+        "criticalLabel": "critical",
+        "unreachable": "Could not load the request list.",
+        "empty": "No open requests right now.",
+        "confirmFailed": "Could not confirm that donation. It may already be confirmed.",
+        "confirmSuccess": "Donation confirmed for {name}.",
+        "confirmDialogTitle": "Confirm this donation?",
+        "confirmDialogBody": "This records that '{name}' donated blood on '{date}'. This cannot be undone.",
+        "cancelCta": "Cancel",
+        "confirmDialogCta": "Yes, confirm",
+        "unitsNeeded": "{count} unit(s) needed",
+        "alertedAccepted": "{alerted} alerted · {accepted} accepted",
+        "noAcceptedDonors": "Nothing waiting on confirmation.",
+        "donatedOnLabel": "Donated on",
+        "confirmDonationCta": "Confirm donation"
     }
 }
