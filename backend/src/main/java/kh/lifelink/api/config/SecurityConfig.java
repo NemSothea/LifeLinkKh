@@ -60,6 +60,11 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers(HttpMethod.POST, "/auth/google")
                                         .permitAll()
+                                        // TM-AUTH-002. /webhook is called by Telegram, never the
+                                        // app, and is gated on the secret-token header instead of a
+                                        // JWT — see TelegramAuthController.
+                                        .requestMatchers(HttpMethod.POST, "/auth/telegram/**")
+                                        .permitAll()
                                         // FR-PORTAL-001. RBAC scoped by hospital happens in
                                         // PortalService; this is the role half — a DONOR or
                                         // REQUESTER JWT gets 403 before the controller runs.

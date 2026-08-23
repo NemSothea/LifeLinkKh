@@ -46,6 +46,23 @@ lifelink:
     rate-limit:
       max-attempts: ${AUTH_RATE_LIMIT_MAX_ATTEMPTS:20}
       window: ${AUTH_RATE_LIMIT_WINDOW:PT1M}
+  telegram:
+    # All three blank by default, unlike the datasource credentials above — the bot does not exist
+    # yet (FR-AUTH-004). TelegramConfig.isAvailable() is false until all three are set, and every
+    # /auth/telegram/* endpoint answers 503 TELEGRAM_PROVIDER_UNCONFIGURED until then, the same
+    # shape FirebaseConfig already uses for POST /auth/google.
+    bot-token: ${TELEGRAM_BOT_TOKEN:}
+    webhook-secret: ${TELEGRAM_WEBHOOK_SECRET:}
+    bot-username: ${TELEGRAM_BOT_USERNAME:}
+    rate-limit:
+      start:
+        max-attempts: ${TELEGRAM_START_RATE_LIMIT_MAX_ATTEMPTS:10}
+        window: ${TELEGRAM_START_RATE_LIMIT_WINDOW:PT10M}
+      verify:
+        # Tighter than start: this is the endpoint TM-AUTH-002 S3 (OTP brute force) actually runs
+        # against. The per-challenge attempt_count cap is the real defence; this is depth.
+        max-attempts: ${TELEGRAM_VERIFY_RATE_LIMIT_MAX_ATTEMPTS:20}
+        window: ${TELEGRAM_VERIFY_RATE_LIMIT_WINDOW:PT10M}
   matching:
     # 25, and the number is a decision with reasoning behind it: ADR 0008. Clearing
     # the PRD's "70% of requests answered within 60 minutes" needs 24 notified donors

@@ -2,6 +2,21 @@
 
 Every new/changed FR gets an entry. What + Why are mandatory.
 
+## 2026-08-23 — `FR-AUTH-004`'s Telegram backend built; Facebook's scope narrowed
+- **What:** The half of `FR-AUTH-004` buildable without a real bot token is done: `TM-AUTH-002`
+  (threat model), `V11__telegram_auth.sql`, `TelegramAuthService`/`Controller` (start/webhook/verify,
+  OTP expiry + resend cooldown + rate-limiting), and `SEC-REVIEW-002` (pass-with-conditions, 19
+  tests). Also corrected Facebook's scope: it needs no separate backend verifier — Firebase Auth
+  handles it as a federated provider, so the existing Google ID-token verification already covers
+  it once Facebook is enabled in the Firebase console. `FR-AUTH-004`'s acceptance criteria updated
+  to match both.
+  **Why:** Sothea asked "what's next" while waiting on the Meta Developer App review and the
+  Telegram bot — both his own account-level actions, neither needing code. The Telegram OTP system
+  was fully buildable behind `TelegramBotClient`'s seam without the real token (same reasoning
+  `GoogleTokenVerifier` already demonstrated: fake the seam, build and test everything behind it).
+  Building it now rather than waiting keeps the M7 sequencing plan from `changelog.md`'s earlier
+  2026-08-23 entry on schedule instead of idle.
+
 ## 2026-08-23 — `FR-AUTH-004` (Facebook/Telegram sign-in) reversed from deferred to active
 - **What:** `FR-AUTH-004` (Facebook and Telegram sign-in for donors) was written and deferred to
   post-M7 earlier today. Reversed same day: status moves `requested` → `accepted`, work starts now,

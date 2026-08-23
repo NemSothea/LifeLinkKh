@@ -30,3 +30,11 @@ Completed for auth: [`TM-AUTH-001`](threat-models/TM-AUTH-001-google-sign-in.md)
 [`SEC-REVIEW-001`](reviews/SEC-REVIEW-001-google-sign-in.md) (pass-with-conditions — conditions are
 tracked on `FR-AUTH-003` and verified by `docs/qa/test-cases/TC-AUTH-001-google-sign-in-security.md`).
 A second review is required against the M3 implementation.
+
+Completed for Telegram sign-in (`FR-AUTH-004`):
+[`TM-AUTH-002`](threat-models/TM-AUTH-002-telegram-sign-in.md) +
+[`SEC-REVIEW-002`](reviews/SEC-REVIEW-002-telegram-sign-in.md) (pass-with-conditions — the "validate
++ rate-limit inbound webhooks" row above is this feature's whole reason for existing: the webhook
+secret-token check is `TM-AUTH-002` S1). No QA test case exists yet for this one — `FR-AUTH-004` has
+no real bot to test against until Sothea's `@BotFather` step lands; `SEC-REVIEW-003` covers the
+re-review once it does.

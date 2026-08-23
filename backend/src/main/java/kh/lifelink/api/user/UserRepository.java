@@ -10,6 +10,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     /** The sign-in lookup on every authenticated request from M3 onward. */
     Optional<User> findByFirebaseUid(String firebaseUid);
 
+    /** The Telegram equivalent of {@link #findByFirebaseUid}. */
+    Optional<User> findByTelegramChatId(Long telegramChatId);
+
     /** Self-service accounts an ADMIN can promote to HOSPITAL/ADMIN — never an existing staff row. */
     List<User> findByRoleInOrderByDisplayNameAsc(List<String> roles);
 }

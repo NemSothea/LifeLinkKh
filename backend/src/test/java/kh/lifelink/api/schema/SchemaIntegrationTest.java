@@ -36,11 +36,11 @@ class SchemaIntegrationTest {
         Integer applied =
                 jdbc.queryForObject(
                         "SELECT count(*) FROM flyway_schema_history WHERE success", Integer.class);
-        assertThat(applied).isEqualTo(10);
+        assertThat(applied).isEqualTo(11);
     }
 
     @Test
-    void allEightTablesExist() {
+    void allNineTablesExist() {
         List<String> tables =
                 jdbc.queryForList(
                         "SELECT table_name FROM information_schema.tables"
@@ -55,7 +55,8 @@ class SchemaIntegrationTest {
                         "request_matches",
                         "donations",
                         "blood_compatibility",
-                        "districts");
+                        "districts",
+                        "telegram_auth_challenges");
     }
 
     /**

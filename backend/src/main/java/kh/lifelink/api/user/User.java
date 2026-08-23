@@ -32,9 +32,21 @@ public class User extends Auditable {
     /**
      * The Google {@code sub} from a verified ID token — the credential. MUST be written server-side
      * only, never bound from a request body (TM-AUTH-001 S1).
+     *
+     * <p>Nullable since {@code V11__telegram_auth.sql} — a Telegram-only account has no Google
+     * identity at all. {@code users_has_a_credential_check} is what stops that relaxation from
+     * producing an account with neither.
      */
-    @Column(name = "firebase_uid", nullable = false, unique = true, length = 128)
+    @Column(name = "firebase_uid", unique = true, length = 128)
     private String firebaseUid;
+
+    /**
+     * The Telegram chat id — the credential for a Telegram-authenticated account, exactly as
+     * {@code firebaseUid} is for Google. Written only from an already-verified webhook call
+     * (TM-AUTH-002 S1/S2), never bound from a request body.
+     */
+    @Column(name = "telegram_chat_id", unique = true)
+    private Long telegramChatId;
 
     /** E.164. UNVERIFIED since auth moved off OTP (ADR 0002). Nullable. */
     @Column(name = "phone", unique = true, length = 20)
@@ -81,6 +93,14 @@ public class User extends Auditable {
 
     public void setFirebaseUid(String firebaseUid) {
         this.firebaseUid = firebaseUid;
+    }
+
+    public Long getTelegramChatId() {
+        return telegramChatId;
+    }
+
+    public void setTelegramChatId(Long telegramChatId) {
+        this.telegramChatId = telegramChatId;
     }
 
     public String getPhone() {

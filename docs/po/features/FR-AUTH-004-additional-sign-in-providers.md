@@ -45,24 +45,36 @@ So the work is sequenced, not raced against M7:
 
 ## Scope
 **In:**
-- Facebook: `FacebookTokenVerifier` mirroring `GoogleTokenVerifier`'s shape; a second sign-in
-  button.
-- Telegram: server-side OTP generation, expiry, resend cooldown, and rate-limiting (`FR-AUTH-002`'s
-  retired scope, reintroduced for this one path only); a phone or Telegram-handle entry step.
-- A TM-AUTH-001-style threat model per new provider — S1/S2 (client-asserted identity, audience/
-  issuer checks) do not automatically carry over from Google's.
+- Facebook: **no new backend verifier** — Firebase Auth handles Facebook as a federated provider
+  natively, so the existing Firebase ID token verification (`GoogleTokenVerifier`) already covers a
+  Facebook-authenticated user once Facebook is enabled as a sign-in method in the Firebase console.
+  Mobile-only work: `flutter_facebook_auth`, exchanging its credential for a Firebase credential, a
+  second sign-in button.
+- Telegram: `TM-AUTH-002`, built 2026-08-23 — `V11__telegram_auth.sql`, `TelegramAuthService`
+  (start/webhook/verify), OTP generation, expiry, resend cooldown, and rate-limiting (`FR-AUTH-002`'s
+  retired scope, reintroduced for this one path only), behind a `TelegramBotClient` seam so the
+  backend was buildable and testable before a real bot existed. `SEC-REVIEW-002`: pass-with-conditions.
+- A threat model per new provider, mirroring `TM-AUTH-001`'s shape — S1/S2 (client-asserted
+  identity, audience/issuer checks) do not automatically carry over from Google's.
 
 **Out:**
 - Extending either provider to `HOSPITAL`/`ADMIN` sign-in — donors only, per the request.
 - Any code landing in a way that jeopardizes M7 (Play Store release) — if the two conflict, M7 wins
   and this slips, not the reverse.
+- Telegram mobile-side work (the deep-link open, the code-entry screen) — the backend is built and
+  tested; nothing calls it from the app yet.
 
 ## Acceptance criteria
 - [ ] Meta Developer App created and submitted for App Review (Sothea).
-- [ ] Telegram bot created via @BotFather (Sothea).
-- [ ] `FacebookTokenVerifier` verifies signature, `aud`, and token validity server-side — no
-      client-supplied identity accepted (TM-AUTH-001 S1, mirrored for this provider).
-- [ ] Telegram OTP path has expiry, a resend cooldown, and rate-limiting before it ships — not
-      after (this is exactly the surface `FR-AUTH-002` existed for).
-- [ ] Both providers produce only `DONOR`/`REQUESTER` accounts, same allow-list rule as Google
-      (TM-AUTH-001 E1).
+- [ ] Telegram bot created via @BotFather, and `setWebhook` called with a `secret_token` matching
+      `TELEGRAM_WEBHOOK_SECRET` (Sothea) — `SEC-REVIEW-002` condition 1.
+- [ ] Facebook enabled as a sign-in provider in the Firebase console using the Meta App's ID/Secret
+      — no separate backend verifier needed (see Scope).
+- [x] Telegram OTP path has expiry, a resend cooldown, and rate-limiting before it ships — not
+      after (this is exactly the surface `FR-AUTH-002` existed for). `V11__telegram_auth.sql`,
+      `TelegramAuthService`, 19 tests (`TelegramAuthServiceTest` + `TelegramAuthControllerTest`).
+- [x] Telegram produces only `DONOR`/`REQUESTER` accounts, same allow-list rule as Google
+      (TM-AUTH-001 E1, mirrored as TM-AUTH-002 E1).
+- [ ] Facebook produces only `DONOR`/`REQUESTER` accounts — inherits Google's existing E1 control
+      once wired up, but not yet confirmed against a real Facebook-authenticated Firebase user.
+- [ ] `SEC-REVIEW-003` — re-review once a real Telegram bot exists (`SEC-REVIEW-002` condition 2).
