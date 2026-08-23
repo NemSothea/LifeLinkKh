@@ -74,6 +74,7 @@ services:
     build: ./frontend
     environment:
       API_BASE_URL: http://backend:8080/api
+      PORTAL_DEV_JWT: ${PORTAL_DEV_JWT}
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
