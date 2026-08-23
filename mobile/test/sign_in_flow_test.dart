@@ -46,6 +46,13 @@ void main() {
         await tester.pumpAndSettle();
     }
 
+    // Sign-out lives on the dashboard's "Me" tab (GLOBAL-home-dashboard prototype),
+    // not on the Home tab a fresh sign-in lands on.
+    Future<void> goToMeTab(WidgetTester tester) async {
+        await tester.tap(find.byKey(const Key('dashboard-tab-me')));
+        await tester.pumpAndSettle();
+    }
+
     testWidgets('a fresh install lands on sign-in, not home', (tester) async {
         await pumpApp(tester);
 
@@ -59,8 +66,9 @@ void main() {
 
         await pumpApp(tester);
 
-        expect(find.byKey(const Key('sign-out')), findsOneWidget);
         expect(find.byKey(const Key('sign-in-google')), findsNothing);
+        await goToMeTab(tester);
+        expect(find.byKey(const Key('sign-out')), findsOneWidget);
     });
 
     testWidgets('signing in stores the session, registers for push, and routes home',
@@ -70,6 +78,7 @@ void main() {
         await tester.tap(find.byKey(const Key('sign-in-google')));
         await tester.pumpAndSettle();
 
+        await goToMeTab(tester);
         expect(find.byKey(const Key('sign-out')), findsOneWidget);
         expect(sessionStore.stored?.token, 'jwt-1');
         // DEC-002 pulled token registration into M3 precisely so that M4's request alert
@@ -133,6 +142,7 @@ void main() {
         await tester.tap(find.byKey(const Key('sign-in-google')));
         await tester.pumpAndSettle();
 
+        await goToMeTab(tester);
         expect(find.byKey(const Key('sign-out')), findsOneWidget);
     });
 
@@ -141,6 +151,7 @@ void main() {
         sessionStore = FakeSessionStore(testSession());
 
         await pumpApp(tester);
+        await goToMeTab(tester);
         await tester.tap(find.byKey(const Key('sign-out')));
         await tester.pumpAndSettle();
 

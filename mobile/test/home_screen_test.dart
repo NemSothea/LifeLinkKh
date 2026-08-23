@@ -3,35 +3,93 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifelink_kh/l10n/app_localizations.dart';
-import 'package:lifelink_kh/src/features/home/domain/health_repository.dart';
-import 'package:lifelink_kh/src/features/home/domain/health_status.dart';
-import 'package:lifelink_kh/src/features/home/application/health_providers.dart';
+import 'package:lifelink_kh/src/core/error/result.dart';
+import 'package:lifelink_kh/src/features/auth/application/auth_providers.dart';
+import 'package:lifelink_kh/src/features/auth/domain/auth_session.dart';
+import 'package:lifelink_kh/src/features/auth/domain/auth_user.dart';
+import 'package:lifelink_kh/src/features/auth/domain/user_role.dart';
+import 'package:lifelink_kh/src/features/donation/application/donation_providers.dart';
+import 'package:lifelink_kh/src/features/donation/domain/donation.dart';
+import 'package:lifelink_kh/src/features/donation/domain/donation_repository.dart';
+import 'package:lifelink_kh/src/features/donor/application/donor_providers.dart';
+import 'package:lifelink_kh/src/features/donor/domain/donor_repository.dart';
 import 'package:lifelink_kh/src/features/home/presentation/home_screen.dart';
+import 'package:lifelink_kh/src/features/match/application/match_providers.dart';
+import 'package:lifelink_kh/src/features/match/domain/match.dart';
+import 'package:lifelink_kh/src/features/match/domain/match_repository.dart';
+import 'package:lifelink_kh/src/features/match/domain/match_response_type.dart';
+import 'package:lifelink_kh/src/features/match/domain/respond_result.dart';
+import 'package:lifelink_kh/src/features/request/application/request_providers.dart';
+import 'package:lifelink_kh/src/features/request/domain/blood_request.dart';
+import 'package:lifelink_kh/src/features/request/domain/blood_request_draft.dart';
+import 'package:lifelink_kh/src/features/request/domain/hospital.dart';
+import 'package:lifelink_kh/src/features/request/domain/request_repository.dart';
 
-/// A fake at the repository seam, which is the whole reason [HealthRepository] is
-/// abstract (rule S4). Overriding here rather than at the provider closest to the
-/// widget means the Service and the provider graph above it are exercised for real —
-/// only the transport is replaced.
-final class _FakeHealthRepository implements HealthRepository {
-    _FakeHealthRepository(this._result);
+import 'support/auth_fakes.dart';
 
-    final Future<HealthStatus> Function() _result;
+/// The `GLOBAL-home-dashboard` prototype's shell, exercised at the repository seam
+/// (rule S4) — no network, no Firebase. `sessionStoreProvider` supplies the signed-in
+/// session directly, the same technique `sign_in_flow_test.dart` uses, so the real
+/// `AuthController` resolves the role this shell branches on.
+final class _FakeMatchRepository implements MatchRepository {
+    @override
+    Future<Result<List<Match>>> fetchMine() async => const Success([]);
 
     @override
-    Future<HealthStatus> fetchStatus() => _result();
+    Future<Result<RespondResult>> respond(String matchId, MatchResponseType response) =>
+        throw UnimplementedError();
 }
 
-/// Pumps the home screen with the repository overridden, so no test touches the
-/// network or `Env.apiBaseUrl`.
+final class _FakeRequestRepository implements RequestRepository {
+    @override
+    Future<Result<List<BloodRequest>>> fetchMine() async => const Success([]);
+
+    @override
+    Future<Result<List<Hospital>>> fetchHospitals() => throw UnimplementedError();
+
+    @override
+    Future<Result<BloodRequest>> create(RequestDraft draft) => throw UnimplementedError();
+
+    @override
+    Future<Result<BloodRequest>> fetchDetail(String requestId) => throw UnimplementedError();
+
+    @override
+    Future<Result<BloodRequest>> cancel(String requestId) => throw UnimplementedError();
+}
+
+final class _FakeDonationRepository implements DonationRepository {
+    @override
+    Future<Result<List<Donation>>> fetchMine() async => const Success([]);
+}
+
+const _requesterSession = AuthSession(
+    token: 'jwt-requester',
+    user: AuthUser(
+        id: '99999999-9999-9999-9999-999999999999',
+        role: UserRole.requester,
+        displayName: 'Chea Srey',
+        isNewAccount: false,
+    ),
+);
+
 Widget _wrap({
-    required Locale locale,
-    required Future<HealthStatus> Function() health,
+    DonorRepository? donorRepository,
+    AuthSession? session,
+    Locale locale = const Locale('en'),
 }) {
     return ProviderScope(
         overrides: [
-            healthRepositoryProvider.overrideWithValue(
-                _FakeHealthRepository(health),
+            sessionStoreProvider.overrideWithValue(
+                FakeSessionStore(session ?? testSession()),
             ),
+            authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+            googleCredentialsProvider.overrideWithValue(FakeGoogleCredentials()),
+            donorRepositoryProvider.overrideWithValue(
+                donorRepository ?? FakeDonorRepository(),
+            ),
+            matchRepositoryProvider.overrideWithValue(_FakeMatchRepository()),
+            requestRepositoryProvider.overrideWithValue(_FakeRequestRepository()),
+            donationRepositoryProvider.overrideWithValue(_FakeDonationRepository()),
         ],
         child: MaterialApp(
             locale: locale,
@@ -48,48 +106,72 @@ Widget _wrap({
 }
 
 void main() {
-    testWidgets('shows the English app title and the up state', (tester) async {
-        await tester.pumpWidget(
-            _wrap(
-                locale: const Locale('en'),
-                health: () async => const HealthStatus('UP'),
-            ),
-        );
+    testWidgets('a donor sees three tabs, Home first, with the become-a-donor prompt',
+        (tester) async {
+        await tester.pumpWidget(_wrap(donorRepository: FakeDonorRepository()));
         await tester.pumpAndSettle();
 
-        expect(find.text('LifeLink KH'), findsWidgets);
-        expect(find.byKey(const Key('health-up')), findsOneWidget);
-        expect(find.byKey(const Key('health-down')), findsNothing);
+        expect(find.byKey(const Key('dashboard-tab-home')), findsOneWidget);
+        expect(find.byKey(const Key('dashboard-tab-history')), findsOneWidget);
+        expect(find.byKey(const Key('dashboard-tab-me')), findsOneWidget);
+        expect(find.byKey(const Key('donor-home-start-setup')), findsOneWidget);
+        expect(find.byKey(const Key('donor-home-matches-empty')), findsOneWidget);
     });
 
-    testWidgets('shows the Khmer app title under the km locale', (tester) async {
-        await tester.pumpWidget(
-            _wrap(
-                locale: const Locale('km'),
-                health: () async => const HealthStatus('UP'),
-            ),
-        );
+    testWidgets('a registered donor sees their eligibility card on the Home tab',
+        (tester) async {
+        final repository = FakeDonorRepository()..profile = testProfile(isEligible: true);
+        await tester.pumpWidget(_wrap(donorRepository: repository));
         await tester.pumpAndSettle();
 
-        expect(find.text('ជីវិត — LifeLink KH'), findsWidgets);
+        expect(find.byKey(const Key('eligibility-card')), findsOneWidget);
+        expect(find.text('You can donate now'), findsOneWidget);
     });
 
-    // M2 acceptance: a failing health call is a handled state, not a crash, and the
-    // cause never reaches the screen.
-    testWidgets('renders the handled error state when the health call fails', (
-        tester,
-    ) async {
-        await tester.pumpWidget(
-            _wrap(
-                locale: const Locale('en'),
-                health: () async =>
-                    throw Exception('connect failed to 10.0.2.2:8080'),
-            ),
-        );
+    testWidgets('the History tab shows the donation history screen', (tester) async {
+        await tester.pumpWidget(_wrap(donorRepository: FakeDonorRepository()));
         await tester.pumpAndSettle();
 
-        expect(find.byKey(const Key('health-down')), findsOneWidget);
-        expect(find.text('Cannot reach the API'), findsOneWidget);
-        expect(find.textContaining('10.0.2.2'), findsNothing);
+        await tester.tap(find.byKey(const Key('dashboard-tab-history')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('donation-history-empty')), findsOneWidget);
+    });
+
+    testWidgets('the Me tab offers the donor profile, request blood, and sign-out',
+        (tester) async {
+        await tester.pumpWidget(_wrap(donorRepository: FakeDonorRepository()));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('dashboard-tab-me')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('me-donor-profile')), findsOneWidget);
+        expect(find.byKey(const Key('me-request-blood')), findsOneWidget);
+        expect(find.byKey(const Key('sign-out')), findsOneWidget);
+    });
+
+    testWidgets('a requester sees two tabs and the oversized request-blood button',
+        (tester) async {
+        await tester.pumpWidget(_wrap(session: _requesterSession));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('dashboard-tab-home')), findsOneWidget);
+        expect(find.byKey(const Key('dashboard-tab-history')), findsNothing);
+        expect(find.byKey(const Key('dashboard-tab-me')), findsOneWidget);
+        expect(find.byKey(const Key('requester-home-request-new')), findsOneWidget);
+        expect(find.byKey(const Key('requester-home-empty')), findsOneWidget);
+    });
+
+    testWidgets("a requester's Me tab has no donor-only entries", (tester) async {
+        await tester.pumpWidget(_wrap(session: _requesterSession));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('dashboard-tab-me')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('me-donor-profile')), findsNothing);
+        expect(find.byKey(const Key('me-request-blood')), findsNothing);
+        expect(find.byKey(const Key('sign-out')), findsOneWidget);
     });
 }

@@ -1,169 +1,96 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:go_router/go_router.dart';
-
 import '../../../../l10n/app_localizations.dart';
 import '../../auth/application/auth_providers.dart';
-import '../../donor/application/donor_providers.dart';
-import '../../donor/presentation/donor_profile_screen.dart';
-import '../../donor/presentation/donor_setup_screen.dart';
-import '../../match/presentation/donor_inbox_screen.dart';
-import '../../request/presentation/my_requests_screen.dart';
-import '../../request/presentation/request_form_screen.dart';
-import '../application/health_providers.dart';
+import '../../auth/domain/user_role.dart';
+import '../../donation/presentation/donation_history_screen.dart';
+import '../../request/presentation/requester_home_tab.dart';
+import 'donor_home_tab.dart';
+import 'me_tab.dart';
 
-/// Home screen: app name in the active locale, the live health result, and sign-out.
+/// Root shell for a signed-in session. `GLOBAL-home-dashboard` prototype: branch once,
+/// at the root, on `users.role` — not a role check inside every screen — and reuse one
+/// shell with a different tab set, rather than two separate shell widgets.
 ///
-/// Still a stub in feature terms — donor registration lands next. Reachable only when a
-/// session exists; the router redirects otherwise.
+/// `HOSPITAL`/`ADMIN` never reach this shell: the server refuses those roles at mobile
+/// self-service sign-up (`TM-AUTH-001` E1), so any role this app has not seen gets the
+/// donor tab set, the safer of the two defaults.
 ///
-/// One feature import, and it points at `application/`. The Week 3 version reached into
-/// `data/` for the concrete repository; removing that import is the Week 4 deliverable.
-/// The domain entity's fields are read through type inference, which is permitted —
-/// `domain/` points inward.
-class HomeScreen extends ConsumerWidget {
+/// Reachable only when a session exists; the router redirects otherwise, which is also
+/// why `role` is read without a loading/error branch — by the time this widget builds,
+/// the redirect has already established that a session is present.
+class HomeScreen extends ConsumerStatefulWidget {
     const HomeScreen({super.key});
 
     /// Owned by the screen, not by the router, so a route string appears once in the app.
     static const String path = '/';
 
     @override
-    Widget build(BuildContext context, WidgetRef ref) {
-        final l10n = AppLocalizations.of(context)!;
-        // ref.watch, because this is build() and the widget should rebuild when the
-        // check resolves.
-        final health = ref.watch(healthStatusProvider);
-
-        return Scaffold(
-            appBar: AppBar(
-                title: Text(l10n.appTitle),
-                actions: [
-                    IconButton(
-                        key: const Key('sign-out'),
-                        tooltip: l10n.signOut,
-                        icon: const Icon(Icons.logout),
-                        // Clears the FCM registration before disposing of the token that
-                        // authorises the call — see AuthService.signOut.
-                        onPressed: () =>
-                            ref.read(authControllerProvider.notifier).signOut(),
-                    ),
-                ],
-            ),
-            body: Center(
-                child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                            Text(
-                                l10n.appTitle,
-                                style: Theme.of(context).textTheme.headlineSmall,
-                                textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(l10n.homeTagline, textAlign: TextAlign.center),
-                            const SizedBox(height: 32),
-                            const _DonorEntryPoint(),
-                            const SizedBox(height: 16),
-                            const _RequestEntryPoints(),
-                            const SizedBox(height: 32),
-                            health.when(
-                                loading: () => Text(
-                                    l10n.apiStatusChecking,
-                                    key: const Key('health-checking'),
-                                ),
-                                // Every failure — no config, timeout, 500, bad body —
-                                // renders one handled state. The cause is never shown.
-                                error: (_, _) => Text(
-                                    l10n.apiStatusUnreachable,
-                                    key: const Key('health-down'),
-                                    style: TextStyle(
-                                        color: Theme.of(context).colorScheme.error,
-                                    ),
-                                ),
-                                data: (health) => Text(
-                                    '${l10n.apiStatusUp} (${health.status})',
-                                    key: const Key('health-up'),
-                                ),
-                            ),
-                        ],
-                    ),
-                ),
-            ),
-        );
-    }
+    ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-/// The one thing the home screen does besides the health ping: get a signed-in user to their
-/// donor profile, or into setup if they have none.
-///
-/// Watches the profile rather than routing on `isNewAccount`, because the two can disagree —
-/// a donor who abandoned setup on their first run is not a new account any more, and would
-/// otherwise never be asked again.
-class _DonorEntryPoint extends ConsumerWidget {
-    const _DonorEntryPoint();
-
-    @override
-    Widget build(BuildContext context, WidgetRef ref) {
-        final l10n = AppLocalizations.of(context)!;
-        final profile = ref.watch(donorProfileControllerProvider);
-
-        return switch (profile) {
-            AsyncValue(hasValue: true, value: final loaded?) => FilledButton.tonalIcon(
-                key: const Key('home-donor-profile'),
-                icon: const Icon(Icons.badge_outlined),
-                onPressed: () => context.push(DonorProfileScreen.path),
-                label: Text('${l10n.donorProfileTitle} · ${loaded.bloodType.wireValue}'),
-            ),
-            AsyncValue(hasValue: true) => FilledButton.icon(
-                key: const Key('home-donor-setup'),
-                icon: const Icon(Icons.person_add_alt),
-                onPressed: () => context.push(DonorSetupScreen.path),
-                label: Text(l10n.donorProfileCta),
-            ),
-            // A failed profile load must not block the rest of the screen; the profile screen
-            // owns the retry.
-            _ => const SizedBox.shrink(),
-        };
-    }
-}
-
-/// M4's three entry points. Deliberately not gated on having a donor profile —
-/// `RequestController` allows any authenticated user to post a request (a donor
-/// whose relative needs blood is the most likely requester in the pilot), and the
-/// inbox screen itself handles the no-profile case rather than hiding its button.
-class _RequestEntryPoints extends StatelessWidget {
-    const _RequestEntryPoints();
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+    int _index = 0;
 
     @override
     Widget build(BuildContext context) {
         final l10n = AppLocalizations.of(context)!;
+        final role = ref.watch(authControllerProvider).valueOrNull?.user.role;
+        final isRequester = role == UserRole.requester;
 
-        return Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-                FilledButton.icon(
-                    key: const Key('home-request-new'),
-                    icon: const Icon(Icons.bloodtype_outlined),
-                    onPressed: () => context.push(RequestFormScreen.path),
-                    label: Text(l10n.requestNewCta),
-                ),
-                OutlinedButton.icon(
-                    key: const Key('home-my-requests'),
-                    icon: const Icon(Icons.list_alt),
-                    onPressed: () => context.push(MyRequestsScreen.path),
-                    label: Text(l10n.myRequestsCta),
-                ),
-                OutlinedButton.icon(
-                    key: const Key('home-inbox'),
-                    icon: const Icon(Icons.notifications_outlined),
-                    onPressed: () => context.push(DonorInboxScreen.path),
-                    label: Text(l10n.inboxCta),
-                ),
-            ],
+        final tabs = isRequester
+            ? const [RequesterHomeTab(), MeTab()]
+            : const [DonorHomeTab(), DonationHistoryScreen(), MeTab()];
+
+        // Guards a stale index surviving a role change mid-session (sign-out/sign-in as
+        // the other role reuses this widget rather than remounting it).
+        if (_index >= tabs.length) {
+            _index = 0;
+        }
+
+        return Scaffold(
+            body: IndexedStack(index: _index, children: tabs),
+            bottomNavigationBar: NavigationBar(
+                key: const Key('dashboard-nav'),
+                selectedIndex: _index,
+                onDestinationSelected: (value) => setState(() => _index = value),
+                destinations: isRequester
+                    ? [
+                        NavigationDestination(
+                            key: const Key('dashboard-tab-home'),
+                            icon: const Icon(Icons.home_outlined),
+                            selectedIcon: const Icon(Icons.home),
+                            label: l10n.dashboardTabHome,
+                        ),
+                        NavigationDestination(
+                            key: const Key('dashboard-tab-me'),
+                            icon: const Icon(Icons.person_outline),
+                            selectedIcon: const Icon(Icons.person),
+                            label: l10n.dashboardTabMe,
+                        ),
+                    ]
+                    : [
+                        NavigationDestination(
+                            key: const Key('dashboard-tab-home'),
+                            icon: const Icon(Icons.home_outlined),
+                            selectedIcon: const Icon(Icons.home),
+                            label: l10n.dashboardTabHome,
+                        ),
+                        NavigationDestination(
+                            key: const Key('dashboard-tab-history'),
+                            icon: const Icon(Icons.volunteer_activism_outlined),
+                            selectedIcon: const Icon(Icons.volunteer_activism),
+                            label: l10n.dashboardTabHistory,
+                        ),
+                        NavigationDestination(
+                            key: const Key('dashboard-tab-me'),
+                            icon: const Icon(Icons.person_outline),
+                            selectedIcon: const Icon(Icons.person),
+                            label: l10n.dashboardTabMe,
+                        ),
+                    ],
+            ),
         );
     }
 }

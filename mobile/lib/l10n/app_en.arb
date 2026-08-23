@@ -8,6 +8,22 @@
     "@homeTagline": {
         "description": "Stub home screen subtitle at M2"
     },
+    "dashboardTabHome": "Home",
+    "@dashboardTabHome": {
+        "description": "Bottom navigation label for the dashboard's Home tab"
+    },
+    "dashboardTabHistory": "History",
+    "@dashboardTabHistory": {
+        "description": "Bottom navigation label for the donor shell's History tab"
+    },
+    "dashboardTabMe": "Me",
+    "@dashboardTabMe": {
+        "description": "Bottom navigation label for the dashboard's Me tab, also its app bar title"
+    },
+    "homeNearbyRequestsHeading": "Requests near you",
+    "@homeNearbyRequestsHeading": {
+        "description": "Section heading above the donor Home tab's nearby-matches list"
+    },
     "apiStatusUp": "API is up",
     "@apiStatusUp": {
         "description": "Shown when the health ping succeeds"
