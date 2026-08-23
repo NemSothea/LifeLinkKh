@@ -2,6 +2,19 @@
 
 Every new/changed FR gets an entry. What + Why are mandatory.
 
+## 2026-08-23 — `FR-AUTH-004` (Facebook/Telegram sign-in) reversed from deferred to active
+- **What:** `FR-AUTH-004` (Facebook and Telegram sign-in for donors) was written and deferred to
+  post-M7 earlier today. Reversed same day: status moves `requested` → `accepted`, work starts now,
+  not after M7.
+  **Why:** Sothea (PO): most of Cambodia signs in with Facebook and Telegram day to day, more than
+  Google in a lot of the target donor population — Google-only is a real sign-up barrier, not a
+  theoretical one. The M7 timeline risk named at deferral time has not gone away (Meta App Review's
+  timeline is still outside the team's control; Telegram is still a bot-OTP system to build, not a
+  button), so scope is split: account-level setup (Meta Developer App + review submission, a
+  Telegram bot via BotFather) starts immediately since it is Sothea's own action and touches no
+  code; the actual client/backend integration is sequenced around M7 rather than raced against it.
+  See `FR-AUTH-004` for the split and `ADR 0002`'s addendum for the auth-design reasoning.
+
 ## 2026-08-17 — the two M3 FRs finalized; phone dropped from the donor profile
 - **What:** `FR-AUTH-003` and `FR-DONOR-001` had `<to be filled after prototyping>` in both Scope and
   Acceptance criteria. Both are now filled from their frozen prototypes, so M3 has something

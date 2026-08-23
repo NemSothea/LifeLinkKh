@@ -33,7 +33,7 @@ cross-references still resolve.
 | ID | Title | Area | Priority | Status | Milestone |
 |----|-------|------|----------|--------|-----------|
 | [FR-AUTH-003-google-sign-in](FR-AUTH-003-google-sign-in.md) | Authentication via Google Sign-In | AUTH | Must Have | accepted | M3 |
-| [FR-AUTH-004-additional-sign-in-providers](FR-AUTH-004-additional-sign-in-providers.md) | Facebook and Telegram sign-in for donors | AUTH | Should Have | **requested**, deferred to post-M7 | — |
+| [FR-AUTH-004-additional-sign-in-providers](FR-AUTH-004-additional-sign-in-providers.md) | Facebook and Telegram sign-in for donors | AUTH | Must Have | accepted — account setup now, code sequenced around M7 | M7+ |
 | [FR-AUTH-001-phone-otp-auth](FR-AUTH-001-phone-otp-auth.md) | ~~Phone authentication via OTP~~ | AUTH | Must Have | **superseded** by FR-AUTH-003 | — |
 | [FR-AUTH-002-otp-resend-cooldown](FR-AUTH-002-otp-resend-cooldown.md) | ~~OTP resend with cooldown~~ | AUTH | Should Have | **retired** — no OTP to resend | — |
 | [FR-DONOR-001-donor-profile](FR-DONOR-001-donor-profile.md) | Donor registration and profile | DONOR | Must Have | accepted | M3 |

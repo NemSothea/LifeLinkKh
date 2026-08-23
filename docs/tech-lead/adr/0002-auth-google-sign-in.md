@@ -74,9 +74,11 @@ out — the Telegram fallback above is the answer if that turns out to be common
 
 **Addendum, 2026-08-23.** PO requested both the Telegram fallback and Facebook Login be added for
 donors — see [`FR-AUTH-004`](../../po/features/FR-AUTH-004-additional-sign-in-providers.md).
-Deferred to after M7: Facebook's own App Review timeline is outside the team's control, and
-Telegram here still means the bot-driven OTP path this ADR chose Google Sign-In to avoid, not a
-one-button addition.
+Initially deferred to after M7 (Facebook's own App Review timeline is outside the team's control,
+and Telegram here still means the bot-driven OTP path this ADR chose Google Sign-In to avoid, not a
+one-button addition), then reversed the same day: reach outweighs the scheduling risk, so the
+account-level setup for both starts immediately while the code is sequenced around M7 rather than
+raced against it.
 
 ## Note on where decisions are recorded
 
