@@ -7,12 +7,17 @@ import '../domain/eligibility.dart';
 /// The 56-day cooldown, as the server computed it.
 ///
 /// When not yet eligible this shows **both** the day count and the calendar date — an
-/// acceptance criterion of `FR-DONOR-001`, because a countdown alone cannot be planned around
-/// and a date alone hides how close it is.
+/// acceptance criterion of `FR-DONOR-001`, because a countdown alone cannot be planned
+/// around and a date alone hides how close it is.
 ///
 /// Nothing here computes anything. `daysRemaining` and `eligibleOn` are read from the
-/// response; two implementations of the 56-day rule would eventually disagree, and the one on
-/// the device is the one that cannot be fixed without a release.
+/// response; two implementations of the 56-day rule would eventually disagree, and the
+/// one on the device is the one that cannot be fixed without a release.
+///
+/// The eligible state gets a gradient and the theme's own primary colour — this is the
+/// one thing a donor opens the app to check, and it is good news, so it gets to look
+/// like it. The waiting state stays calm and neutral on purpose: a countdown is not an
+/// alert.
 class EligibilityCard extends StatelessWidget {
     const EligibilityCard({required this.eligibility, super.key});
 
@@ -41,23 +46,33 @@ class EligibilityCard extends StatelessWidget {
 
         return Card(
             key: const Key('eligibility-card'),
-            color: isEligible ? scheme.primaryContainer : scheme.surfaceContainerHighest,
-            child: Padding(
-                padding: const EdgeInsets.all(16),
+            clipBehavior: Clip.antiAlias,
+            child: Container(
+                decoration: BoxDecoration(
+                    gradient: isEligible
+                        ? LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [scheme.primary, scheme.primary.withValues(alpha: 0.78)],
+                        )
+                        : null,
+                    color: isEligible ? null : scheme.surfaceContainerHighest,
+                ),
+                padding: const EdgeInsets.all(20),
                 child: Row(
                     children: [
                         Icon(
                             isEligible ? Icons.check_circle_outline : Icons.schedule,
-                            color: isEligible ? scheme.onPrimaryContainer : scheme.onSurface,
+                            size: 32,
+                            color: isEligible ? scheme.onPrimary : scheme.onSurfaceVariant,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 16),
                         Flexible(
                             child: Text(
                                 message,
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: isEligible
-                                        ? scheme.onPrimaryContainer
-                                        : scheme.onSurface,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: isEligible ? scheme.onPrimary : scheme.onSurface,
+                                    fontWeight: FontWeight.w700,
                                 ),
                             ),
                         ),

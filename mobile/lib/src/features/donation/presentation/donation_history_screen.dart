@@ -54,12 +54,26 @@ class DonationHistoryScreen extends ConsumerWidget {
                 _ImpactCount(count: donations.length),
                 const SizedBox(height: 24),
                 if (donations.isEmpty)
-                    Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                        child: Text(
-                            l10n.donationHistoryEmpty,
-                            key: const Key('donation-history-empty'),
-                            textAlign: TextAlign.center,
+                    Card(
+                        key: const Key('donation-history-empty'),
+                        margin: const EdgeInsets.only(top: 8),
+                        child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+                            child: Column(
+                                children: [
+                                    Icon(
+                                        Icons.volunteer_activism_outlined,
+                                        size: 36,
+                                        color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                        l10n.donationHistoryEmpty,
+                                        textAlign: TextAlign.center,
+                                        style: Theme.of(context).textTheme.bodyMedium,
+                                    ),
+                                ],
+                            ),
                         ),
                     )
                 else

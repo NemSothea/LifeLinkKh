@@ -115,7 +115,10 @@ void main() {
         expect(find.byKey(const Key('dashboard-tab-history')), findsOneWidget);
         expect(find.byKey(const Key('dashboard-tab-me')), findsOneWidget);
         expect(find.byKey(const Key('donor-home-start-setup')), findsOneWidget);
-        expect(find.byKey(const Key('donor-home-matches-empty')), findsOneWidget);
+        // No donor profile yet means "requests near you" cannot mean anything (GET
+        // /matches/me 404s without one) — the section is hidden, not shown empty.
+        expect(find.byKey(const Key('donor-home-matches-empty')), findsNothing);
+        expect(find.text('Requests near you'), findsNothing);
     });
 
     testWidgets('a registered donor sees their eligibility card on the Home tab',
@@ -126,6 +129,16 @@ void main() {
 
         expect(find.byKey(const Key('eligibility-card')), findsOneWidget);
         expect(find.text('You can donate now'), findsOneWidget);
+    });
+
+    testWidgets('a registered donor with no nearby requests sees the empty state, not a stray heading',
+        (tester) async {
+        final repository = FakeDonorRepository()..profile = testProfile(isEligible: true);
+        await tester.pumpWidget(_wrap(donorRepository: repository));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Requests near you'), findsOneWidget);
+        expect(find.byKey(const Key('donor-home-matches-empty')), findsOneWidget);
     });
 
     testWidgets('the History tab shows the donation history screen', (tester) async {

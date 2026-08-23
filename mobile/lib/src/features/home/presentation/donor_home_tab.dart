@@ -11,6 +11,7 @@ import '../../donor/presentation/eligibility_card.dart';
 import '../../match/application/match_providers.dart';
 import '../../match/domain/match.dart';
 import '../../match/presentation/match_detail_screen.dart';
+import '../../request/presentation/urgency_badge.dart';
 
 /// Donor shell's Home tab — `GLOBAL-home-dashboard` prototype: the eligibility card
 /// first (the one thing a donor opens the app to check), a recovery list of nearby
@@ -24,6 +25,11 @@ class DonorHomeTab extends ConsumerWidget {
         final l10n = AppLocalizations.of(context)!;
         final profile = ref.watch(donorProfileControllerProvider);
         final matches = ref.watch(myMatchesControllerProvider);
+        // Nearby-requests needs a donor profile to mean anything (`GET /matches/me` 404s
+        // without one) — gated on the profile actually loading in, not on the match
+        // call's own error, so a donor with no profile never sees a heading with
+        // nothing under it while the "become a donor" card above says the same thing.
+        final hasDonorProfile = profile.valueOrNull != null;
 
         return Scaffold(
             appBar: AppBar(title: Text(l10n.appTitle)),
@@ -48,33 +54,35 @@ class DonorHomeTab extends ConsumerWidget {
                                     ),
                                 ),
                             },
-                            const SizedBox(height: 24),
-                            Text(
-                                l10n.homeNearbyRequestsHeading,
-                                style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 8),
-                            switch (matches) {
-                                AsyncValue(isLoading: true, hasValue: false) => const Center(
-                                    child: CircularProgressIndicator(
-                                        key: Key('donor-home-matches-loading'),
+                            if (hasDonorProfile) ...[
+                                const SizedBox(height: 24),
+                                Text(
+                                    l10n.homeNearbyRequestsHeading,
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 8),
+                                switch (matches) {
+                                    AsyncValue(isLoading: true, hasValue: false) => const Center(
+                                        child: CircularProgressIndicator(
+                                            key: Key('donor-home-matches-loading'),
+                                        ),
                                     ),
-                                ),
-                                // No donor profile means no matches — already covered by the
-                                // card above, so this is not a second error to show.
-                                AsyncValue(hasError: true, error: NotFoundFailure()) =>
-                                    const SizedBox.shrink(),
-                                AsyncValue(hasError: true) => Text(
-                                    l10n.inboxFailed,
-                                    key: const Key('donor-home-matches-failed'),
-                                ),
-                                AsyncValue(hasValue: true, value: final list) => _nearbyList(
-                                    context,
-                                    l10n,
-                                    list ?? const [],
-                                ),
-                                _ => const SizedBox.shrink(),
-                            },
+                                    // Covered by `hasDonorProfile` above — kept only as a
+                                    // defensive fallback if the two calls ever disagree.
+                                    AsyncValue(hasError: true, error: NotFoundFailure()) =>
+                                        const SizedBox.shrink(),
+                                    AsyncValue(hasError: true) => Text(
+                                        l10n.inboxFailed,
+                                        key: const Key('donor-home-matches-failed'),
+                                    ),
+                                    AsyncValue(hasValue: true, value: final list) => _nearbyList(
+                                        context,
+                                        l10n,
+                                        list ?? const [],
+                                    ),
+                                    _ => const SizedBox.shrink(),
+                                },
+                            ],
                         ],
                     ),
                 ),
@@ -104,7 +112,25 @@ class DonorHomeTab extends ConsumerWidget {
 
     Widget _nearbyList(BuildContext context, AppLocalizations l10n, List<Match> matches) {
         if (matches.isEmpty) {
-            return Text(l10n.inboxEmpty, key: const Key('donor-home-matches-empty'));
+            final scheme = Theme.of(context).colorScheme;
+            return Card(
+                key: const Key('donor-home-matches-empty'),
+                margin: EdgeInsets.zero,
+                child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+                    child: Column(
+                        children: [
+                            Icon(Icons.check_circle_outline, size: 36, color: scheme.primary),
+                            const SizedBox(height: 12),
+                            Text(
+                                l10n.inboxEmpty,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                        ],
+                    ),
+                ),
+            );
         }
         return Column(
             key: const Key('donor-home-matches-list'),
@@ -122,15 +148,36 @@ class _NearbyRequestTile extends StatelessWidget {
 
     @override
     Widget build(BuildContext context) {
+        final scheme = Theme.of(context).colorScheme;
         final request = match.request;
         final distance = request.distanceKm;
         return Card(
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: 10),
             child: ListTile(
                 key: Key('donor-home-match-${match.matchId}'),
-                title: Text('${request.patientBloodType.wireValue} · ${request.hospitalName}'),
-                subtitle: Text(
-                    distance == null ? request.urgency.wireValue : '~$distance km',
+                leading: CircleAvatar(
+                    backgroundColor: scheme.primary,
+                    foregroundColor: scheme.onPrimary,
+                    child: Text(
+                        request.patientBloodType.wireValue,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                    ),
+                ),
+                title: Text(request.hospitalName, overflow: TextOverflow.ellipsis),
+                subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    // Wrap, not Row: a long badge label plus the distance must not overflow
+                    // the tile's fixed subtitle width — it drops to a second line instead.
+                    child: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                            UrgencyBadge(urgency: request.urgency),
+                            if (distance != null)
+                                Text('~$distance km', style: Theme.of(context).textTheme.bodySmall),
+                        ],
+                    ),
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(MatchDetailScreen.routeFor(match.matchId)),

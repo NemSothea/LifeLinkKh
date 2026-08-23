@@ -7,6 +7,7 @@ import '../application/request_providers.dart';
 import '../domain/blood_request.dart';
 import 'request_detail_screen.dart';
 import 'request_form_screen.dart';
+import 'urgency_badge.dart';
 
 /// Requester shell's Home tab — `GLOBAL-home-dashboard` prototype: one oversized
 /// primary action, because a requester opens this app for exactly one reason, usually
@@ -109,15 +110,36 @@ class _RequestTile extends StatelessWidget {
     @override
     Widget build(BuildContext context) {
         final l10n = AppLocalizations.of(context)!;
+        final scheme = Theme.of(context).colorScheme;
         return Card(
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: 10),
             child: ListTile(
                 key: Key('requester-home-request-${request.id}'),
-                title: Text('${request.patientBloodType.wireValue} · ${request.hospitalName}'),
-                subtitle: Text(
-                    '${l10n.requestAlertedCount(request.alertedCount)} · '
-                    '${l10n.requestAcceptedCount(request.acceptedCount)}',
+                leading: CircleAvatar(
+                    backgroundColor: scheme.primary,
+                    foregroundColor: scheme.onPrimary,
+                    child: Text(
+                        request.patientBloodType.wireValue,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                    ),
                 ),
+                title: Text(request.hospitalName, overflow: TextOverflow.ellipsis),
+                subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                            UrgencyBadge(urgency: request.urgency),
+                            const SizedBox(height: 4),
+                            Text(
+                                '${l10n.requestAlertedCount(request.alertedCount)} · '
+                                '${l10n.requestAcceptedCount(request.acceptedCount)}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                        ],
+                    ),
+                ),
+                isThreeLine: true,
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(RequestDetailScreen.routeFor(request.id)),
             ),
