@@ -10,7 +10,7 @@ Milestones reference root `CLAUDE.md` section 4, which is the only place milesto
 
 | Area | Next |
 |---|---|
-| AUTH | 003 |
+| AUTH | 005 |
 | DONOR | 003 |
 | REQUEST | 006 |
 | MATCH | 003 |
@@ -33,6 +33,7 @@ cross-references still resolve.
 | ID | Title | Area | Priority | Status | Milestone |
 |----|-------|------|----------|--------|-----------|
 | [FR-AUTH-003-google-sign-in](FR-AUTH-003-google-sign-in.md) | Authentication via Google Sign-In | AUTH | Must Have | accepted | M3 |
+| [FR-AUTH-004-additional-sign-in-providers](FR-AUTH-004-additional-sign-in-providers.md) | Facebook and Telegram sign-in for donors | AUTH | Should Have | **requested**, deferred to post-M7 | — |
 | [FR-AUTH-001-phone-otp-auth](FR-AUTH-001-phone-otp-auth.md) | ~~Phone authentication via OTP~~ | AUTH | Must Have | **superseded** by FR-AUTH-003 | — |
 | [FR-AUTH-002-otp-resend-cooldown](FR-AUTH-002-otp-resend-cooldown.md) | ~~OTP resend with cooldown~~ | AUTH | Should Have | **retired** — no OTP to resend | — |
 | [FR-DONOR-001-donor-profile](FR-DONOR-001-donor-profile.md) | Donor registration and profile | DONOR | Must Have | accepted | M3 |
@@ -54,9 +55,10 @@ cross-references still resolve.
 | [FR-GLOBAL-002-metrics-instrumentation](FR-GLOBAL-002-metrics-instrumentation.md) | Success-metric event capture | GLOBAL | Must Have | **deferred** — DEC-004 | — |
 | [FR-SECURITY-001-account-data-deletion](FR-SECURITY-001-account-data-deletion.md) | Account and personal data deletion | SECURITY | Must Have | **deferred** — DEC-004 | — |
 
-**20 features, 9 in the build.** 12 from `prd.md` FR-01..FR-12, 8 added to close documented gaps
-(`FR-PORTAL-003` added 2026-08-23, closing TM-AUTH-001 E1's gap between the threat model and
-`V8__portal_access.sql`'s hand-run migration).
+**21 features, 9 in the build.** 12 from `prd.md` FR-01..FR-12, 9 added to close documented gaps or
+requests — `FR-PORTAL-003` (2026-08-23, closing TM-AUTH-001 E1's gap between the threat model and
+`V8__portal_access.sql`'s hand-run migration) and `FR-AUTH-004` (2026-08-23, requested by PO,
+deliberately not in this build — see the FR for why).
 
 > **Scope cut 2026-08-07 (DEC-004).** This is a 13-week course case study, not a product. Eight FRs
 > form the buildable core; eight are `deferred`; three are `superseded`/`retired` from the auth

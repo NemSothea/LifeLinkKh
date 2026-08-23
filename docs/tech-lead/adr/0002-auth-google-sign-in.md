@@ -72,6 +72,12 @@ Two items remain open and are tracked as FR scope, not here: whether hospital an
 sign-in uses Google at all (`FR-AUTH-003`), and whether donors without a Google account are locked
 out — the Telegram fallback above is the answer if that turns out to be common.
 
+**Addendum, 2026-08-23.** PO requested both the Telegram fallback and Facebook Login be added for
+donors — see [`FR-AUTH-004`](../../po/features/FR-AUTH-004-additional-sign-in-providers.md).
+Deferred to after M7: Facebook's own App Review timeline is outside the team's control, and
+Telegram here still means the bot-driven OTP path this ADR chose Google Sign-In to avoid, not a
+one-button addition.
+
 ## Note on where decisions are recorded
 
 DEC-001..003 lived in `docs/pm/decisions.md`. The PM role was dropped on 2026-08-07 and that directory
