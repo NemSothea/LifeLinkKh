@@ -124,12 +124,13 @@ public class PortalService {
 
         if (!ADMIN.equals(caller.getRole())
                 && !request.getHospitalId().equals(caller.getHospitalId())) {
-            // 403, not 404: the caller reached this request through their own portal list, so
-            // hiding its existence would be theatre — same reasoning as NOT_REQUEST_CREATOR.
-            throw new ApiException(
-                    HttpStatus.FORBIDDEN,
-                    "NOT_YOUR_HOSPITAL",
-                    "This request belongs to a different hospital.");
+            // The *same* 404 as "no such request" — openapi.yaml documents this endpoint's 404 as
+            // "Unknown request, or not visible to this caller". A distinguishable status here
+            // (the previous 403 NOT_YOUR_HOSPITAL) would let a HOSPITAL account tell "doesn't
+            // exist" apart from "exists, wrong hospital" by comparing error codes, which is
+            // exactly the theatre this rule exists to avoid — same reasoning as GET
+            // /requests/{id}'s donor-visibility check.
+            throw ApiException.notFound("REQUEST_NOT_FOUND", "No such request.");
         }
 
         RequestMatch match =
@@ -137,12 +138,14 @@ public class PortalService {
                         .filter(m -> m.getBloodRequestId().equals(requestId))
                         .filter(m -> ACCEPTED.equals(m.getResponse()))
                         .orElseThrow(
-                                // Staff only ever learn a matchId through this request's own
-                                // acceptedDonors list, which already filters to ACCEPTED — any
-                                // other id is indistinguishable from one that never existed.
+                                // openapi.yaml's 422 for this endpoint is explicitly "matchId not
+                                // ACCEPTED or not on this request" — a 404 here (the previous
+                                // MATCH_NOT_FOUND) would contradict the documented contract, even
+                                // though staff only ever learn a matchId through this request's
+                                // own acceptedDonors list.
                                 () ->
-                                        ApiException.notFound(
-                                                "MATCH_NOT_FOUND",
+                                        ApiException.unprocessable(
+                                                "MATCH_NOT_ACCEPTED",
                                                 "No accepted match with that id on this request."));
 
         if (donations.existsByDonorProfileIdAndBloodRequestId(
@@ -168,7 +171,20 @@ public class PortalService {
         donation.setBloodRequestId(requestId);
         donation.setDonatedOn(body.donatedOn());
         donation.setConfirmedByUserId(callerId);
-        donation = donations.save(donation);
+        try {
+            donation = donations.save(donation);
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            // The existsBy check above is a race, not a guarantee — two confirm-donation calls
+            // for the same match arriving close together can both pass it before either commits.
+            // V9__donations_unique.sql is the actual guarantee; this turns its violation into the
+            // same 409 the check above produces, rather than the generic CONSTRAINT_VIOLATED 422
+            // from GlobalExceptionHandler, whose "a referenced value does not exist" message would
+            // be actively wrong here — the value exists twice, not zero times.
+            throw new ApiException(
+                    HttpStatus.CONFLICT,
+                    "DONATION_ALREADY_CONFIRMED",
+                    "This donor's donation against this request is already confirmed.");
+        }
 
         // The cache wins only when this donation is the newest one on record — confirming an
         // older, backdated donation must not push a donor's cooldown backwards past a donation
