@@ -44,6 +44,14 @@ public class User extends Auditable {
     private String role;
 
     /**
+     * From the verified Google ID token, refreshed on every sign-in (TM-AUTH-001 E1). Lets an
+     * ADMIN pick the right account out of a list when promoting someone to HOSPITAL/ADMIN — the
+     * one thing a bare {@code firebase_uid} can't do. Never email or phone.
+     */
+    @Column(name = "display_name", length = 120)
+    private String displayName;
+
+    /**
      * PostgreSQL reports a {@code CHAR(2)} column as {@code bpchar}, which Hibernate reads as
      * {@code Types.CHAR}. Without this annotation Hibernate expects {@code VARCHAR} and {@code
      * ddl-auto=validate} refuses to start. Caught by SchemaIntegrationTest in CI.
@@ -89,6 +97,14 @@ public class User extends Auditable {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     public String getLanguage() {

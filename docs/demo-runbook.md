@@ -63,10 +63,12 @@ docker exec lifelinkkh-postgres-1 psql -U lifelink -d lifelink \
   -c "SELECT id FROM users WHERE role = 'HOSPITAL';"
 
 # 2. mint a token (expires in 1 hour — re-run this before any demo, not the night before)
+#    `-f2-`, not `-f2` — JWT_SECRET is base64 and ends in `=`, which `-f2` silently
+#    drops, producing a token signed with a truncated key that 401s as INVALID_TOKEN.
 cd backend
 ./mvnw -q dependency:build-classpath -Dmdep.outputFile=/tmp/cp.txt
 java -cp "target/classes:$(cat /tmp/cp.txt)" ../scripts/mint-portal-jwt.java \
-  "$(grep ^JWT_SECRET ../.env | cut -d= -f2)" <hospital-user-id> HOSPITAL
+  "$(grep ^JWT_SECRET ../.env | cut -d= -f2-)" <hospital-user-id> HOSPITAL
 
 # 3. put it in the root .env as PORTAL_DEV_JWT=<token>, then:
 cd ..
@@ -76,11 +78,27 @@ docker compose up -d web
 Full context: `scripts/mint-portal-jwt.java` header comment and
 `docs/po/prototypes/web/PORTAL-open-requests/README.md`.
 
-## 5. Known gaps — say these before someone asks
+## 5. Adding staff after the first one (no SQL required)
 
-- **No portal login.** Hospital staff cannot sign in themselves today; step 4 above is a
-  developer-only bridge. If asked "how does a hospital access this," the honest answer is
-  "that's the one piece of FR-PORTAL-001 not finished — see the runbook."
+The dev-JWT bridge above is only for standing up the very first `ADMIN` session locally.
+Every staff account **after** that is provisioned through the app, not a migration:
+
+1. The person signs in once via the mobile app as an ordinary donor/requester — this is
+   what captures their `display_name` for the next step (TM-AUTH-001 E1).
+2. An `ADMIN` opens **Manage staff** (top of the portal, ADMIN sessions only) at
+   `/portal/admin`, picks that person by name from the dropdown, chooses `HOSPITAL` (with
+   their hospital) or `ADMIN`, and submits.
+3. They now have portal access — no password, no invite email, nothing stored beyond the
+   name already captured at sign-in.
+
+`V8__portal_access.sql`'s hand-run insert is now only a bootstrap for the first `ADMIN`,
+the one account that has to exist before anyone can use step 2 on anyone else.
+
+## 6. Known gaps — say these before someone asks
+
+- **No Google Sign-In button on the portal itself.** A `HOSPITAL`/`ADMIN` account still
+  can't sign in *from the portal* — section 4's bridge stands in for that. Once granted
+  (section 5), they'd sign in the same way the mobile app does, once that button exists.
 - **No seed request data.** A freshly-started stack's portal shows the empty state until
   step 3 of the golden path has been run at least once. Run the golden path *before* the
   audience is watching, or narrate it live — don't open the portal cold.
@@ -90,7 +108,7 @@ Full context: `scripts/mint-portal-jwt.java` header comment and
 - Eight other FRs are deferred by `docs/scope.md` (DEC-004) — point there rather than
   improvising a reason per feature.
 
-## 6. If something's broken instead of empty
+## 7. If something's broken instead of empty
 
 ```bash
 docker compose ps                        # everything should say "healthy"

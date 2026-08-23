@@ -16,7 +16,7 @@ Milestones reference root `CLAUDE.md` section 4, which is the only place milesto
 | MATCH | 003 |
 | DONATION | 002 |
 | NOTIFY | 003 |
-| PORTAL | 003 |
+| PORTAL | 004 |
 | GLOBAL | 003 |
 | SECURITY | 002 |
 | MOBILE | 001 |
@@ -49,20 +49,24 @@ cross-references still resolve.
 | [FR-NOTIFY-002-eligibility-reminder](FR-NOTIFY-002-eligibility-reminder.md) | Eligibility reminder when cooldown ends | NOTIFY | Should Have | **deferred** — DEC-004 | — |
 | [FR-PORTAL-001-hospital-request-management](FR-PORTAL-001-hospital-request-management.md) | Hospital request management (web) | PORTAL | Should Have | accepted | M4 |
 | [FR-PORTAL-002-admin-dashboard](FR-PORTAL-002-admin-dashboard.md) | Admin dashboard (web) | PORTAL | Should Have | **deferred** — DEC-004 | — |
+| [FR-PORTAL-003-staff-provisioning](FR-PORTAL-003-staff-provisioning.md) | Admin-managed staff accounts | PORTAL | Must Have | accepted | M6 |
 | [FR-GLOBAL-001-localization-km-en](FR-GLOBAL-001-localization-km-en.md) | Khmer and English localization | GLOBAL | Should Have | accepted | M6 |
 | [FR-GLOBAL-002-metrics-instrumentation](FR-GLOBAL-002-metrics-instrumentation.md) | Success-metric event capture | GLOBAL | Must Have | **deferred** — DEC-004 | — |
 | [FR-SECURITY-001-account-data-deletion](FR-SECURITY-001-account-data-deletion.md) | Account and personal data deletion | SECURITY | Must Have | **deferred** — DEC-004 | — |
 
-**19 features, 8 in the build.** 12 from `prd.md` FR-01..FR-12, 7 added to close documented gaps.
+**20 features, 9 in the build.** 12 from `prd.md` FR-01..FR-12, 8 added to close documented gaps
+(`FR-PORTAL-003` added 2026-08-23, closing TM-AUTH-001 E1's gap between the threat model and
+`V8__portal_access.sql`'s hand-run migration).
 
 > **Scope cut 2026-08-07 (DEC-004).** This is a 13-week course case study, not a product. Eight FRs
 > form the buildable core; eight are `deferred`; three are `superseded`/`retired` from the auth
 > change. Deferred FRs keep their documents — they are the "future work" section of the defence, and
 > a deliberate cut reads better than eight half-built features. Rationale: [`../../scope.md`](../../scope.md).
 
-**The build (8):** FR-AUTH-003 · FR-DONOR-001 · FR-DONOR-002 · FR-REQUEST-001 · FR-MATCH-001 ·
+**The build (9):** FR-AUTH-003 · FR-DONOR-001 · FR-DONOR-002 · FR-REQUEST-001 · FR-MATCH-001 ·
 FR-REQUEST-002 · FR-NOTIFY-001 · FR-DONATION-001.
-Plus FR-PORTAL-001 trimmed to a single open-requests page, and FR-GLOBAL-001 (km/en) at M6.
+Plus FR-PORTAL-001 trimmed to a single open-requests page, FR-PORTAL-003 (staff provisioning), and
+FR-GLOBAL-001 (km/en) at M6.
 
 🔒 = blocked on an open brief in [../briefs/roadmap.md](../briefs/roadmap.md).
 **No FR in the build carries a 🔒 as of 2026-08-19.** `FR-MATCH-001`'s three blockers cleared in two

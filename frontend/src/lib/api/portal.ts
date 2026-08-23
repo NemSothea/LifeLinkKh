@@ -1,4 +1,5 @@
 import { apiGet, apiPost, type ApiResult } from './client';
+import { portalAuthHeader } from './dev-auth';
 
 /**
  * Typed against `GET`/`POST /api/portal/requests...` in
@@ -34,28 +35,8 @@ export type ConfirmDonationResult = {
     donorNextEligibleOn: string;
 };
 
-/**
- * The bearer token for every `/portal/*` call.
- *
- * **Temporary.** No Firebase Web app is registered yet, so there is no Google Sign-In
- * button on the portal — see `docs/po/prototypes/web/PORTAL-open-requests/README.md`.
- * `PORTAL_DEV_JWT` is a session minted directly for the seeded HOSPITAL account
- * (`V8__portal_access.sql`) and pasted into `.env.local`; it expires in one hour like
- * any other session (ADR 0007) and has to be re-minted, not renewed. Server-side only —
- * never read this under a `NEXT_PUBLIC_` name, or the token ships in the browser bundle.
- */
-function authHeader(): HeadersInit {
-    const token = process.env.PORTAL_DEV_JWT;
-    if (!token) {
-        throw new Error(
-            'PORTAL_DEV_JWT is not set. See docs/po/prototypes/web/PORTAL-open-requests/README.md.',
-        );
-    }
-    return { Authorization: `Bearer ${token}` };
-}
-
 export function listOpenRequests(): Promise<ApiResult<PortalRequest[]>> {
-    return apiGet<PortalRequest[]>('/portal/requests?status=OPEN', authHeader());
+    return apiGet<PortalRequest[]>('/portal/requests?status=OPEN', portalAuthHeader());
 }
 
 export function confirmDonation(
@@ -66,6 +47,6 @@ export function confirmDonation(
     return apiPost<ConfirmDonationResult>(
         `/portal/requests/${requestId}/confirm-donation`,
         { matchId, donatedOn },
-        authHeader(),
+        portalAuthHeader(),
     );
 }

@@ -21,6 +21,27 @@
         "alertedAccepted": "{alerted} alerted · {accepted} accepted",
         "noAcceptedDonors": "Nothing waiting on confirmation.",
         "donatedOnLabel": "Donated on",
-        "confirmDonationCta": "Confirm donation"
+        "confirmDonationCta": "Confirm donation",
+        "manageStaffCta": "Manage staff"
+    },
+    "admin": {
+        "title": "Manage staff",
+        "backToRequests": "Open requests",
+        "adminsOnly": "This page is for administrators only.",
+        "promoted": "{name} now has portal access.",
+        "promoteFailed": "Could not grant access. Check the details and try again.",
+        "currentStaffHeading": "Current staff",
+        "noStaffYet": "No staff accounts yet.",
+        "staffRoleHospital": "Hospital staff",
+        "staffRoleAdmin": "Admin",
+        "promoteHeading": "Grant portal access",
+        "promoteHint": "Only people who have already signed in to the app once can be promoted — pick them by name, not by typing an email.",
+        "candidateLabel": "Person",
+        "candidateHint": "Choose who to grant access to",
+        "noCandidates": "Nobody has signed in yet who could be promoted.",
+        "roleLabel": "Access level",
+        "hospitalLabel": "Hospital",
+        "hospitalNone": "— none, this is an admin —",
+        "submitCta": "Grant access"
     }
 }

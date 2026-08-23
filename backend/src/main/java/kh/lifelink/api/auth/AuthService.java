@@ -50,6 +50,9 @@ public class AuthService {
             User existing, GoogleTokenVerifier.VerifiedIdentity identity) {
         // `role` from the body is ignored outright for a returning user — not compared, not
         // validated. Changing role is not a self-service operation in this build.
+        // Refreshed every sign-in, not just at creation, so a name change on the Google side (or
+        // an account created before this column existed) catches up without a second code path.
+        existing.setDisplayName(identity.displayName());
         log.info("auth sign-in user={} outcome=RETURNING", existing.getId());
         return respond(existing, identity.displayName(), false);
     }
@@ -69,6 +72,7 @@ public class AuthService {
         // From the verified token's sub claim and nowhere else (TM-AUTH-001 S1).
         user.setFirebaseUid(identity.uid());
         user.setRole(role);
+        user.setDisplayName(identity.displayName());
         User saved = users.save(user);
 
         log.info("auth sign-up user={} outcome=CREATED role={}", saved.getId(), role);

@@ -6,8 +6,8 @@
 -- Usage:
 --   docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink < scripts/seed-demo-request.sql
 
-INSERT INTO users (id, firebase_uid, role)
-VALUES ('11111111-1111-1111-1111-111111111111', 'DEMO-DONOR-SOK-DARA', 'DONOR')
+INSERT INTO users (id, firebase_uid, role, display_name)
+VALUES ('11111111-1111-1111-1111-111111111111', 'DEMO-DONOR-SOK-DARA', 'DONOR', 'Sok Dara')
 ON CONFLICT (firebase_uid) DO NOTHING;
 
 INSERT INTO donor_profiles (id, user_id, full_name, blood_type, district_code, is_available)
@@ -21,8 +21,8 @@ VALUES (
 )
 ON CONFLICT (user_id) DO NOTHING;
 
-INSERT INTO users (id, firebase_uid, role)
-VALUES ('33333333-3333-3333-3333-333333333333', 'DEMO-REQUESTER-CHEA-SREY', 'REQUESTER')
+INSERT INTO users (id, firebase_uid, role, display_name)
+VALUES ('33333333-3333-3333-3333-333333333333', 'DEMO-REQUESTER-CHEA-SREY', 'REQUESTER', 'Chea Srey')
 ON CONFLICT (firebase_uid) DO NOTHING;
 
 INSERT INTO blood_requests (id, created_by_user_id, hospital_id, patient_blood_type, units_needed, urgency, status, contact_name, contact_phone)

@@ -65,6 +65,10 @@ public class SecurityConfig {
                                         // REQUESTER JWT gets 403 before the controller runs.
                                         .requestMatchers("/portal/**")
                                         .hasAnyRole("HOSPITAL", "ADMIN")
+                                        // TM-AUTH-001 E1 — staff provisioning. HOSPITAL and
+                                        // REQUESTER/DONOR JWTs get 403 before AdminController runs.
+                                        .requestMatchers("/admin/**")
+                                        .hasRole("ADMIN")
                                         .anyRequest()
                                         .authenticated())
                 .exceptionHandling(

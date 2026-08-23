@@ -1,5 +1,7 @@
 import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { portalRole } from '@/lib/api/dev-auth';
 import { listOpenRequests, type PortalRequest } from '@/lib/api/portal';
 import ConfirmDonationForm from './confirm-donation-form';
 import {
@@ -44,6 +46,15 @@ export default async function PortalPage({
                     <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
                 </div>
                 <div className="flex items-center gap-3">
+                    {portalRole() === 'ADMIN' ? (
+                        <Link
+                            href={`/${locale}/portal/admin`}
+                            data-testid="manage-staff-link"
+                            className="text-sm font-medium text-black/60 underline-offset-4 hover:underline dark:text-white/60"
+                        >
+                            {t('manageStaffCta')}
+                        </Link>
+                    ) : null}
                     <LanguageSwitcher />
                     {result.ok ? (
                         <div
