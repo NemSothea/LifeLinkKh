@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { listOpenRequests, type PortalRequest } from '@/lib/api/portal';
 import ConfirmDonationForm from './confirm-donation-form';
 import {
@@ -42,23 +43,26 @@ export default async function PortalPage({
                     </p>
                     <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
                 </div>
-                {result.ok ? (
-                    <div
-                        data-testid="portal-summary"
-                        className="flex items-center gap-4 rounded-full border border-black/10 bg-black/[0.02] px-5 py-2 text-sm dark:border-white/15 dark:bg-white/[0.04]"
-                    >
-                        <span>
-                            <strong className="text-lg">{requests.length}</strong>{' '}
-                            <span className="text-black/60 dark:text-white/60">{t('openLabel')}</span>
-                        </span>
-                        {criticalCount > 0 ? (
-                            <span className="flex items-center gap-1 font-medium text-red-700 dark:text-red-400">
-                                <IconAlertTriangle className="h-4 w-4" />
-                                {criticalCount} {t('criticalLabel')}
+                <div className="flex items-center gap-3">
+                    <LanguageSwitcher />
+                    {result.ok ? (
+                        <div
+                            data-testid="portal-summary"
+                            className="flex items-center gap-4 rounded-full border border-black/10 bg-black/[0.02] px-5 py-2 text-sm dark:border-white/15 dark:bg-white/[0.04]"
+                        >
+                            <span>
+                                <strong className="text-lg">{requests.length}</strong>{' '}
+                                <span className="text-black/60 dark:text-white/60">{t('openLabel')}</span>
                             </span>
-                        ) : null}
-                    </div>
-                ) : null}
+                            {criticalCount > 0 ? (
+                                <span className="flex items-center gap-1 font-medium text-red-700 dark:text-red-400">
+                                    <IconAlertTriangle className="h-4 w-4" />
+                                    {criticalCount} {t('criticalLabel')}
+                                </span>
+                            ) : null}
+                        </div>
+                    ) : null}
+                </div>
             </header>
 
             {confirmed ? (
