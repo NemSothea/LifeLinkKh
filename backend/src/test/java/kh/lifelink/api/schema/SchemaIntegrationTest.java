@@ -36,7 +36,7 @@ class SchemaIntegrationTest {
         Integer applied =
                 jdbc.queryForObject(
                         "SELECT count(*) FROM flyway_schema_history WHERE success", Integer.class);
-        assertThat(applied).isEqualTo(8);
+        assertThat(applied).isEqualTo(9);
     }
 
     @Test
@@ -241,6 +241,52 @@ class SchemaIntegrationTest {
                                                 + " VALUES ('Nowhere Hospital', 11.55, 104.91,"
                                                 + " 'no-such-code')"))
                 .hasMessageContaining("hospitals_district_fk");
+    }
+
+    /**
+     * The constraint added by V9, backing {@code PortalService.confirmDonation}'s 409 when the
+     * application-level check-then-insert loses a race (two confirm-donation calls for the same
+     * match arriving close together). Without this at the database layer, the app-level check is
+     * advisory only and a race produces two donations rows for one donor against one request.
+     */
+    @Test
+    void aDonorCannotBeConfirmedTwiceAgainstTheSameRequest() {
+        jdbc.update("INSERT INTO users (firebase_uid, role) VALUES ('uid-donation-uniq-creator', 'REQUESTER')");
+        jdbc.update("INSERT INTO users (firebase_uid, role) VALUES ('uid-donation-uniq-donor', 'DONOR')");
+        jdbc.update(
+                "INSERT INTO donor_profiles (user_id, full_name, blood_type, district_code)"
+                        + " SELECT id, 'Test Donor', 'O-', '1201' FROM users"
+                        + " WHERE firebase_uid = 'uid-donation-uniq-donor'");
+        jdbc.update(
+                "INSERT INTO blood_requests (created_by_user_id, hospital_id, patient_blood_type,"
+                        + " units_needed, urgency, contact_name, contact_phone)"
+                        + " SELECT u.id, h.id, 'O-', 1, 'URGENT', 'Test', '012000000' FROM users u,"
+                        + " hospitals h WHERE u.firebase_uid = 'uid-donation-uniq-creator'"
+                        + " AND h.name = 'Calmette Hospital'");
+
+        jdbc.update(
+                "INSERT INTO donations (donor_profile_id, hospital_id, blood_request_id, donated_on)"
+                        + " SELECT dp.id, h.id, br.id, CURRENT_DATE FROM donor_profiles dp,"
+                        + " hospitals h, blood_requests br, users u"
+                        + " WHERE u.firebase_uid = 'uid-donation-uniq-donor' AND dp.user_id = u.id"
+                        + " AND h.name = 'Calmette Hospital'"
+                        + " AND br.created_by_user_id ="
+                        + " (SELECT id FROM users WHERE firebase_uid = 'uid-donation-uniq-creator')");
+
+        assertThatThrownBy(
+                        () ->
+                                jdbc.update(
+                                        "INSERT INTO donations (donor_profile_id, hospital_id,"
+                                                + " blood_request_id, donated_on)"
+                                                + " SELECT dp.id, h.id, br.id, CURRENT_DATE FROM"
+                                                + " donor_profiles dp, hospitals h, blood_requests br,"
+                                                + " users u WHERE u.firebase_uid ="
+                                                + " 'uid-donation-uniq-donor' AND dp.user_id = u.id"
+                                                + " AND h.name = 'Calmette Hospital'"
+                                                + " AND br.created_by_user_id ="
+                                                + " (SELECT id FROM users WHERE firebase_uid ="
+                                                + " 'uid-donation-uniq-creator')"))
+                .hasMessageContaining("donations_donor_request_uniq");
     }
 
     private List<String> donorsFor(String recipient) {

@@ -168,8 +168,13 @@ class PortalServiceTest {
                 .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
+    /**
+     * Same 404 as an unknown request — openapi.yaml documents this endpoint's 404 as "Unknown
+     * request, or not visible to this caller". A distinguishable status would let a HOSPITAL
+     * account tell "doesn't exist" apart from "exists, wrong hospital" by comparing error codes.
+     */
     @Test
-    void confirmingAgainstAnotherHospitalsRequestIsForbidden() {
+    void confirmingAgainstAnotherHospitalsRequestIsNotFound() {
         when(requests.findById(REQUEST_ID)).thenReturn(Optional.of(openRequest(OTHER_HOSPITAL)));
 
         assertThatThrownBy(
@@ -180,11 +185,12 @@ class PortalServiceTest {
                                         new ConfirmDonationRequest(MATCH_ID, LocalDate.now())))
                 .isInstanceOf(ApiException.class)
                 .extracting(ex -> ((ApiException) ex).getStatus())
-                .isEqualTo(HttpStatus.FORBIDDEN);
+                .isEqualTo(HttpStatus.NOT_FOUND);
 
         verify(donations, never()).save(any());
     }
 
+    /** openapi.yaml's 422 for this endpoint is explicitly "matchId not ACCEPTED or not on this request". */
     @Test
     void aMatchThatNeverAcceptedCannotBeConfirmed() {
         when(requests.findById(REQUEST_ID)).thenReturn(Optional.of(openRequest(CALMETTE)));
@@ -201,7 +207,7 @@ class PortalServiceTest {
                                         new ConfirmDonationRequest(MATCH_ID, LocalDate.now())))
                 .isInstanceOf(ApiException.class)
                 .extracting(ex -> ((ApiException) ex).getStatus())
-                .isEqualTo(HttpStatus.NOT_FOUND);
+                .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @Test
@@ -223,6 +229,36 @@ class PortalServiceTest {
                 .isEqualTo(HttpStatus.CONFLICT);
 
         verify(donations, never()).save(any());
+    }
+
+    /**
+     * The existsBy check above is a race, not a guarantee. V9__donations_unique.sql is the real
+     * guarantee; this proves its violation surfaces as the same 409 the check produces, not the
+     * generic CONSTRAINT_VIOLATED 422 from GlobalExceptionHandler.
+     */
+    @Test
+    void aRaceThatSlipsPastTheCheckStillConflictsAtTheDatabase() {
+        when(requests.findById(REQUEST_ID)).thenReturn(Optional.of(openRequest(CALMETTE)));
+        when(matches.findById(MATCH_ID))
+                .thenReturn(Optional.of(acceptedMatch(DONOR_PROFILE_ID, OffsetDateTime.now())));
+        when(donations.existsByDonorProfileIdAndBloodRequestId(DONOR_PROFILE_ID, REQUEST_ID))
+                .thenReturn(false);
+        when(donorProfiles.findById(DONOR_PROFILE_ID))
+                .thenReturn(Optional.of(donorProfile(DONOR_PROFILE_ID, "Sophea")));
+        when(donations.save(any()))
+                .thenThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate key"));
+
+        assertThatThrownBy(
+                        () ->
+                                service.confirmDonation(
+                                        HOSPITAL_STAFF,
+                                        REQUEST_ID,
+                                        new ConfirmDonationRequest(MATCH_ID, LocalDate.now())))
+                .isInstanceOf(ApiException.class)
+                .extracting(ex -> ((ApiException) ex).getStatus())
+                .isEqualTo(HttpStatus.CONFLICT);
+
+        verify(requests, never()).save(any());
     }
 
     @Test
