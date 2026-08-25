@@ -40,6 +40,24 @@ final googleCredentialsProvider = Provider<GoogleCredentials>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef GoogleCredentialsRef = ProviderRef<GoogleCredentials>;
+String _$facebookCredentialsHash() =>
+    r'2a7dbf6d9c453f78799e8b1eac36c4810fbbbedd';
+
+/// See also [facebookCredentials].
+@ProviderFor(facebookCredentials)
+final facebookCredentialsProvider = Provider<FacebookCredentials>.internal(
+  facebookCredentials,
+  name: r'facebookCredentialsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$facebookCredentialsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef FacebookCredentialsRef = ProviderRef<FacebookCredentials>;
 String _$authRepositoryHash() => r'5b7dc96a12914892b3b8b136d6d8d5362d4f269c';
 
 /// Built on `signInApiClient` — the Dio **without** the auth interceptor. Renewing a
@@ -60,7 +78,29 @@ final authRepositoryProvider = Provider<AuthRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AuthRepositoryRef = ProviderRef<AuthRepository>;
-String _$authServiceHash() => r'a2f82777f418b616624dfcbb54fd9c88d7e1dde9';
+String _$telegramAuthRepositoryHash() =>
+    r'facbe2665f9511404c92bce3271aeb852a955609';
+
+/// Same unintercepted client as `authRepository` — neither Telegram call carries a
+/// bearer token either.
+///
+/// Copied from [telegramAuthRepository].
+@ProviderFor(telegramAuthRepository)
+final telegramAuthRepositoryProvider =
+    Provider<TelegramAuthRepository>.internal(
+      telegramAuthRepository,
+      name: r'telegramAuthRepositoryProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$telegramAuthRepositoryHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef TelegramAuthRepositoryRef = ProviderRef<TelegramAuthRepository>;
+String _$authServiceHash() => r'5f0450a363fc79eb708f4409e47d869b3434c34c';
 
 /// The service, and the [AuthTokenGateway] the HTTP layer holds.
 ///
@@ -83,7 +123,7 @@ final authServiceProvider = Provider<AuthService>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AuthServiceRef = ProviderRef<AuthService>;
-String _$authControllerHash() => r'96f8b0f59429714e6a33f1a78008e42279032ed2';
+String _$authControllerHash() => r'09d34f91dd3a015d554deb1cf3dd97085b94ff18';
 
 /// The session, as the UI sees it. `AsyncNotifier` per Week 5 — loading, data, and error
 /// are states of one object rather than three booleans.
@@ -105,5 +145,52 @@ final authControllerProvider =
     );
 
 typedef _$AuthController = AsyncNotifier<AuthSession?>;
+String _$telegramStartControllerHash() =>
+    r'aac88b91dfc4e1451df4b68193f55d408483b0ec';
+
+/// The Telegram sheet's own state (FR-AUTH-004) — the deep link and session token, not
+/// a session. Deliberately **not** `keepAlive`: this is scoped to one sheet's lifetime,
+/// and a stale challenge from a closed, reopened sheet must not survive to be reused.
+///
+/// Copied from [TelegramStartController].
+@ProviderFor(TelegramStartController)
+final telegramStartControllerProvider =
+    AutoDisposeAsyncNotifierProvider<
+      TelegramStartController,
+      TelegramStartSession?
+    >.internal(
+      TelegramStartController.new,
+      name: r'telegramStartControllerProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$telegramStartControllerHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+typedef _$TelegramStartController =
+    AutoDisposeAsyncNotifier<TelegramStartSession?>;
+String _$telegramVerifyControllerHash() =>
+    r'214bd77f922073af15e72d24c23b45ced03d2c73';
+
+/// The code-entry step's own state (FR-AUTH-004) — separate from
+/// `TelegramStartController` because a wrong code should not throw away the deep link
+/// already fetched, and separate from `AuthController` for the reason documented on
+/// `AuthController.applyTelegramSession`.
+///
+/// Copied from [TelegramVerifyController].
+@ProviderFor(TelegramVerifyController)
+final telegramVerifyControllerProvider =
+    AutoDisposeAsyncNotifierProvider<TelegramVerifyController, void>.internal(
+      TelegramVerifyController.new,
+      name: r'telegramVerifyControllerProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$telegramVerifyControllerHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+typedef _$TelegramVerifyController = AutoDisposeAsyncNotifier<void>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

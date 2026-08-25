@@ -84,6 +84,8 @@ Widget _wrap({
             ),
             authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
             googleCredentialsProvider.overrideWithValue(FakeGoogleCredentials()),
+            facebookCredentialsProvider.overrideWithValue(FakeFacebookCredentials()),
+            telegramAuthRepositoryProvider.overrideWithValue(FakeTelegramAuthRepository()),
             donorRepositoryProvider.overrideWithValue(
                 donorRepository ?? FakeDonorRepository(),
             ),

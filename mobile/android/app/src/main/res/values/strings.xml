@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FR-AUTH-004: flutter_facebook_auth's required Android resources.
+     App ID is client configuration, not a secret — same status as
+     google-services.json (see root .gitignore's note on that file). The App
+     SECRET never belongs here or anywhere in the mobile tree; it lives only in
+     the untracked .env, and isn't even consumed server-side (Firebase Auth
+     verifies Facebook natively — FR-AUTH-004 scope). -->
+<resources>
+    <string name="facebook_app_id">1538785524224504</string>
+    <string name="fb_login_protocol_scheme">fb1538785524224504</string>
+    <!-- From the Meta App dashboard: Settings -> Advanced -> Client Token. Not
+         set yet — Facebook login works without it in Development mode with
+         registered test users; fill this in before requesting App Review. -->
+    <string name="facebook_client_token"></string>
+</resources>

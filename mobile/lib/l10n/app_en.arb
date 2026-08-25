@@ -40,13 +40,41 @@
     "@signInTitle": {
         "description": "Sign-in screen heading"
     },
-    "signInTagline": "One tap with Google. No password to remember in an emergency.",
+    "signInTagline": "One tap. No password to remember in an emergency.",
     "@signInTagline": {
-        "description": "Sign-in screen subtitle explaining why Google Sign-In is the only method"
+        "description": "Sign-in screen subtitle — provider-agnostic, both buttons are one tap"
     },
     "signInWithGoogle": "Continue with Google",
     "@signInWithGoogle": {
-        "description": "Label of the only sign-in button"
+        "description": "Label of the Google sign-in button"
+    },
+    "signInWithFacebook": "Continue with Facebook",
+    "@signInWithFacebook": {
+        "description": "Label of the Facebook sign-in button (FR-AUTH-004)"
+    },
+    "signInWithTelegram": "Continue with Telegram",
+    "@signInWithTelegram": {
+        "description": "Label of the Telegram sign-in button, opens the code-entry sheet (FR-AUTH-004)"
+    },
+    "telegramSheetTitle": "Sign in with Telegram",
+    "@telegramSheetTitle": {
+        "description": "Heading of the Telegram sign-in bottom sheet"
+    },
+    "telegramInstructions": "Open Telegram and send the message to our bot. It will reply with a 6-digit code — enter it below.",
+    "@telegramInstructions": {
+        "description": "Explains the deep-link-then-code flow before the donor taps Open Telegram"
+    },
+    "telegramOpenApp": "Open Telegram",
+    "@telegramOpenApp": {
+        "description": "Button that opens the t.me deep link"
+    },
+    "telegramCodeLabel": "6-digit code",
+    "@telegramCodeLabel": {
+        "description": "Label of the code text field"
+    },
+    "telegramSubmit": "Verify",
+    "@telegramSubmit": {
+        "description": "Submits the typed code to POST /auth/telegram/verify"
     },
     "signInSigningIn": "Signing in…",
     "@signInSigningIn": {
@@ -56,9 +84,9 @@
     "@signInFailedNetwork": {
         "description": "Sign-in error for NetworkFailure"
     },
-    "signInFailedRejected": "Google could not confirm this account. Try signing in again.",
+    "signInFailedRejected": "We could not confirm this account. Try signing in again.",
     "@signInFailedRejected": {
-        "description": "Sign-in error for UnauthorizedFailure"
+        "description": "Sign-in error for UnauthorizedFailure — provider-agnostic"
     },
     "signInFailedRateLimited": "Too many attempts. Wait a minute before trying again.",
     "@signInFailedRateLimited": {

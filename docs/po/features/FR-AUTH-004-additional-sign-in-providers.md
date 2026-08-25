@@ -61,20 +61,41 @@ So the work is sequenced, not raced against M7:
 - Extending either provider to `HOSPITAL`/`ADMIN` sign-in — donors only, per the request.
 - Any code landing in a way that jeopardizes M7 (Play Store release) — if the two conflict, M7 wins
   and this slips, not the reverse.
-- Telegram mobile-side work (the deep-link open, the code-entry screen) — the backend is built and
-  tested; nothing calls it from the app yet.
 
 ## Acceptance criteria
-- [ ] Meta Developer App created and submitted for App Review (Sothea).
-- [ ] Telegram bot created via @BotFather, and `setWebhook` called with a `secret_token` matching
-      `TELEGRAM_WEBHOOK_SECRET` (Sothea) — `SEC-REVIEW-002` condition 1.
-- [ ] Facebook enabled as a sign-in provider in the Firebase console using the Meta App's ID/Secret
-      — no separate backend verifier needed (see Scope).
+- [x] Meta Developer App created, Facebook Login product added (App ID `1538785524224504`).
+      Development mode, default permissions (`public_profile`, `email`) only — App Review not
+      required at this permission level. Going **Live** for real donors needs Meta Business
+      Verification on top of App Review; not filed yet, budget for it separately (Sothea).
+- [x] Telegram bot created via @BotFather — `@LifeLinkKHbot`. `setWebhook` **not yet called**:
+      needs a public HTTPS URL, backend is local-only right now. `TELEGRAM_WEBHOOK_SECRET`
+      generated and in `.env`, ready to register once a URL exists — `SEC-REVIEW-002` condition 1
+      still open.
+- [x] Facebook enabled as a sign-in provider in the Firebase console using the Meta App's ID/Secret
+      — no separate backend verifier needed (see Scope). Redirect URI confirmed
+      (`https://lifelinkkh.firebaseapp.com/__/auth/handler`), toggle-on saved (Sothea, 2026-08-25).
 - [x] Telegram OTP path has expiry, a resend cooldown, and rate-limiting before it ships — not
       after (this is exactly the surface `FR-AUTH-002` existed for). `V11__telegram_auth.sql`,
       `TelegramAuthService`, 19 tests (`TelegramAuthServiceTest` + `TelegramAuthControllerTest`).
 - [x] Telegram produces only `DONOR`/`REQUESTER` accounts, same allow-list rule as Google
       (TM-AUTH-001 E1, mirrored as TM-AUTH-002 E1).
+- [x] Facebook mobile wiring landed: `flutter_facebook_auth`, `FacebookCredentials` /
+      `FirebaseFacebookCredentials` (mirrors `GoogleCredentials`, reuses its Firebase-session
+      `idToken`/`signOut` — only interactive sign-in differs per provider), second button on
+      `SignInScreen` (`sign-in-facebook`), Android manifest/strings wired to the Meta App ID.
+      `flutter analyze` clean, full `flutter test` green (139 tests, 6 new). Not yet run on a
+      device — no real Facebook-authenticated login exercised.
 - [ ] Facebook produces only `DONOR`/`REQUESTER` accounts — inherits Google's existing E1 control
       once wired up, but not yet confirmed against a real Facebook-authenticated Firebase user.
+- [x] Telegram mobile wiring landed: `TelegramAuthRepository`/`DioTelegramAuthRepository` (start +
+      verify, no bearer token, same as `AuthRepository`), `TelegramStartController` (deep link) and
+      `TelegramVerifyController` (code entry) as separate autoDispose controllers so a wrong code
+      doesn't discard the fetched deep link and doesn't leak an error onto `SignInScreen` behind the
+      sheet — `AuthController` only learns of the session via `applyTelegramSession`, on success.
+      Third button on `SignInScreen` (`sign-in-telegram`) opens `TelegramSignInSheet` (deep-link
+      button + 6-digit code field), `url_launcher` for the `t.me` link. `flutter analyze` clean,
+      full `flutter test` green (145 tests, 6 new). Not yet run on a device — no real Telegram bot
+      round-trip exercised (`setWebhook` still not registered, see below).
 - [ ] `SEC-REVIEW-003` — re-review once a real Telegram bot exists (`SEC-REVIEW-002` condition 2).
+      The bot itself exists now (`@LifeLinkKHbot`); this still waits on `setWebhook`, which waits on
+      a public HTTPS URL (held per Sothea's 2026-08-25 call).

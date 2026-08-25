@@ -5,8 +5,11 @@ import 'package:lifelink_kh/src/core/error/result.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_repository.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_session.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_user.dart';
+import 'package:lifelink_kh/src/features/auth/domain/facebook_credentials.dart';
 import 'package:lifelink_kh/src/features/auth/domain/google_credentials.dart';
 import 'package:lifelink_kh/src/features/auth/domain/session_store.dart';
+import 'package:lifelink_kh/src/features/auth/domain/telegram_auth_repository.dart';
+import 'package:lifelink_kh/src/features/auth/domain/telegram_start_session.dart';
 import 'package:lifelink_kh/src/features/auth/domain/user_role.dart';
 import 'package:lifelink_kh/src/features/home/domain/health_repository.dart';
 import 'package:lifelink_kh/src/features/home/domain/health_status.dart';
@@ -82,6 +85,45 @@ final class FakeGoogleCredentials implements GoogleCredentials {
 
     @override
     Future<void> signOut() async => signedOut = true;
+}
+
+final class FakeFacebookCredentials implements FacebookCredentials {
+    /// `null` models a dismissed Facebook login dialog.
+    String? interactiveToken = 'firebase-id-token';
+
+    @override
+    Future<String?> signIn() async => interactiveToken;
+}
+
+final class FakeTelegramAuthRepository implements TelegramAuthRepository {
+    Failure? startFailure;
+    Failure? verifyFailure;
+    String deepLink = 'https://t.me/LifeLinkKHbot?start=session-token-1';
+    String sessionToken = 'session-token-1';
+
+    /// The code `verify` accepts. Anything else fails as `TELEGRAM_CODE_INVALID`
+    /// (`UnauthorizedFailure`), same as the real backend.
+    String validCode = '123456';
+
+    @override
+    Future<Result<TelegramStartSession>> start({required UserRole role}) async {
+        final failure = startFailure;
+        if (failure != null) return Failed(failure);
+        return Success(TelegramStartSession(sessionToken: sessionToken, deepLink: deepLink));
+    }
+
+    @override
+    Future<Result<AuthSession>> verify({
+        required String sessionToken,
+        required String code,
+    }) async {
+        final failure = verifyFailure;
+        if (failure != null) return Failed(failure);
+        if (code != validCode) {
+            return const Failed(UnauthorizedFailure());
+        }
+        return Success(testSession());
+    }
 }
 
 final class FakeFcmTokenRepository implements FcmTokenRepository {

@@ -15,6 +15,8 @@ void main() {
     late FakeAuthRepository repository;
     late FakeSessionStore sessionStore;
     late FakeGoogleCredentials credentials;
+    late FakeFacebookCredentials facebookCredentials;
+    late FakeTelegramAuthRepository telegramRepository;
     late FakeFcmTokenRepository fcm;
     late FakePushTokenSource pushTokens;
 
@@ -22,6 +24,8 @@ void main() {
         repository = FakeAuthRepository();
         sessionStore = FakeSessionStore();
         credentials = FakeGoogleCredentials();
+        facebookCredentials = FakeFacebookCredentials();
+        telegramRepository = FakeTelegramAuthRepository();
         fcm = FakeFcmTokenRepository();
         pushTokens = FakePushTokenSource();
     });
@@ -35,6 +39,8 @@ void main() {
                     authRepositoryProvider.overrideWithValue(repository),
                     sessionStoreProvider.overrideWithValue(sessionStore),
                     googleCredentialsProvider.overrideWithValue(credentials),
+                    facebookCredentialsProvider.overrideWithValue(facebookCredentials),
+                    telegramAuthRepositoryProvider.overrideWithValue(telegramRepository),
                     fcmTokenRepositoryProvider.overrideWithValue(fcm),
                     pushTokenSourceProvider.overrideWithValue(pushTokens),
                     healthRepositoryProvider.overrideWithValue(FakeHealthRepository()),
@@ -84,6 +90,78 @@ void main() {
         // DEC-002 pulled token registration into M3 precisely so that M4's request alert
         // has somewhere to send.
         expect(fcm.registered, ['fcm-token-1']);
+    });
+
+    testWidgets(
+        'signing in via Facebook stores the session, registers for push, and routes home',
+        (tester) async {
+        await pumpApp(tester);
+
+        expect(find.byKey(const Key('sign-in-facebook')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('sign-in-facebook')));
+        await tester.pumpAndSettle();
+
+        await goToMeTab(tester);
+        expect(find.byKey(const Key('sign-out')), findsOneWidget);
+        expect(sessionStore.stored?.token, 'jwt-1');
+        expect(fcm.registered, ['fcm-token-1']);
+    });
+
+    testWidgets('a dismissed Facebook login dialog leaves the user on sign-in with no error',
+        (tester) async {
+        facebookCredentials.interactiveToken = null;
+
+        await pumpApp(tester);
+        await tester.tap(find.byKey(const Key('sign-in-facebook')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('sign-in-facebook')), findsOneWidget);
+        expect(
+            find.byKey(const Key('sign-in-error')),
+            findsNothing,
+            reason: 'a cancel is a choice, not a failure',
+        );
+        expect(repository.exchangeCount, 0);
+    });
+
+    testWidgets(
+        'signing in via Telegram opens the sheet, verifies the code, and routes home',
+        (tester) async {
+        await pumpApp(tester);
+
+        await tester.tap(find.byKey(const Key('sign-in-telegram')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('telegram-code-entry')), findsOneWidget);
+
+        await tester.enterText(
+            find.byKey(const Key('telegram-code-field')),
+            telegramRepository.validCode,
+        );
+        await tester.tap(find.byKey(const Key('telegram-submit')));
+        await tester.pumpAndSettle();
+
+        // The sheet closes itself on a real session, not on the tap.
+        expect(find.byKey(const Key('telegram-code-entry')), findsNothing);
+        await goToMeTab(tester);
+        expect(find.byKey(const Key('sign-out')), findsOneWidget);
+        expect(sessionStore.stored?.token, 'jwt-1');
+        expect(fcm.registered, ['fcm-token-1']);
+    });
+
+    testWidgets('a wrong Telegram code shows an error and keeps the sheet open',
+        (tester) async {
+        await pumpApp(tester);
+
+        await tester.tap(find.byKey(const Key('sign-in-telegram')));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byKey(const Key('telegram-code-field')), '000000');
+        await tester.tap(find.byKey(const Key('telegram-submit')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('sign-in-error')), findsOneWidget);
+        expect(find.byKey(const Key('telegram-code-entry')), findsOneWidget);
+        expect(sessionStore.stored, isNull);
     });
 
     testWidgets('a dismissed account chooser leaves the user on sign-in with no error',

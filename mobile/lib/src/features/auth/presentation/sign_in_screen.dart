@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
-import '../../../core/error/failure.dart';
 import '../application/auth_providers.dart';
+import 'auth_failure_message.dart';
+import 'telegram_sign_in_sheet.dart';
 
 /// The only unauthenticated screen in the app.
 ///
-/// One button, because there is one method: `ADR 0002` replaced phone OTP with Google
-/// Sign-In, so there is no password field, no OTP entry, and nothing to forget at 03:00.
+/// Three buttons — Google, Facebook, Telegram (FR-AUTH-004) — but still no password
+/// field and nothing to forget at 03:00. Google and Facebook are both federated and
+/// trade a provider credential for a Firebase session; Telegram is not (ADR 0002 chose
+/// Google specifically to avoid an OTP round-trip, then FR-AUTH-004 reintroduced one for
+/// this one path). `TelegramSignInSheet` is where that OTP entry lives, not here — this
+/// screen only opens it.
 ///
 /// Four-state rendering (Week 5): idle, in flight, signed in, and failed — where *failed*
-/// switches on the sealed [Failure] rather than on a message string, so the compiler
+/// switches on the sealed `Failure` rather than on a message string, so the compiler
 /// checks that every variant has copy and the copy is localised.
 class SignInScreen extends ConsumerWidget {
     const SignInScreen({super.key});
@@ -57,7 +62,7 @@ class SignInScreen extends ConsumerWidget {
                                 if (auth.hasError)
                                     Padding(
                                         padding: const EdgeInsets.only(bottom: 16),
-                                        child: _FailureMessage(error: auth.error!),
+                                        child: AuthFailureMessage(error: auth.error!),
                                     ),
                                 FilledButton.icon(
                                     key: const Key('sign-in-google'),
@@ -81,58 +86,46 @@ class SignInScreen extends ConsumerWidget {
                                                 : l10n.signInWithGoogle),
                                     ),
                                 ),
+                                const SizedBox(height: 12),
+                                OutlinedButton.icon(
+                                    key: const Key('sign-in-facebook'),
+                                    onPressed: inFlight
+                                        ? null
+                                        : () => ref
+                                            .read(authControllerProvider.notifier)
+                                            .signInWithFacebook(),
+                                    icon: inFlight
+                                        ? const SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(strokeWidth: 2),
+                                        )
+                                        : const Icon(Icons.facebook),
+                                    label: Text(
+                                        inFlight ? l10n.signInSigningIn : l10n.signInWithFacebook,
+                                    ),
+                                ),
+                                const SizedBox(height: 12),
+                                OutlinedButton.icon(
+                                    key: const Key('sign-in-telegram'),
+                                    // Not tied to `inFlight`: the Telegram flow has its own
+                                    // sheet and its own loading state, and closing this button
+                                    // off while an unrelated Google/Facebook attempt is in
+                                    // flight would strand a donor who changed their mind about
+                                    // which provider to use.
+                                    onPressed: () => showModalBottomSheet<void>(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        builder: (_) => const TelegramSignInSheet(),
+                                    ),
+                                    icon: const Icon(Icons.send_outlined),
+                                    label: Text(l10n.signInWithTelegram),
+                                ),
                             ],
                         ),
                     ),
                 ),
             ),
-        );
-    }
-}
-
-/// Turns a [Failure] into localised copy. One `switch` over the sealed type, so adding a
-/// variant is a compile error here rather than a silent fallthrough to "something went
-/// wrong".
-class _FailureMessage extends StatelessWidget {
-    const _FailureMessage({required this.error});
-
-    /// `Object` because that is what `AsyncError.error` is. A non-[Failure] means a bug
-    /// escaped the data layer, and it renders as the generic case rather than crashing.
-    final Object error;
-
-    @override
-    Widget build(BuildContext context) {
-        final l10n = AppLocalizations.of(context)!;
-        final theme = Theme.of(context);
-
-        final (IconData icon, String message) = switch (error) {
-            NetworkFailure() => (Icons.wifi_off, l10n.signInFailedNetwork),
-            UnauthorizedFailure() => (Icons.lock_outline, l10n.signInFailedRejected),
-            RateLimitedFailure() => (Icons.timer_outlined, l10n.signInFailedRateLimited),
-            ServerFailure() => (Icons.cloud_off, l10n.signInFailedServer),
-            // A rejected role and a not-found are both bugs from this screen's point of
-            // view: it always asks for DONOR, which is self-service.
-            ValidationFailure() || NotFoundFailure() || UnknownFailure() => (
-                Icons.error_outline,
-                l10n.signInFailedUnknown,
-            ),
-            _ => (Icons.error_outline, l10n.signInFailedUnknown),
-        };
-
-        return Row(
-            key: const Key('sign-in-error'),
-            mainAxisSize: MainAxisSize.min,
-            children: [
-                Icon(icon, color: theme.colorScheme.error, size: 20),
-                const SizedBox(width: 8),
-                Flexible(
-                    child: Text(
-                        message,
-                        style: TextStyle(color: theme.colorScheme.error),
-                        textAlign: TextAlign.center,
-                    ),
-                ),
-            ],
         );
     }
 }

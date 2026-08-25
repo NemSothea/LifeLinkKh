@@ -35,6 +35,12 @@ dependencies:
   firebase_core: ^4.13.0
   firebase_auth: ^6.5.7
   google_sign_in: ^7.2.0
+  # FR-AUTH-004: Facebook login dialog only — Firebase Auth handles the federated
+  # provider server-side, same as Google, so no extra backend dependency.
+  flutter_facebook_auth: ^7.1.1
+  # FR-AUTH-004: opens the https://t.me/<bot>?start=... deep link that hands the donor
+  # to the Telegram app.
+  url_launcher: ^6.3.1
   firebase_messaging: ^16.5.0
   flutter_secure_storage: ^10.0.0
   google_fonts: ^8.2.1
