@@ -36,16 +36,11 @@ final class DonorService {
 
     /// Seeds the edit form from a saved profile.
     ///
-    /// **Coordinates are absent, and that is a problem waiting at M6.** The read model does not
-    /// carry them (ADR 0003), so a draft built from a profile has none, and a `PUT` that sends
-    /// null coordinates *clears* the stored ones — meaning a donor who edits their name would
-    /// silently lose the precision that sorts them ahead of district-only donors.
-    ///
-    /// Latent today: nothing acquires coordinates until `geolocator` lands at M6 (root
-    /// `CLAUDE.md` §4), so every profile has null coordinates already. It must be decided before
-    /// then, and it is not the client's to decide alone — the candidates are a `PUT` that treats
-    /// omitted coordinates as unchanged, a `PATCH`, or an edit screen that always re-acquires
-    /// GPS. Raised as a CR-MAPI when M6 starts rather than guessed here.
+    /// Coordinates are always absent here — the read model never carries them (ADR 0003) — and
+    /// that is fine now: the resulting draft's `updateCoordinates` defaults to `false`, and
+    /// CR-MAPI-004 made the server treat that as "leave stored coordinates alone" rather than
+    /// "clear them". A donor who edits their name without tapping "use my current location"
+    /// again keeps whatever precision they already had.
     DonorProfileDraft draftFrom(DonorProfile profile) => DonorProfileDraft(
         fullName: profile.fullName,
         bloodType: profile.bloodType,

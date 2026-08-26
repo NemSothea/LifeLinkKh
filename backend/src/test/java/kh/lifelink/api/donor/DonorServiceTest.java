@@ -56,7 +56,8 @@ class DonorServiceTest {
 
     @Test
     void aFirstTimeDonorSavesWithNoDateAndNoCoordinates() {
-        DonorProfileResponse saved = donors.save(callerId, write("A+", DISTRICT, null, null, null));
+        DonorProfileResponse saved =
+                donors.save(callerId, write("A+", DISTRICT, null, null, null, false));
 
         assertThat(saved.eligibility().isEligible()).isTrue();
         assertThat(saved.districtName().km()).isEqualTo("ចំការមន");
@@ -64,7 +65,8 @@ class DonorServiceTest {
 
     @Test
     void anUnknownBloodTypeIsUnprocessable() {
-        assertThatThrownBy(() -> donors.save(callerId, write("C+", DISTRICT, null, null, null)))
+        assertThatThrownBy(
+                        () -> donors.save(callerId, write("C+", DISTRICT, null, null, null, false)))
                 .isInstanceOf(ApiException.class)
                 .extracting(ex -> ((ApiException) ex).getCode())
                 .isEqualTo("UNKNOWN_BLOOD_TYPE");
@@ -74,7 +76,8 @@ class DonorServiceTest {
     void anUnknownDistrictIsUnprocessable() {
         when(districts.findByCode("9999")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> donors.save(callerId, write("A+", "9999", null, null, null)))
+        assertThatThrownBy(
+                        () -> donors.save(callerId, write("A+", "9999", null, null, null, false)))
                 .isInstanceOf(ApiException.class)
                 .extracting(ex -> ((ApiException) ex).getCode())
                 .isEqualTo("UNKNOWN_DISTRICT");
@@ -87,7 +90,13 @@ class DonorServiceTest {
                         () ->
                                 donors.save(
                                         callerId,
-                                        write("A+", DISTRICT, null, null, TODAY.plusDays(1))))
+                                        write(
+                                                "A+",
+                                                DISTRICT,
+                                                null,
+                                                null,
+                                                TODAY.plusDays(1),
+                                                false)))
                 .isInstanceOf(ApiException.class)
                 .extracting(ex -> ((ApiException) ex).getStatus())
                 .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
@@ -99,7 +108,7 @@ class DonorServiceTest {
     @Test
     void todayIsAnAcceptableLastDonationDate() {
         DonorProfileResponse saved =
-                donors.save(callerId, write("A+", DISTRICT, null, null, TODAY));
+                donors.save(callerId, write("A+", DISTRICT, null, null, TODAY, false));
 
         assertThat(saved.eligibility().isEligible()).isFalse();
         assertThat(saved.eligibility().daysRemaining()).isEqualTo(56);
@@ -112,10 +121,27 @@ class DonorServiceTest {
                         () ->
                                 donors.save(
                                         callerId,
-                                        write("A+", DISTRICT, new BigDecimal("11.55"), null, null)))
+                                        write(
+                                                "A+",
+                                                DISTRICT,
+                                                new BigDecimal("11.55"),
+                                                null,
+                                                null,
+                                                true)))
                 .isInstanceOf(ApiException.class)
                 .extracting(ex -> ((ApiException) ex).getCode())
                 .isEqualTo("INCOMPLETE_COORDINATES");
+    }
+
+    /** {@code updateCoordinates=false} means the pair rule does not even apply. */
+    @Test
+    void anIncompletePairIsIgnoredWhenNotUpdatingCoordinates() {
+        DonorProfileResponse saved =
+                donors.save(
+                        callerId,
+                        write("A+", DISTRICT, new BigDecimal("11.55"), null, null, false));
+
+        assertThat(saved).isNotNull();
     }
 
     /**
@@ -132,12 +158,48 @@ class DonorServiceTest {
                         DISTRICT,
                         new BigDecimal("11.55000"),
                         new BigDecimal("104.92000"),
-                        null));
+                        null,
+                        true));
 
         ArgumentCaptor<DonorProfile> saved = ArgumentCaptor.forClass(DonorProfile.class);
         verify(profiles).save(saved.capture());
         assertThat(saved.getValue().getLatitude()).isEqualByComparingTo("11.55000");
         assertThat(saved.getValue().getLongitude()).isEqualByComparingTo("104.92000");
+    }
+
+    /**
+     * CR-MAPI-004. Editing a name or a date must not silently wipe a donor's GPS precision —
+     * coordinates never come back in a response, so "not sent" cannot mean "clear."
+     */
+    @Test
+    void editingWithoutUpdateCoordinatesLeavesStoredCoordinatesUntouched() {
+        DonorProfile existing = new DonorProfile();
+        existing.setUserId(callerId);
+        existing.setBloodType("O-");
+        existing.setLatitude(new BigDecimal("11.55000"));
+        existing.setLongitude(new BigDecimal("104.92000"));
+        when(profiles.findByUserId(callerId)).thenReturn(Optional.of(existing));
+
+        donors.save(callerId, write("O-", DISTRICT, null, null, null, false));
+
+        assertThat(existing.getLatitude()).isEqualByComparingTo("11.55000");
+        assertThat(existing.getLongitude()).isEqualByComparingTo("104.92000");
+    }
+
+    /** {@code updateCoordinates=true} with both fields null is an explicit clear, not a no-op. */
+    @Test
+    void updateCoordinatesTrueWithBothNullClearsThem() {
+        DonorProfile existing = new DonorProfile();
+        existing.setUserId(callerId);
+        existing.setBloodType("O-");
+        existing.setLatitude(new BigDecimal("11.55000"));
+        existing.setLongitude(new BigDecimal("104.92000"));
+        when(profiles.findByUserId(callerId)).thenReturn(Optional.of(existing));
+
+        donors.save(callerId, write("O-", DISTRICT, null, null, null, true));
+
+        assertThat(existing.getLatitude()).isNull();
+        assertThat(existing.getLongitude()).isNull();
     }
 
     /** A second PUT updates the existing row rather than creating a second profile. */
@@ -148,7 +210,7 @@ class DonorServiceTest {
         existing.setBloodType("O-");
         when(profiles.findByUserId(callerId)).thenReturn(Optional.of(existing));
 
-        donors.save(callerId, write("AB+", DISTRICT, null, null, null));
+        donors.save(callerId, write("AB+", DISTRICT, null, null, null, false));
 
         ArgumentCaptor<DonorProfile> saved = ArgumentCaptor.forClass(DonorProfile.class);
         verify(profiles).save(saved.capture());
@@ -179,7 +241,8 @@ class DonorServiceTest {
                                 DISTRICT,
                                 new BigDecimal("11.55000"),
                                 new BigDecimal("104.92000"),
-                                null));
+                                null,
+                                true));
 
         String json =
                 new ObjectMapper()
@@ -205,8 +268,16 @@ class DonorServiceTest {
             String districtCode,
             BigDecimal latitude,
             BigDecimal longitude,
-            LocalDate lastDonationDate) {
+            LocalDate lastDonationDate,
+            boolean updateCoordinates) {
         return new DonorProfileWriteRequest(
-                "Nem Sothea", bloodType, districtCode, latitude, longitude, lastDonationDate, null);
+                "Nem Sothea",
+                bloodType,
+                districtCode,
+                latitude,
+                longitude,
+                lastDonationDate,
+                null,
+                updateCoordinates);
     }
 }

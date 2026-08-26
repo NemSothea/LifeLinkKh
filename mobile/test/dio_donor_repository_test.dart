@@ -149,6 +149,29 @@ void main() {
             expect(body['lastDonationDate'], isNull);
             expect(body['latitude'], isNull);
             expect(body['longitude'], isNull);
+            // CR-MAPI-004 default: a draft that never touched location must not tell the
+            // server to apply (and thus clear) these nulls.
+            expect(body['updateCoordinates'], isFalse);
+        });
+
+        test('a fresh GPS fix sends updateCoordinates so the server actually applies it', () async {
+            adapter.reply(200, profileJson);
+
+            await repository.saveProfile(
+                const DonorProfileDraft(
+                    fullName: 'Nem Sothea',
+                    bloodType: BloodType.oNegative,
+                    districtCode: '1204',
+                    latitude: 11.55,
+                    longitude: 104.92,
+                    updateCoordinates: true,
+                ),
+            );
+
+            final body = adapter.lastBody! as Map<String, dynamic>;
+            expect(body['latitude'], 11.55);
+            expect(body['longitude'], 104.92);
+            expect(body['updateCoordinates'], isTrue);
         });
 
         test('an unknown district keeps the server code for the form to point at', () async {

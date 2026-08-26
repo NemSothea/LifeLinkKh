@@ -6,7 +6,7 @@ part of 'donor_setup_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$donorSetupHash() => r'76e23d16c1cfb74e70778a98a4913ddfe9173f39';
+String _$donorSetupHash() => r'b735dcbe21ae76f9d3e0c7c2ddaf6b29488f9301';
 
 /// Drives the setup wizard. `autoDispose` (the default) on purpose: leaving the flow discards
 /// a half-filled draft rather than showing it again days later.

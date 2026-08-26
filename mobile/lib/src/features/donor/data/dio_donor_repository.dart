@@ -51,10 +51,12 @@ final class DioDonorRepository implements DonorRepository {
                     'bloodType': draft.bloodType?.wireValue,
                     'districtCode': draft.districtCode,
                     // Sent as a pair or not at all — one without the other is a 400
-                    // INCOMPLETE_COORDINATES. Nulls are explicit rather than omitted so an edit
-                    // that drops coordinates actually clears them server-side.
+                    // INCOMPLETE_COORDINATES, but only when `updateCoordinates` is true. Default
+                    // `false` means the server leaves whatever it already has alone (CR-MAPI-004);
+                    // an edit that never touched location must not wipe stored GPS precision.
                     'latitude': draft.latitude,
                     'longitude': draft.longitude,
+                    'updateCoordinates': draft.updateCoordinates,
                     // ISO date, not date-time: the server field is a LocalDate, and sending an
                     // instant would make the value depend on the device's timezone.
                     'lastDonationDate': _asIsoDate(draft.lastDonationDate),

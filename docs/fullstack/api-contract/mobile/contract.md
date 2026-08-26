@@ -81,6 +81,7 @@ These are the contract, not style guidance. `TC-AUTH-001` case 12 tests them.
 PUT /donors/me
 { "fullName": "Nem Sothea", "bloodType": "O-", "districtCode": "1204",
   "latitude": 11.5730, "longitude": 104.8920,      // optional, nullable
+  "updateCoordinates": true,                        // CR-MAPI-004, default false
   "lastDonationDate": "2026-06-14" }                // null = never donated
 
 200 { "id": "uuid", "bloodType": "O-", "districtCode": "1204",
@@ -94,6 +95,12 @@ PUT /donors/me
 - `districtCode` required; coordinates optional. Declining GPS must not exclude a donor (ADR 0003).
   Valid codes come from `GET /districts` (CR-MAPI-002) — they are national geocodes such as `1204`,
   and `districts.code` is a foreign key, so an invented code is a 422 (`UNKNOWN_DISTRICT`).
+- **`updateCoordinates` (CR-MAPI-004, default `false`).** Rule 1 above means no response ever hands
+  `latitude`/`longitude` back, so a client editing an existing profile cannot resend what it already
+  has on file. `updateCoordinates: false` (or omitted) leaves stored coordinates exactly as they
+  were, regardless of what `latitude`/`longitude` carry. Only `updateCoordinates: true` applies them —
+  both non-null sets them, both null explicitly clears them, one-of-each is still `INCOMPLETE_COORDINATES`.
+  Without this flag, editing a name would silently wipe a donor's GPS precision on every save.
 - `lastDonationDate` must not be in the future — a future date makes the donor permanently ineligible.
 - **`eligibility` is computed server-side and returned.** The client never calculates the 56-day
   window; two implementations of one rule will disagree.

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/error/result.dart';
+import '../../../core/location/location_providers.dart';
 import '../application/donor_providers.dart';
 import '../application/donor_setup_controller.dart';
 import '../domain/donor_profile.dart';
@@ -39,6 +40,11 @@ class _DonorSetupScreenState extends ConsumerState<DonorSetupScreen> {
     DonorProfile? _saved;
     bool _isSaving = false;
     bool _saveFailed = false;
+
+    bool _isLocating = false;
+    /// `null` = not tried this visit. Set on every attempt so the message reflects the most
+    /// recent tap, not a stale one from before the donor navigated away and back.
+    bool? _locationSucceeded;
 
     @override
     void initState() {
@@ -247,6 +253,7 @@ class _DonorSetupScreenState extends ConsumerState<DonorSetupScreen> {
 
     Widget _locationStep(BuildContext context, DonorSetupState setup) {
         final l10n = AppLocalizations.of(context)!;
+        final hasCoordinates = setup.draft.latitude != null && setup.draft.longitude != null;
 
         return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,11 +282,52 @@ class _DonorSetupScreenState extends ConsumerState<DonorSetupScreen> {
                         ),
                     ],
                 ),
-                // "Use my current location" is not here: geolocator lands at M6 (root
-                // CLAUDE.md §4). Coordinates are optional by ADR 0003, so a district-only
-                // profile is complete and matchable — it simply sorts NULLS LAST.
+                const SizedBox(height: 16),
+                // Optional (ADR 0003): a district-only profile is complete and matchable — it
+                // simply sorts NULLS LAST. Declining here must never block setup.
+                OutlinedButton.icon(
+                    key: const Key('donor-use-current-location'),
+                    onPressed: _isLocating ? null : _useCurrentLocation,
+                    icon: hasCoordinates && !_isLocating
+                        ? const Icon(Icons.check, size: 18)
+                        : const Icon(Icons.my_location, size: 18),
+                    label: Text(
+                        _isLocating
+                            ? l10n.donorAcquiringLocation
+                            : (hasCoordinates
+                                ? l10n.donorLocationAdded
+                                : l10n.donorUseCurrentLocation),
+                    ),
+                ),
+                if (_locationSucceeded == false)
+                    Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                            l10n.donorLocationUnavailable,
+                            key: const Key('donor-location-unavailable'),
+                            style: TextStyle(color: Theme.of(context).colorScheme.error),
+                        ),
+                    ),
             ],
         );
+    }
+
+    Future<void> _useCurrentLocation() async {
+        setState(() {
+            _isLocating = true;
+            _locationSucceeded = null;
+        });
+        final fix = await ref.read(locationServiceProvider).currentFix();
+        if (!mounted) return;
+        if (fix != null) {
+            ref
+                .read(donorSetupProvider.notifier)
+                .setCoordinates(fix.latitude, fix.longitude);
+        }
+        setState(() {
+            _isLocating = false;
+            _locationSucceeded = fix != null;
+        });
     }
 
     Widget _donationStep(BuildContext context, DonorSetupState setup) {

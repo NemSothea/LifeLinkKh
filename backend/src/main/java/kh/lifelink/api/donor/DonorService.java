@@ -59,8 +59,12 @@ public class DonorService {
         profile.setFullName(body.fullName());
         profile.setBloodType(body.bloodType());
         profile.setDistrictCode(body.districtCode());
-        profile.setLatitude(body.latitude());
-        profile.setLongitude(body.longitude());
+        // Untouched unless the caller explicitly asked to change it (CR-MAPI-004) — coordinates
+        // never come back in a response, so "not sent" must not mean "clear."
+        if (Boolean.TRUE.equals(body.updateCoordinates())) {
+            profile.setLatitude(body.latitude());
+            profile.setLongitude(body.longitude());
+        }
         profile.setLastDonationDate(body.lastDonationDate());
         if (body.isAvailable() != null) {
             profile.setAvailable(body.isAvailable());
@@ -74,13 +78,16 @@ public class DonorService {
             throw ApiException.unprocessable("UNKNOWN_BLOOD_TYPE", "That blood type is not valid.");
         }
 
-        // Both or neither. A latitude with no longitude is not a partial location, it is a bug, and
-        // storing it produces a donor who is neither rankable nor obviously broken.
-        boolean hasLat = body.latitude() != null;
-        boolean hasLon = body.longitude() != null;
-        if (hasLat != hasLon) {
-            throw ApiException.badRequest(
-                    "INCOMPLETE_COORDINATES", "Latitude and longitude must be provided together.");
+        // Both or neither, and only checked when the caller is actually changing coordinates —
+        // otherwise every edit that leaves location alone would 400 on its own stored NULLs.
+        if (Boolean.TRUE.equals(body.updateCoordinates())) {
+            boolean hasLat = body.latitude() != null;
+            boolean hasLon = body.longitude() != null;
+            if (hasLat != hasLon) {
+                throw ApiException.badRequest(
+                        "INCOMPLETE_COORDINATES",
+                        "Latitude and longitude must be provided together.");
+            }
         }
 
         LocalDate lastDonation = body.lastDonationDate();

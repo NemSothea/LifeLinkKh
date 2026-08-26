@@ -160,6 +160,22 @@
     "@donorLocationPrivacy": {
         "description": "The user-facing half of ADR 0003, shown on the location step"
     },
+    "donorUseCurrentLocation": "Use my current location",
+    "@donorUseCurrentLocation": {
+        "description": "Button on the location step that acquires a GPS fix (FR-DONOR-001, M6)"
+    },
+    "donorAcquiringLocation": "Finding your location\u2026",
+    "@donorAcquiringLocation": {
+        "description": "Shown on the button while a GPS fix is being acquired"
+    },
+    "donorLocationAdded": "Location added",
+    "@donorLocationAdded": {
+        "description": "Confirmation after a successful GPS fix"
+    },
+    "donorLocationUnavailable": "Could not get your location. You can still save with just your district.",
+    "@donorLocationUnavailable": {
+        "description": "Shown when GPS is off, permission is denied, or the fix times out \u2014 never blocks saving (ADR 0003)"
+    },
     "donorDistrictsFailed": "Could not load the district list.",
     "@donorDistrictsFailed": {
         "description": "Error state of the district dropdown"

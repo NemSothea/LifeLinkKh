@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifelink_kh/l10n/app_localizations.dart';
 import 'package:lifelink_kh/src/core/error/failure.dart';
+import 'package:lifelink_kh/src/core/location/location_providers.dart';
 import 'package:lifelink_kh/src/features/donor/application/donor_providers.dart';
 import 'package:lifelink_kh/src/features/donor/presentation/donor_profile_screen.dart';
 import 'package:lifelink_kh/src/features/donor/presentation/donor_setup_screen.dart';
@@ -14,13 +15,22 @@ import 'support/auth_fakes.dart';
 /// so the service, the wizard controller and the providers all run for real.
 void main() {
     late FakeDonorRepository repository;
+    late FakeLocationService locationService;
 
-    setUp(() => repository = FakeDonorRepository());
+    setUp(() {
+        repository = FakeDonorRepository();
+        // Declined by default: every existing test never taps the location button, and a
+        // fix must not be assumed just because the fake exists.
+        locationService = FakeLocationService();
+    });
 
     Future<void> pump(WidgetTester tester, Widget screen, {Locale locale = const Locale('en')}) async {
         await tester.pumpWidget(
             ProviderScope(
-                overrides: [donorRepositoryProvider.overrideWithValue(repository)],
+                overrides: [
+                    donorRepositoryProvider.overrideWithValue(repository),
+                    locationServiceProvider.overrideWithValue(locationService),
+                ],
                 child: MaterialApp(
                     locale: locale,
                     localizationsDelegates: const [
@@ -106,6 +116,54 @@ void main() {
                 ),
                 findsOneWidget,
             );
+        });
+
+        testWidgets('use my current location acquires a fix and saves it as an update',
+            (tester) async {
+            locationService.fix = (latitude: 11.55, longitude: 104.92);
+            await pump(tester, const DonorSetupScreen());
+            await _completeIdentityStep(tester);
+            await _pickDistrict(tester);
+
+            await tester.tap(find.byKey(const Key('donor-use-current-location')));
+            await tester.pumpAndSettle();
+
+            expect(find.text('Location added'), findsOneWidget);
+            expect(find.byKey(const Key('donor-location-unavailable')), findsNothing);
+
+            await tester.tap(find.byKey(const Key('donor-next')));
+            await tester.pumpAndSettle();
+            await tester.tap(find.byKey(const Key('donor-next')));
+            await tester.pumpAndSettle();
+
+            final saved = repository.saves.single;
+            expect(saved.latitude, 11.55);
+            expect(saved.longitude, 104.92);
+            // CR-MAPI-004: without this the server would leave stored coordinates alone.
+            expect(saved.updateCoordinates, isTrue);
+        });
+
+        testWidgets('declining location still lets a donor finish setup', (tester) async {
+            locationService.fix = null;
+            await pump(tester, const DonorSetupScreen());
+            await _completeIdentityStep(tester);
+            await _pickDistrict(tester);
+
+            await tester.tap(find.byKey(const Key('donor-use-current-location')));
+            await tester.pumpAndSettle();
+
+            expect(find.byKey(const Key('donor-location-unavailable')), findsOneWidget);
+
+            await tester.tap(find.byKey(const Key('donor-next')));
+            await tester.pumpAndSettle();
+            await tester.tap(find.byKey(const Key('donor-next')));
+            await tester.pumpAndSettle();
+
+            // Declining GPS must never block setup (ADR 0003).
+            expect(find.byKey(const Key('donor-saved')), findsOneWidget);
+            final saved = repository.saves.single;
+            expect(saved.latitude, isNull);
+            expect(saved.updateCoordinates, isFalse);
         });
 
         testWidgets('a first-time donor finishes without entering any date', (tester) async {

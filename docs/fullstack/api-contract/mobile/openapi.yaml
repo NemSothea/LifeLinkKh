@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: LifeLink KH — Mobile API
-  version: 0.3.0
+  version: 0.4.0
   description: |
     Flutter donor/requester app. Machine twin of contract.md — this file wins on conflict.
     Scope: the 8 core FRs only (docs/scope.md). Deferred FRs have no endpoints here.
@@ -413,6 +413,14 @@ components:
           nullable: true
           description: Null means never donated. Must not be in the future.
         isAvailable: { type: boolean, default: true }
+        updateCoordinates:
+          type: boolean
+          default: false
+          description: >-
+            CR-MAPI-004. `latitude`/`longitude` are applied — including clearing both when both
+            are null — only when this is `true`. Default `false` leaves stored coordinates
+            untouched, because no response ever echoes them back, so an edit that does not touch
+            location has nothing to resend.
 
     DonorProfile:
       type: object

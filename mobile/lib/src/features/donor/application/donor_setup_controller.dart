@@ -60,6 +60,12 @@ class DonorSetup extends _$DonorSetup {
     void setDistrict(String code) =>
         state = state.copyWith(draft: state.draft.copyWith(districtCode: code));
 
+    /// A fresh GPS fix from "use my current location". Marks the draft so the server actually
+    /// applies it (CR-MAPI-004) rather than leaving stored coordinates untouched.
+    void setCoordinates(double latitude, double longitude) => state = state.copyWith(
+        draft: state.draft.copyWith(latitude: latitude, longitude: longitude),
+    );
+
     void setLastDonationDate(DateTime date) =>
         state = state.copyWith(draft: state.draft.copyWith(lastDonationDate: date));
 

@@ -44,6 +44,9 @@ dependencies:
   firebase_messaging: ^16.5.0
   flutter_secure_storage: ^10.0.0
   google_fonts: ^8.2.1
+  # M6 (root CLAUDE.md §4): FR-DONOR-001's "use my current location" button. Coordinates only —
+  # no google_maps_flutter, no map widget (DEC-004).
+  geolocator: ^14.0.2
 
 dev_dependencies:
   flutter_test:

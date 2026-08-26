@@ -17,6 +17,7 @@ final class DonorProfileDraft {
         this.districtCode,
         this.latitude,
         this.longitude,
+        this.updateCoordinates = false,
         this.lastDonationDate,
         this.isAvailable = true,
     });
@@ -30,6 +31,11 @@ final class DonorProfileDraft {
     /// still produce a matchable profile (ADR 0003), so null here is a normal outcome.
     final double? latitude;
     final double? longitude;
+
+    /// CR-MAPI-004. `false` unless [setCoordinates] (or an explicit clear) ran this session —
+    /// no response ever hands coordinates back, so a draft that never touched location must
+    /// leave whatever is already stored alone rather than wiping it on the next save.
+    final bool updateCoordinates;
 
     /// Null means never donated. A first-time donor finishes setup without touching a date.
     final DateTime? lastDonationDate;
@@ -50,6 +56,9 @@ final class DonorProfileDraft {
         bool clearLastDonationDate = false,
         bool clearCoordinates = false,
     }) {
+        // Sticky once true: a donor who acquires a fix and then edits their name must not
+        // have that fix silently downgraded back to "leave coordinates alone" on save.
+        final touchesCoordinates = clearCoordinates || latitude != null || longitude != null;
         return DonorProfileDraft(
             fullName: fullName ?? this.fullName,
             bloodType: bloodType ?? this.bloodType,
@@ -59,6 +68,7 @@ final class DonorProfileDraft {
             // donated" needs to mean *remove the date*, not *leave it alone*.
             latitude: clearCoordinates ? null : latitude ?? this.latitude,
             longitude: clearCoordinates ? null : longitude ?? this.longitude,
+            updateCoordinates: touchesCoordinates || updateCoordinates,
             lastDonationDate:
                 clearLastDonationDate ? null : lastDonationDate ?? this.lastDonationDate,
             isAvailable: isAvailable ?? this.isAvailable,

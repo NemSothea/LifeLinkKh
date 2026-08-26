@@ -88,3 +88,42 @@ to `blood_requests` as NOT NULL with no default — the table is empty, so there
 and a default would let a future insert omit the one field the accept flow depends on.
 `district.dto.DistrictName` is now one shared record used by donor profile, hospital and request
 detail. `openapi.yaml` is at 0.3.0.
+
+---
+
+## CR-MAPI-004 — `PUT /donors/me` gains `updateCoordinates`
+
+**Ask.** Add a boolean `updateCoordinates` (default `false`) to `DonorProfileWrite`. `latitude`/
+`longitude` are applied — including an explicit clear when both are null — only when it is `true`.
+When it is `false` or absent, stored coordinates are left exactly as they are, whatever `latitude`/
+`longitude` carry.
+
+**Why.** M6 wires `geolocator` into `DONOR-profile-setup`'s "use my current location" button
+(`FR-DONOR-001`), which is the first thing that ever populates these columns. That exposed a landmine
+flagged since M3 (`DonorService.draftFrom`, mobile): response rule 1 means no endpoint — including
+`GET /donors/me` for the owner — ever returns `latitude`/`longitude` (ADR 0003, unconditionally, no
+self-view exception). A client editing an existing profile therefore has no value to resend, and the
+old `PUT` semantics (`profile.setLatitude(body.latitude())` unconditionally) treated every omitted
+pair as "clear." A donor who edited their name or last-donation date — never touching location — would
+silently lose the GPS precision that ranks them ahead of district-only donors, with no error and no
+way to notice.
+
+Three candidates were on the table (mobile's own comment named them): a `PUT` that treats omitted
+coordinates as unchanged, a `PATCH`, and an edit screen that always re-acquires GPS. The last was
+rejected — it would demand a fresh location permission prompt on every edit, including edits that
+have nothing to do with location, and would still lose precision outright for a donor who declines.
+A separate `PATCH` was rejected as more surface for one flag's worth of behavior. Exposing coordinates
+back through `GET /donors/me` for self only was considered and rejected too — rule 1 is written as an
+absolute ("no donor endpoint ever returns latitude or longitude"), not "no other user," and weakening
+it for a case this narrow is not worth reopening a documented invariant that `TC-AUTH-001` asserts
+against.
+
+An explicit flag needs no server-side "was this JSON key present" trick — Jackson cannot distinguish
+an absent key from an explicit `null` on a plain record without extra machinery, and this problem
+does not need that machinery. It mirrors the pattern the client already uses locally for "I have
+never donated" (`DonorProfileDraft.clearLastDonationDate`): an explicit signal, not null-as-overload.
+
+**Resolution.** Accepted and built. `DonorProfileWriteRequest.updateCoordinates` (`Boolean`, same
+nullable-wrapper style as `isAvailable`). `DonorService.save` only writes and only pair-validates
+`latitude`/`longitude` when it is `true`. No response schema changed; rule 1 is untouched.
+`openapi.yaml` is at 0.4.0.

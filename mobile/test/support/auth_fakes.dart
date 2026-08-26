@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:lifelink_kh/src/core/error/failure.dart';
 import 'package:lifelink_kh/src/core/error/result.dart';
+import 'package:lifelink_kh/src/core/location/location_service.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_repository.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_session.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_user.dart';
@@ -225,4 +226,15 @@ final class FakeDonorRepository implements DonorRepository {
             District(code: '1204', nameKm: 'ទួលគោក', nameEn: 'Tuol Kouk'),
         ]);
     }
+}
+
+/// `fix` is read fresh on every call, so a test can flip from a decline to a fix (or back)
+/// between taps without rebuilding the fake.
+final class FakeLocationService implements LocationService {
+    FakeLocationService({this.fix});
+
+    LocationFix? fix;
+
+    @override
+    Future<LocationFix?> currentFix() async => fix;
 }

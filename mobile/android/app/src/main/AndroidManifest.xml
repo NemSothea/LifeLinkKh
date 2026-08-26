@@ -4,6 +4,11 @@
     <!-- Android 13+. Without it, notification permission is never asked for and every
          urgent-request alert is dropped by the system with no error (FR-NOTIFY-001). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- FR-DONOR-001's "use my current location" button (M6, `geolocator`). Coarse is enough for
+         0.5 km-rounded distance ranking (ADR 0003) but fine is requested too — a donor who grants
+         only coarse still gets a usable fix; declining both is a normal, fully supported outcome. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
         android:label="lifelink_kh"
         android:name="${applicationName}"
