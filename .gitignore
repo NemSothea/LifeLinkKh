@@ -30,6 +30,12 @@ secrets/*
 # package name and SHA-1 fingerprint, and the release build in CI needs the file
 # present. The private key above is the file that must never be committed.
 
+# NOTE: mobile/ios/Runner/GoogleService-Info.plist is deliberately NOT ignored,
+# same reasoning as the Android file above — the iOS API key in it is restricted
+# by bundle ID in Google Cloud Console, and the build needs the file present.
+# GitHub secret scanning will still flag it (it can't see the restriction); close
+# that alert as a false positive rather than removing the file.
+
 # Local Claude Code permissions — machine-specific, not team state.
 .claude/settings.local.json
 
