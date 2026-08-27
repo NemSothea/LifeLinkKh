@@ -40,7 +40,7 @@ class AppTheme {
             navigationBarTheme: NavigationBarThemeData(
                 height: 68,
                 labelTextStyle: WidgetStatePropertyAll(
-                    GoogleFonts.manrope(fontSize: 12, fontWeight: FontWeight.w600),
+                    GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
                 ),
             ),
             filledButtonTheme: FilledButtonThemeData(
@@ -52,33 +52,32 @@ class AppTheme {
         );
     }
 
-    /// Manrope for Latin — a warmer, more characterful geometric sans than the Material
-    /// default — falling back to Noto Sans Khmer for the script Manrope has no glyphs
-    /// for. The two are both humanist sans designs at a similar x-height, so a string
-    /// mixing scripts (the app title does, on purpose) does not visibly clash.
+    /// Inter for Latin, falling back to Kantumruy Pro for the script Inter has no glyphs
+    /// for. Both are humanist sans designs at a similar x-height, so a string mixing
+    /// scripts (the app title does, on purpose) does not visibly clash.
     static TextTheme _textTheme(TextTheme base) {
-        final khmerFallback = [GoogleFonts.notoSansKhmer().fontFamily!];
-        final manrope = GoogleFonts.manropeTextTheme(base);
+        final khmerFallback = [GoogleFonts.kantumruyPro().fontFamily!];
+        final inter = GoogleFonts.interTextTheme(base);
 
         TextStyle? withFallback(TextStyle? style) =>
             style?.copyWith(fontFamilyFallback: khmerFallback);
 
-        return manrope.copyWith(
-            displayLarge: withFallback(manrope.displayLarge),
-            displayMedium: withFallback(manrope.displayMedium),
-            displaySmall: withFallback(manrope.displaySmall),
-            headlineLarge: withFallback(manrope.headlineLarge),
-            headlineMedium: withFallback(manrope.headlineMedium),
-            headlineSmall: withFallback(manrope.headlineSmall),
-            titleLarge: withFallback(manrope.titleLarge),
-            titleMedium: withFallback(manrope.titleMedium),
-            titleSmall: withFallback(manrope.titleSmall),
-            bodyLarge: withFallback(manrope.bodyLarge),
-            bodyMedium: withFallback(manrope.bodyMedium),
-            bodySmall: withFallback(manrope.bodySmall),
-            labelLarge: withFallback(manrope.labelLarge),
-            labelMedium: withFallback(manrope.labelMedium),
-            labelSmall: withFallback(manrope.labelSmall),
+        return inter.copyWith(
+            displayLarge: withFallback(inter.displayLarge),
+            displayMedium: withFallback(inter.displayMedium),
+            displaySmall: withFallback(inter.displaySmall),
+            headlineLarge: withFallback(inter.headlineLarge),
+            headlineMedium: withFallback(inter.headlineMedium),
+            headlineSmall: withFallback(inter.headlineSmall),
+            titleLarge: withFallback(inter.titleLarge),
+            titleMedium: withFallback(inter.titleMedium),
+            titleSmall: withFallback(inter.titleSmall),
+            bodyLarge: withFallback(inter.bodyLarge),
+            bodyMedium: withFallback(inter.bodyMedium),
+            bodySmall: withFallback(inter.bodySmall),
+            labelLarge: withFallback(inter.labelLarge),
+            labelMedium: withFallback(inter.labelMedium),
+            labelSmall: withFallback(inter.labelSmall),
         );
     }
 }

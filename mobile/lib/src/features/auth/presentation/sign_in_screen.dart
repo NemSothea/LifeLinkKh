@@ -29,6 +29,24 @@ class SignInScreen extends ConsumerWidget {
         final auth = ref.watch(authControllerProvider);
         final theme = Theme.of(context);
 
+        // The very first read of `authControllerProvider` starts `restoreSession()`, which
+        // is `isLoading` with no previous value — the same shape the router's own redirect
+        // (`app_router.dart`) checks for "still reading the keystore". Rendering the normal
+        // button row here would show both providers as "Signing in..." before anything was
+        // tapped, for every cold start. A neutral splash instead — gone the instant restore
+        // resolves, whichever way.
+        if (auth.isLoading && !auth.hasValue) {
+            return Scaffold(
+                body: Center(
+                    child: Icon(
+                        Icons.bloodtype_outlined,
+                        size: 64,
+                        color: theme.colorScheme.primary,
+                    ),
+                ),
+            );
+        }
+
         // `isLoading` rather than a `when`: a re-sign-in after a failure keeps the previous
         // state, and this screen wants the spinner in both cases.
         final inFlight = auth.isLoading;

@@ -1,13 +1,35 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifelink_kh/src/app.dart';
 import 'package:lifelink_kh/src/core/error/failure.dart';
 import 'package:lifelink_kh/src/features/auth/application/auth_providers.dart';
+import 'package:lifelink_kh/src/features/auth/domain/auth_session.dart';
+import 'package:lifelink_kh/src/features/auth/domain/session_store.dart';
 import 'package:lifelink_kh/src/features/home/application/health_providers.dart';
 import 'package:lifelink_kh/src/features/notify/application/push_providers.dart';
 
 import 'support/auth_fakes.dart';
+
+/// A [SessionStore] whose `read()` only resolves when the test says so — the fake in
+/// `auth_fakes.dart` completes within one microtask, too fast for a `pump()` in between
+/// to ever observe the loading state it produces.
+final class _GatedSessionStore implements SessionStore {
+    _GatedSessionStore(this._gate);
+
+    final Completer<AuthSession?> _gate;
+
+    @override
+    Future<AuthSession?> read() => _gate.future;
+
+    @override
+    Future<void> write(AuthSession session) async {}
+
+    @override
+    Future<void> clear() async {}
+}
 
 /// Drives the whole M3 sign-in path — screen, controller, service, router redirect — with
 /// fakes only at the plugin and transport seams. No Firebase, no emulator, no network.
@@ -64,6 +86,40 @@ void main() {
 
         expect(find.byKey(const Key('sign-in-google')), findsOneWidget);
         expect(find.byKey(const Key('sign-out')), findsNothing);
+    });
+
+    testWidgets(
+        'restoring the session shows a neutral splash, not "Signing in…" on unpressed buttons',
+        (tester) async {
+        // `FakeSessionStore.read()` completes within one microtask — too fast for a
+        // `pump()` in between to ever observe. A store that only resolves once this test
+        // says so is the only way to actually see the frame the router calls "still
+        // reading the keystore".
+        final restoreGate = Completer<AuthSession?>();
+        await tester.pumpWidget(
+            ProviderScope(
+                overrides: [
+                    authRepositoryProvider.overrideWithValue(repository),
+                    sessionStoreProvider.overrideWithValue(_GatedSessionStore(restoreGate)),
+                    googleCredentialsProvider.overrideWithValue(credentials),
+                    facebookCredentialsProvider.overrideWithValue(facebookCredentials),
+                    telegramAuthRepositoryProvider.overrideWithValue(telegramRepository),
+                    fcmTokenRepositoryProvider.overrideWithValue(fcm),
+                    pushTokenSourceProvider.overrideWithValue(pushTokens),
+                    healthRepositoryProvider.overrideWithValue(FakeHealthRepository()),
+                ],
+                child: const LifeLinkApp(),
+            ),
+        );
+        await tester.pump();
+
+        expect(find.byKey(const Key('sign-in-google')), findsNothing);
+        expect(find.text('Signing in…'), findsNothing);
+
+        restoreGate.complete(null);
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('sign-in-google')), findsOneWidget);
     });
 
     testWidgets('a stored session skips sign-in entirely', (tester) async {
