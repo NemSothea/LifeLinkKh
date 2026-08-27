@@ -26,6 +26,40 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- FR-AUTH-004: flutter_facebook_auth's required iOS keys, mirroring Android's
+	     android/app/src/main/res/values/strings.xml — same App ID, client token left
+	     empty (fine for Development mode with registered test users; fill in before
+	     App Review). App ID is client configuration, not a secret. -->
+	<key>FacebookAppID</key>
+	<string>1538785524224504</string>
+	<key>FacebookClientToken</key>
+	<string></string>
+	<key>FacebookDisplayName</key>
+	<string>LifeLink KH</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>fbapi</string>
+		<string>fbauth2</string>
+		<string>fbshareextension</string>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fb1538785524224504</string>
+			</array>
+		</dict>
+		<!-- google_sign_in's redirect back into the app after the Safari-hosted sign-in
+		     flow completes — REVERSED_CLIENT_ID from GoogleService-Info.plist. Without
+		     this, the flow has no way back and never resolves on iOS. -->
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.45594180154-qbf1rtgvev2uh32ik9pngh70ali75tnn</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
