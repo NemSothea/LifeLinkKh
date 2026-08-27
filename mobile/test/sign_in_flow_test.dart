@@ -7,6 +7,7 @@ import 'package:lifelink_kh/src/app.dart';
 import 'package:lifelink_kh/src/core/error/failure.dart';
 import 'package:lifelink_kh/src/features/auth/application/auth_providers.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_session.dart';
+import 'package:lifelink_kh/src/features/auth/domain/google_credentials.dart';
 import 'package:lifelink_kh/src/features/auth/domain/session_store.dart';
 import 'package:lifelink_kh/src/features/home/application/health_providers.dart';
 import 'package:lifelink_kh/src/features/notify/application/push_providers.dart';
@@ -29,6 +30,23 @@ final class _GatedSessionStore implements SessionStore {
 
     @override
     Future<void> clear() async {}
+}
+
+/// A [GoogleCredentials] whose `signIn()` only resolves when the test says so — same
+/// reason as `_GatedSessionStore`.
+final class _GatedGoogleCredentials implements GoogleCredentials {
+    _GatedGoogleCredentials(this._gate);
+
+    final Completer<String?> _gate;
+
+    @override
+    Future<String?> signIn() => _gate.future;
+
+    @override
+    Future<String?> idToken({bool forceRefresh = false}) async => null;
+
+    @override
+    Future<void> signOut() async {}
 }
 
 /// Drives the whole M3 sign-in path — screen, controller, service, router redirect — with
@@ -120,6 +138,46 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byKey(const Key('sign-in-google')), findsOneWidget);
+    });
+
+    testWidgets(
+        'tapping Google does not draw the untouched Facebook button as "Signing in…"',
+        (tester) async {
+        final signInGate = Completer<String?>();
+        await tester.pumpWidget(
+            ProviderScope(
+                overrides: [
+                    authRepositoryProvider.overrideWithValue(repository),
+                    sessionStoreProvider.overrideWithValue(sessionStore),
+                    googleCredentialsProvider.overrideWithValue(
+                        _GatedGoogleCredentials(signInGate),
+                    ),
+                    facebookCredentialsProvider.overrideWithValue(facebookCredentials),
+                    telegramAuthRepositoryProvider.overrideWithValue(telegramRepository),
+                    fcmTokenRepositoryProvider.overrideWithValue(fcm),
+                    pushTokenSourceProvider.overrideWithValue(pushTokens),
+                    healthRepositoryProvider.overrideWithValue(FakeHealthRepository()),
+                ],
+                child: const LifeLinkApp(),
+            ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('sign-in-google')));
+        await tester.pump();
+
+        // Google — the one actually tapped — is busy.
+        expect(find.text('Signing in…'), findsOneWidget);
+        // Facebook is disabled (a concurrent attempt is still wrong) but must not claim
+        // to be signing in too — it wasn't touched.
+        expect(find.text('Continue with Facebook'), findsOneWidget);
+        final facebookButton = tester.widget<OutlinedButton>(
+            find.byKey(const Key('sign-in-facebook')),
+        );
+        expect(facebookButton.onPressed, isNull);
+
+        signInGate.complete('firebase-id-token');
+        await tester.pumpAndSettle();
     });
 
     testWidgets('a stored session skips sign-in entirely', (tester) async {

@@ -18,13 +18,26 @@ import 'telegram_sign_in_sheet.dart';
 /// Four-state rendering (Week 5): idle, in flight, signed in, and failed — where *failed*
 /// switches on the sealed `Failure` rather than on a message string, so the compiler
 /// checks that every variant has copy and the copy is localised.
-class SignInScreen extends ConsumerWidget {
+class SignInScreen extends ConsumerStatefulWidget {
     const SignInScreen({super.key});
 
     static const String path = '/sign-in';
 
     @override
-    Widget build(BuildContext context, WidgetRef ref) {
+    ConsumerState<SignInScreen> createState() => _SignInScreenState();
+}
+
+/// Which button was actually tapped. `authControllerProvider`'s `isLoading` is one flag
+/// shared by both federated providers — without this, tapping Google also drew Facebook's
+/// button as "Signing in..." (a spinner and copy on a button nobody touched), even though
+/// it was correctly disabled underneath.
+enum _PendingProvider { google, facebook }
+
+class _SignInScreenState extends ConsumerState<SignInScreen> {
+    _PendingProvider? _pending;
+
+    @override
+    Widget build(BuildContext context) {
         final l10n = AppLocalizations.of(context)!;
         final auth = ref.watch(authControllerProvider);
         final theme = Theme.of(context);
@@ -48,8 +61,14 @@ class SignInScreen extends ConsumerWidget {
         }
 
         // `isLoading` rather than a `when`: a re-sign-in after a failure keeps the previous
-        // state, and this screen wants the spinner in both cases.
+        // state, and this screen wants the spinner in both cases. Both buttons disable
+        // while either is in flight — a second tap must not open a second account chooser
+        // — but only the one actually tapped (`_pending`) draws the spinner/"Signing in..."
+        // or "Retry" copy. `auth.isLoading`/`auth.hasError` are one flag shared by both
+        // providers; without `_pending` the untapped button drew that same state too.
         final inFlight = auth.isLoading;
+        final googlePending = _pending == _PendingProvider.google;
+        final facebookPending = _pending == _PendingProvider.facebook;
 
         return Scaffold(
             body: SafeArea(
@@ -88,8 +107,11 @@ class SignInScreen extends ConsumerWidget {
                                     // account chooser and the first result is discarded.
                                     onPressed: inFlight
                                         ? null
-                                        : () => ref.read(authControllerProvider.notifier).signIn(),
-                                    icon: inFlight
+                                        : () {
+                                            setState(() => _pending = _PendingProvider.google);
+                                            ref.read(authControllerProvider.notifier).signIn();
+                                        },
+                                    icon: inFlight && googlePending
                                         ? const SizedBox(
                                             width: 18,
                                             height: 18,
@@ -97,9 +119,9 @@ class SignInScreen extends ConsumerWidget {
                                         )
                                         : const Icon(Icons.login),
                                     label: Text(
-                                        inFlight
+                                        inFlight && googlePending
                                             ? l10n.signInSigningIn
-                                            : (auth.hasError
+                                            : (auth.hasError && googlePending
                                                 ? l10n.retry
                                                 : l10n.signInWithGoogle),
                                     ),
@@ -109,10 +131,13 @@ class SignInScreen extends ConsumerWidget {
                                     key: const Key('sign-in-facebook'),
                                     onPressed: inFlight
                                         ? null
-                                        : () => ref
-                                            .read(authControllerProvider.notifier)
-                                            .signInWithFacebook(),
-                                    icon: inFlight
+                                        : () {
+                                            setState(() => _pending = _PendingProvider.facebook);
+                                            ref
+                                                .read(authControllerProvider.notifier)
+                                                .signInWithFacebook();
+                                        },
+                                    icon: inFlight && facebookPending
                                         ? const SizedBox(
                                             width: 18,
                                             height: 18,
@@ -120,7 +145,11 @@ class SignInScreen extends ConsumerWidget {
                                         )
                                         : const Icon(Icons.facebook),
                                     label: Text(
-                                        inFlight ? l10n.signInSigningIn : l10n.signInWithFacebook,
+                                        inFlight && facebookPending
+                                            ? l10n.signInSigningIn
+                                            : (auth.hasError && facebookPending
+                                                ? l10n.retry
+                                                : l10n.signInWithFacebook),
                                     ),
                                 ),
                                 const SizedBox(height: 12),
