@@ -8,11 +8,11 @@ import 'src/features/auth/application/auth_providers.dart';
 
 /// Composition root, and the only place that knows both `core/` and the auth feature.
 ///
-/// No `firebase_options.dart`: this build ships Android only, where `initializeApp` reads
-/// `android/app/google-services.json` through the `google-services` Gradle plugin.
-/// Generating a Dart options file would put the same values in two places and require the
-/// FlutterFire CLI in CI for no gain. Add it when iOS arrives — which is not in this
-/// build (root `CLAUDE.md` §4: Play Store internal testing at M7).
+/// No `firebase_options.dart`: Android reads `android/app/google-services.json` through
+/// the `google-services` Gradle plugin, and iOS (DEC-006, build-only) reads
+/// `ios/Runner/GoogleService-Info.plist` the same way — both plugins discover their config
+/// file directly. Generating a Dart options file would put the same values in a third
+/// place and require the FlutterFire CLI in CI for no gain.
 Future<void> main() async {
     WidgetsFlutterBinding.ensureInitialized();
 
