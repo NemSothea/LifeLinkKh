@@ -43,7 +43,7 @@ https://capybara.kosign.dev/en/docs/overview
 |---------------|------------|
 | Backend       | Spring Boot (JPA, Flyway migrations, Spring Security) |
 | Database      | PostgreSQL |
-| Mobile app    | **Flutter** — donor/patient app, builds native Android → Play Store |
+| Mobile app    | **Flutter** — donor/patient app, builds native Android → Play Store. iOS build target added (DEC-006): device/simulator build only, no App Store submission, no Apple Developer account. |
 | Web portal    | Next.js (App Router, TypeScript, Tailwind CSS) — hospital/admin portal |
 | Local dev     | Docker / docker-compose (postgres + backend + web) |
 | CI            | GitHub Actions — owned by Tech Lead; there is no infra role |
@@ -82,7 +82,7 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 | M3 | W7-9   | Google Sign-In + donor register + FCM token registration end-to-end (feature 1) |
 | M4 | W10-12 | Request create + ABO/Rh and distance matching + eligibility computation + request-alert push + accept/decline end-to-end (feature 2) |
 | M5 | W13    | Donation history list + 56-day eligibility status + the single hospital web page (feature 3) |
-| M6 | W14    | GPS via `geolocator`, Khmer/English i18n, Android build, bug fix |
+| M6 | W14    | GPS via `geolocator`, Khmer/English i18n, Android build, iOS build (device/simulator only, DEC-006), bug fix |
 | M7 | W15    | Test pass, signed AAB, **Flutter app published to Play Store internal testing** |
 
 > Amended 2026-07-31 by DEC-001, DEC-002, DEC-003 (`docs/decisions.md`) — eligibility computation and
@@ -93,6 +93,10 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 > Eight FRs are deferred — see `docs/scope.md`. DEC-003's per-milestone metric capture is **withdrawn**
 > with `FR-GLOBAL-002`: the five PRD metrics come from SQL `COUNT` queries against pilot data at demo
 > time instead.
+>
+> **Amended 2026-08-27 by DEC-006 — iOS added to M6.** Build-only target: `flutter build ios`
+> to simulator/device, no signing, no App Store/TestFlight, no Apple Developer account. Play Store
+> internal testing (M7) is still the only store release in scope.
 
 ## 5. Team — responsibilities (Group 2)
 

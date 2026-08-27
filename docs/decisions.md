@@ -1,5 +1,5 @@
 # Decisions (DEC)
-next: 005
+next: 007
 
 > **Relocated 2026-08-07** from `docs/pm/decisions.md`. The PM role was dropped and `docs/pm/` was
 > deleted, but a decision register is a project artefact, not a role's artefact — DEC-001..003 are
@@ -23,6 +23,7 @@ next: 005
 | DEC-003 | Metrics event capture is a per-milestone delivery requirement, not a milestone item | 2026-07-31 |
 | DEC-004 | Scope cut to 8 buildable FRs; 8 deferred; M3/M4 given 3 weeks each | 2026-08-07 |
 | DEC-005 | Seed all 14 Phnom Penh districts; `1213`/`1214` ship provisional rather than withheld | 2026-08-18 |
+| DEC-006 | iOS build target added to M6, scope capped at device/simulator build, no App Store submission | 2026-08-27 |
 
 ---
 
@@ -201,3 +202,32 @@ prevent a data migration, and it was being read as preventing any seed at all.
   option — the pilot is Phnom Penh.
 - If an official code for either khan surfaces, correcting it is a `V<n>` migration and a profile
   update, not a schema change. Whoever does it must update `donor_profiles` in the same migration.
+
+---
+
+## DEC-006 — iOS build target added, capped at device/simulator build
+
+**Date:** 2026-08-27 · **Decided by:** Tech Lead (Nem Sothea)
+
+### Context
+The original stack choice (`CLAUDE.md` §2) picked Flutter specifically because it "builds a native
+Android app directly, satisfying the course Play Store requirement cleanly" — iOS was never in scope,
+the course only grades a Play Store internal-testing release. Flutter targets iOS by default with no
+extra dependency, so the cost of adding it is not zero but is bounded.
+
+### Decision
+Add an iOS build target to M6, alongside the existing Android build. Scope capped at **build only**:
+`flutter build ios` runs and the app launches on simulator/device. No code signing, no TestFlight, no
+App Store submission, no Apple Developer account ($99/yr). M7's store release stays Play Store only.
+
+### Why this and not the alternative
+Full App Store submission was rejected: it needs a paid Apple Developer account, a Mac for signing,
+and TestFlight setup — none budgeted, and M7 (Play Store internal testing) is already the course
+deliverable at week 15, one day out from this decision. Build-only demonstrates cross-platform reach
+at the defence without new cost or schedule risk.
+
+### Consequence
+- `CLAUDE.md` §2 and §4 (M6 row) amended.
+- `mobile/ios/` (present untracked at time of this decision) is the Flutter-generated scaffold this
+  build target uses — not a separate feature to build.
+- No `docs/scope.md` FR entry needed: this is a build-target addition, not a new feature.
