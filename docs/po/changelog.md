@@ -2,6 +2,18 @@
 
 Every new/changed FR gets an entry. What + Why are mandatory.
 
+## 2026-08-27 — `FR-DONOR-003` (scannable donor ID) registered, requested only
+- **What:** Added `FR-DONOR-003-scannable-donor-id` — a QR/barcode on the donor profile that
+  hospital staff could scan to jump straight to the accepted match on the portal, instead of
+  hunting the request row by hand. `status: requested`, no acceptance criteria yet, no brief or
+  prototype behind it.
+  **Why:** Surfaced during the M7 demo dry run, prompted by a real blood-donation service's own
+  scannable donor card. Registered rather than left as a conversation because it is a real gap
+  next to how actual services confirm identity. Not built now: not on the graded list
+  (`docs/scope.md`), and real scope (signed/expiring token, backend endpoint, camera-scan on the
+  Next.js portal) this late in the schedule. `docs/scope.md`'s deferred section updated to point
+  here so the idea has one home instead of living only in chat history.
+
 ## 2026-08-23 — `FR-AUTH-004`'s Telegram backend built; Facebook's scope narrowed
 - **What:** The half of `FR-AUTH-004` buildable without a real bot token is done: `TM-AUTH-002`
   (threat model), `V11__telegram_auth.sql`, `TelegramAuthService`/`Controller` (start/webhook/verify,

@@ -56,6 +56,16 @@ Documents kept, `status: deferred`, nothing started. These are the "future work"
 | `FR-GLOBAL-002` Metrics instrumentation | Event capture across three milestones plus a dashboard. Replaced by SQL `COUNT` queries against pilot data at demo time — same numbers for the defence, none of the instrumentation. This withdraws DEC-003 |
 | `FR-SECURITY-001` Account and data deletion | See the warning below |
 
+### An idea surfaced after the cut, not part of the original 19
+
+Unlike the eight above — all cut from the original 19-FR registry by this same decision (DEC-004,
+2026-08-07) — `FR-DONOR-003` (scannable donor ID, a QR/barcode hospital staff could scan to confirm
+a donation instead of finding the request row by hand) was registered later, on 2026-08-27 during
+the M7 demo dry run. Same outcome, different reason: not on the graded list, and real scope (a
+signed/expiring token, a backend endpoint, camera-scan on the portal) this late in the schedule.
+See `docs/po/features/FR-DONOR-003-scannable-donor-id.md` and `docs/po/changelog.md`'s 2026-08-27
+entry.
+
 ### One deferral that is not purely a scheduling choice
 
 `FR-SECURITY-001` (account and personal data deletion) is a **privacy obligation**, not a feature. It

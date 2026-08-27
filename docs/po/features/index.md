@@ -11,7 +11,7 @@ Milestones reference root `CLAUDE.md` section 4, which is the only place milesto
 | Area | Next |
 |---|---|
 | AUTH | 005 |
-| DONOR | 003 |
+| DONOR | 004 |
 | REQUEST | 006 |
 | MATCH | 003 |
 | DONATION | 002 |
@@ -38,6 +38,7 @@ cross-references still resolve.
 | [FR-AUTH-002-otp-resend-cooldown](FR-AUTH-002-otp-resend-cooldown.md) | ~~OTP resend with cooldown~~ | AUTH | Should Have | **retired** — no OTP to resend | — |
 | [FR-DONOR-001-donor-profile](FR-DONOR-001-donor-profile.md) | Donor registration and profile | DONOR | Must Have | accepted | M3 |
 | [FR-DONOR-002-eligibility-check](FR-DONOR-002-eligibility-check.md) | Eligibility check — 56-day cooldown | DONOR | Must Have | accepted | M4 computation, M5 donor status |
+| [FR-DONOR-003-scannable-donor-id](FR-DONOR-003-scannable-donor-id.md) | Scannable donor ID (QR/barcode check-in) | DONOR | Nice to Have | requested | none — future work |
 | [FR-REQUEST-001-create-urgent-request](FR-REQUEST-001-create-urgent-request.md) | Create urgent blood request | REQUEST | Must Have | accepted | M4 |
 | [FR-REQUEST-002-respond-accept-decline](FR-REQUEST-002-respond-accept-decline.md) | Respond to a request — accept or decline | REQUEST | Must Have | accepted | M4 |
 | [FR-REQUEST-003-duplicate-request-warning](FR-REQUEST-003-duplicate-request-warning.md) | Warn on duplicate open request | REQUEST | Should Have | **deferred** — DEC-004 | — |
