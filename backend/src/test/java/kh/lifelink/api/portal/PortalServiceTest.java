@@ -63,7 +63,9 @@ class PortalServiceTest {
         users = mock(UserRepository.class);
         hospitals = mock(HospitalRepository.class);
         districts = mock(DistrictRepository.class);
-        service = new PortalService(requests, matches, donorProfiles, donations, users, hospitals, districts);
+        service =
+                new PortalService(
+                        requests, matches, donorProfiles, donations, users, hospitals, districts);
 
         when(hospitals.findAllById(any())).thenReturn(List.of());
         when(districts.findAll()).thenReturn(List.of());
@@ -190,7 +192,10 @@ class PortalServiceTest {
         verify(donations, never()).save(any());
     }
 
-    /** openapi.yaml's 422 for this endpoint is explicitly "matchId not ACCEPTED or not on this request". */
+    /**
+     * openapi.yaml's 422 for this endpoint is explicitly "matchId not ACCEPTED or not on this
+     * request".
+     */
     @Test
     void aMatchThatNeverAcceptedCannotBeConfirmed() {
         when(requests.findById(REQUEST_ID)).thenReturn(Optional.of(openRequest(CALMETTE)));
@@ -246,7 +251,9 @@ class PortalServiceTest {
         when(donorProfiles.findById(DONOR_PROFILE_ID))
                 .thenReturn(Optional.of(donorProfile(DONOR_PROFILE_ID, "Sophea")));
         when(donations.save(any()))
-                .thenThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate key"));
+                .thenThrow(
+                        new org.springframework.dao.DataIntegrityViolationException(
+                                "duplicate key"));
 
         assertThatThrownBy(
                         () ->

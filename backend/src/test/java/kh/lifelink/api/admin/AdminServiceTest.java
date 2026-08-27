@@ -2,7 +2,6 @@ package kh.lifelink.api.admin;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -68,7 +67,8 @@ class AdminServiceTest {
         when(hospitals.findById(CALMETTE)).thenReturn(Optional.of(calmette));
 
         StaffResponse result =
-                service.assignStaffRole(new AssignStaffRoleRequest(user.getId(), "HOSPITAL", CALMETTE));
+                service.assignStaffRole(
+                        new AssignStaffRoleRequest(user.getId(), "HOSPITAL", CALMETTE));
 
         assertThat(result.role()).isEqualTo("HOSPITAL");
         assertThat(result.hospitalId()).isEqualTo(CALMETTE);
@@ -85,7 +85,8 @@ class AdminServiceTest {
         assertThatThrownBy(
                         () ->
                                 service.assignStaffRole(
-                                        new AssignStaffRoleRequest(user.getId(), "ADMIN", CALMETTE)))
+                                        new AssignStaffRoleRequest(
+                                                user.getId(), "ADMIN", CALMETTE)))
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         ex -> {
@@ -117,7 +118,8 @@ class AdminServiceTest {
         assertThatThrownBy(
                         () ->
                                 service.assignStaffRole(
-                                        new AssignStaffRoleRequest(staff.getId(), "HOSPITAL", CALMETTE)))
+                                        new AssignStaffRoleRequest(
+                                                staff.getId(), "HOSPITAL", CALMETTE)))
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         ex -> assertThat(ex.getCode()).isEqualTo("ALREADY_STAFF"));

@@ -252,8 +252,10 @@ class SchemaIntegrationTest {
      */
     @Test
     void aDonorCannotBeConfirmedTwiceAgainstTheSameRequest() {
-        jdbc.update("INSERT INTO users (firebase_uid, role) VALUES ('uid-donation-uniq-creator', 'REQUESTER')");
-        jdbc.update("INSERT INTO users (firebase_uid, role) VALUES ('uid-donation-uniq-donor', 'DONOR')");
+        jdbc.update(
+                "INSERT INTO users (firebase_uid, role) VALUES ('uid-donation-uniq-creator', 'REQUESTER')");
+        jdbc.update(
+                "INSERT INTO users (firebase_uid, role) VALUES ('uid-donation-uniq-donor', 'DONOR')");
         jdbc.update(
                 "INSERT INTO donor_profiles (user_id, full_name, blood_type, district_code)"
                         + " SELECT id, 'Test Donor', 'O-', '1201' FROM users"

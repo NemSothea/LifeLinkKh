@@ -76,7 +76,8 @@ public class TelegramAuthService {
         challenge.setRole(role);
         challenge = challenges.save(challenge);
 
-        String deepLink = "https://t.me/" + config.botUsername() + "?start=" + challenge.getSessionToken();
+        String deepLink =
+                "https://t.me/" + config.botUsername() + "?start=" + challenge.getSessionToken();
         return new TelegramSession(challenge.getSessionToken(), deepLink);
     }
 
@@ -98,7 +99,9 @@ public class TelegramAuthService {
                 .filter(
                         c ->
                                 c.getOtpSentAt() == null
-                                        || c.getOtpSentAt().plus(RESEND_COOLDOWN).isBefore(OffsetDateTime.now()))
+                                        || c.getOtpSentAt()
+                                                .plus(RESEND_COOLDOWN)
+                                                .isBefore(OffsetDateTime.now()))
                 .ifPresent(
                         challenge -> {
                             String code = randomOtp();
@@ -130,7 +133,8 @@ public class TelegramAuthService {
                         .filter(c -> c.getOtpHash() != null)
                         .orElseThrow(TelegramAuthService::invalidCode);
 
-        if (challenge.getExpiresAt() == null || challenge.getExpiresAt().isBefore(OffsetDateTime.now())) {
+        if (challenge.getExpiresAt() == null
+                || challenge.getExpiresAt().isBefore(OffsetDateTime.now())) {
             throw invalidCode();
         }
         if (challenge.getAttemptCount() >= MAX_ATTEMPTS) {
@@ -189,8 +193,9 @@ public class TelegramAuthService {
 
     private static String sha256Hex(String value) {
         try {
-            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
-                    .digest(value.getBytes(StandardCharsets.UTF_8));
+            byte[] digest =
+                    java.security.MessageDigest.getInstance("SHA-256")
+                            .digest(value.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);
         } catch (NoSuchAlgorithmException ex) {
             // SHA-256 is mandated by every JDK security provider; this cannot happen at runtime.

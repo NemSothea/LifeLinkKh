@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
- * The only place the Telegram Bot API is actually called. No SDK dependency — one endpoint,
- * {@code sendMessage}, doesn't justify one.
+ * The only place the Telegram Bot API is actually called. No SDK dependency — one endpoint, {@code
+ * sendMessage}, doesn't justify one.
  *
  * <p>Never logs the message body (TM-AUTH-002 I1) — for this feature that body is always the OTP
  * code.
@@ -40,12 +40,17 @@ class HttpTelegramBotClient implements TelegramBotClient {
             String body = json.writeValueAsString(Map.of("chat_id", chatId, "text", text));
             HttpRequest request =
                     HttpRequest.newBuilder()
-                            .uri(URI.create("https://api.telegram.org/bot" + config.botToken() + "/sendMessage"))
+                            .uri(
+                                    URI.create(
+                                            "https://api.telegram.org/bot"
+                                                    + config.botToken()
+                                                    + "/sendMessage"))
                             .timeout(TIMEOUT)
                             .header("Content-Type", "application/json")
                             .POST(HttpRequest.BodyPublishers.ofString(body))
                             .build();
-            HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response =
+                    http.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
                 // Never the response body: Telegram echoes the request back on some 4xx errors,
                 // which would put the OTP text straight into the log (TM-AUTH-002 I1).

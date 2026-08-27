@@ -44,7 +44,8 @@ public class TelegramAuthController {
         if (!rateLimiter.tryAcquireStart(request.getRemoteAddr())) {
             throw ApiException.rateLimited("RATE_LIMITED", "Too many attempts.");
         }
-        TelegramAuthService.TelegramSession session = telegram.start(body == null ? null : body.role());
+        TelegramAuthService.TelegramSession session =
+                telegram.start(body == null ? null : body.role());
         return new TelegramStartResponse(session.sessionToken(), session.deepLink());
     }
 
@@ -65,7 +66,9 @@ public class TelegramAuthController {
             if (text.startsWith(START_COMMAND)) {
                 String sessionToken = text.substring(START_COMMAND.length()).trim();
                 String firstName =
-                        update.message().from() == null ? null : update.message().from().firstName();
+                        update.message().from() == null
+                                ? null
+                                : update.message().from().firstName();
                 telegram.recordOtpSent(sessionToken, update.message().chat().id(), firstName);
             }
         }
@@ -73,7 +76,8 @@ public class TelegramAuthController {
     }
 
     @PostMapping("/verify")
-    AuthResponse verify(@Valid @RequestBody TelegramVerifyRequest body, HttpServletRequest request) {
+    AuthResponse verify(
+            @Valid @RequestBody TelegramVerifyRequest body, HttpServletRequest request) {
         if (!rateLimiter.tryAcquireVerify(request.getRemoteAddr())) {
             throw ApiException.rateLimited("RATE_LIMITED", "Too many attempts.");
         }

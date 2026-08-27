@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Staff account management (TM-AUTH-001 E1). {@code SecurityConfig} restricts every
- * {@code /admin/**} path to {@code ADMIN} — a {@code HOSPITAL}, {@code DONOR} or {@code REQUESTER}
- * JWT reaching here gets a 403 before this class ever runs, same shape as {@code PortalController}.
+ * Staff account management (TM-AUTH-001 E1). {@code SecurityConfig} restricts every {@code
+ * /admin/**} path to {@code ADMIN} — a {@code HOSPITAL}, {@code DONOR} or {@code REQUESTER} JWT
+ * reaching here gets a 403 before this class ever runs, same shape as {@code PortalController}.
  */
 @RestController
 @RequestMapping("/admin")

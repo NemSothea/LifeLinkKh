@@ -18,9 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * TM-AUTH-001 E1 — "HOSPITAL and ADMIN are provisioned by an existing admin" — as an endpoint
  * instead of {@code V8__portal_access.sql}'s hand-run migration. This <strong>promotes an existing
- * self-service account</strong>; it never creates one from a bare name or email, which would
- * reopen the identity-spoofing question S1 already closed (a user's only identity is their
- * verified Google {@code sub}, established by signing in themselves).
+ * self-service account</strong>; it never creates one from a bare name or email, which would reopen
+ * the identity-spoofing question S1 already closed (a user's only identity is their verified Google
+ * {@code sub}, established by signing in themselves).
  */
 @Service
 public class AdminService {
@@ -37,15 +37,18 @@ public class AdminService {
     }
 
     /**
-     * Everyone an ADMIN could promote. Filtered to accounts with a {@code display_name} —
-     * without one there is nothing to tell two candidates apart by, and showing a bare UUID
-     * invites picking the wrong person.
+     * Everyone an ADMIN could promote. Filtered to accounts with a {@code display_name} — without
+     * one there is nothing to tell two candidates apart by, and showing a bare UUID invites picking
+     * the wrong person.
      */
     @Transactional(readOnly = true)
     public List<AdminUserResponse> listCandidates() {
         return users.findByRoleInOrderByDisplayNameAsc(SELF_SERVICE_ROLES).stream()
                 .filter(user -> user.getDisplayName() != null)
-                .map(user -> new AdminUserResponse(user.getId(), user.getDisplayName(), user.getRole()))
+                .map(
+                        user ->
+                                new AdminUserResponse(
+                                        user.getId(), user.getDisplayName(), user.getRole()))
                 .toList();
     }
 
@@ -57,9 +60,9 @@ public class AdminService {
     }
 
     /**
-     * The one write. Sets role and hospital scope on an existing row — the same two fields
-     * {@code V8__portal_access.sql}'s seed sets by hand, now set by an authenticated ADMIN through
-     * the app.
+     * The one write. Sets role and hospital scope on an existing row — the same two fields {@code
+     * V8__portal_access.sql}'s seed sets by hand, now set by an authenticated ADMIN through the
+     * app.
      */
     @Transactional
     public StaffResponse assignStaffRole(AssignStaffRoleRequest body) {
@@ -77,7 +80,8 @@ public class AdminService {
 
         User user =
                 users.findById(body.userId())
-                        .orElseThrow(() -> ApiException.notFound("USER_NOT_FOUND", "No such user."));
+                        .orElseThrow(
+                                () -> ApiException.notFound("USER_NOT_FOUND", "No such user."));
 
         if (STAFF_ROLES.contains(user.getRole())) {
             // Not idempotent on purpose: re-provisioning an existing staff account (a hospital
@@ -111,13 +115,19 @@ public class AdminService {
 
     private java.util.Map<java.util.UUID, Hospital> hospitalsById(List<User> staff) {
         List<java.util.UUID> ids =
-                staff.stream().map(User::getHospitalId).filter(Objects::nonNull).distinct().toList();
+                staff.stream()
+                        .map(User::getHospitalId)
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .toList();
         return hospitals.findAllById(ids).stream()
                 .collect(Collectors.toMap(Hospital::getId, Function.identity()));
     }
 
-    private StaffResponse toStaffResponse(User user, java.util.Map<java.util.UUID, Hospital> hospitalsById) {
-        Hospital hospital = user.getHospitalId() == null ? null : hospitalsById.get(user.getHospitalId());
+    private StaffResponse toStaffResponse(
+            User user, java.util.Map<java.util.UUID, Hospital> hospitalsById) {
+        Hospital hospital =
+                user.getHospitalId() == null ? null : hospitalsById.get(user.getHospitalId());
         return new StaffResponse(
                 user.getId(),
                 user.getDisplayName(),

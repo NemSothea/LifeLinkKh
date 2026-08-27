@@ -43,7 +43,8 @@ class TelegramAuthServiceTest {
         challenges = mock(TelegramAuthChallengeRepository.class);
         bot = mock(TelegramBotClient.class);
         users = mock(UserRepository.class);
-        TelegramConfig config = new TelegramConfig("test-bot-token", "test-webhook-secret", "TestBot");
+        TelegramConfig config =
+                new TelegramConfig("test-bot-token", "test-webhook-secret", "TestBot");
         JwtService jwt = mock(JwtService.class);
         when(jwt.issue(any(UUID.class), anyString())).thenReturn("fake-jwt");
         service = new TelegramAuthService(challenges, bot, config, users, jwt);
@@ -96,7 +97,8 @@ class TelegramAuthServiceTest {
     void start_defaults_to_donor_and_returns_a_deep_link_to_the_configured_bot() {
         var session = service.start(null);
 
-        assertThat(session.deepLink()).isEqualTo("https://t.me/TestBot?start=" + session.sessionToken());
+        assertThat(session.deepLink())
+                .isEqualTo("https://t.me/TestBot?start=" + session.sessionToken());
         assertThat(session.sessionToken()).isNotBlank();
     }
 
@@ -104,7 +106,8 @@ class TelegramAuthServiceTest {
     void everything_503s_when_telegram_is_not_configured() {
         TelegramConfig unconfigured = new TelegramConfig("", "", "");
         TelegramAuthService unavailable =
-                new TelegramAuthService(challenges, bot, unconfigured, users, mock(JwtService.class));
+                new TelegramAuthService(
+                        challenges, bot, unconfigured, users, mock(JwtService.class));
 
         assertThatThrownBy(() -> unavailable.start("DONOR"))
                 .isInstanceOfSatisfying(

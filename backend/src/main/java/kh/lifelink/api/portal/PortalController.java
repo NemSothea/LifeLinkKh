@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * The hospital portal's one page (FR-PORTAL-001, trimmed by DEC-004). {@code SecurityConfig}
- * restricts every {@code /portal/**} path to {@code HOSPITAL} or {@code ADMIN} — a {@code DONOR}
- * or {@code REQUESTER} JWT reaching here gets a 403 before this class ever runs.
+ * restricts every {@code /portal/**} path to {@code HOSPITAL} or {@code ADMIN} — a {@code DONOR} or
+ * {@code REQUESTER} JWT reaching here gets a 403 before this class ever runs.
  */
 @RestController
 @RequestMapping("/portal/requests")

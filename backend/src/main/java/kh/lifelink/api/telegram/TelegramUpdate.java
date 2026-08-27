@@ -18,8 +18,8 @@ record TelegramUpdate(Message message) {
     record Chat(long id) {}
 
     /**
-     * {@code first_name} only — the same "one field, not the whole profile" restraint
-     * {@code GoogleTokenVerifier} applies to {@code VerifiedIdentity}. No username, no last name.
+     * {@code first_name} only — the same "one field, not the whole profile" restraint {@code
+     * GoogleTokenVerifier} applies to {@code VerifiedIdentity}. No username, no last name.
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     record From(@JsonProperty("first_name") String firstName) {}

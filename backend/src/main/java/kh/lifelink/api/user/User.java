@@ -41,9 +41,9 @@ public class User extends Auditable {
     private String firebaseUid;
 
     /**
-     * The Telegram chat id — the credential for a Telegram-authenticated account, exactly as
-     * {@code firebaseUid} is for Google. Written only from an already-verified webhook call
-     * (TM-AUTH-002 S1/S2), never bound from a request body.
+     * The Telegram chat id — the credential for a Telegram-authenticated account, exactly as {@code
+     * firebaseUid} is for Google. Written only from an already-verified webhook call (TM-AUTH-002
+     * S1/S2), never bound from a request body.
      */
     @Column(name = "telegram_chat_id", unique = true)
     private Long telegramChatId;
@@ -56,9 +56,9 @@ public class User extends Auditable {
     private String role;
 
     /**
-     * From the verified Google ID token, refreshed on every sign-in (TM-AUTH-001 E1). Lets an
-     * ADMIN pick the right account out of a list when promoting someone to HOSPITAL/ADMIN — the
-     * one thing a bare {@code firebase_uid} can't do. Never email or phone.
+     * From the verified Google ID token, refreshed on every sign-in (TM-AUTH-001 E1). Lets an ADMIN
+     * pick the right account out of a list when promoting someone to HOSPITAL/ADMIN — the one thing
+     * a bare {@code firebase_uid} can't do. Never email or phone.
      */
     @Column(name = "display_name", length = 120)
     private String displayName;

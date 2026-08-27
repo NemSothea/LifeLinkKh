@@ -82,7 +82,9 @@ class DonationServiceTest {
         assertThat(response.hospital().districtName().km()).isEqualTo("ចំការមន");
     }
 
-    /** A walk-in donation has no originating request (FR-08) — null must round-trip, not 0/empty. */
+    /**
+     * A walk-in donation has no originating request (FR-08) — null must round-trip, not 0/empty.
+     */
     @Test
     void aWalkInDonationHasNoBloodRequestId() {
         UUID hospitalId = UUID.randomUUID();

@@ -23,9 +23,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Web-slice test: no PostgreSQL, so it passes in CI. Exists specifically to close
- * SEC-REVIEW-002's F1 — the secret-token check has to be proven at the HTTP layer, not only in a
- * unit test that never goes near the header Spring actually parses.
+ * Web-slice test: no PostgreSQL, so it passes in CI. Exists specifically to close SEC-REVIEW-002's
+ * F1 — the secret-token check has to be proven at the HTTP layer, not only in a unit test that
+ * never goes near the header Spring actually parses.
  */
 @WebMvcTest(TelegramAuthController.class)
 @Import({SecurityConfig.class, JwtAuthFilter.class, JwtService.class})
@@ -89,7 +89,9 @@ class TelegramAuthControllerTest {
     void startIsReachableWithNoAuthentication() throws Exception {
         when(rateLimiter.tryAcquireStart(any())).thenReturn(true);
         when(telegram.start(any()))
-                .thenReturn(new TelegramAuthService.TelegramSession("tok-1", "https://t.me/Bot?start=tok-1"));
+                .thenReturn(
+                        new TelegramAuthService.TelegramSession(
+                                "tok-1", "https://t.me/Bot?start=tok-1"));
 
         mockMvc.perform(
                         post("/auth/telegram/start")

@@ -1,9 +1,9 @@
 package kh.lifelink.api.telegram;
 
 /**
- * Sends a message as the LifeLink bot. A deliberately thin seam, same reasoning as
- * {@code GoogleTokenVerifier} — the one place the Telegram Bot API is touched, therefore the one
- * place tests fake, and the one place to change if the HTTP client or the API version ever moves.
+ * Sends a message as the LifeLink bot. A deliberately thin seam, same reasoning as {@code
+ * GoogleTokenVerifier} — the one place the Telegram Bot API is touched, therefore the one place
+ * tests fake, and the one place to change if the HTTP client or the API version ever moves.
  */
 public interface TelegramBotClient {
 

@@ -9,8 +9,8 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
- * One sign-in attempt in flight (TM-AUTH-002). Not extended from {@code Auditable} — this table
- * has {@code created_at} only, no {@code updated_at}, the same shape {@code donations} and {@code
+ * One sign-in attempt in flight (TM-AUTH-002). Not extended from {@code Auditable} — this table has
+ * {@code created_at} only, no {@code updated_at}, the same shape {@code donations} and {@code
  * request_matches} already use for a row nothing ever revises in place.
  */
 @Entity

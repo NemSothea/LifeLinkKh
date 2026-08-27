@@ -39,8 +39,8 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>{@code SecurityConfig} already refuses a non-HOSPITAL/ADMIN caller before this class runs.
  * What this class adds is the second half of RBAC that a role check alone cannot do: a HOSPITAL
- * account only ever sees or writes against its own hospital, never another's — scoped from
- * {@code users.hospital_id}, never from a request parameter.
+ * account only ever sees or writes against its own hospital, never another's — scoped from {@code
+ * users.hospital_id}, never from a request parameter.
  */
 @Service
 public class PortalService {
@@ -76,8 +76,8 @@ public class PortalService {
 
     /**
      * Only {@code OPEN} is supported — the DEC-004 trim is "a table of open requests," not a
-     * general request browser, so a caller asking for anything else is refused rather than
-     * silently given a filter nobody built.
+     * general request browser, so a caller asking for anything else is refused rather than silently
+     * given a filter nobody built.
      */
     @Transactional(readOnly = true)
     public List<PortalRequestResponse> listRequests(UUID callerId, String status) {
@@ -102,12 +102,13 @@ public class PortalService {
     }
 
     /**
-     * One transaction, three writes — see {@code contract.md}'s "Confirm a donation": insert
-     * {@code donations}, refresh the cached {@code last_donation_date}, close the request if this
-     * was the last unit it needed.
+     * One transaction, three writes — see {@code contract.md}'s "Confirm a donation": insert {@code
+     * donations}, refresh the cached {@code last_donation_date}, close the request if this was the
+     * last unit it needed.
      */
     @Transactional
-    public ConfirmDonationResponse confirmDonation(UUID callerId, UUID requestId, ConfirmDonationRequest body) {
+    public ConfirmDonationResponse confirmDonation(
+            UUID callerId, UUID requestId, ConfirmDonationRequest body) {
         LocalDate today = LocalDate.now();
         if (body.donatedOn().isAfter(today)) {
             throw ApiException.unprocessable(
@@ -218,7 +219,8 @@ public class PortalService {
             BloodRequest request,
             Map<UUID, Hospital> hospitalsById,
             Map<String, District> districtsByCode) {
-        List<RequestMatch> accepted = matches.findByBloodRequestIdAndResponse(request.getId(), ACCEPTED);
+        List<RequestMatch> accepted =
+                matches.findByBloodRequestIdAndResponse(request.getId(), ACCEPTED);
 
         // `acceptedCount` is every ACCEPTED match, same meaning as the mobile contract's
         // acceptedCount — computed on read, one definition for both clients. `acceptedDonors`
@@ -266,16 +268,21 @@ public class PortalService {
                 .orElse(null);
     }
 
-    private HospitalResponse hospitalResponse(Hospital hospital, Map<String, District> districtsByCode) {
+    private HospitalResponse hospitalResponse(
+            Hospital hospital, Map<String, District> districtsByCode) {
         if (hospital == null) {
             return null;
         }
         District district =
-                hospital.getDistrictCode() == null ? null : districtsByCode.get(hospital.getDistrictCode());
+                hospital.getDistrictCode() == null
+                        ? null
+                        : districtsByCode.get(hospital.getDistrictCode());
         return new HospitalResponse(
                 hospital.getId(),
                 hospital.getName(),
-                district == null ? null : new DistrictName(district.getNameKm(), district.getNameEn()));
+                district == null
+                        ? null
+                        : new DistrictName(district.getNameKm(), district.getNameEn()));
     }
 
     private Map<UUID, Hospital> hospitalsById(List<BloodRequest> rows) {

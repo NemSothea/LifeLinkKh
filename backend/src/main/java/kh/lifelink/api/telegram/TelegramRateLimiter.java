@@ -6,12 +6,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * Per-IP limits on {@code /auth/telegram/start} and {@code /auth/telegram/verify} (TM-AUTH-002
- * D1) — two separate {@link FixedWindowLimiter} instances, same reasoning {@code
- * SignInRateLimiter}'s own javadoc gives for never sharing one limiter across two different
- * allowances. {@code verify} additionally caps attempts per challenge row (TM-AUTH-002 S3),
- * independent of this — this limiter alone would not stop a flood from many different challenge
- * tokens against one IP.
+ * Per-IP limits on {@code /auth/telegram/start} and {@code /auth/telegram/verify} (TM-AUTH-002 D1)
+ * — two separate {@link FixedWindowLimiter} instances, same reasoning {@code SignInRateLimiter}'s
+ * own javadoc gives for never sharing one limiter across two different allowances. {@code verify}
+ * additionally caps attempts per challenge row (TM-AUTH-002 S3), independent of this — this limiter
+ * alone would not stop a flood from many different challenge tokens against one IP.
  */
 @Component
 public class TelegramRateLimiter {

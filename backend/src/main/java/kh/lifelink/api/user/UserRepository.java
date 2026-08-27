@@ -13,6 +13,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     /** The Telegram equivalent of {@link #findByFirebaseUid}. */
     Optional<User> findByTelegramChatId(Long telegramChatId);
 
-    /** Self-service accounts an ADMIN can promote to HOSPITAL/ADMIN — never an existing staff row. */
+    /**
+     * Self-service accounts an ADMIN can promote to HOSPITAL/ADMIN — never an existing staff row.
+     */
     List<User> findByRoleInOrderByDisplayNameAsc(List<String> roles);
 }

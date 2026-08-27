@@ -69,7 +69,9 @@ public class DonationService {
     }
 
     private DonationResponse toResponse(
-            Donation row, Map<UUID, Hospital> hospitalsById, Map<String, District> districtsByCode) {
+            Donation row,
+            Map<UUID, Hospital> hospitalsById,
+            Map<String, District> districtsByCode) {
         Hospital hospital = hospitalsById.get(row.getHospitalId());
         District district =
                 hospital == null || hospital.getDistrictCode() == null

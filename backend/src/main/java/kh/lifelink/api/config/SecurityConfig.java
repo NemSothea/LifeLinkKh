@@ -78,8 +78,7 @@ public class SecurityConfig {
                                         .authenticated())
                 .exceptionHandling(
                         handling ->
-                                handling
-                                        .authenticationEntryPoint(
+                                handling.authenticationEntryPoint(
                                                 (request, response, ex) -> {
                                                     // Same envelope as every other error,
                                                     // serialised the same way. A caller cannot

@@ -52,10 +52,9 @@ public class TelegramConfig {
     }
 
     /**
-     * TM-AUTH-002 S1: the only thing distinguishing a real Telegram webhook call from anyone on
-     * the internet POSTing to the same URL. Constant-time on purpose — same reasoning as the OTP
-     * hash comparison (T1): a non-constant-time check leaks how much of the secret the caller got
-     * right.
+     * TM-AUTH-002 S1: the only thing distinguishing a real Telegram webhook call from anyone on the
+     * internet POSTing to the same URL. Constant-time on purpose — same reasoning as the OTP hash
+     * comparison (T1): a non-constant-time check leaks how much of the secret the caller got right.
      */
     public boolean verifyWebhookSecret(String headerValue) {
         if (headerValue == null) {
