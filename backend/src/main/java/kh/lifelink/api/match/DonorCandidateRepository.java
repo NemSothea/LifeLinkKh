@@ -56,12 +56,20 @@ public interface DonorCandidateRepository extends Repository<DonorProfile, UUID>
      *       exists to prevent, arriving through a different door, and {@code NULLS LAST} cannot
      *       catch it because the value is no longer null. Caught by MatchingIntegrationTest, which
      *       is why the ranking rules are tested against a real PostgreSQL and not a mock.
+     *   <li><strong>{@code dp.user_id <> :requesterUserId}.</strong> A donor whose relative needs
+     *       blood is the app's own expected requester ({@code MeTab}'s "request blood" entry), and
+     *       nothing else here stops that same person's donor profile from matching their own
+     *       compatible-blood-type request — compatibility, availability and eligibility all pass
+     *       against yourself. Without this clause a donor gets pushed an alert to donate to
+     *       themselves.
      * </ul>
      *
      * @param eligibleCutoff today minus {@link
      *     kh.lifelink.api.donor.EligibilityCalculator#COOLDOWN_DAYS}; a donor is eligible when they
      *     last donated on or before it
      * @param maxNotified ADR 0008's cap — a ceiling, never a target
+     * @param requesterUserId the user who created the request; excluded even when their own donor
+     *     profile would otherwise qualify
      */
     @Query(
             value =
@@ -83,6 +91,7 @@ public interface DonorCandidateRepository extends Repository<DonorProfile, UUID>
                           ON bc.donor_type = dp.blood_type
                          AND bc.recipient_type = :patientBloodType
                         WHERE dp.is_available = true
+                          AND dp.user_id <> :requesterUserId
                           AND (dp.last_donation_date IS NULL
                                OR dp.last_donation_date <= :eligibleCutoff)
                     ) c
@@ -97,7 +106,8 @@ public interface DonorCandidateRepository extends Repository<DonorProfile, UUID>
             @Param("hospitalLng") BigDecimal hospitalLng,
             @Param("eligibleCutoff") LocalDate eligibleCutoff,
             @Param("radiusKm") int radiusKm,
-            @Param("maxNotified") int maxNotified);
+            @Param("maxNotified") int maxNotified,
+            @Param("requesterUserId") UUID requesterUserId);
 
     /**
      * Aliases are quoted in the SQL above so Postgres preserves their case and these getters bind.

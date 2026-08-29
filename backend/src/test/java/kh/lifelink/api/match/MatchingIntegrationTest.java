@@ -46,6 +46,13 @@ class MatchingIntegrationTest {
     /** 1 degree of latitude is about 111 km, so this is roughly 1 km due north per unit. */
     private static final double KM_IN_DEGREES = 1.0 / 111.0;
 
+    /**
+     * Stands in for "the requester" in every test that is not about self-matching — a random id
+     * that matches no seeded donor, so {@code dp.user_id <> :requesterUserId} never excludes anyone
+     * these tests actually seeded.
+     */
+    private static final UUID NOT_A_DONOR = UUID.randomUUID();
+
     @Autowired private JdbcTemplate jdbc;
     @Autowired private MatchingService matching;
     @Autowired private HospitalRepository hospitals;
@@ -78,7 +85,7 @@ class MatchingIntegrationTest {
     void anONegativeDonorAnswersAnAPositivePatient() {
         UUID universal = donor("O-", 1);
 
-        List<MatchingService.Candidate> matched = matching.findFor("A+", hospital);
+        List<MatchingService.Candidate> matched = matching.findFor("A+", hospital, NOT_A_DONOR);
 
         assertThat(matched)
                 .extracting(MatchingService.Candidate::donorProfileId)
@@ -89,7 +96,29 @@ class MatchingIntegrationTest {
     void anAPositiveDonorDoesNotAnswerAnONegativePatient() {
         donor("A+", 1);
 
-        assertThat(matching.findFor("O-", hospital)).isEmpty();
+        assertThat(matching.findFor("O-", hospital, NOT_A_DONOR)).isEmpty();
+    }
+
+    /**
+     * The bug this exists to catch: a donor whose relative needs blood ({@code MeTab}'s "request
+     * blood" entry) creates a request compatible with their own blood type. Every other clause —
+     * compatibility, availability, eligibility, distance — passes against yourself, so without an
+     * explicit exclusion the donor is offered as a match for their own request.
+     */
+    @Test
+    void aDonorIsNeverMatchedToTheirOwnRequest() {
+        UUID selfProfileId = donor("A+", 1);
+        UUID selfUserId =
+                jdbc.queryForObject(
+                        "SELECT user_id FROM donor_profiles WHERE id = ?",
+                        UUID.class,
+                        selfProfileId);
+        UUID other = donor("A+", 2);
+
+        assertThat(matching.findFor("A+", hospital, selfUserId))
+                .extracting(MatchingService.Candidate::donorProfileId)
+                .containsExactly(other)
+                .doesNotContain(selfProfileId);
     }
 
     @Test
@@ -97,7 +126,7 @@ class MatchingIntegrationTest {
         UUID available = donor("O-", 1);
         UUID unavailable = donor("O-", 2, false, null, true);
 
-        assertThat(matching.findFor("A+", hospital))
+        assertThat(matching.findFor("A+", hospital, NOT_A_DONOR))
                 .extracting(MatchingService.Candidate::donorProfileId)
                 .containsExactly(available)
                 .doesNotContain(unavailable);
@@ -117,7 +146,7 @@ class MatchingIntegrationTest {
                         today.minusDays(EligibilityCalculator.COOLDOWN_DAYS - 1),
                         true);
 
-        assertThat(matching.findFor("A+", hospital))
+        assertThat(matching.findFor("A+", hospital, NOT_A_DONOR))
                 .extracting(MatchingService.Candidate::donorProfileId)
                 .containsExactly(exactlyDue)
                 .doesNotContain(oneDayShort);
@@ -131,7 +160,7 @@ class MatchingIntegrationTest {
             donor("O-", 2);
         }
 
-        assertThat(matching.findFor("A+", hospital)).hasSize(25);
+        assertThat(matching.findFor("A+", hospital, NOT_A_DONOR)).hasSize(25);
     }
 
     /** The cap is a ceiling, never a target — nothing is padded to reach 25. */
@@ -141,7 +170,7 @@ class MatchingIntegrationTest {
             donor("O-", i);
         }
 
-        assertThat(matching.findFor("A+", hospital)).hasSize(8);
+        assertThat(matching.findFor("A+", hospital, NOT_A_DONOR)).hasSize(8);
     }
 
     /**
@@ -156,11 +185,11 @@ class MatchingIntegrationTest {
         }
 
         List<UUID> first =
-                matching.findFor("A+", hospital).stream()
+                matching.findFor("A+", hospital, NOT_A_DONOR).stream()
                         .map(MatchingService.Candidate::donorProfileId)
                         .toList();
         List<UUID> second =
-                matching.findFor("A+", hospital).stream()
+                matching.findFor("A+", hospital, NOT_A_DONOR).stream()
                         .map(MatchingService.Candidate::donorProfileId)
                         .toList();
 
@@ -173,7 +202,7 @@ class MatchingIntegrationTest {
         UUID near = donor("O-", 1);
         UUID middle = donor("O-", 3);
 
-        assertThat(matching.findFor("A+", hospital))
+        assertThat(matching.findFor("A+", hospital, NOT_A_DONOR))
                 .extracting(MatchingService.Candidate::donorProfileId)
                 .containsExactly(near, middle, far);
     }
@@ -188,7 +217,7 @@ class MatchingIntegrationTest {
         UUID noCoordinates = donor("O-", 0, true, null, false);
         UUID far = donor("O-", 9);
 
-        List<MatchingService.Candidate> matched = matching.findFor("A+", hospital);
+        List<MatchingService.Candidate> matched = matching.findFor("A+", hospital, NOT_A_DONOR);
 
         assertThat(matched)
                 .extracting(MatchingService.Candidate::donorProfileId)
@@ -202,7 +231,7 @@ class MatchingIntegrationTest {
         UUID inside = donor("O-", 9);
         UUID outside = donor("O-", 40);
 
-        assertThat(matching.findFor("A+", hospital))
+        assertThat(matching.findFor("A+", hospital, NOT_A_DONOR))
                 .extracting(MatchingService.Candidate::donorProfileId)
                 .containsExactly(inside)
                 .doesNotContain(outside);
@@ -213,7 +242,7 @@ class MatchingIntegrationTest {
     void distanceIsRoundedToHalfAKilometre() {
         donor("O-", 3);
 
-        BigDecimal distance = matching.findFor("A+", hospital).get(0).distanceKm();
+        BigDecimal distance = matching.findFor("A+", hospital, NOT_A_DONOR).get(0).distanceKm();
 
         assertThat(distance.remainder(new BigDecimal("0.5"))).isEqualByComparingTo(BigDecimal.ZERO);
     }

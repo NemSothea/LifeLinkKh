@@ -87,7 +87,7 @@ class RequestCreation {
         BloodRequest saved = requests.save(request);
 
         List<MatchingService.Candidate> candidates =
-                matching.findFor(saved.getPatientBloodType(), hospital);
+                matching.findFor(saved.getPatientBloodType(), hospital, userId);
 
         List<UUID> matchedIds = new ArrayList<>(candidates.size());
         for (MatchingService.Candidate candidate : candidates) {

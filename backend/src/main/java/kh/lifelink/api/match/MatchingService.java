@@ -45,12 +45,15 @@ public class MatchingService {
 
     /**
      * @param patientBloodType the recipient side of the compatibility join — not the donor side
+     * @param requesterUserId excluded even when their own donor profile would otherwise qualify — a
+     *     donor requesting blood for a relative must not be offered as a match for themselves
      * @return at most {@code lifelink.matching.max-notified} donors, nearest first, donors without
      *     coordinates last. Empty when nobody qualifies: there is no widening and no retry, because
      *     {@code FR-MATCH-002} is deferred (docs/scope.md).
      */
     @Transactional(readOnly = true)
-    public List<Candidate> findFor(String patientBloodType, Hospital hospital) {
+    public List<Candidate> findFor(
+            String patientBloodType, Hospital hospital, UUID requesterUserId) {
         LocalDate cutoff = LocalDate.now(clock).minusDays(EligibilityCalculator.COOLDOWN_DAYS);
 
         return candidates
@@ -60,7 +63,8 @@ public class MatchingService {
                         hospital.getLongitude(),
                         cutoff,
                         radiusKm,
-                        maxNotified)
+                        maxNotified,
+                        requesterUserId)
                 .stream()
                 .map(c -> new Candidate(c.getDonorProfileId(), c.getDistanceKm()))
                 .toList();
