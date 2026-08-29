@@ -5,6 +5,7 @@ import { portalRole } from '@/lib/api/dev-auth';
 import { listHospitals } from '@/lib/api/hospitals';
 import { IconAlertTriangle, IconCheck } from '../icons';
 import { assignStaffRoleAction } from './actions';
+import SearchableSelect from './searchable-select';
 
 /**
  * TM-AUTH-001 E1 as a screen: an ADMIN grants HOSPITAL/ADMIN access to someone who has
@@ -139,22 +140,19 @@ export default async function AdminPage({
 
                         <label className="flex flex-col gap-1 text-sm">
                             {t('candidateLabel')}
-                            <select
+                            <SearchableSelect
                                 name="userId"
                                 required
-                                defaultValue=""
-                                data-testid="admin-candidate-select"
-                                className="rounded-xl border border-black/20 px-2 py-1.5 dark:border-white/25 dark:bg-black/30"
-                            >
-                                <option value="" disabled>
-                                    {t('candidateHint')}
-                                </option>
-                                {candidates.map((candidate) => (
-                                    <option key={candidate.id} value={candidate.id}>
-                                        {candidate.displayName} · {candidate.role}
-                                    </option>
-                                ))}
-                            </select>
+                                testId="admin-candidate-select"
+                                placeholder={t('candidateHint')}
+                                noMatchesLabel={t('noMatches')}
+                                options={candidates.map((candidate) => ({
+                                    value: candidate.id,
+                                    label: candidate.displayName,
+                                    sublabel: candidate.role,
+                                    searchText: `${candidate.displayName} ${candidate.role}`,
+                                }))}
+                            />
                         </label>
 
                         <label className="flex flex-col gap-1 text-sm">
@@ -173,18 +171,21 @@ export default async function AdminPage({
 
                         <label className="flex flex-col gap-1 text-sm">
                             {t('hospitalLabel')}
-                            <select
+                            <SearchableSelect
                                 name="hospitalId"
-                                data-testid="admin-hospital-select"
-                                className="rounded-xl border border-black/20 px-2 py-1.5 dark:border-white/25 dark:bg-black/30"
-                            >
-                                <option value="">{t('hospitalNone')}</option>
-                                {hospitals.map((hospital) => (
-                                    <option key={hospital.id} value={hospital.id}>
-                                        {hospital.name}
-                                    </option>
-                                ))}
-                            </select>
+                                testId="admin-hospital-select"
+                                placeholder={t('hospitalHint')}
+                                noMatchesLabel={t('noMatches')}
+                                defaultValue=""
+                                options={[
+                                    { value: '', label: t('hospitalNone'), searchText: t('hospitalNone') },
+                                    ...hospitals.map((hospital) => ({
+                                        value: hospital.id,
+                                        label: hospital.name,
+                                        searchText: hospital.name,
+                                    })),
+                                ]}
+                            />
                         </label>
 
                         <button

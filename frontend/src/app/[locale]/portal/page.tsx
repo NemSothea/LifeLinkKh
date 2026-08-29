@@ -1,18 +1,11 @@
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
+import EmptyState from '@/components/EmptyState';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { portalRole } from '@/lib/api/dev-auth';
 import { listOpenRequests, type PortalRequest } from '@/lib/api/portal';
-import ConfirmDonationForm from './confirm-donation-form';
-import {
-    IconAlertTriangle,
-    IconBell,
-    IconBuilding,
-    IconCheck,
-    IconChevron,
-    IconDroplet,
-    IconInbox,
-} from './icons';
+import { IconAlertTriangle, IconCheck, IconInbox } from './icons';
+import RequestList, { type RequestViewModel } from './request-list';
 
 /**
  * FR-PORTAL-001, trimmed by DEC-004 to one page: a table of open requests, each
@@ -35,6 +28,12 @@ export default async function PortalPage({
     const result = await listOpenRequests();
     const requests = result.ok ? sortByUrgency(result.data) : [];
     const criticalCount = requests.filter((r) => r.urgency === 'CRITICAL').length;
+    // Interpolated server-side because a Client Component (RequestList) cannot receive
+    // the `t()` function itself as a prop — functions don't cross that boundary.
+    const requestViewModels: RequestViewModel[] = requests.map((request) => ({
+        ...request,
+        unitsLabel: t('unitsNeeded', { count: request.unitsNeeded }),
+    }));
 
     return (
         <main className="mx-auto max-w-4xl p-6 sm:p-10">
@@ -108,11 +107,26 @@ export default async function PortalPage({
                     {t('empty')}
                 </EmptyState>
             ) : (
-                <ul data-testid="portal-request-list" className="flex flex-col gap-4">
-                    {requests.map((request) => (
-                        <RequestRow key={request.id} request={request} locale={locale} t={t} />
-                    ))}
-                </ul>
+                <RequestList
+                    requests={requestViewModels}
+                    locale={locale}
+                    copy={{
+                        noAcceptedDonors: t('noAcceptedDonors'),
+                        donatedOnLabel: t('donatedOnLabel'),
+                        confirmDonationCta: t('confirmDonationCta'),
+                        dialogTitle: t('confirmDialogTitle'),
+                        dialogBody: t('confirmDialogBody'),
+                        cancelCta: t('cancelCta'),
+                        dialogConfirmCta: t('confirmDialogCta'),
+                        searchPlaceholder: t('searchPlaceholder'),
+                        noMatches: t('noMatches'),
+                        filterAll: t('filterAll'),
+                        filterCritical: t('filterCritical'),
+                        filterUrgent: t('filterUrgent'),
+                        filterRoutine: t('filterRoutine'),
+                        pageLabel: t('pageLabel'),
+                    }}
+                />
             )}
         </main>
     );
@@ -128,157 +142,5 @@ const URGENCY_RANK: Record<string, number> = { CRITICAL: 0, URGENT: 1, ROUTINE: 
 function sortByUrgency(requests: PortalRequest[]): PortalRequest[] {
     return [...requests].sort(
         (a, b) => (URGENCY_RANK[a.urgency] ?? 9) - (URGENCY_RANK[b.urgency] ?? 9),
-    );
-}
-
-function EmptyState({
-    icon,
-    children,
-    testId,
-}: {
-    icon: React.ReactNode;
-    children: React.ReactNode;
-    testId: string;
-}) {
-    return (
-        <div
-            data-testid={testId}
-            className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-black/15 py-16 text-center text-black/50 dark:border-white/15 dark:text-white/50"
-        >
-            {icon}
-            <p>{children}</p>
-        </div>
-    );
-}
-
-const URGENCY_STYLE: Record<string, string> = {
-    CRITICAL:
-        'bg-red-100 text-red-800 ring-1 ring-inset ring-red-300 dark:bg-red-950/60 dark:text-red-300 dark:ring-red-800',
-    URGENT:
-        'bg-amber-100 text-amber-800 ring-1 ring-inset ring-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-800',
-    ROUTINE:
-        'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-300 dark:bg-slate-800/60 dark:text-slate-300 dark:ring-slate-700',
-};
-
-function UrgencyBadge({ urgency }: { urgency: string }) {
-    return (
-        <span
-            className={`rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide uppercase ${
-                URGENCY_STYLE[urgency] ?? URGENCY_STYLE.ROUTINE
-            }`}
-        >
-            {urgency}
-        </span>
-    );
-}
-
-async function RequestRow({
-    request,
-    locale,
-    t,
-}: {
-    request: PortalRequest;
-    locale: string;
-    t: Awaited<ReturnType<typeof getTranslations>>;
-}) {
-    const isCritical = request.urgency === 'CRITICAL';
-
-    return (
-        <li
-            data-testid={`portal-request-${request.id}`}
-            className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition-shadow hover:shadow-md dark:bg-white/[0.03] ${
-                isCritical
-                    ? 'border-red-300 border-l-4 border-l-brand dark:border-red-800'
-                    : 'border-black/10 dark:border-white/15'
-            }`}
-        >
-            <details className="group">
-                <summary className="flex cursor-pointer list-none items-center gap-4 p-5 select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold text-white shadow-inner">
-                        <IconDroplet className="mr-0.5 -ml-1 h-3.5 w-3.5 opacity-70" />
-                        {request.patientBloodType}
-                    </span>
-
-                    <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <UrgencyBadge urgency={request.urgency} />
-                            <span className="text-sm text-black/60 dark:text-white/60">
-                                {t('unitsNeeded', { count: request.unitsNeeded })}
-                            </span>
-                        </div>
-                        {request.hospital ? (
-                            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-black/80 dark:text-white/80">
-                                <IconBuilding className="h-4 w-4 text-black/40 dark:text-white/40" />
-                                {request.hospital.name}
-                            </p>
-                        ) : null}
-                    </div>
-
-                    <div className="hidden shrink-0 items-center gap-4 text-sm tabular-nums sm:flex">
-                        <span className="flex items-center gap-1.5 text-black/60 dark:text-white/60">
-                            <IconBell className="h-4 w-4" />
-                            {request.alertedCount}
-                        </span>
-                        <span className="flex items-center gap-1.5 font-medium text-emerald-700 dark:text-emerald-400">
-                            <IconCheck className="h-4 w-4" />
-                            {request.acceptedCount}
-                        </span>
-                    </div>
-
-                    <IconChevron className="h-5 w-5 shrink-0 text-black/40 transition-transform duration-200 group-open:rotate-180 dark:text-white/40" />
-                </summary>
-
-                <div className="border-t border-black/10 bg-black/[0.015] p-5 dark:border-white/10 dark:bg-white/[0.02]">
-                    {request.acceptedDonors.length === 0 ? (
-                        <p
-                            data-testid={`portal-request-${request.id}-no-donors`}
-                            className="text-sm text-black/50 dark:text-white/50"
-                        >
-                            {t('noAcceptedDonors')}
-                        </p>
-                    ) : (
-                        <ul className="flex flex-col gap-3">
-                            {request.acceptedDonors.map((donor) => (
-                                <li
-                                    key={donor.matchId}
-                                    data-testid={`portal-donor-${donor.matchId}`}
-                                    className="flex flex-col gap-3 rounded-xl border border-black/10 bg-white p-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/[0.04]"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/10 text-xs font-semibold dark:bg-white/10">
-                                            {donor.displayName.charAt(0).toUpperCase()}
-                                        </span>
-                                        <span className="text-sm">
-                                            <span className="font-medium">{donor.displayName}</span>
-                                            <span className="text-black/50 dark:text-white/50">
-                                                {' · '}
-                                                {donor.bloodType}
-                                                {donor.districtName ? ` · ${donor.districtName}` : ''}
-                                            </span>
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-wrap items-end gap-2">
-                                        <ConfirmDonationForm
-                                            requestId={request.id}
-                                            matchId={donor.matchId}
-                                            donorName={donor.displayName}
-                                            locale={locale}
-                                            copy={{
-                                                donatedOnLabel: t('donatedOnLabel'),
-                                                confirmDonationCta: t('confirmDonationCta'),
-                                                dialogTitle: t('confirmDialogTitle'),
-                                                dialogBody: t('confirmDialogBody'),
-                                                cancelCta: t('cancelCta'),
-                                                dialogConfirmCta: t('confirmDialogCta'),
-                                            }}
-                                        />
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-            </details>
-        </li>
     );
 }

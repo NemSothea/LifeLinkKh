@@ -22,7 +22,14 @@
         "noAcceptedDonors": "Nothing waiting on confirmation.",
         "donatedOnLabel": "Donated on",
         "confirmDonationCta": "Confirm donation",
-        "manageStaffCta": "Manage staff"
+        "manageStaffCta": "Manage staff",
+        "searchPlaceholder": "Search by hospital or blood type",
+        "noMatches": "Nothing matches your filter.",
+        "filterAll": "All",
+        "filterCritical": "Critical",
+        "filterUrgent": "Urgent",
+        "filterRoutine": "Routine",
+        "pageLabel": "Page {page} of {total}"
     },
     "admin": {
         "title": "Manage staff",
@@ -41,7 +48,9 @@
         "noCandidates": "Nobody has signed in yet who could be promoted.",
         "roleLabel": "Access level",
         "hospitalLabel": "Hospital",
+        "hospitalHint": "Search, or leave blank for an admin",
         "hospitalNone": "— none, this is an admin —",
-        "submitCta": "Grant access"
+        "submitCta": "Grant access",
+        "noMatches": "No matches."
     }
 }

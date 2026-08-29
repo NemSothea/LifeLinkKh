@@ -22,7 +22,14 @@
         "noAcceptedDonors": "គ្មានករណីរង់ចាំការបញ្ជាក់ទេ។",
         "donatedOnLabel": "បរិច្ចាគនៅថ្ងៃ",
         "confirmDonationCta": "បញ្ជាក់ការបរិច្ចាគ",
-        "manageStaffCta": "គ្រប់គ្រងបុគ្គលិក"
+        "manageStaffCta": "គ្រប់គ្រងបុគ្គលិក",
+        "searchPlaceholder": "ស្វែងរកតាមមន្ទីរពេទ្យ ឬក្រុមឈាម",
+        "noMatches": "គ្មានលទ្ធផលដូចនឹងតម្រង។",
+        "filterAll": "ទាំងអស់",
+        "filterCritical": "បន្ទាន់បំផុត",
+        "filterUrgent": "បន្ទាន់",
+        "filterRoutine": "ធម្មតា",
+        "pageLabel": "ទំព័រ {page} នៃ {total}"
     },
     "admin": {
         "title": "គ្រប់គ្រងបុគ្គលិក",
@@ -41,7 +48,9 @@
         "noCandidates": "មិនទាន់មាននរណាម្នាក់ចូលកម្មវិធីដែលអាចតែងតាំងបានទេ។",
         "roleLabel": "កម្រិតសិទ្ធិ",
         "hospitalLabel": "មន្ទីរពេទ្យ",
+        "hospitalHint": "ស្វែងរក ឬទុកទទេសម្រាប់អ្នកគ្រប់គ្រង",
         "hospitalNone": "— គ្មាន, នេះជាអ្នកគ្រប់គ្រង —",
-        "submitCta": "ផ្តល់សិទ្ធិ"
+        "submitCta": "ផ្តល់សិទ្ធិ",
+        "noMatches": "គ្មានលទ្ធផល។"
     }
 }
