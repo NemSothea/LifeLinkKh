@@ -84,6 +84,7 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 | M5 | W13    | Donation history list + 56-day eligibility status + the single hospital web page (feature 3) |
 | M6 | W14    | GPS via `geolocator`, Khmer/English i18n, Android build, iOS build (device/simulator only, DEC-006), bug fix |
 | M7 | W15    | Test pass, signed AAB, **Flutter app published to Play Store internal testing** |
+| M8 | W15+   | **Not graded — added by DEC-008.** Demo scenario: a scripted walkthrough (`docs/po/demo-script.md`) for explaining the app to someone seeing it for the first time — instructor, classmate, or pilot partner |
 
 > Amended 2026-07-31 by DEC-001, DEC-002, DEC-003 (`docs/decisions.md`) — eligibility computation and
 > request-alert push moved earlier so each milestone can satisfy its own acceptance criteria.
@@ -97,6 +98,12 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 > **Amended 2026-08-27 by DEC-006 — iOS added to M6.** Build-only target: `flutter build ios`
 > to simulator/device, no signing, no App Store/TestFlight, no Apple Developer account. Play Store
 > internal testing (M7) is still the only store release in scope.
+>
+> **Added 2026-08-29 by DEC-008 — M8, demo scenario.** Not a course requirement (the course grades
+> M1–M7 only) and not an FR — a narrative script for walking a first-time viewer through the app,
+> distinct from `docs/demo-runbook.md` (the Tech Lead's own command-by-command runbook for standing
+> the stack up before a demo). No milestone-boundary sign-off; it is a living doc, updated whenever
+> the golden path changes.
 
 ## 5. Team — responsibilities (Group 2)
 

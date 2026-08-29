@@ -419,6 +419,46 @@ Do not spend more than a minute here. It is a credibility slide, not the substan
     return s
 
 
+def slide_07b_demo(prs):
+    """M8 / DEC-008 (docs/decisions.md) — the hand-off point from slides to the live app.
+
+    Full narration lives in docs/po/demo-script.md; this slide is deliberately thin —
+    six bullets that name the golden path, not a transcript. Read the script, don't read
+    the slide.
+    """
+    s = blank(prs)
+    heading(s, "ការបង្ហាញផ្ទាល់", "Live Walkthrough", kicker="Demo")
+    bullets(s, [
+        "Two devices, one browser — donor, requester, hospital portal side by side",
+        "Donor registers — Google Sign-in, blood type, district, no password",
+        "Requester creates an urgent request — blood type, urgency, hospital",
+        "Push notification fires — instant, targeted, not a Facebook scroll",
+        "Donor accepts; hospital confirms on the portal — cooldown starts",
+        "Full script: docs/po/demo-script.md — narration for every step",
+    ])
+    footer(s, FOOT)
+    notes(s, """
+This is the hand-off slide, not the demo itself. Say one sentence and switch devices:
+"Rather than describe it, let me show it" — then tab away from the deck.
+
+Everything said out loud from here follows docs/po/demo-script.md, not this slide. That
+file has the full narration, plus ready answers for the questions people actually ask
+mid-demo (why a phone app and not a website, what happens if nobody accepts, why there's
+no map). This slide exists so the deck doesn't go straight from "here's our scope" to "any
+questions" with no visible proof in between.
+
+Fallback if the live app cannot run in the room (no network, no projector HDMI for a
+device, borrowed machine): docs/demo-runbook.md's golden path is short enough to walk
+through as a screen-recording instead. Have one ready; do not discover you need it live.
+
+LIKELY QUESTION: "What if the demo breaks?"
+ANSWER: Say so plainly rather than fighting it in front of the room, then either retry
+once or switch to the fallback recording. A visible recovery reads better than a
+stalled silence.
+""")
+    return s
+
+
 def slide_08_milestones(prs, milestones):
     s = blank(prs)
     heading(s, "ដំណាក់កាលការងារ", "Milestones · M1 → M7", kicker="When")
@@ -619,11 +659,12 @@ def main():
         ("5", "ហេតុអ្វីត្រូវជាកម្មវិធីទូរស័ព្ទ · Why Mobile", lambda: slide_05_why_mobile(prs)),
         ("6", "ស្ថាបត្យកម្មប្រព័ន្ធ · Architecture", lambda: slide_06_architecture(prs)),
         ("7", "ការគ្រប់គ្រងវិសាលភាព · How We Manage Scope", lambda: slide_07_scope(prs)),
-        ("8", "ដំណាក់កាលការងារ · Milestones", lambda: slide_08_milestones(prs, milestones)),
-        ("9", "ស្ថានភាពបច្ចុប្បន្ន · Where We Are Today", lambda: slide_09_status(prs)),
-        ("10", "សូចនាករជោគជ័យ · Success Metrics", lambda: slide_10_metrics(prs)),
-        ("11", "ហានិភ័យ · Risks + Open Decisions", lambda: slide_11_risks(prs)),
-        ("12", "ក្រុមការងារ · Team + One Open Question", lambda: slide_12_team(prs)),
+        ("8", "ការបង្ហាញផ្ទាល់ · Live Walkthrough (M8 / DEC-008)", lambda: slide_07b_demo(prs)),
+        ("9", "ដំណាក់កាលការងារ · Milestones", lambda: slide_08_milestones(prs, milestones)),
+        ("10", "ស្ថានភាពបច្ចុប្បន្ន · Where We Are Today", lambda: slide_09_status(prs)),
+        ("11", "សូចនាករជោគជ័យ · Success Metrics", lambda: slide_10_metrics(prs)),
+        ("12", "ហានិភ័យ · Risks + Open Decisions", lambda: slide_11_risks(prs)),
+        ("13", "ក្រុមការងារ · Team + One Open Question", lambda: slide_12_team(prs)),
     ]
     for num, label, build in builders:
         build()

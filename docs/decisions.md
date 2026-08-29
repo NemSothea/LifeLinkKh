@@ -1,5 +1,5 @@
 # Decisions (DEC)
-next: 008
+next: 009
 
 > **Relocated 2026-08-07** from `docs/pm/decisions.md`. The PM role was dropped and `docs/pm/` was
 > deleted, but a decision register is a project artefact, not a role's artefact — DEC-001..003 are
@@ -25,6 +25,7 @@ next: 008
 | DEC-005 | Seed all 14 Phnom Penh districts; `1213`/`1214` ship provisional rather than withheld | 2026-08-18 |
 | DEC-006 | iOS build target added to M6, scope capped at device/simulator build, no App Store submission | 2026-08-27 |
 | DEC-007 | M7 internal-testing backend reached via tunnel (ngrok/cloudflared) to a laptop, not a hosted deploy | 2026-08-29 |
+| DEC-008 | New M8 (ungraded): a demo-script.md walkthrough for explaining the app to a first-time viewer | 2026-08-29 |
 
 ---
 
@@ -269,3 +270,39 @@ does not already accept elsewhere.
   open.
 - `docs/risks.md`'s "no production backend host decided" row updated: decided, not closed — the
   laptop-dependency it trades in is now the live risk.
+
+---
+
+## DEC-008 — New M8 (ungraded): a demo-script for explaining the app to a first-time viewer
+
+**Date:** 2026-08-29 · **Decided by:** Tech Lead (Nem Sothea)
+
+### Context
+Two documents already exist for showing the app to someone: `docs/demo-runbook.md` (commands to
+bring the stack up, mint a portal token, run the golden path) and `docs/po/prd.md` (the product
+spec). Neither is written for the moment itself — standing in front of an instructor, classmate, or
+pilot partner who has never seen the app and needs the *story*, not the command list: what problem
+this solves, why it's a phone app and not a website, what to watch for at each step, and where the
+demo's known gaps (`docs/demo-runbook.md` §6) come from. Asked for directly: "create a demo scenario
+for explaining to other people."
+
+### Decision
+Add **M8**, explicitly not a course milestone — the course grades M1–M7 only, and this is not an FR
+either. Deliverable: `docs/po/demo-script.md`, a narrated walkthrough of the same golden path
+`demo-runbook.md` already runs, written for the audience watching rather than the person driving.
+No sign-off gate, no acceptance criteria, no QA test case — it is prose, and it goes stale the moment
+the golden path changes, at which point it gets edited, not re-approved.
+
+### Why this and not the alternative
+Folding this into `demo-runbook.md` was rejected: that document's audience is the Tech Lead
+operating the stack (`.env`, `docker compose`, JWT minting), and interleaving narration for a
+first-time viewer into command blocks would make both jobs — running the demo and narrating it —
+harder to do from the same page. Two documents, one for each half of a two-person demo (driver +
+narrator, often the same person switching hats), reads better than one document trying to serve
+both.
+
+### Consequence
+- `CLAUDE.md` §4 gains an M8 row, marked not graded.
+- Owner is PO (`docs/po/`), not Tech Lead — this is the product's story, not its operation.
+- Living document: update it whenever the golden path in `demo-runbook.md` changes, same as that
+  file's own maintenance expectation.

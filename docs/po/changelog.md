@@ -2,6 +2,20 @@
 
 Every new/changed FR gets an entry. What + Why are mandatory.
 
+## 2026-08-29 — M8 added: `demo-script.md`, a narrated first-time-viewer walkthrough
+- **What:** New [`demo-script.md`](demo-script.md) — not an FR, no acceptance criteria. A script
+  for narrating the app to someone seeing it for the first time (instructor, classmate, pilot
+  partner), distinct from `../demo-runbook.md`'s command-by-command runbook for the person actually
+  driving the stack. Recorded as `DEC-008`; `CLAUDE.md` §4 gains an M8 row, explicitly marked not
+  graded — the course requirement stays M1–M7.
+  **Why:** Asked directly for "a demo scenario for explaining to other people." Two documents
+  already existed that a newcomer could theoretically read — `demo-runbook.md` (commands, not
+  narration) and `prd.md` (the spec, not a walkthrough) — but neither is written for the moment of
+  standing in front of someone and telling the story. Folding narration into `demo-runbook.md` was
+  considered and rejected: that file's audience is the Tech Lead operating `.env`/`docker
+  compose`/JWT minting, and interleaving talking points into command blocks makes both harder to
+  use from the same page.
+
 ## 2026-08-27 — `FR-DONOR-003` (scannable donor ID) registered, requested only
 - **What:** Added `FR-DONOR-003-scannable-donor-id` — a QR/barcode on the donor profile that
   hospital staff could scan to jump straight to the accepted match on the portal, instead of
