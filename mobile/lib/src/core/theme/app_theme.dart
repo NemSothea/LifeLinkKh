@@ -17,8 +17,25 @@ class AppTheme {
     /// is most likely read at night, on a phone that has been in dark mode all day.
     static ThemeData get dark => _themeFor(Brightness.dark);
 
+    /// The vivid red every button, badge, and icon actually paints with — not the seed
+    /// itself for dark mode. `ColorScheme.fromSeed`'s HCT tonal mapping runs the seed
+    /// through its own algorithm rather than reproducing it: on this seed specifically,
+    /// the light-mode primary it derives is `#904A44`, a muddy brick red with none of
+    /// the vividness "blood red, the one place colour is the subject" was chosen for.
+    /// Overriding `primary`/`onPrimary` below keeps the rest of the seed-derived
+    /// palette (containers, tertiary, surfaces) but pins the one color users actually
+    /// register as "the app's red" to a value chosen for how it looks, not what the
+    /// algorithm outputs. Verified against WCAG AA: white-on-`_seed` is 5.6:1; the
+    /// dark-mode lift is 4.5:1 against this theme's dark surface.
+    static const Color _primaryLight = _seed;
+    static const Color _primaryDark = Color(0xFFD15353);
+
     static ThemeData _themeFor(Brightness brightness) {
-        final scheme = ColorScheme.fromSeed(seedColor: _seed, brightness: brightness);
+        final rawScheme = ColorScheme.fromSeed(seedColor: _seed, brightness: brightness);
+        final scheme = rawScheme.copyWith(
+            primary: brightness == Brightness.light ? _primaryLight : _primaryDark,
+            onPrimary: Colors.white,
+        );
         final base = ThemeData(brightness: brightness, useMaterial3: true);
 
         return base.copyWith(

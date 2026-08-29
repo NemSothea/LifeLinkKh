@@ -24,8 +24,17 @@ class LifeLinkApp extends ConsumerWidget {
                 GlobalWidgetsLocalizations.delegate,
                 GlobalCupertinoLocalizations.delegate,
             ],
-            // Khmer first: it is the default locale (docs/po/prd.md section 5), and it is
-            // what an unmatched device language falls back to.
+            // Explicit, not left to device-locale resolution: without a `locale:`
+            // override, Flutter's default `basicLocaleListResolution` picks the device's
+            // language whenever it's in `supportedLocales` — on any English-locale phone
+            // (most dev/test devices) that means English, contradicting the comment this
+            // replaced, which claimed Khmer was already the default. `docs/po/prd.md`
+            // section 5 and the web portal's `routing.ts` (`defaultLocale: 'km'`) both
+            // make it the real default; this line is what actually does that on mobile.
+            // No in-app switch exists yet on this client (`MeTab`'s TODO) — until it
+            // ships, an English speaker cannot self-select English here the way the
+            // portal's `LanguageSwitcher` already lets them.
+            locale: const Locale('km'),
             supportedLocales: const [Locale('km'), Locale('en')],
         );
     }

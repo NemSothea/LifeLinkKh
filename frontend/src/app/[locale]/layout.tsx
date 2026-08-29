@@ -1,8 +1,20 @@
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { notFound } from 'next/navigation';
+import { Inter, Kantumruy_Pro } from 'next/font/google';
 import { routing, type Locale } from '@/i18n/routing';
 import '../globals.css';
+
+// Same pairing as the Flutter app's AppTheme: Inter for Latin, Kantumruy Pro filling in
+// the Khmer glyphs Inter has none of. One typographic identity across both clients
+// rather than the portal inventing its own.
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+const kantumruyPro = Kantumruy_Pro({
+    subsets: ['khmer', 'latin'],
+    weight: ['400', '500', '600', '700'],
+    variable: '--font-kantumruy',
+    display: 'swap',
+});
 
 export const metadata: Metadata = {
     title: 'LifeLink KH',
@@ -22,19 +34,8 @@ export default async function LocaleLayout({
     }
 
     return (
-        <html lang={locale}>
-            {/*
-              Explicit Khmer-capable font stack. The default system stack renders Khmer
-              inconsistently across Windows and macOS, and a portal that looks broken on a
-              hospital's PC is a portal nobody uses.
-            */}
-            <body
-                style={{
-                    fontFamily:
-                        "'Noto Sans Khmer', 'Khmer OS Battambang', 'Khmer OS', system-ui, -apple-system, 'Segoe UI', sans-serif",
-                }}
-                className="antialiased"
-            >
+        <html lang={locale} className={`${inter.variable} ${kantumruyPro.variable}`}>
+            <body className="antialiased">
                 <NextIntlClientProvider>{children}</NextIntlClientProvider>
             </body>
         </html>

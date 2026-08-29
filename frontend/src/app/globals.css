@@ -3,24 +3,36 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Blood red, the one place in this app where the colour is the subject — same value
+     as `AppTheme._seed`/`_primaryLight`. An earlier version of this token matched
+     Material 3's `ColorScheme.fromSeed(seedColor: _seed).primary` instead (#904A44),
+     since that's what the algorithm actually renders from this seed — a muddy brick
+     red, not blood red. `AppTheme` now overrides `primary` past the algorithm for
+     exactly this reason, so match that override, not the raw fromSeed output. */
+  --brand: #c62828;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-brand: var(--brand);
+  --font-sans: var(--font-inter), var(--font-kantumruy), ui-sans-serif, system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    /* Matches `AppTheme._primaryDark` exactly — chosen there for the same reason this
+       file lifts it: the light value alone is 3.3:1 against a dark surface, under
+       WCAG AA's 4.5:1 for text. #D15353 clears 4.5:1 here and on the app's own dark
+       surface, while staying recognizably the same red. */
+    --brand: #d15353;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }

@@ -54,7 +54,7 @@ export default async function AdminPage({
         <main className="mx-auto max-w-2xl p-6 sm:p-10">
             <header className="mb-8 flex flex-wrap items-end justify-between gap-3">
                 <div>
-                    <p className="text-sm font-medium tracking-wide text-red-700 uppercase dark:text-red-400">
+                    <p className="text-sm font-semibold tracking-wide text-brand uppercase">
                         LifeLink KH
                     </p>
                     <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
@@ -144,7 +144,7 @@ export default async function AdminPage({
                                 required
                                 defaultValue=""
                                 data-testid="admin-candidate-select"
-                                className="rounded-md border border-black/20 px-2 py-1.5 dark:border-white/25 dark:bg-black/30"
+                                className="rounded-xl border border-black/20 px-2 py-1.5 dark:border-white/25 dark:bg-black/30"
                             >
                                 <option value="" disabled>
                                     {t('candidateHint')}
@@ -164,7 +164,7 @@ export default async function AdminPage({
                                 required
                                 defaultValue="HOSPITAL"
                                 data-testid="admin-role-select"
-                                className="rounded-md border border-black/20 px-2 py-1.5 dark:border-white/25 dark:bg-black/30"
+                                className="rounded-xl border border-black/20 px-2 py-1.5 dark:border-white/25 dark:bg-black/30"
                             >
                                 <option value="HOSPITAL">{t('staffRoleHospital')}</option>
                                 <option value="ADMIN">{t('staffRoleAdmin')}</option>
@@ -176,7 +176,7 @@ export default async function AdminPage({
                             <select
                                 name="hospitalId"
                                 data-testid="admin-hospital-select"
-                                className="rounded-md border border-black/20 px-2 py-1.5 dark:border-white/25 dark:bg-black/30"
+                                className="rounded-xl border border-black/20 px-2 py-1.5 dark:border-white/25 dark:bg-black/30"
                             >
                                 <option value="">{t('hospitalNone')}</option>
                                 {hospitals.map((hospital) => (
@@ -190,7 +190,7 @@ export default async function AdminPage({
                         <button
                             type="submit"
                             data-testid="admin-submit"
-                            className="flex items-center justify-center gap-1.5 self-start rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                            className="flex items-center justify-center gap-1.5 self-start rounded-xl bg-brand px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                         >
                             <IconCheck className="h-4 w-4" />
                             {t('submitCta')}

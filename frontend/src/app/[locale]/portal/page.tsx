@@ -40,7 +40,7 @@ export default async function PortalPage({
         <main className="mx-auto max-w-4xl p-6 sm:p-10">
             <header className="mb-8 flex flex-wrap items-end justify-between gap-3">
                 <div>
-                    <p className="text-sm font-medium tracking-wide text-red-700 uppercase dark:text-red-400">
+                    <p className="text-sm font-semibold tracking-wide text-brand uppercase">
                         LifeLink KH
                     </p>
                     <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
@@ -59,16 +59,19 @@ export default async function PortalPage({
                     {result.ok ? (
                         <div
                             data-testid="portal-summary"
-                            className="flex items-center gap-4 rounded-full border border-black/10 bg-black/[0.02] px-5 py-2 text-sm dark:border-white/15 dark:bg-white/[0.04]"
+                            className="flex items-center gap-4 rounded-full border border-black/10 bg-black/[0.02] px-5 py-2 text-sm tabular-nums dark:border-white/15 dark:bg-white/[0.04]"
                         >
                             <span>
                                 <strong className="text-lg">{requests.length}</strong>{' '}
                                 <span className="text-black/60 dark:text-white/60">{t('openLabel')}</span>
                             </span>
                             {criticalCount > 0 ? (
-                                <span className="flex items-center gap-1 font-medium text-red-700 dark:text-red-400">
-                                    <IconAlertTriangle className="h-4 w-4" />
-                                    {criticalCount} {t('criticalLabel')}
+                                <span className="flex items-center gap-1.5 font-medium text-brand">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="absolute inline-flex h-full w-full motion-safe:animate-ping rounded-full bg-brand opacity-75" />
+                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-brand" />
+                                    </span>
+                                    <span className="tabular-nums">{criticalCount}</span> {t('criticalLabel')}
                                 </span>
                             ) : null}
                         </div>
@@ -185,13 +188,13 @@ async function RequestRow({
             data-testid={`portal-request-${request.id}`}
             className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition-shadow hover:shadow-md dark:bg-white/[0.03] ${
                 isCritical
-                    ? 'border-red-300 dark:border-red-800'
+                    ? 'border-red-300 border-l-4 border-l-brand dark:border-red-800'
                     : 'border-black/10 dark:border-white/15'
             }`}
         >
             <details className="group">
-                <summary className="flex cursor-pointer list-none items-center gap-4 p-5 select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-600 text-sm font-bold text-white shadow-inner">
+                <summary className="flex cursor-pointer list-none items-center gap-4 p-5 select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold text-white shadow-inner">
                         <IconDroplet className="mr-0.5 -ml-1 h-3.5 w-3.5 opacity-70" />
                         {request.patientBloodType}
                     </span>
@@ -211,7 +214,7 @@ async function RequestRow({
                         ) : null}
                     </div>
 
-                    <div className="hidden shrink-0 items-center gap-4 text-sm sm:flex">
+                    <div className="hidden shrink-0 items-center gap-4 text-sm tabular-nums sm:flex">
                         <span className="flex items-center gap-1.5 text-black/60 dark:text-white/60">
                             <IconBell className="h-4 w-4" />
                             {request.alertedCount}

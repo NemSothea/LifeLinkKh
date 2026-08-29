@@ -59,14 +59,14 @@ export default function ConfirmDonationForm({
                         max={new Date().toISOString().slice(0, 10)}
                         value={donatedOn}
                         onChange={(e) => setDonatedOn(e.target.value)}
-                        className="rounded-md border border-black/20 px-2 py-1 text-sm text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 dark:border-white/25 dark:bg-black/30 dark:text-white"
+                        className="rounded-xl border border-black/20 px-2 py-1 text-sm text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:border-white/25 dark:bg-black/30 dark:text-white"
                     />
                 </label>
                 <button
                     type="button"
                     onClick={() => setOpen(true)}
                     data-testid={`confirm-donation-${matchId}`}
-                    className="flex items-center gap-1.5 rounded-md bg-red-700 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                    className="flex items-center gap-1.5 rounded-xl bg-brand px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                 >
                     <IconCheck className="h-4 w-4" />
                     {copy.confirmDonationCta}
@@ -105,14 +105,14 @@ export default function ConfirmDonationForm({
                                 type="button"
                                 autoFocus
                                 onClick={() => setOpen(false)}
-                                className="rounded-md px-3 py-1.5 text-sm font-medium text-black/70 hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 dark:text-white/70 dark:hover:bg-white/10"
+                                className="rounded-xl px-3 py-1.5 text-sm font-medium text-black/70 hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:text-white/70 dark:hover:bg-white/10"
                             >
                                 {copy.cancelCta}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => formRef.current?.requestSubmit()}
-                                className="flex items-center gap-1.5 rounded-md bg-red-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                                className="flex items-center gap-1.5 rounded-xl bg-brand px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                             >
                                 <IconCheck className="h-4 w-4" />
                                 {copy.dialogConfirmCta}

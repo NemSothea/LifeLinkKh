@@ -166,11 +166,13 @@ void main() {
         await tester.tap(find.byKey(const Key('sign-in-google')));
         await tester.pump();
 
-        // Google — the one actually tapped — is busy.
-        expect(find.text('Signing in…'), findsOneWidget);
+        // Google — the one actually tapped — is busy. Asserted in Khmer: `LifeLinkApp`
+        // defaults to `Locale('km')` (`app.dart`) and no locale override exists in this
+        // test, so this is genuinely what a real user sees, not an artifact of the test.
+        expect(find.text('កំពុងចូល…'), findsOneWidget);
         // Facebook is disabled (a concurrent attempt is still wrong) but must not claim
         // to be signing in too — it wasn't touched.
-        expect(find.text('Continue with Facebook'), findsOneWidget);
+        expect(find.text('បន្តជាមួយ Facebook'), findsOneWidget);
         final facebookButton = tester.widget<OutlinedButton>(
             find.byKey(const Key('sign-in-facebook')),
         );
@@ -303,9 +305,13 @@ void main() {
         await tester.tap(find.byKey(const Key('sign-in-google')));
         await tester.pumpAndSettle();
 
+        // Khmer, same reason as above: the app's real default, not a test artifact.
         expect(find.byKey(const Key('sign-in-error')), findsOneWidget);
-        expect(find.text('No connection. Check the network and try again.'), findsOneWidget);
-        expect(find.text('Try again'), findsOneWidget);
+        expect(
+            find.text('គ្មានការតភ្ជាប់។ សូមពិនិត្យបណ្តាញ ហើយព្យាយាមម្តងទៀត។'),
+            findsOneWidget,
+        );
+        expect(find.text('ព្យាយាមម្តងទៀត'), findsOneWidget);
         expect(sessionStore.stored, isNull);
     });
 
@@ -317,7 +323,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(
-            find.text('Too many attempts. Wait a minute before trying again.'),
+            find.text('ព្យាយាមច្រើនដងពេក។ សូមរង់ចាំមួយនាទីមុនព្យាយាមម្តងទៀត។'),
             findsOneWidget,
         );
     });

@@ -48,6 +48,10 @@
     "@signInWithGoogle": {
         "description": "Label of the Google sign-in button"
     },
+    "signInMoreOptions": "More ways to sign in",
+    "@signInMoreOptions": {
+        "description": "Divider label between Google (ADR 0002's primary method) and the Facebook/Telegram alternatives added later by FR-AUTH-004"
+    },
     "signInWithFacebook": "Continue with Facebook",
     "@signInWithFacebook": {
         "description": "Label of the Facebook sign-in button (FR-AUTH-004)"
