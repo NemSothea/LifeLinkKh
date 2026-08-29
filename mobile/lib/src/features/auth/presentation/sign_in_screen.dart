@@ -64,8 +64,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         final googlePending = _pending == _PendingProvider.google;
         final facebookPending = _pending == _PendingProvider.facebook;
 
+        // The action panel is a full-bleed surface, not an inset card — it should paint
+        // through to the physical bottom edge (behind the home indicator), not stop at
+        // the safe area and leave a gap of plain background showing underneath.
+        final bottomInset = MediaQuery.of(context).padding.bottom;
+
         return Scaffold(
             body: SafeArea(
+                bottom: false,
                 // Not wrapped in a scroll view: `Expanded` below needs the bounded height
                 // `SafeArea`/`Scaffold` already provide, and a scroll view would hand it
                 // unbounded height instead — the two don't compose. Both zones are small,
@@ -125,7 +131,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         // sharing a flat background with three buttons.
                         Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
+                                padding: EdgeInsets.fromLTRB(24, 28, 24, 32 + bottomInset),
                                 decoration: BoxDecoration(
                                     color: theme.colorScheme.surfaceContainerHigh,
                                     borderRadius: const BorderRadius.vertical(
