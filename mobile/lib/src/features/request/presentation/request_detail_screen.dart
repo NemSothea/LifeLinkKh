@@ -158,7 +158,13 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                        DateFormat.yMMMd(languageCode).add_jm().format(request.createdAt),
+                        // add_Hm, not add_jm: intl's bundled km locale data has no real
+                        // AM/PM symbol for the 12-hour skeleton — jm renders as a literal
+                        // "6:13 a" instead of a day-period word. 24-hour sidesteps the
+                        // missing symbol entirely, and is arguably the better choice
+                        // anyway: whether a donor got notified at 6 AM or 6 PM is exactly
+                        // the kind of thing this app can't afford to leave ambiguous.
+                        DateFormat.yMMMd(languageCode).add_Hm().format(request.createdAt),
                         style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 32),
