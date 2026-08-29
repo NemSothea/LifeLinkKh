@@ -25,3 +25,12 @@ hospitals/admin, backed by one API. Team of 5 with backend, frontend, mobile, QA
 ## Alternatives considered
 - Capacitor R3 Hybrid (one Next.js codebase, wrapped): rejected — team chose native Flutter.
 - Flutter-only, no web: rejected — hospitals/admin need a web portal.
+- **Microservices, raised and rejected 2026-08-29.** Reasoning it out surfaced the actual reason
+  this stays a monolith, so recorded here rather than only in chat: `PortalService.confirmDonation`
+  is one transaction across three writes (record the donation, refresh the cooldown cache, close
+  the request if fulfilled) specifically so it cannot partially fail. Split across services, that
+  becomes a distributed saga with compensating rollbacks — strictly more to build and more ways to
+  fail, not less. Combined with no DevOps role on the team (`docs/team.md`) and this being raised at
+  M7 of a 13-week course project, the "easier to manage" premise doesn't hold at this scale. Revisit
+  only if a real second deploy target or an independent-scaling need ever appears — neither exists
+  today.
