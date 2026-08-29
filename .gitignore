@@ -52,7 +52,13 @@ frontend/out/
 frontend/dist/
 node_modules/
 
-# Mobile (Flutter)
+# Mobile (Flutter) — release signing. The upload keystore can mint updates to the
+# published app; key.properties holds its passwords in plain text. Neither ever
+# belongs in git. docs/tech-lead/deploy-runbook.md covers generating and storing them.
+mobile/android/key.properties
+*.jks
+*.keystore
+
 mobile/build/
 mobile/.dart_tool/
 mobile/.flutter-plugins

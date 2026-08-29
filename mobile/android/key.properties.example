@@ -1,0 +1,6 @@
+# Copy to key.properties (same directory) and fill in real values. key.properties is
+# gitignored — never commit it. See docs/tech-lead/deploy-runbook.md Steps 1-2.
+storePassword=
+keyPassword=
+keyAlias=lifelinkkh-upload
+storeFile=/absolute/path/to/lifelinkkh-upload.jks

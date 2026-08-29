@@ -14,7 +14,9 @@
 - **Matching:** server computes ABO/Rh-compatible + eligible + available donors ranked by distance.
 - **Notifications:** FCM push to matched donors. Scheduled eligibility reminders are deferred (DEC-004) — the 56-day status is shown in-app instead.
 - **Local dev:** docker-compose (postgres, backend, web); Flutter runs on device/emulator.
-- **CI:** GitHub Actions, owned by Tech Lead. No infra role, no deploy runbook yet.
+- **CI:** GitHub Actions, owned by Tech Lead. No infra role. Deploy runbook:
+  [`local-development.md`](local-development.md) (local stack) +
+  [`deploy-runbook.md`](deploy-runbook.md) (signed AAB, Play Store internal testing).
 - **Secrets:** Firebase (Auth + FCM) and Maps keys via env — never committed (see docs/security).
   No SMS provider.
 

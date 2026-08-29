@@ -1,5 +1,5 @@
 # Decisions (DEC)
-next: 007
+next: 008
 
 > **Relocated 2026-08-07** from `docs/pm/decisions.md`. The PM role was dropped and `docs/pm/` was
 > deleted, but a decision register is a project artefact, not a role's artefact — DEC-001..003 are
@@ -24,6 +24,7 @@ next: 007
 | DEC-004 | Scope cut to 8 buildable FRs; 8 deferred; M3/M4 given 3 weeks each | 2026-08-07 |
 | DEC-005 | Seed all 14 Phnom Penh districts; `1213`/`1214` ship provisional rather than withheld | 2026-08-18 |
 | DEC-006 | iOS build target added to M6, scope capped at device/simulator build, no App Store submission | 2026-08-27 |
+| DEC-007 | M7 internal-testing backend reached via tunnel (ngrok/cloudflared) to a laptop, not a hosted deploy | 2026-08-29 |
 
 ---
 
@@ -231,3 +232,40 @@ at the defence without new cost or schedule risk.
 - `mobile/ios/` (present untracked at time of this decision) is the Flutter-generated scaffold this
   build target uses — not a separate feature to build.
 - No `docs/scope.md` FR entry needed: this is a build-target addition, not a new feature.
+
+---
+
+## DEC-007 — M7 internal-testing backend reached via tunnel, not a hosted deploy
+
+**Date:** 2026-08-29 · **Decided by:** Tech Lead (Nem Sothea)
+
+### Context
+`docs/tech-lead/deploy-runbook.md` Step 5 named the gap: no production backend host is decided
+anywhere in the repo, and `API_BASE_URL` is a compile-time `--dart-define` baked into the signed
+AAB, so it must be settled before the first M7 build. Two options were laid out there — tunnel the
+local backend, or deploy backend + Postgres to a free-tier host (Render/Railway/Fly.io).
+
+### Decision
+For M7, internal testers reach the backend through a **tunnel** (`ngrok` or `cloudflared`) pointed
+at the backend running on a team laptop. No hosted deployment is built for this milestone.
+
+### Why this and not the alternative
+A hosted deploy is durable but is new, unbudgeted infrastructure work — a Docker-based deploy
+pipeline, plus finding `.env`'s secrets (`JWT_SECRET`, `FIREBASE_PROJECT_ID`, the Firebase
+service-account key) a real home outside a developer's machine. None of that is needed to satisfy
+M7's actual bar, which is a signed AAB installable from Play Store's internal testing track, not a
+production backend. The pilot is already team-only test accounts (`docs/scope.md`'s
+`FR-SECURITY-001` note), so a laptop-dependent backend carries no user-facing cost this milestone
+does not already accept elsewhere.
+
+### Consequence
+- The backend must be running, with the tunnel active, whenever a tester opens the app during the
+  testing window. Restarting either changes the tunnel URL (free-tier `ngrok`) and requires a
+  rebuild + re-upload of the AAB — `API_BASE_URL` cannot be changed after the fact.
+- This is explicitly **not durable past M7**. Revisit before any real donor outside the team uses
+  the app — the same trigger `docs/scope.md` already names for bringing `FR-SECURITY-001` back into
+  scope.
+- `docs/tech-lead/deploy-runbook.md` Step 5 updated to point here instead of listing both options as
+  open.
+- `docs/risks.md`'s "no production backend host decided" row updated: decided, not closed — the
+  laptop-dependency it trades in is now the live risk.

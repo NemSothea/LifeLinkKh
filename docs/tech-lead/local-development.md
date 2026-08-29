@@ -1,7 +1,9 @@
 # Local development — running the stack
 
-**Owner: Tech Lead.** This is the first half of the deploy runbook M7 still needs. It covers getting
-`postgres + backend + web` running on a developer machine, and nothing about deploying anywhere real.
+**Owner: Tech Lead.** This is the first half of the deploy runbook. It covers getting
+`postgres + backend + web` running on a developer machine, and nothing about deploying anywhere
+real — for the signed-AAB / Play Store internal testing half, see
+[`deploy-runbook.md`](deploy-runbook.md).
 
 > **Local development only.** Every port binds to `127.0.0.1` on purpose. The M2 backend has no
 > authentication, and Docker's default `0.0.0.0` binding can bypass a host firewall and publish an
@@ -273,6 +275,7 @@ Each of these has actually happened on this project.
 
 ## Related
 
+- [`deploy-runbook.md`](deploy-runbook.md) — second half: signed AAB, Play Store internal testing (M7)
 - [`docs/fullstack/specs/foundation/infra-docker.md`](../fullstack/specs/foundation/infra-docker.md) — Compose service spec
 - [`docs/qa/test-strategy.md`](../qa/test-strategy.md) — what QA needs before signing a milestone
 - [`docs/security/security-checklist.md`](../security/security-checklist.md) — secret handling

@@ -9,7 +9,7 @@
 | M4 overloaded after DEC-001/DEC-002 (see below) | High | Med | FCM token registration pulled into M3; cut `FR-REQUEST-003` and `FR-MATCH-002` from M4 first if the milestone slips |
 | Low donor density early | High | Med | Campus/NGO onboarding drives |
 | Donor phone numbers unverified after auth moved to Google Sign-In | High | High (already true) | Coordinate via FCM push in-app, not phone calls — must land in `FR-REQUEST-002` / `FR-NOTIFY-001`. Lazy verification at acceptance time is the fallback (ADR 0002) |
-| No deploy runbook exists (`infra/` deleted with the DevOps role) | Med | High (already true) | Tech Lead writes one before M7. The signed-AAB release currently has no documented promotion path |
+| M7 backend is a tunneled laptop, not a hosted deploy ([DEC-007](decisions.md#dec-007--m7-internal-testing-backend-reached-via-tunnel-not-a-hosted-deploy)) | Med | High (already true) | Backend + tunnel must stay running for the whole testing window; a restarted free-tier tunnel URL forces a rebuild + re-upload of the AAB. Revisit as a real hosted deploy before any real donor outside the team uses the app |
 | False/abusive requests | Med | Med | Admin moderation + hospital confirmation |
 | 5-person team vs assignment's 3 | Low | — | Confirm with instructor |
 

@@ -100,9 +100,9 @@ Two items have external lead time and will block M3/M7 if left:
 
 ## Still open, and still needed for the build
 
-| Open item | Blocks |
+| Open item | Status |
 |---|---|
-| Max notified donor count | `FR-MATCH-001` — FR-05 calls it configurable but gives no default |
-| Deploy runbook | M7 signed-AAB release has no documented promotion path |
+| Max notified donor count | **Closed** 2026-08-19 by [ADR 0008](tech-lead/adr/0008-max-notified-donor-count.md) — `FR-MATCH-001` no longer blocked |
+| Deploy runbook | **Written** — [`tech-lead/deploy-runbook.md`](tech-lead/deploy-runbook.md). Backend-host question resolved by [DEC-007](decisions.md#dec-007--m7-internal-testing-backend-reached-via-tunnel-not-a-hosted-deploy) (tunnel, not hosted). No signed AAB actually built yet — that's execution, not a doc gap |
 
-Both are Tech Lead's. Neither is large; both are currently unwritten.
+Both are Tech Lead's.
