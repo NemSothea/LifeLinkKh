@@ -7,14 +7,15 @@ import '../../../core/error/result.dart';
 import '../application/request_providers.dart';
 import '../domain/blood_request.dart';
 import '../domain/request_status.dart';
+import 'urgency_badge.dart';
 
-/// A single request — the "waiting for responders" screen from the prototype, and
-/// also what `MyRequestsScreen` opens into.
+/// A single request — the "waiting for responders" screen from the prototype, reached
+/// by `pushReplacement` right after `RequestFormScreen` creates it.
 ///
 /// `distanceKm` and `requesterContact` are always null here: those only appear
 /// when the caller is a matched donor, and this screen is only reachable by a
-/// request's own creator (`MyRequestsScreen`), never by a donor — a donor answers
-/// from their inbox instead (`MatchDetailScreen`).
+/// request's own creator, never by a donor — a donor answers from their home tab's
+/// nearby-requests list instead (`MatchDetailScreen`).
 class RequestDetailScreen extends ConsumerStatefulWidget {
     const RequestDetailScreen({required this.requestId, super.key});
 
@@ -115,6 +116,18 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                             child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                    Row(
+                                        children: [
+                                            UrgencyBadge(urgency: request.urgency),
+                                            const SizedBox(width: 8),
+                                            _StatusPill(
+                                                key: const Key('request-status'),
+                                                status: request.status,
+                                                label: statusLabel(request.status),
+                                            ),
+                                        ],
+                                    ),
+                                    const SizedBox(height: 8),
                                     Text(
                                         '${request.patientBloodType.wireValue} · '
                                         '${request.unitsNeeded}',
@@ -127,12 +140,6 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                                                 '${request.hospitalName} · $district',
                                             null => request.hospitalName,
                                         },
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                        statusLabel(request.status),
-                                        key: const Key('request-status'),
-                                        style: Theme.of(context).textTheme.labelLarge,
                                     ),
                                 ],
                             ),
@@ -181,6 +188,50 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                             ),
                         ),
                 ],
+            ),
+        );
+    }
+}
+
+/// A request's own status, color-coded the same way `UrgencyBadge` codes urgency — a
+/// requester should be able to tell "fulfilled" (good) from "cancelled" (not) by shape
+/// and colour, not by reading a plain grey label. `open` uses `Urgency.routine`'s
+/// neutral treatment; `cancelled`/`expired` reuse the error role `UrgencyBadge` already
+/// uses for `critical`; `fulfilled` hand-picks a green pair the same way `UrgencyBadge`
+/// hand-picks amber for `urgent` — Material 3 has no built-in "success" role either.
+class _StatusPill extends StatelessWidget {
+    const _StatusPill({required this.status, required this.label, super.key});
+
+    final RequestStatus status;
+    final String label;
+
+    @override
+    Widget build(BuildContext context) {
+        final scheme = Theme.of(context).colorScheme;
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        final (Color background, Color foreground) = switch (status) {
+            RequestStatus.open => (scheme.surfaceContainerHighest, scheme.onSurfaceVariant),
+            RequestStatus.fulfilled => isDark
+                ? (const Color(0xFF1B4332), const Color(0xFF8FD9B6))
+                : (const Color(0xFFDCF5E7), const Color(0xFF1B6E43)),
+            RequestStatus.cancelled ||
+            RequestStatus.expired => (scheme.errorContainer, scheme.onErrorContainer),
+        };
+
+        return DecoratedBox(
+            decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(999)),
+            child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                child: Text(
+                    label,
+                    style: TextStyle(
+                        color: foreground,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        letterSpacing: 0.4,
+                    ),
+                ),
             ),
         );
     }

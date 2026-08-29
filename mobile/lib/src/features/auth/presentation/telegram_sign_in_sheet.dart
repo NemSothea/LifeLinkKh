@@ -150,7 +150,6 @@ class _CodeEntry extends StatelessWidget {
                     decoration: InputDecoration(
                         labelText: l10n.telegramCodeLabel,
                         counterText: '',
-                        border: const OutlineInputBorder(),
                     ),
                 ),
                 if (failure != null)

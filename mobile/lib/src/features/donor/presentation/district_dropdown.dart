@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/widgets/searchable_picker.dart';
 import '../application/donor_providers.dart';
+import '../domain/district.dart';
 
 /// The district picker, fed by `GET /districts`.
 ///
@@ -47,26 +49,27 @@ class DistrictDropdown extends ConsumerWidget {
                     ),
                 ],
             ),
-            data: (districts) => DropdownButtonFormField<String>(
+            data: (districts) => SearchablePicker<District>(
                 key: const Key('donor-district'),
-                initialValue: selectedCode,
-                isExpanded: true,
-                decoration: InputDecoration(
-                    labelText: l10n.donorDistrictLabel,
-                    border: const OutlineInputBorder(),
-                ),
-                hint: Text(l10n.donorDistrictHint),
-                items: [
-                    for (final district in districts)
-                        DropdownMenuItem(
-                            value: district.code,
-                            child: Text(district.label(languageCode)),
-                        ),
-                ],
-                onChanged: (code) {
-                    if (code != null) onSelected(code);
-                },
+                items: districts,
+                selected: _selectedOrNull(districts, selectedCode),
+                labelBuilder: (d) => d.label(languageCode),
+                searchableTextBuilder: (d) => d.label(languageCode),
+                itemKey: (d) => Key('district-option-${d.code}'),
+                onSelected: (d) => onSelected(d.code),
+                fieldLabel: l10n.donorDistrictLabel,
+                hintText: l10n.donorDistrictHint,
+                searchHint: l10n.pickerSearchHint,
+                noResultsText: l10n.pickerNoResults,
             ),
         );
+    }
+
+    District? _selectedOrNull(List<District> districts, String? code) {
+        if (code == null) return null;
+        for (final district in districts) {
+            if (district.code == code) return district;
+        }
+        return null;
     }
 }

@@ -108,6 +108,14 @@
     "@retry": {
         "description": "Retry button on a failed sign-in"
     },
+    "pickerSearchHint": "Search",
+    "@pickerSearchHint": {
+        "description": "Placeholder in a SearchablePicker's search field, shared by every picker (district, hospital)"
+    },
+    "pickerNoResults": "No matches",
+    "@pickerNoResults": {
+        "description": "Shown in a SearchablePicker's sheet when the query matches nothing"
+    },
     "signOut": "Sign out",
     "@signOut": {
         "description": "Sign-out action in the home screen app bar"

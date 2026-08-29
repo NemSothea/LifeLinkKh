@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/widgets/searchable_picker.dart';
 import '../application/request_providers.dart';
+import '../domain/hospital.dart';
 
 /// The hospital picker, fed by `GET /hospitals`. Same shape as `DistrictDropdown`
 /// and for the same reason: `hospitalId` is a foreign key, so the list is fetched,
@@ -39,32 +41,36 @@ class HospitalDropdown extends ConsumerWidget {
                     ),
                 ],
             ),
-            data: (hospitals) => DropdownButtonFormField<String>(
+            data: (hospitals) => SearchablePicker<Hospital>(
                 key: const Key('request-hospital'),
-                initialValue: selectedId,
-                isExpanded: true,
-                decoration: InputDecoration(
-                    labelText: l10n.requestHospitalLabel,
-                    border: const OutlineInputBorder(),
-                ),
-                hint: Text(l10n.requestHospitalHint),
-                items: [
-                    for (final hospital in hospitals)
-                        DropdownMenuItem(
-                            value: hospital.id,
-                            child: Text(
-                                switch (hospital.districtLabel(languageCode)) {
-                                    final String district => '${hospital.name} · $district',
-                                    null => hospital.name,
-                                },
-                                overflow: TextOverflow.ellipsis,
-                            ),
-                        ),
-                ],
-                onChanged: (id) {
-                    if (id != null) onSelected(id);
-                },
+                items: hospitals,
+                selected: _selectedOrNull(hospitals, selectedId),
+                labelBuilder: (h) => _label(h, languageCode),
+                // Typing a district also surfaces hospitals in it, even though the
+                // closed field and the sheet's rows only show `_label`.
+                searchableTextBuilder: (h) =>
+                    '${h.name} ${h.districtLabel(languageCode) ?? ''}',
+                itemKey: (h) => Key('hospital-option-${h.id}'),
+                onSelected: (h) => onSelected(h.id),
+                fieldLabel: l10n.requestHospitalLabel,
+                hintText: l10n.requestHospitalHint,
+                searchHint: l10n.pickerSearchHint,
+                noResultsText: l10n.pickerNoResults,
             ),
         );
+    }
+
+    String _label(Hospital hospital, String languageCode) =>
+        switch (hospital.districtLabel(languageCode)) {
+            final String district => '${hospital.name} · $district',
+            null => hospital.name,
+        };
+
+    Hospital? _selectedOrNull(List<Hospital> hospitals, String? id) {
+        if (id == null) return null;
+        for (final hospital in hospitals) {
+            if (hospital.id == id) return hospital;
+        }
+        return null;
     }
 }

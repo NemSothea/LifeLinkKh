@@ -9,9 +9,7 @@ import '../features/donation/presentation/donation_history_screen.dart';
 import '../features/donor/presentation/donor_profile_screen.dart';
 import '../features/donor/presentation/donor_setup_screen.dart';
 import '../features/home/presentation/home_screen.dart';
-import '../features/match/presentation/donor_inbox_screen.dart';
 import '../features/match/presentation/match_detail_screen.dart';
-import '../features/request/presentation/my_requests_screen.dart';
 import '../features/request/presentation/request_detail_screen.dart';
 import '../features/request/presentation/request_form_screen.dart';
 
@@ -75,18 +73,10 @@ GoRouter appRouter(AppRouterRef ref) {
                 builder: (context, state) => const RequestFormScreen(),
             ),
             GoRoute(
-                path: MyRequestsScreen.path,
-                builder: (context, state) => const MyRequestsScreen(),
-            ),
-            GoRoute(
                 path: RequestDetailScreen.routePath,
                 builder: (context, state) => RequestDetailScreen(
                     requestId: state.pathParameters['id']!,
                 ),
-            ),
-            GoRoute(
-                path: DonorInboxScreen.path,
-                builder: (context, state) => const DonorInboxScreen(),
             ),
             GoRoute(
                 path: MatchDetailScreen.routePath,

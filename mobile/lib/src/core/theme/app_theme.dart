@@ -66,6 +66,19 @@ class AppTheme {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 ),
             ),
+            // 14 to match filledButtonTheme — a field is a control you interact with
+            // directly, same as a button. Without this every TextField/dropdown across
+            // the app fell back to a bare square-ish OutlineInputBorder, each screen
+            // re-specifying its own border by hand.
+            inputDecorationTheme: InputDecorationTheme(
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            // 18 to match cardTheme — a dialog is a surface/container, same as a card.
+            // Without this AlertDialog used Material 3's default 28dp radius, a third
+            // value next to the 18/14 this theme already commits to everywhere else.
+            dialogTheme: DialogThemeData(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            ),
         );
     }
 

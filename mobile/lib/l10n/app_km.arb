@@ -27,6 +27,8 @@
     "signInFailedServer": "LifeLink មិនឆ្លើយតបទេឥឡូវនេះ។ សូមព្យាយាមម្តងទៀតឆាប់ៗ។",
     "signInFailedUnknown": "មានបញ្ហាកើតឡើង។ សូមព្យាយាមម្តងទៀត។",
     "retry": "ព្យាយាមម្តងទៀត",
+    "pickerSearchHint": "ស្វែងរក",
+    "pickerNoResults": "គ្មានលទ្ធផល",
     "signOut": "ចេញពីគណនី",
     "donorSetupTitle": "ក្លាយជាអ្នកបរិច្ចាគ",
     "donorEditTitle": "កែប្រែប្រវត្តិរូប",

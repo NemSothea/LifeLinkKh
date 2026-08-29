@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/error/result.dart';
 import '../../request/domain/blood_request.dart';
+import '../../request/presentation/urgency_badge.dart';
 import '../application/match_providers.dart';
 import '../domain/match.dart';
 import '../domain/match_response_type.dart';
@@ -92,33 +93,49 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                    Text(
-                        request.urgency.wireValue,
-                        key: const Key('match-urgency'),
-                        style: Theme.of(context).textTheme.labelLarge,
+                    Card(
+                        child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                    UrgencyBadge(
+                                        key: const Key('match-urgency'),
+                                        urgency: request.urgency,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                        request.patientBloodType.wireValue,
+                                        style: Theme.of(context).textTheme.displaySmall,
+                                    ),
+                                    Text('${l10n.requestUnitsLabel}: ${request.unitsNeeded}'),
+                                    const Divider(height: 32),
+                                    Text(
+                                        request.hospitalName,
+                                        style: Theme.of(context).textTheme.titleMedium,
+                                    ),
+                                    Text(
+                                        switch ((
+                                            request.hospitalDistrictLabel(languageCode),
+                                            request.distanceKm,
+                                        )) {
+                                            (final String district, final double km) =>
+                                                '$district · ~$km km',
+                                            (final String district, null) => district,
+                                            (null, final double km) => '~$km km',
+                                            (null, null) => '',
+                                        },
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                        DateFormat.yMMMd(languageCode).add_jm().format(request.createdAt),
+                                        style: Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                ],
+                            ),
+                        ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                        request.patientBloodType.wireValue,
-                        style: Theme.of(context).textTheme.displaySmall,
-                    ),
-                    Text('${l10n.requestUnitsLabel}: ${request.unitsNeeded}'),
-                    const Divider(height: 32),
-                    Text(request.hospitalName, style: Theme.of(context).textTheme.titleMedium),
-                    Text(
-                        switch ((request.hospitalDistrictLabel(languageCode), request.distanceKm)) {
-                            (final String district, final double km) => '$district · ~$km km',
-                            (final String district, null) => district,
-                            (null, final double km) => '~$km km',
-                            (null, null) => '',
-                        },
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                        DateFormat.yMMMd(languageCode).add_jm().format(request.createdAt),
-                        style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const Divider(height: 32),
+                    const SizedBox(height: 24),
                     Text(
                         l10n.inboxYourBloodTypeCompatible(match.myBloodType.wireValue),
                         key: const Key('match-compatible'),

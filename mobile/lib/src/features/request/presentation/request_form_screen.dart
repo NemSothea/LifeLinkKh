@@ -111,27 +111,41 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                                 style: Theme.of(context).textTheme.titleSmall,
                             ),
                             const SizedBox(height: 8),
-                            Row(
-                                children: [
-                                    IconButton(
-                                        key: const Key('request-units-decrement'),
-                                        icon: const Icon(Icons.remove_circle_outline),
-                                        onPressed: draft.unitsNeeded > 1
-                                            ? () => controller.setUnits(draft.unitsNeeded - 1)
-                                            : null,
-                                    ),
-                                    Text(
-                                        '${draft.unitsNeeded}',
-                                        key: const Key('request-units-value'),
-                                        style: Theme.of(context).textTheme.titleLarge,
-                                    ),
-                                    IconButton(
-                                        key: const Key('request-units-increment'),
-                                        icon: const Icon(Icons.add_circle_outline),
-                                        onPressed: () =>
-                                            controller.setUnits(draft.unitsNeeded + 1),
-                                    ),
-                                ],
+                            // Bordered like every other field on this form (BloodTypeGrid's
+                            // tiles, HospitalDropdown) — previously a bare Row that floated
+                            // disconnected from the controls around it.
+                            Container(
+                                decoration: BoxDecoration(
+                                    border: Border.all(color: Theme.of(context).dividerColor),
+                                    borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                        IconButton(
+                                            key: const Key('request-units-decrement'),
+                                            icon: const Icon(Icons.remove_circle_outline),
+                                            onPressed: draft.unitsNeeded > 1
+                                                ? () => controller.setUnits(draft.unitsNeeded - 1)
+                                                : null,
+                                        ),
+                                        SizedBox(
+                                            width: 32,
+                                            child: Text(
+                                                '${draft.unitsNeeded}',
+                                                key: const Key('request-units-value'),
+                                                textAlign: TextAlign.center,
+                                                style: Theme.of(context).textTheme.titleLarge,
+                                            ),
+                                        ),
+                                        IconButton(
+                                            key: const Key('request-units-increment'),
+                                            icon: const Icon(Icons.add_circle_outline),
+                                            onPressed: () =>
+                                                controller.setUnits(draft.unitsNeeded + 1),
+                                        ),
+                                    ],
+                                ),
                             ),
                             const SizedBox(height: 24),
                             HospitalDropdown(
@@ -155,7 +169,6 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                                 textCapitalization: TextCapitalization.words,
                                 decoration: InputDecoration(
                                     labelText: l10n.requestContactNameLabel,
-                                    border: const OutlineInputBorder(),
                                 ),
                                 onChanged: controller.setContactName,
                             ),
@@ -166,7 +179,6 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                                 keyboardType: TextInputType.phone,
                                 decoration: InputDecoration(
                                     labelText: l10n.requestContactPhoneLabel,
-                                    border: const OutlineInputBorder(),
                                 ),
                                 onChanged: controller.setContactPhone,
                             ),

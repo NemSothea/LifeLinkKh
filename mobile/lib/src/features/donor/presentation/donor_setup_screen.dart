@@ -231,7 +231,6 @@ class _DonorSetupScreenState extends ConsumerState<DonorSetupScreen> {
                     textCapitalization: TextCapitalization.words,
                     decoration: InputDecoration(
                         labelText: l10n.donorFullNameLabel,
-                        border: const OutlineInputBorder(),
                     ),
                     onChanged: ref.read(donorSetupProvider.notifier).setFullName,
                 ),
