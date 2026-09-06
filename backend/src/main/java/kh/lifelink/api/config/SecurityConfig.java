@@ -11,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -58,7 +60,18 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers(HttpMethod.GET, "/health")
                                         .permitAll()
+                                        // The public live board (DEC-009). Read-only, OPEN
+                                        // requests only, and served by its own service and
+                                        // DTOs so no portal field can reach it by accident.
+                                        .requestMatchers(HttpMethod.GET, "/public/**")
+                                        .permitAll()
                                         .requestMatchers(HttpMethod.POST, "/auth/google")
+                                        .permitAll()
+                                        // Portal staff sign-in. Unauthenticated by
+                                        // definition — it is the thing that produces a
+                                        // session — and rate limited in AuthController for
+                                        // the same reason /auth/google is.
+                                        .requestMatchers(HttpMethod.POST, "/auth/portal/login")
                                         .permitAll()
                                         // TM-AUTH-002. /webhook is called by Telegram, never the
                                         // app, and is gated on the secret-token header instead of a
@@ -132,5 +145,20 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    /**
+     * BCrypt, at Spring Security's own default cost. Chosen over a bare digest for the property a
+     * digest does not have: it is deliberately slow and individually salted, so a leaked
+     * {@code password_hash} column cannot be attacked with a rainbow table and each row has to be
+     * broken on its own.
+     *
+     * <p>The cost factor is left at the library default rather than pinned here, so an upgrade that
+     * raises it applies without an edit — {@code matches()} reads the cost out of the stored hash,
+     * which is what makes an old hash keep verifying after the default moves.
+     */
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

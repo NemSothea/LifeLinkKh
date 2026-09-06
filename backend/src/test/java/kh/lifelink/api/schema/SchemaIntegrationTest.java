@@ -36,7 +36,7 @@ class SchemaIntegrationTest {
         Integer applied =
                 jdbc.queryForObject(
                         "SELECT count(*) FROM flyway_schema_history WHERE success", Integer.class);
-        assertThat(applied).isEqualTo(11);
+        assertThat(applied).isEqualTo(17);
     }
 
     @Test
@@ -187,6 +187,59 @@ class SchemaIntegrationTest {
                                                 + " VALUES (gen_random_uuid(), gen_random_uuid(), 'A+', 0,"
                                                 + " 'URGENT', 'Test', '012000000')"))
                 .isNotNull();
+    }
+
+    /**
+     * V12. The distance sort of ADR 0004/0003 is the one algorithm in this product, and
+     * {@code request_matches.distance_km} is written once at match time and never recomputed (V6).
+     * A latitude and longitude entered the wrong way round is therefore not a display bug a refresh
+     * fixes — it is a permanently wrong distance on every match that donor is ever offered.
+     * Phnom Penh's longitude, 104.92, is a plausible-looking NUMERIC(8,5) that no latitude can be.
+     */
+    @Test
+    void aTransposedDonorCoordinateIsRejected() {
+        jdbc.update(
+                "INSERT INTO districts (code, name_km, name_en) VALUES ('9901', 'x', 'x')"
+                        + " ON CONFLICT DO NOTHING");
+        jdbc.update(
+                "INSERT INTO users (id, firebase_uid, role) VALUES"
+                        + " ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'SCHEMA-TEST-LATLNG', 'DONOR')"
+                        + " ON CONFLICT DO NOTHING");
+
+        assertThatThrownBy(
+                        () ->
+                                jdbc.update(
+                                        "INSERT INTO donor_profiles (user_id, full_name, blood_type,"
+                                                + " district_code, latitude, longitude)"
+                                                + " VALUES ('cccccccc-cccc-cccc-cccc-cccccccccccc',"
+                                                + " 'Transposed', 'O+', '9901', 104.92, 11.55)"))
+                .hasMessageContaining("donor_profiles_latitude_check");
+    }
+
+    /** Same rule on the other side of every distance calculation. */
+    @Test
+    void aTransposedHospitalCoordinateIsRejected() {
+        assertThatThrownBy(
+                        () ->
+                                jdbc.update(
+                                        "INSERT INTO hospitals (name, latitude, longitude)"
+                                                + " VALUES ('Transposed Hospital', 104.92, 11.55)"))
+                .hasMessageContaining("hospitals_latitude_check");
+    }
+
+    /**
+     * V12 dropped the plain index V11 created on a column that is already UNIQUE — PostgreSQL
+     * builds a unique index for the constraint, so the pair meant two B-trees maintained on every
+     * insert and one the planner would never choose. V1 states the rule; this keeps it stated.
+     */
+    @Test
+    void noColumnCarriesBothAUniqueConstraintAndADuplicatePlainIndex() {
+        List<String> indexes =
+                jdbc.queryForList(
+                        "SELECT indexname FROM pg_indexes"
+                                + " WHERE schemaname = 'public' AND tablename = 'telegram_auth_challenges'",
+                        String.class);
+        assertThat(indexes).doesNotContain("idx_telegram_auth_challenges_session_token");
     }
 
     /**

@@ -5,6 +5,8 @@ import jakarta.validation.Valid;
 import java.util.UUID;
 import kh.lifelink.api.auth.dto.AuthResponse;
 import kh.lifelink.api.auth.dto.FcmTokenRequest;
+import kh.lifelink.api.auth.dto.ChangePasswordRequest;
+import kh.lifelink.api.auth.dto.PortalLoginRequest;
 import kh.lifelink.api.auth.dto.GoogleSignInRequest;
 import kh.lifelink.api.common.error.ApiException;
 import org.springframework.http.ResponseEntity;
@@ -36,10 +38,42 @@ public class AuthController {
         return auth.signIn(body.idToken(), body.role());
     }
 
+    /**
+     * Portal staff sign-in, and the second unauthenticated endpoint.
+     *
+     * <p>Rate limited per IP on the same limiter as {@code /auth/google}, for a different reason:
+     * that endpoint is expensive per call, this one is guessable. Five wrong passwords a minute is
+     * not a brute force.
+     */
+    @PostMapping("/portal/login")
+    AuthResponse portalLogin(
+            @Valid @RequestBody PortalLoginRequest body, HttpServletRequest request) {
+        if (!rateLimiter.tryAcquire(request.getRemoteAddr())) {
+            throw ApiException.rateLimited("RATE_LIMITED", "Too many sign-in attempts.");
+        }
+        return auth.signInWithPassword(body.username(), body.password());
+    }
+
+    /**
+     * Change your own password. Authenticated, and rate limited on the same per-IP bucket as
+     * sign-in: verifying the current password is exactly as guessable as signing in.
+     */
+    @PostMapping("/portal/password")
+    ResponseEntity<Void> changePassword(
+            @AuthenticationPrincipal UUID userId,
+            @Valid @RequestBody ChangePasswordRequest body,
+            HttpServletRequest request) {
+        if (!rateLimiter.tryAcquire(request.getRemoteAddr())) {
+            throw ApiException.rateLimited("RATE_LIMITED", "Too many attempts.");
+        }
+        auth.changePassword(userId, body.currentPassword(), body.newPassword());
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/fcm-token")
     ResponseEntity<Void> registerFcmToken(
             @AuthenticationPrincipal UUID userId, @Valid @RequestBody FcmTokenRequest body) {
-        auth.registerFcmToken(userId, body.fcmToken());
+        auth.registerFcmToken(userId, body.fcmToken(), body.language());
         return ResponseEntity.noContent().build();
     }
 

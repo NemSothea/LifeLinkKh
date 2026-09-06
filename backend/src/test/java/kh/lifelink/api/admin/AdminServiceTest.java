@@ -2,22 +2,28 @@ package kh.lifelink.api.admin;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import kh.lifelink.api.admin.dto.AssignStaffRoleRequest;
+import kh.lifelink.api.admin.dto.CreateStaffAccountRequest;
 import kh.lifelink.api.admin.dto.StaffResponse;
 import kh.lifelink.api.common.error.ApiException;
 import kh.lifelink.api.hospital.Hospital;
 import kh.lifelink.api.hospital.HospitalRepository;
 import kh.lifelink.api.user.User;
 import kh.lifelink.api.user.UserRepository;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /** TM-AUTH-001 E1 as an endpoint: an ADMIN promotes an existing self-service account. */
@@ -33,7 +39,7 @@ class AdminServiceTest {
     void setUp() {
         users = mock(UserRepository.class);
         hospitals = mock(HospitalRepository.class);
-        service = new AdminService(users, hospitals);
+        service = new AdminService(users, hospitals, new BCryptPasswordEncoder());
     }
 
     private User donor(UUID id, String displayName) {
@@ -157,5 +163,192 @@ class AdminServiceTest {
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         ex -> assertThat(ex.getCode()).isEqualTo("INVALID_ROLE"));
+    }
+
+    // ---------------------------------------------------------------------------
+    // Creating a portal account outright
+    // ---------------------------------------------------------------------------
+
+    @Test
+    void createsAStaffAccountWithAHashedPassword() {
+        UUID hospitalId = UUID.randomUUID();
+        Hospital hospital = new Hospital();
+        hospital.setName("Calmette Hospital");
+        when(hospitals.findById(hospitalId)).thenReturn(Optional.of(hospital));
+        when(users.findByUsername("clerk")).thenReturn(Optional.empty());
+        when(users.save(any(User.class))).thenAnswer(call -> call.getArgument(0));
+
+        StaffResponse created =
+                service.createStaffAccount(
+                        new CreateStaffAccountRequest(
+                                "clerk", "a-good-password", "Clerk", "HOSPITAL", hospitalId));
+
+        assertThat(created.role()).isEqualTo("HOSPITAL");
+        assertThat(created.hospitalName()).isEqualTo("Calmette Hospital");
+
+        ArgumentCaptor<User> saved = ArgumentCaptor.forClass(User.class);
+        verify(users).save(saved.capture());
+        // The plaintext must not reach the row, and the digest must verify.
+        assertThat(saved.getValue().getPasswordHash()).isNotEqualTo("a-good-password");
+        assertThat(new BCryptPasswordEncoder().matches("a-good-password", saved.getValue().getPasswordHash()))
+                .isTrue();
+    }
+
+    @Test
+    void refusesAUsernameThatIsAlreadyTaken() {
+        when(users.findByUsername("clerk")).thenReturn(Optional.of(new User()));
+
+        assertThatThrownBy(
+                        () ->
+                                service.createStaffAccount(
+                                        new CreateStaffAccountRequest(
+                                                "clerk", "a-good-password", "Clerk", "ADMIN", null)))
+                .isInstanceOf(ApiException.class)
+                .extracting(ex -> ((ApiException) ex).getStatus())
+                .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        verify(users, never()).save(any());
+    }
+
+    /** The same role rules as promotion — a caller must not reach through this door what the other refuses. */
+    @Test
+    void refusesHospitalStaffWithNoHospital() {
+        when(users.findByUsername("clerk")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                        () ->
+                                service.createStaffAccount(
+                                        new CreateStaffAccountRequest(
+                                                "clerk", "a-good-password", "Clerk", "HOSPITAL", null)))
+                .isInstanceOf(ApiException.class);
+        verify(users, never()).save(any());
+    }
+
+    @Test
+    void refusesAnAdminScopedToAHospital() {
+        when(users.findByUsername("boss")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                        () ->
+                                service.createStaffAccount(
+                                        new CreateStaffAccountRequest(
+                                                "boss", "a-good-password", "Boss", "ADMIN", UUID.randomUUID())))
+                .isInstanceOf(ApiException.class);
+        verify(users, never()).save(any());
+    }
+
+    @Test
+    void refusesARoleThatIsNotStaff() {
+        assertThatThrownBy(
+                        () ->
+                                service.createStaffAccount(
+                                        new CreateStaffAccountRequest(
+                                                "someone", "a-good-password", "Someone", "DONOR", null)))
+                .isInstanceOf(ApiException.class);
+        verify(users, never()).save(any());
+    }
+
+    // ---------------------------------------------------------------------------
+    // Demote and revoke
+    // ---------------------------------------------------------------------------
+
+    private User staff(String role, UUID id) {
+        User user = new User();
+        user.setRole(role);
+        user.setDisplayName(role + " account");
+        ReflectionTestUtils.setField(user, "id", id);
+        when(users.findById(id)).thenReturn(Optional.of(user));
+        return user;
+    }
+
+    @Test
+    void demotesAnAdminToHospitalStaff() {
+        UUID caller = UUID.randomUUID();
+        UUID target = UUID.randomUUID();
+        UUID hospitalId = UUID.randomUUID();
+        User admin = staff("ADMIN", target);
+        Hospital hospital = new Hospital();
+        hospital.setName("Calmette Hospital");
+        when(hospitals.findById(hospitalId)).thenReturn(Optional.of(hospital));
+        when(users.countByRoleAndDeactivatedAtIsNull("ADMIN")).thenReturn(2L);
+
+        StaffResponse result = service.demoteToHospitalStaff(caller, target, hospitalId);
+
+        assertThat(result.role()).isEqualTo("HOSPITAL");
+        assertThat(admin.getHospitalId()).isEqualTo(hospitalId);
+    }
+
+    /**
+     * The one move that cannot be undone from inside the product: the page you would fix it from is
+     * the page you just lost, and there is no password reset to recover through.
+     */
+    @Test
+    void anAdminCannotDemoteThemselves() {
+        UUID self = UUID.randomUUID();
+        staff("ADMIN", self);
+
+        assertThatThrownBy(() -> service.demoteToHospitalStaff(self, self, UUID.randomUUID()))
+                .isInstanceOf(ApiException.class)
+                .extracting(ex -> ((ApiException) ex).getStatus())
+                .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    /** With no ADMIN left, nobody can ever grant access to anyone again. */
+    @Test
+    void theLastAdminCannotBeRevoked() {
+        UUID caller = UUID.randomUUID();
+        UUID target = UUID.randomUUID();
+        staff("ADMIN", target);
+        when(users.countByRoleAndDeactivatedAtIsNull("ADMIN")).thenReturn(1L);
+
+        assertThatThrownBy(() -> service.revokeStaffAccess(caller, target))
+                .isInstanceOf(ApiException.class)
+                .extracting(ex -> ((ApiException) ex).getStatus())
+                .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    /** A promoted account keeps its Google credential, so it goes back to being an ordinary donor. */
+    @Test
+    void revokingAPromotedAccountReturnsItToDonor() {
+        UUID caller = UUID.randomUUID();
+        UUID target = UUID.randomUUID();
+        User promoted = staff("HOSPITAL", target);
+        promoted.setFirebaseUid("google-sub-123");
+        promoted.setHospitalId(UUID.randomUUID());
+
+        service.revokeStaffAccess(caller, target);
+
+        assertThat(promoted.getRole()).isEqualTo("DONOR");
+        assertThat(promoted.getHospitalId()).isNull();
+        assertThat(promoted.getDeactivatedAt()).isNull();
+    }
+
+    /**
+     * A portal-only account has nowhere to go back to, and the row cannot be deleted — donations it
+     * confirmed reference it. Switched off instead.
+     */
+    @Test
+    void revokingAPortalOnlyAccountDeactivatesItRatherThanDeletingIt() {
+        UUID caller = UUID.randomUUID();
+        UUID target = UUID.randomUUID();
+        User portalOnly = staff("HOSPITAL", target);
+        portalOnly.setUsername("clerk");
+        portalOnly.setPasswordHash("$2a$10$whatever");
+
+        service.revokeStaffAccess(caller, target);
+
+        assertThat(portalOnly.getDeactivatedAt()).isNotNull();
+        assertThat(portalOnly.getRole()).isEqualTo("HOSPITAL");
+        verify(users, never()).delete(any());
+    }
+
+    @Test
+    void anAlreadyRevokedAccountCannotBeRevokedTwice() {
+        UUID caller = UUID.randomUUID();
+        UUID target = UUID.randomUUID();
+        User gone = staff("HOSPITAL", target);
+        gone.setDeactivatedAt(java.time.OffsetDateTime.now());
+
+        assertThatThrownBy(() -> service.revokeStaffAccess(caller, target))
+                .isInstanceOf(ApiException.class);
     }
 }

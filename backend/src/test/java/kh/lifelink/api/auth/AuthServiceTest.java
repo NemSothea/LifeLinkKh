@@ -2,6 +2,7 @@ package kh.lifelink.api.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
@@ -46,7 +48,7 @@ class AuthServiceTest {
         users = mock(UserRepository.class);
         JwtService jwt =
                 new JwtService("test-secret-that-is-long-enough-for-hs256", Duration.ofHours(1));
-        auth = new AuthService(verifier, users, jwt);
+        auth = new AuthService(verifier, users, jwt, new BCryptPasswordEncoder());
 
         when(verifier.verify("good-token"))
                 .thenReturn(new GoogleTokenVerifier.VerifiedIdentity(UID, "Sothea"));
@@ -159,9 +161,38 @@ class AuthServiceTest {
         User caller = new User();
         when(users.findById(callerId)).thenReturn(Optional.of(caller));
 
-        auth.registerFcmToken(callerId, "fcm-abc");
+        auth.registerFcmToken(callerId, "fcm-abc", null);
 
         assertThat(caller.getFcmToken()).isEqualTo("fcm-abc");
+    }
+
+    /**
+     * {@code users.language} decides which language an urgent-request alert is sent in
+     * ({@code RequestAlertNotifier}), and before this parameter existed nothing anywhere wrote it —
+     * every row kept V1's {@code 'km'} default whatever the donor had the app set to.
+     */
+    @Test
+    void registeringAnFcmTokenAlsoRecordsTheDonorsLanguage() {
+        UUID callerId = UUID.randomUUID();
+        User caller = new User();
+        when(users.findById(callerId)).thenReturn(Optional.of(caller));
+
+        auth.registerFcmToken(callerId, "fcm-abc", "en");
+
+        assertThat(caller.getLanguage()).isEqualTo("en");
+    }
+
+    /** Absent means unchanged. An older client must not push its user back to the default. */
+    @Test
+    void omittingTheLanguageLeavesTheStoredOneAlone() {
+        UUID callerId = UUID.randomUUID();
+        User caller = new User();
+        caller.setLanguage("en");
+        when(users.findById(callerId)).thenReturn(Optional.of(caller));
+
+        auth.registerFcmToken(callerId, "fcm-abc", null);
+
+        assertThat(caller.getLanguage()).isEqualTo("en");
     }
 
     @Test
@@ -169,7 +200,7 @@ class AuthServiceTest {
         UUID unknown = UUID.randomUUID();
         when(users.findById(unknown)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> auth.registerFcmToken(unknown, "fcm-abc"))
+        assertThatThrownBy(() -> auth.registerFcmToken(unknown, "fcm-abc", null))
                 .isInstanceOf(ApiException.class)
                 .extracting(ex -> ((ApiException) ex).getStatus())
                 .isEqualTo(HttpStatus.UNAUTHORIZED);
@@ -206,7 +237,7 @@ class AuthServiceTest {
         other.setFcmToken("fcm-other-device");
         when(users.findById(callerId)).thenReturn(Optional.of(caller));
 
-        auth.registerFcmToken(callerId, "fcm-caller-device");
+        auth.registerFcmToken(callerId, "fcm-caller-device", null);
 
         assertThat(caller.getFcmToken()).isEqualTo("fcm-caller-device");
         assertThat(other.getFcmToken()).isEqualTo("fcm-other-device");
@@ -294,7 +325,7 @@ class AuthServiceTest {
             assertThatThrownBy(() -> auth.signIn("bad-token", "DONOR"))
                     .isInstanceOf(ApiException.class);
 
-            auth.registerFcmToken(callerId, fcm);
+            auth.registerFcmToken(callerId, fcm, null);
             auth.clearFcmToken(callerId);
 
             assertThat(captured.list).isNotEmpty();
@@ -320,5 +351,151 @@ class AuthServiceTest {
             authLogger.detachAppender(captured);
             captured.stop();
         }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Portal sign-in (username + password)
+    // ---------------------------------------------------------------------------
+
+    private static User portalUser(String role, String rawPassword) {
+        User user = new User();
+        user.setRole(role);
+        user.setUsername("soborey");
+        user.setDisplayName("Soborey");
+        user.setPasswordHash(new BCryptPasswordEncoder().encode(rawPassword));
+        ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
+        return user;
+    }
+
+    @Test
+    void portalSignInIssuesASessionForTheRightPassword() {
+        User admin = portalUser("ADMIN", "qwer12324!");
+        when(users.findByUsername("soborey")).thenReturn(Optional.of(admin));
+
+        AuthResponse response = auth.signInWithPassword("soborey", "qwer12324!");
+
+        // A real JwtService signs this (see setUp), so the assertion is that a session came
+        // back at all and that it carries the role off the row rather than anything sent in.
+        assertThat(response.token()).isNotBlank();
+        assertThat(response.user().role()).isEqualTo("ADMIN");
+        assertThat(response.user().isNewAccount()).isFalse();
+    }
+
+    @Test
+    void portalSignInRejectsAWrongPassword() {
+        when(users.findByUsername("soborey"))
+                .thenReturn(Optional.of(portalUser("ADMIN", "qwer12324!")));
+
+        assertThatThrownBy(() -> auth.signInWithPassword("soborey", "wrong"))
+                .isInstanceOf(ApiException.class)
+                .extracting(ex -> ((ApiException) ex).getStatus())
+                .isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    /**
+     * The same status, the same code and the same message as a wrong password. Anything that told
+     * these two apart would let an attacker enumerate the staff list one guess at a time.
+     */
+    @Test
+    void anUnknownUsernameIsIndistinguishableFromAWrongPassword() {
+        when(users.findByUsername("nobody")).thenReturn(Optional.empty());
+        when(users.findByUsername("soborey"))
+                .thenReturn(Optional.of(portalUser("ADMIN", "qwer12324!")));
+
+        ApiException unknown =
+                catchThrowableOfType(
+                        () -> auth.signInWithPassword("nobody", "whatever"), ApiException.class);
+        ApiException wrongPassword =
+                catchThrowableOfType(
+                        () -> auth.signInWithPassword("soborey", "wrong"), ApiException.class);
+
+        assertThat(unknown.getStatus()).isEqualTo(wrongPassword.getStatus());
+        assertThat(unknown.getMessage()).isEqualTo(wrongPassword.getMessage());
+    }
+
+    /**
+     * A donor who somehow acquired a username still cannot use the portal door — and is refused
+     * with the same answer as a wrong password, so the response never confirms the account exists.
+     */
+    @Test
+    void aDonorCannotSignInThroughThePortalDoor() {
+        when(users.findByUsername("soborey"))
+                .thenReturn(Optional.of(portalUser("DONOR", "qwer12324!")));
+
+        assertThatThrownBy(() -> auth.signInWithPassword("soborey", "qwer12324!"))
+                .isInstanceOf(ApiException.class)
+                .extracting(ex -> ((ApiException) ex).getStatus())
+                .isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    /** A staff row with no hash at all must not become a way in with any password. */
+    @Test
+    void anAccountWithNoPasswordHashCannotSignIn() {
+        User admin = portalUser("ADMIN", "qwer12324!");
+        admin.setPasswordHash(null);
+        when(users.findByUsername("soborey")).thenReturn(Optional.of(admin));
+
+        assertThatThrownBy(() -> auth.signInWithPassword("soborey", "qwer12324!"))
+                .isInstanceOf(ApiException.class);
+    }
+
+    // ---------------------------------------------------------------------------
+    // Changing your own password
+    // ---------------------------------------------------------------------------
+
+    @Test
+    void changesThePasswordWhenTheCurrentOneIsRight() {
+        User admin = portalUser("ADMIN", "old-password");
+        UUID id = (UUID) ReflectionTestUtils.getField(admin, "id");
+        String before = admin.getPasswordHash();
+        when(users.findById(id)).thenReturn(Optional.of(admin));
+
+        auth.changePassword(id, "old-password", "a-new-password");
+
+        assertThat(admin.getPasswordHash()).isNotEqualTo(before);
+        assertThat(new BCryptPasswordEncoder().matches("a-new-password", admin.getPasswordHash()))
+                .isTrue();
+    }
+
+    /**
+     * A session proves possession of a browser, not of the password. Without this check an unlocked
+     * laptop is enough to lock its owner out for good — this product has no password reset.
+     */
+    @Test
+    void refusesTheChangeWhenTheCurrentPasswordIsWrong() {
+        User admin = portalUser("ADMIN", "old-password");
+        UUID id = (UUID) ReflectionTestUtils.getField(admin, "id");
+        String before = admin.getPasswordHash();
+        when(users.findById(id)).thenReturn(Optional.of(admin));
+
+        assertThatThrownBy(() -> auth.changePassword(id, "not-the-password", "a-new-password"))
+                .isInstanceOf(ApiException.class)
+                .extracting(ex -> ((ApiException) ex).getStatus())
+                .isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(admin.getPasswordHash()).isEqualTo(before);
+    }
+
+    /** A donor authenticates through Google or Telegram; giving them a password is a second way in. */
+    @Test
+    void aDonorHasNoPasswordToChange() {
+        User donor = portalUser("DONOR", "old-password");
+        donor.setPasswordHash(null);
+        UUID id = (UUID) ReflectionTestUtils.getField(donor, "id");
+        when(users.findById(id)).thenReturn(Optional.of(donor));
+
+        assertThatThrownBy(() -> auth.changePassword(id, "old-password", "a-new-password"))
+                .isInstanceOf(ApiException.class);
+    }
+
+    @Test
+    void refusesReusingTheSamePassword() {
+        User admin = portalUser("ADMIN", "old-password");
+        UUID id = (UUID) ReflectionTestUtils.getField(admin, "id");
+        when(users.findById(id)).thenReturn(Optional.of(admin));
+
+        assertThatThrownBy(() -> auth.changePassword(id, "old-password", "old-password"))
+                .isInstanceOf(ApiException.class)
+                .extracting(ex -> ((ApiException) ex).getStatus())
+                .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
     }
 }

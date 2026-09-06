@@ -49,6 +49,31 @@ public class User extends Auditable {
     private Long telegramChatId;
 
     /** E.164. UNVERIFIED since auth moved off OTP (ADR 0002). Nullable. */
+    /**
+     * Portal sign-in name. NULL for every donor and requester — they authenticate through
+     * Google or Telegram (ADR 0002) and never hold one. Only HOSPITAL and ADMIN accounts
+     * carry a username, and {@code AuthService.signInWithPassword} refuses any other role
+     * even if a row somehow acquired one.
+     */
+    @Column(name = "username", unique = true, length = 64)
+    private String username;
+
+    /**
+     * BCrypt digest, never the password, and never returned by any endpoint or written to
+     * a log. Paired with {@link #username} by {@code users_password_pair_check} — both or
+     * neither.
+     */
+    @Column(name = "password_hash", length = 100)
+    private String passwordHash;
+
+    /**
+     * When portal access was revoked; null while the account is active. Kept rather than deleting
+     * the row because {@code donations.confirmed_by_user_id} points at it — a staff account that
+     * confirmed a donation is part of that donation's audit trail.
+     */
+    @Column(name = "deactivated_at")
+    private java.time.OffsetDateTime deactivatedAt;
+
     @Column(name = "phone", unique = true, length = 20)
     private String phone;
 
@@ -101,6 +126,30 @@ public class User extends Auditable {
 
     public void setTelegramChatId(Long telegramChatId) {
         this.telegramChatId = telegramChatId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public java.time.OffsetDateTime getDeactivatedAt() {
+        return deactivatedAt;
+    }
+
+    public void setDeactivatedAt(java.time.OffsetDateTime deactivatedAt) {
+        this.deactivatedAt = deactivatedAt;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public String getPhone() {

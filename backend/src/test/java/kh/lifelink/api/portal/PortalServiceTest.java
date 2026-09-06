@@ -81,11 +81,29 @@ class PortalServiceTest {
     }
 
     @Test
-    void anythingOtherThanOpenIsRefused() {
-        assertThatThrownBy(() -> service.listRequests(HOSPITAL_STAFF, "FULFILLED"))
+    void cancelledIsStillRefused() {
+        assertThatThrownBy(() -> service.listRequests(HOSPITAL_STAFF, "CANCELLED"))
                 .isInstanceOf(ApiException.class)
                 .extracting(ex -> ((ApiException) ex).getStatus())
                 .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    /**
+     * The portal's "recently fulfilled" section is this call with the other status. Without it,
+     * confirming the last unit a request needed made the row disappear with nothing to show for
+     * it — see {@code PortalService.listRequests}.
+     */
+    @Test
+    void fulfilledRequestsAreListable() {
+        BloodRequest fulfilled = openRequest(CALMETTE);
+        fulfilled.setStatus("FULFILLED");
+        when(requests.findByStatusAndHospitalIdOrderByCreatedAtDesc("FULFILLED", CALMETTE))
+                .thenReturn(List.of(fulfilled));
+
+        List<PortalRequestResponse> result = service.listRequests(HOSPITAL_STAFF, "FULFILLED");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().status()).isEqualTo("FULFILLED");
     }
 
     @Test

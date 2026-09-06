@@ -8,6 +8,7 @@ import kh.lifelink.api.user.User;
 import kh.lifelink.api.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,14 +28,80 @@ public class AuthService {
 
     private static final String DEFAULT_ROLE = "DONOR";
 
+    /** The only roles a username and password may ever sign in as. */
+    private static final Set<String> PORTAL_ROLES = Set.of("HOSPITAL", "ADMIN");
+
+    /**
+     * A real BCrypt digest of a random string nobody holds, compared against when there is no row
+     * or no stored hash. Without it, an unknown username returns in microseconds while a known one
+     * takes the ~100ms BCrypt costs, and that difference alone enumerates the staff list. The
+     * response was already identical; this makes the timing identical too.
+     *
+     * <p>It must be the digest of a value that is not a password anywhere. An earlier revision
+     * reused the seeded admin's hash here, which meant a staff row with a NULL {@code
+     * password_hash} authenticated successfully against the seeded password — a real hole, caught
+     * by {@code anAccountWithNoPasswordHashCannotSignIn}. The structural guard below now refuses a
+     * null hash regardless of what the comparison returns, so this value being wrong could never
+     * again be enough on its own.
+     */
+    private static final String TIMING_DECOY_HASH =
+            "$2a$10$gH01AwaU/BLto/QXKUnpl.JT3saq1gYEKk7uoI09cgshHWU7g3ou.";
+
     private final GoogleTokenVerifier verifier;
     private final UserRepository users;
     private final JwtService jwt;
+    private final PasswordEncoder passwords;
 
-    AuthService(GoogleTokenVerifier verifier, UserRepository users, JwtService jwt) {
+    AuthService(
+            GoogleTokenVerifier verifier,
+            UserRepository users,
+            JwtService jwt,
+            PasswordEncoder passwords) {
         this.verifier = verifier;
         this.users = users;
         this.jwt = jwt;
+        this.passwords = passwords;
+    }
+
+    /**
+     * Portal sign-in. The one place in this product where a password is checked.
+     *
+     * <p>Every failure — unknown username, wrong password, an account whose role may not use this
+     * door — answers the same 401 with the same code and takes the same time. A caller learns
+     * whether they got the whole pair right and nothing else. That is why the role check is here
+     * rather than at the controller: a distinguishable "you exist but you are a donor" response
+     * would confirm an account for anyone who guessed a name.
+     *
+     * <p>Roles are checked against the row, never against anything the caller sent. There is no
+     * requested-role parameter here for the same reason {@code /auth/google} ignores one for a
+     * returning user: role is granted by an admin, never claimed at sign-in.
+     */
+    @Transactional(readOnly = true)
+    public AuthResponse signInWithPassword(String username, String password) {
+        User user = users.findByUsername(username).orElse(null);
+        String storedHash = user == null ? null : user.getPasswordHash();
+
+        // Always runs, always on a real digest, so every path costs the same time.
+        boolean hashMatches = passwords.matches(password, storedHash == null ? TIMING_DECOY_HASH : storedHash);
+
+        // Separate from the comparison on purpose: an account with no stored hash is refused
+        // because it has no hash, not because the decoy failed to match. That ordering is what
+        // makes the decoy's value a timing detail rather than a credential.
+        boolean accountCanSignIn =
+                user != null
+                        && storedHash != null
+                        && user.getDeactivatedAt() == null
+                        && PORTAL_ROLES.contains(user.getRole());
+
+        if (!accountCanSignIn || !hashMatches) {
+            // Never logs the username: a failed-login log line with the attempted name in it turns
+            // the application log into the enumeration oracle this method just avoided being.
+            log.warn("portal sign-in rejected outcome=INVALID_CREDENTIALS");
+            throw ApiException.unauthorized("INVALID_CREDENTIALS", "Wrong username or password.");
+        }
+
+        log.info("portal sign-in user={} outcome=OK role={}", user.getId(), user.getRole());
+        return respond(user, user.getDisplayName(), false);
     }
 
     @Transactional
@@ -79,13 +146,58 @@ public class AuthService {
         return respond(saved, identity.displayName(), true);
     }
 
+    /**
+     * A staff member changing their own password.
+     *
+     * <p>The caller is the JWT subject and nothing else — there is no user field to send, so an
+     * admin cannot change someone else's password through this door and a staff member cannot
+     * target an admin's. Resetting a forgotten password stays a manual database change
+     * (docs/demo-runbook.md section 9), because a self-service reset needs a channel to prove
+     * identity over and this product has neither verified email nor verified phone (ADR 0002).
+     *
+     * <p>The current password is required even though the caller already holds a session. A session
+     * proves possession of a browser, not of the password: without this, a laptop left unlocked for
+     * one minute is enough to lock its owner out of their own account for good.
+     */
+    @Transactional
+    public void changePassword(UUID callerId, String currentPassword, String newPassword) {
+        User user = requireCaller(callerId);
+
+        if (user.getPasswordHash() == null || !PORTAL_ROLES.contains(user.getRole())) {
+            // A donor or requester has no password to change — they authenticate through Google or
+            // Telegram, and inventing one here would create a second way into their account.
+            throw ApiException.unprocessable(
+                    "NO_PASSWORD_LOGIN", "This account does not sign in with a password.");
+        }
+        if (!passwords.matches(currentPassword, user.getPasswordHash())) {
+            log.warn("password change rejected user={} outcome=WRONG_CURRENT", callerId);
+            throw ApiException.unauthorized("INVALID_CREDENTIALS", "Wrong current password.");
+        }
+        if (passwords.matches(newPassword, user.getPasswordHash())) {
+            throw ApiException.unprocessable(
+                    "PASSWORD_UNCHANGED", "The new password must be different from the current one.");
+        }
+
+        user.setPasswordHash(passwords.encode(newPassword));
+        // The session already issued stays valid until it expires — ADR 0007 has no server-side
+        // revocation, so a password change cannot end other sessions. Worth knowing before anyone
+        // treats this as a way to evict someone.
+        log.info("password changed user={}", callerId);
+    }
+
     /** Writes the caller's FCM token. The target is the JWT subject, never a body field. */
     @Transactional
-    public void registerFcmToken(UUID userId, String fcmToken) {
+    public void registerFcmToken(UUID userId, String fcmToken, String language) {
         User user = requireCaller(userId);
         // Idempotent by nature: the Firebase SDK rotates tokens on its own schedule and the client
         // re-posts whatever it currently holds, so the same value twice is a no-op, not an error.
         user.setFcmToken(fcmToken);
+        // Absent means "unchanged", not "reset to the default" — a client that has not been updated
+        // to send this must not silently push every donor back to Khmer. The value itself is
+        // already constrained twice over: @Pattern on the DTO, and users_language_check in V1.
+        if (language != null) {
+            user.setLanguage(language);
+        }
         log.info("fcm token registered user={}", userId);
     }
 
