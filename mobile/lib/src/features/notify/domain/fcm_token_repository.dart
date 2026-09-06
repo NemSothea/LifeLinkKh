@@ -13,7 +13,14 @@ abstract interface class FcmTokenRepository {
     /// Called on sign-in and again on every `onTokenRefresh`, which fires without user
     /// action. A token that is not re-registered after a refresh is a donor who has
     /// silently stopped receiving alerts.
-    Future<Result<void>> register(String fcmToken);
+    ///
+    /// [language] answers the other half of the same question — where to reach this
+    /// donor, and in what language. `users.language` is what the server's
+    /// `RequestAlertNotifier` groups alerts by, and no client ever wrote it before, so
+    /// every row kept the `'km'` default from `V1__init.sql`: a donor with the app in
+    /// English still received a Khmer push for the one message in this product that has
+    /// to be understood on sight. Omitting it leaves the stored value alone.
+    Future<Result<void>> register(String fcmToken, {String? language});
 
     /// `DELETE /auth/fcm-token` — stop pushing to this device.
     ///

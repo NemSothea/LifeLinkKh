@@ -129,11 +129,17 @@ final class FakeTelegramAuthRepository implements TelegramAuthRepository {
 
 final class FakeFcmTokenRepository implements FcmTokenRepository {
     final List<String> registered = [];
+
+    /// Recorded alongside the token because the language is what decides which language
+    /// an urgent-request alert arrives in — a test that only checks the token cannot
+    /// tell a donor who gets English alerts from one who gets Khmer.
+    final List<String?> registeredLanguages = [];
     int clearCount = 0;
 
     @override
-    Future<Result<void>> register(String fcmToken) async {
+    Future<Result<void>> register(String fcmToken, {String? language}) async {
         registered.add(fcmToken);
+        registeredLanguages.add(language);
         return const Success(null);
     }
 

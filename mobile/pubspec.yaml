@@ -47,6 +47,10 @@ dependencies:
   # M6 (root CLAUDE.md §4): FR-DONOR-001's "use my current location" button. Coordinates only —
   # no google_maps_flutter, no map widget (DEC-004).
   geolocator: ^14.0.2
+  # FR-GLOBAL-001's mobile half: the in-app language choice has to survive a restart,
+  # and it is a preference, not a credential — flutter_secure_storage (the Keystore /
+  # Keychain, used for the session JWT) would be the wrong store for it.
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:

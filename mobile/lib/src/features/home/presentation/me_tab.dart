@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/settings/locale_controller.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/domain/user_role.dart';
 import '../../donor/presentation/donor_profile_screen.dart';
@@ -11,8 +12,11 @@ import '../../request/presentation/request_form_screen.dart';
 /// The third tab of every shell — `GLOBAL-home-dashboard` prototype: "profile edit,
 /// language toggle, and sign-out. Not a settings labyrinth — three items."
 ///
-/// The language toggle is not here yet — `FR-GLOBAL-001` shipped on the web portal
-/// first; the mobile side is tracked separately. This tab is the seam it lands in.
+/// The language toggle is the mobile half of `FR-GLOBAL-001`, which shipped on the web
+/// portal first (`LanguageSwitcher`). It is the last item before sign-out on purpose:
+/// someone who cannot read the app is hunting for it, and it is the only control here
+/// that has to be findable without reading the label above it — hence the flag-free
+/// endonyms, ខ្មែរ and English, each written in its own script.
 class MeTab extends ConsumerWidget {
     const MeTab({super.key});
 
@@ -83,6 +87,8 @@ class MeTab extends ConsumerWidget {
                                 ),
                             ),
                         if (role == UserRole.donor) const SizedBox(height: 16),
+                        const _LanguageCard(),
+                        const SizedBox(height: 16),
                         Card(
                             margin: EdgeInsets.zero,
                             child: ListTile(
@@ -91,6 +97,66 @@ class MeTab extends ConsumerWidget {
                                 title: Text(l10n.signOut),
                                 onTap: () =>
                                     ref.read(authControllerProvider.notifier).signOut(),
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+        );
+    }
+}
+
+/// The language toggle. Reads the locale that is actually in effect
+/// (`Localizations.localeOf`) rather than the controller's own value, so the control
+/// can never claim a language the surrounding screen is not already rendering in.
+class _LanguageCard extends ConsumerWidget {
+    const _LanguageCard();
+
+    @override
+    Widget build(BuildContext context, WidgetRef ref) {
+        final l10n = AppLocalizations.of(context)!;
+        final theme = Theme.of(context);
+        final active = Localizations.localeOf(context).languageCode;
+
+        return Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                        Row(
+                            children: [
+                                const Icon(Icons.translate),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                    child: Text(
+                                        l10n.languageLabel,
+                                        style: theme.textTheme.titleMedium,
+                                    ),
+                                ),
+                            ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Full width so the two segments split evenly — a content-sized
+                        // SegmentedButton makes "English" visibly wider than "ខ្មែរ",
+                        // which reads as one option being the recommended one.
+                        SizedBox(
+                            width: double.infinity,
+                            child: SegmentedButton<String>(
+                                key: const Key('me-language'),
+                                showSelectedIcon: false,
+                                segments: const [
+                                    // Endonyms, never translated: the whole point of this
+                                    // control is to be usable by someone who cannot read
+                                    // the language the app is currently in.
+                                    ButtonSegment(value: 'km', label: Text('ខ្មែរ')),
+                                    ButtonSegment(value: 'en', label: Text('English')),
+                                ],
+                                selected: {active},
+                                onSelectionChanged: (selection) => ref
+                                    .read(localeControllerProvider.notifier)
+                                    .select(Locale(selection.first)),
                             ),
                         ),
                     ],

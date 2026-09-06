@@ -1,9 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'src/app.dart';
 import 'src/core/network/auth_token_gateway.dart';
+import 'src/core/settings/locale_controller.dart';
+import 'src/core/settings/preferences_locale_store.dart';
 import 'src/features/auth/application/auth_providers.dart';
 
 /// Composition root, and the only place that knows both `core/` and the auth feature.
@@ -20,6 +23,11 @@ Future<void> main() async {
     // read, and reaching it before this completes throws.
     await Firebase.initializeApp();
 
+    // Awaited too, and for a related reason: `LocaleStore.read()` is synchronous so the
+    // first frame already paints in the chosen language. That only works if the backing
+    // store is loaded before `runApp`.
+    final preferences = await SharedPreferences.getInstance();
+
     runApp(
         ProviderScope(
             overrides: [
@@ -28,6 +36,11 @@ Future<void> main() async {
                 // widget test gets a plain client without stubbing Firebase.
                 authTokenGatewayProvider.overrideWith(
                     (ref) => ref.watch(authServiceProvider),
+                ),
+                // Same shape: the default store forgets the language at exit, and this
+                // is the one line that makes the choice survive a restart.
+                localeStoreProvider.overrideWithValue(
+                    PreferencesLocaleStore(preferences),
                 ),
             ],
             child: const LifeLinkApp(),

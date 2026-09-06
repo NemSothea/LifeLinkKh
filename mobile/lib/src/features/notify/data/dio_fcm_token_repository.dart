@@ -17,9 +17,15 @@ final class DioFcmTokenRepository implements FcmTokenRepository {
     static const String path = '/auth/fcm-token';
 
     @override
-    Future<Result<void>> register(String fcmToken) async {
+    Future<Result<void>> register(String fcmToken, {String? language}) async {
         try {
-            await _dio.post<void>(path, data: {'fcmToken': fcmToken});
+            await _dio.post<void>(path, data: {
+                'fcmToken': fcmToken,
+                // Omitted rather than sent as null: the server reads an absent key as
+                // "leave it unchanged", and an explicit null would be a validation error
+                // on a field that is allowed to be missing entirely.
+                'language': ?language,
+            });
             return const Success(null);
         } on DioException catch (error) {
             return Failed(failureFromDio(error));

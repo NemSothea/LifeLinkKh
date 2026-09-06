@@ -7,16 +7,22 @@ import 'support/auth_fakes.dart';
 void main() {
     late FakePushTokenSource source;
     late FakeFcmTokenRepository repository;
+    late String language;
 
     setUp(() {
         source = FakePushTokenSource();
         repository = FakeFcmTokenRepository();
+        language = 'km';
     });
 
     tearDown(() => source.refreshes.close());
 
     PushRegistrationService serviceUnder() =>
-        PushRegistrationService(source: source, repository: repository);
+        PushRegistrationService(
+            source: source,
+            repository: repository,
+            currentLanguage: () => language,
+        );
 
     test('registers this device with the token FCM gave it', () async {
         final result = await serviceUnder().registerThisDevice();
@@ -52,5 +58,30 @@ void main() {
         // FCM rotates on reinstall and restore. A rotation that is not re-registered is a
         // donor who has silently stopped receiving alerts.
         expect(repository.registered, ['fcm-token-2']);
+    });
+
+    /// `users.language` decides which language `RequestAlertNotifier` sends an
+    /// urgent-request alert in. Before this parameter existed no client ever wrote it, so
+    /// every row kept the server's `'km'` default whatever the donor had the app set to.
+    test('registers the language the app is currently in', () async {
+        language = 'en';
+
+        await serviceUnder().registerThisDevice();
+
+        expect(repository.registeredLanguages, ['en']);
+    });
+
+    /// Read at call time, not captured: a donor who switches language after sign-in must
+    /// not keep re-registering the language they started with on every token rotation.
+    test('a token refresh carries the language as it is now, not as it was', () async {
+        final subscription = serviceUnder().watchTokenRefreshes();
+        addTearDown(subscription.cancel);
+
+        language = 'en';
+        source.refreshes.add('fcm-token-2');
+        await Future<void>.delayed(Duration.zero);
+
+        expect(repository.registered, ['fcm-token-2']);
+        expect(repository.registeredLanguages, ['en']);
     });
 }

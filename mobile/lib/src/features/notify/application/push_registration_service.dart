@@ -18,11 +18,18 @@ final class PushRegistrationService {
     const PushRegistrationService({
         required PushTokenSource source,
         required FcmTokenRepository repository,
+        required String Function() currentLanguage,
     })  : _source = source,
-          _repository = repository;
+          _repository = repository,
+          _currentLanguage = currentLanguage;
 
     final PushTokenSource _source;
     final FcmTokenRepository _repository;
+
+    /// Read at call time, not captured at construction: the donor can change language
+    /// from `MeTab` long after this service was built, and a captured value would keep
+    /// sending the language they started with.
+    final String Function() _currentLanguage;
 
     /// Asks permission, reads the token, registers it.
     ///
@@ -34,11 +41,12 @@ final class PushRegistrationService {
         await _source.requestPermission();
         final token = await _source.currentToken();
         if (token == null) return null;
-        return _repository.register(token);
+        return _repository.register(token, language: _currentLanguage());
     }
 
     /// Re-registers on every rotation. The caller cancels the returned subscription on
     /// sign-out.
-    StreamSubscription<String> watchTokenRefreshes() =>
-        _source.tokenRefreshes().listen(_repository.register);
+    StreamSubscription<String> watchTokenRefreshes() => _source.tokenRefreshes().listen(
+        (token) => _repository.register(token, language: _currentLanguage()),
+    );
 }

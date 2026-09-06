@@ -26,8 +26,40 @@ class _UrgencyBadgeState extends State<UrgencyBadge> with SingleTickerProviderSt
     @override
     void initState() {
         super.initState();
-        _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))
-            ..repeat(reverse: true);
+        _controller = AnimationController(
+            vsync: this,
+            duration: const Duration(milliseconds: 1100),
+        );
+    }
+
+    /// Started here rather than in `initState` because whether it should run at all
+    /// depends on `MediaQuery` — and reading an inherited widget is not allowed that
+    /// early.
+    @override
+    void didChangeDependencies() {
+        super.didChangeDependencies();
+        _syncAnimation();
+    }
+
+    @override
+    void didUpdateWidget(UrgencyBadge oldWidget) {
+        super.didUpdateWidget(oldWidget);
+        if (oldWidget.urgency != widget.urgency) _syncAnimation();
+    }
+
+    /// The controller used to `repeat()` unconditionally in `initState`, including on
+    /// the two urgency levels whose `build` never reads it: every ROUTINE and URGENT
+    /// badge drove a 60 fps ticker whose output was discarded, and a list of fifteen
+    /// tiles ran fifteen of them. It also made `pumpAndSettle` hang on any screen
+    /// showing a badge of any urgency, which is how this was found.
+    void _syncAnimation() {
+        final shouldPulse = widget.urgency == Urgency.critical &&
+            !MediaQuery.of(context).disableAnimations;
+        if (shouldPulse && !_controller.isAnimating) {
+            _controller.repeat(reverse: true);
+        } else if (!shouldPulse && _controller.isAnimating) {
+            _controller.stop();
+        }
     }
 
     @override

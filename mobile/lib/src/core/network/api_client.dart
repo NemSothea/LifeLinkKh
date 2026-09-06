@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../config/env.dart';
@@ -16,6 +17,16 @@ BaseOptions _baseOptions() => BaseOptions(
     headers: const {'Content-Type': 'application/json'},
 );
 
+/// Debug-only request/response logging. Never in a release build — this is the only
+/// place a bearer token could end up in a device's log buffer.
+void _addDebugLogging(Dio dio) {
+    if (kDebugMode) {
+        dio.interceptors.add(
+            LogInterceptor(requestBody: true, responseBody: true, error: true),
+        );
+    }
+}
+
 /// The Dio every authenticated call goes through.
 ///
 /// Pass [authGateway] to install the ADR 0007 interceptor. Omitting it yields a plain
@@ -30,6 +41,7 @@ Dio createApiClient({AuthTokenGateway? authGateway}) {
             AuthInterceptor(gateway: authGateway, client: () => dio),
         );
     }
+    _addDebugLogging(dio);
     return dio;
 }
 
@@ -38,7 +50,11 @@ Dio createApiClient({AuthTokenGateway? authGateway}) {
 /// Separate instance, not a flag: renewing a session over a client that attaches and
 /// repairs sessions is the recursion ADR 0007 warns about. Keeping sign-in on its own
 /// transport makes that structurally impossible rather than merely avoided.
-Dio createSignInApiClient() => Dio(_baseOptions());
+Dio createSignInApiClient() {
+    final dio = Dio(_baseOptions());
+    _addDebugLogging(dio);
+    return dio;
+}
 
 @Riverpod(keepAlive: true)
 Dio apiClient(ApiClientRef ref) =>

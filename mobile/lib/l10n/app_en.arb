@@ -8,6 +8,57 @@
     "@homeTagline": {
         "description": "Stub home screen subtitle at M2"
     },
+    "timeJustNow": "Just now",
+    "@timeJustNow": {
+        "description": "Relative timestamp under a minute old. An emergency screen answers 'how long ago' before it answers 'at what time'."
+    },
+    "timeMinutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
+    "@timeMinutesAgo": {
+        "description": "Relative timestamp, under an hour",
+        "placeholders": {
+                "count": {
+                        "type": "int"
+                }
+        }
+    },
+    "timeHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
+    "@timeHoursAgo": {
+        "description": "Relative timestamp, under a day",
+        "placeholders": {
+                "count": {
+                        "type": "int"
+                }
+        }
+    },
+    "timeDaysAgo": "{count, plural, =1{Yesterday} other{{count} days ago}}",
+    "@timeDaysAgo": {
+        "description": "Relative timestamp, under a week. Past a week the absolute date is shown instead — 'nine days ago' is harder to place than a date.",
+        "placeholders": {
+                "count": {
+                        "type": "int"
+                }
+        }
+    },
+    "requestPostedLabel": "Requested",
+    "@requestPostedLabel": {
+        "description": "Label above a request's age. NOTIFY-donor-alert screen 2 calls for this as a first-class fact, not a footnote."
+    },
+    "matchStateAccepted": "Accepted",
+    "@matchStateAccepted": {
+        "description": "Short chip on a nearby-request tile the donor has already accepted"
+    },
+    "matchStateDeclined": "Declined",
+    "@matchStateDeclined": {
+        "description": "Short chip on a nearby-request tile the donor has already declined"
+    },
+    "matchNeedsAnswer": "Waiting for your answer",
+    "@matchNeedsAnswer": {
+        "description": "Section heading over the nearby requests this donor has not answered yet"
+    },
+    "matchAlreadyAnswered": "Already answered",
+    "@matchAlreadyAnswered": {
+        "description": "Section heading over the nearby requests this donor has already accepted or declined"
+    },
     "dashboardTabHome": "Home",
     "@dashboardTabHome": {
         "description": "Bottom navigation label for the dashboard's Home tab"
@@ -15,6 +66,10 @@
     "dashboardTabHistory": "History",
     "@dashboardTabHistory": {
         "description": "Bottom navigation label for the donor shell's History tab"
+    },
+    "languageLabel": "Language",
+    "@languageLabel": {
+        "description": "Heading of the language toggle on the Me tab. The two options are labelled with their own endonyms (ខ្មែរ / English), which do not translate — a reader who cannot read the current language still has to recognise their own."
     },
     "dashboardTabMe": "Me",
     "@dashboardTabMe": {

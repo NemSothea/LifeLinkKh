@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/error/result.dart';
+import '../../../core/time/relative_time.dart';
 import '../../request/domain/blood_request.dart';
 import '../../request/presentation/urgency_badge.dart';
 import '../application/match_providers.dart';
@@ -126,19 +126,28 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
                                             (null, null) => '',
                                         },
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                        // add_Hm, not add_jm: intl's bundled km locale data
-                                        // has no real AM/PM symbol for the 12-hour skeleton —
-                                        // jm renders as a literal "6:13 a" instead of a day-
-                                        // period word. 24-hour sidesteps the missing symbol,
-                                        // and is arguably the better choice anyway: whether a
-                                        // request came in at 6 AM or 6 PM is exactly the kind
-                                        // of thing this app can't afford to leave ambiguous.
-                                        DateFormat.yMMMd(languageCode)
-                                            .add_Hm()
-                                            .format(request.createdAt),
-                                        style: Theme.of(context).textTheme.bodySmall,
+                                    const SizedBox(height: 12),
+                                    // Age, not wall-clock time. `NOTIFY-donor-alert`
+                                    // screen 2 asks for "Requested · 14 minutes ago"
+                                    // and this screen shipped "2 Sep 2026 06:13" —
+                                    // which is the one fact a donor deciding whether to
+                                    // leave the house has to do arithmetic on.
+                                    Row(
+                                        children: [
+                                            Icon(
+                                                Icons.schedule,
+                                                size: 16,
+                                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                                '${l10n.requestPostedLabel} · '
+                                                '${formatRelativeTime(context, request.createdAt)}',
+                                                key: const Key('match-request-age'),
+                                                style: Theme.of(context).textTheme.bodyMedium
+                                                    ?.copyWith(fontWeight: FontWeight.w600),
+                                            ),
+                                        ],
                                     ),
                                 ],
                             ),

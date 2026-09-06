@@ -118,7 +118,11 @@ BloodRequest _nearbyRequest() => BloodRequest(
     hospitalDistrictEn: 'Doun Penh',
     alertedCount: 12,
     acceptedCount: 1,
-    createdAt: DateTime(2026, 8, 23, 9, 0),
+    // Relative to now, not a wall-clock literal: these screens render a request's
+    // *age* ("14 minutes ago"), so a fixed date would make the golden change every day
+    // it is regenerated. The extra 30 seconds keeps `inMinutes` truncation from
+    // flipping to 13 if the run is slow.
+    createdAt: DateTime.now().subtract(const Duration(minutes: 14, seconds: 30)),
     distanceKm: 2.5,
 );
 

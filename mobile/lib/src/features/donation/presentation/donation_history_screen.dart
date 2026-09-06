@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/widgets/retryable_failure.dart';
 import '../application/donation_providers.dart';
 import '../domain/donation.dart';
 
@@ -28,11 +29,24 @@ class DonationHistoryScreen extends ConsumerWidget {
                         AsyncValue(isLoading: true, hasValue: false) => const Center(
                             child: CircularProgressIndicator(key: Key('donation-history-loading')),
                         ),
-                        AsyncValue(hasError: true) => Center(
-                            child: Text(
-                                l10n.donationHistoryFailed,
-                                key: const Key('donation-history-failed'),
-                            ),
+                        // A `ListView`, not a `Center`: `RefreshIndicator` drives the
+                        // gesture off its child's scroll notifications, so wrapping a
+                        // non-scrollable in one makes pull-to-refresh silently dead —
+                        // in the exact state where pulling to retry is the obvious move.
+                        // `AlwaysScrollableScrollPhysics` keeps the gesture alive even
+                        // when the content is shorter than the viewport.
+                        AsyncValue(hasError: true) => ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.all(24),
+                            children: [
+                                const SizedBox(height: 48),
+                                RetryableFailure(
+                                    key: const Key('donation-history-failed'),
+                                    message: l10n.donationHistoryFailed,
+                                    onRetry: () =>
+                                        ref.invalidate(myDonationsControllerProvider),
+                                ),
+                            ],
                         ),
                         AsyncValue(hasValue: true, value: final list) => _body(
                             context,
@@ -49,6 +63,7 @@ class DonationHistoryScreen extends ConsumerWidget {
     Widget _body(BuildContext context, AppLocalizations l10n, List<Donation> donations) {
         return ListView(
             key: const Key('donation-history-list'),
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(24),
             children: [
                 _ImpactCount(count: donations.length),

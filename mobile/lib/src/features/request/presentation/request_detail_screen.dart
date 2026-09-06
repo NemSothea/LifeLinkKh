@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/error/result.dart';
+import '../../../core/time/relative_time.dart';
 import '../application/request_providers.dart';
 import '../domain/blood_request.dart';
 import '../domain/request_status.dart';
@@ -157,14 +157,13 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                         key: const Key('request-accepted-count'),
                     ),
                     const SizedBox(height: 8),
+                    // Same change as `MatchDetailScreen`: a requester refreshing this
+                    // screen is asking "how long has nobody answered", which an absolute
+                    // timestamp makes them work out for themselves.
                     Text(
-                        // add_Hm, not add_jm: intl's bundled km locale data has no real
-                        // AM/PM symbol for the 12-hour skeleton — jm renders as a literal
-                        // "6:13 a" instead of a day-period word. 24-hour sidesteps the
-                        // missing symbol entirely, and is arguably the better choice
-                        // anyway: whether a donor got notified at 6 AM or 6 PM is exactly
-                        // the kind of thing this app can't afford to leave ambiguous.
-                        DateFormat.yMMMd(languageCode).add_Hm().format(request.createdAt),
+                        '${l10n.requestPostedLabel} · '
+                        '${formatRelativeTime(context, request.createdAt)}',
+                        key: const Key('request-age'),
                         style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 32),

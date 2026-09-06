@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/time/relative_time.dart';
+import '../../../core/widgets/retryable_failure.dart';
 import '../application/request_providers.dart';
 import '../domain/blood_request.dart';
 import 'request_detail_screen.dart';
@@ -27,6 +29,10 @@ class RequesterHomeTab extends ConsumerWidget {
                     onRefresh: () => ref.refresh(myRequestsControllerProvider.future),
                     child: ListView(
                         key: const Key('requester-home-list'),
+                        // Without this the pull gesture is dead whenever the
+                        // content is shorter than the viewport — which on this
+                        // tab is the common case, not the edge case.
+                        physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.all(16),
                         children: [
                             _RequestBloodButton(
@@ -45,9 +51,11 @@ class RequesterHomeTab extends ConsumerWidget {
                                         key: Key('requester-home-loading'),
                                     ),
                                 ),
-                                AsyncValue(hasError: true) => Text(
-                                    l10n.myRequestsFailed,
+                                AsyncValue(hasError: true) => RetryableFailure(
                                     key: const Key('requester-home-failed'),
+                                    message: l10n.myRequestsFailed,
+                                    onRetry: () =>
+                                        ref.invalidate(myRequestsControllerProvider),
                                 ),
                                 AsyncValue(hasValue: true, value: final list) => _list(
                                     context,
@@ -65,7 +73,31 @@ class RequesterHomeTab extends ConsumerWidget {
 
     Widget _list(BuildContext context, AppLocalizations l10n, List<BloodRequest> requests) {
         if (requests.isEmpty) {
-            return Text(l10n.myRequestsEmpty, key: const Key('requester-home-empty'));
+            // Same card treatment as the donor tab's and the history screen's empty
+            // states. A bare line of text read as a rendering failure next to the
+            // oversized button above it.
+            return Card(
+                key: const Key('requester-home-empty'),
+                margin: EdgeInsets.zero,
+                child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+                    child: Column(
+                        children: [
+                            Icon(
+                                Icons.inbox_outlined,
+                                size: 36,
+                                color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                                l10n.myRequestsEmpty,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                        ],
+                    ),
+                ),
+            );
         }
         return Column(
             key: const Key('requester-home-request-list'),
@@ -135,6 +167,16 @@ class _RequestTile extends StatelessWidget {
                                 '${l10n.requestAlertedCount(request.alertedCount)} · '
                                 '${l10n.requestAcceptedCount(request.acceptedCount)}',
                                 style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            // "12 alerted · 0 accepted" only means something next to how
+                            // long that has been true. Three minutes is patience; forty
+                            // is a reason to phone the hospital.
+                            Text(
+                                formatRelativeTime(context, request.createdAt),
+                                key: Key('requester-home-request-${request.id}-age'),
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                ),
                             ),
                         ],
                     ),
