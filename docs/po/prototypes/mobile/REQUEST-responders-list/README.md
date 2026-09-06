@@ -18,6 +18,12 @@ back, and nothing on the backend does that. Which one is wrong: the promise, or 
 
 ## Answer
 
+> **Superseded on the web by DEC-009 (2026-09-06).** The reasoning below still governs the *mobile*
+> client — a requester still sees only a count. But the web portal's request board is now public and
+> lists accepted donors by name, blood type and district, which is exactly what this document argued
+> against. Read `docs/decisions.md` DEC-009 before treating the rule below as current, and read this
+> section before changing DEC-009 back: the argument here is the one that has to be answered.
+
 **The promise was wrong. Reveal stays one-directional.** A requester sees a *count* going up
 (`acceptedCount`), never a name, phone, or blood type per acceptance.
 

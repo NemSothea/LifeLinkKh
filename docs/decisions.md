@@ -306,3 +306,109 @@ both.
 - Owner is PO (`docs/po/`), not Tech Lead — this is the product's story, not its operation.
 - Living document: update it whenever the golden path in `demo-runbook.md` changes, same as that
   file's own maintenance expectation.
+
+---
+
+## DEC-009 — The portal's request board is public; sign-in gates staff actions only
+
+**Date:** 2026-09-06 · **Raised by:** Nem Sothea (Tech Lead / PO) · **Status:** accepted
+
+### Context
+The portal had no sign-in at all until this date — access was `PORTAL_DEV_JWT`, a token pasted into
+`.env` by hand. Replacing it with a real staff login (`V13__staff_password_login.sql`,
+`POST /auth/portal/login`) was built first as a gate in front of the *whole* portal, which was wrong:
+it turned a page whose purpose is to show who needs blood into a page that shows nothing until you
+have an account. The correction is this decision.
+
+### Decision
+`/[locale]/portal` is a **public live board**. Anyone with the link sees every OPEN request: blood
+type, units needed, urgency, hospital and district, when it was posted, how many donors were alerted
+and how many accepted — **and the accepted donors themselves, by name, with their blood type and
+district.** Signing in adds the staff actions on the same page (confirm a donation, the recently
+fulfilled section) rather than unlocking a different screen. `/portal/staff` stays ADMIN-only.
+
+Served by `GET /public/requests` — its own controller, service and DTOs, not a flag on
+`PortalService`. Two mappers can only leak on purpose; one mapper with a visibility flag leaks by
+accident the next time somebody adds a field.
+
+### Why this and not the alternative
+A board nobody can read without an account cannot do the job the product exists for. The Facebook
+posts this app replaces are public; a private replacement is a downgrade for the reach that matters
+most — the passer-by who is O− and did not know anyone needed it.
+
+### ⚠ This overrides TM-AUTH-001 I1 and `REQUEST-responders-list`
+Both said an accepted donor's name, blood type and district are visible **only to hospital staff**,
+who have an operational reason a stranger does not. `REQUEST-responders-list` argued the point at
+length and refused even to show the donor back to the *requester*. Publishing the same fields to the
+open internet is the opposite of that decision, taken knowingly by the product owner.
+
+What that means concretely: a named person's blood type and neighbourhood become world-readable, and
+they never agreed to it — no consent screen exists, because until today there was nothing to consent
+to.
+
+**Not overridden, and still enforced:** the requester's name and phone number (revealed only to a
+donor who accepted), every coordinate (ADR 0003), the alerted-but-silent donors, and `matchId` — the
+public DTO omits it so the confirm-donation handle is not published alongside the person it points at.
+
+### Consequence
+- **Revisit before any real donor uses this app**, on the same footing as `FR-SECURITY-001` in
+  `docs/scope.md`: safe today only because every donor row in the pilot is a team-created test
+  account. A consent step, or a switch back to counts-only, has to land before that stops being true.
+- `docs/po/prototypes/mobile/REQUEST-responders-list/README.md` and the `TM-AUTH-001` threat model
+  both now describe a rule the product no longer follows on the web. Cross-referenced, not rewritten
+  — the reasoning in them is still the reasoning that has to be argued against.
+- The public endpoint is rate limited per IP on its own limiter, so a refreshing ward screen cannot
+  lock anyone out of signing in.
+
+---
+
+## DEC-010 — Portal staff sign in with a username and password, not Google
+
+**Date:** 2026-09-06 · **Raised by:** Nem Sothea (Tech Lead / PO) · **Status:** accepted
+
+### Context
+The portal had no sign-in at all. Access was `PORTAL_DEV_JWT`: a token minted by hand and pasted
+into `.env`, shared by whoever had the file, owned by nobody, and impossible to revoke from inside
+the product. Every person using the portal was the same anonymous session.
+
+The intended fix was always the Google button the mobile app uses, blocked on registering a Firebase
+**Web** app. That registration never happened, and waiting for it kept the portal on a hand-minted
+token for four milestones.
+
+### Decision
+`POST /auth/portal/login` — username and password, for HOSPITAL and ADMIN accounts only. The session
+JWT it returns is the same shape `/auth/google` issues; the portal keeps it in an httpOnly cookie.
+
+Scope is narrow on purpose, and the narrowness is the security argument:
+- **Only HOSPITAL and ADMIN may hold a password.** `AuthService.signInWithPassword` refuses any
+  other role even if a row somehow carries one.
+- **No self-service sign-up.** An admin creates or promotes; nobody registers.
+- **No password reset.** A forgotten password is a hash set by hand
+  (`docs/demo-runbook.md` section 9).
+
+### Relationship to ADR 0002
+ADR 0002 moved authentication *off* credentials — but it moved **donor and requester**
+authentication off them, for reasons that do not describe portal staff. A donor should not hold a
+password for an app they open three times a year, and Firebase already proves their identity for
+free. Portal staff are a handful of named accounts reaching a desktop browser with no phone in the
+loop; for them a password is the smaller mechanism, not the larger one.
+
+This is a scoped exception, not a reversal. Nothing about donor or requester authentication changes.
+
+### Why not wait for the Firebase Web app
+It had been "pending" since M4. A credential store for four named accounts is a smaller, better
+understood risk than a portal that anyone with a copy of `.env` can open as an anonymous admin —
+which is what the alternative actually was, not what it looked like on paper.
+
+### Consequence
+- **Seeded credentials are a debt with a deadline.** V13-V16 put a password in the repository, and
+  since V16 all four accounts share it — one leaked string is every portal account, including the
+  admin. `docs/demo-runbook.md` section 9 has the rotation procedure. It must run before this app
+  holds one real donor's record, on the same footing as `FR-SECURITY-001`.
+- **No refresh, so no "stay signed in".** ADR 0007 has no refresh token, so a session is one hour
+  and the cookie's lifetime matches it deliberately. A cookie outliving its token would leave staff
+  on a page that 401s on every action instead of sending them to sign in.
+- **A password change cannot evict anyone.** Sessions already issued stay valid until they expire;
+  the change-password page says so, because otherwise someone will use it expecting otherwise.
+- The account lifecycle this created — create, promote, demote, revoke — is `/admin/*`, documented
+  in `docs/fullstack/api-contract/web/openapi.yaml` 0.3.0.

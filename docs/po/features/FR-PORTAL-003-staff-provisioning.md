@@ -32,7 +32,8 @@ Google sign-in, an `ADMIN` decides what role it maps to.
 - `GET /admin/staff` — current `HOSPITAL`/`ADMIN` accounts, with their hospital.
 - `POST /admin/staff` — promotes an existing account to `HOSPITAL` (hospital required) or `ADMIN`
   (hospital must be absent). Refuses an account already on staff.
-- Portal screen at `/portal/admin`, `ADMIN`-only, linked from the main portal page for `ADMIN`
+- Portal screen at `/portal/staff`, `ADMIN`-only, linked from the main portal page for `ADMIN`
+  (was `/portal/admin` until 2026-09-06; the old path is permanently redirected in `next.config.ts`)
   sessions only.
 - `users.display_name`, captured from the verified Google ID token at every sign-in — the one new
   piece of stored data, and not email or phone.

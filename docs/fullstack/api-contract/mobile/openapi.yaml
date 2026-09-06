@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: LifeLink KH — Mobile API
-  version: 0.4.0
+  version: 0.5.0
   description: |
     Flutter donor/requester app. Machine twin of contract.md — this file wins on conflict.
     Scope: the 8 core FRs only (docs/scope.md). Deferred FRs have no endpoints here.
@@ -79,6 +79,16 @@ paths:
     post:
       tags: [auth]
       summary: Register or refresh this device's FCM token
+      description: |
+        `language` rides along with the token because it answers the other half of the same
+        question: where to reach this donor, and in what language. `users.language` is what
+        decides the language of an urgent-request alert, and until 2026-09-06 no client ever
+        wrote it — every row kept the `'km'` default from `V1__init.sql`, so a donor with the
+        app in English still received a Khmer push for the one message in this product that has
+        to be understood on sight.
+
+        Optional, and absent means **unchanged**, not "reset to the default": a client that has
+        not been updated must not silently move its user back to Khmer.
       requestBody:
         required: true
         content:
@@ -88,6 +98,10 @@ paths:
               required: [fcmToken]
               properties:
                 fcmToken: { type: string }
+                language:
+                  type: string
+                  enum: [km, en]
+                  description: The language the app is currently displayed in. Omit to leave it unchanged.
       responses:
         '204': { description: Stored }
         '401': { $ref: '#/components/responses/Unauthorized' }

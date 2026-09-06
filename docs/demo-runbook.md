@@ -51,32 +51,40 @@ the demo confusing to watch, not clearer.
 That loop — register, request, match, push, accept, confirm, history — is the whole product.
 Everything else in `docs/scope.md`'s "8 FRs built" table supports one of these six steps.
 
-## 4. Getting into the portal (temporary — read this)
+## 4. Signing in to the portal
 
-The portal has **no Google Sign-In button yet** — no Firebase Web app is registered for it.
-Until that's built, a session is minted directly for the backend's own JWT format:
+The portal has a real sign-in at **`/<locale>/sign-in`** — username and password, no token to
+mint, nothing to paste into `.env`. Four accounts are seeded by migration:
 
-```bash
-# 1. get the seeded HOSPITAL user's id (once — id is stable across restarts, only
-#    the token needs re-minting)
-docker exec lifelinkkh-postgres-1 psql -U lifelink -d lifelink \
-  -c "SELECT id FROM users WHERE role = 'HOSPITAL';"
+**All four use the same password: `qwer1234!`**
 
-# 2. mint a token (expires in 1 hour — re-run this before any demo, not the night before)
-#    `-f2-`, not `-f2` — JWT_SECRET is base64 and ends in `=`, which `-f2` silently
-#    drops, producing a token signed with a truncated key that 401s as INVALID_TOKEN.
-cd backend
-./mvnw -q dependency:build-classpath -Dmdep.outputFile=/tmp/cp.txt
-java -cp "target/classes:$(cat /tmp/cp.txt)" ../scripts/mint-portal-jwt.java \
-  "$(grep ^JWT_SECRET ../.env | cut -d= -f2-)" <hospital-user-id> HOSPITAL
+| Username | Role | Hospital | Sees |
+|---|---|---|---|
+| `soborey` | ADMIN | — | every hospital, plus **Manage staff** |
+| `calmette` | HOSPITAL | Calmette Hospital | that hospital only |
+| `tepi` | HOSPITAL | National Blood Transfusion Center | that hospital only |
+| `july` | HOSPITAL | Khmer-Soviet Friendship Hospital | that hospital only |
 
-# 3. put it in the root .env as PORTAL_DEV_JWT=<token>, then:
-cd ..
-docker compose up -d web
-```
+Seeded by `V13__staff_password_login.sql` (admin), `V14__hospital_staff_login.sql` (Calmette) and
+`V15__more_hospital_staff.sql` (the other two); `V16__unify_seeded_passwords.sql` then set them all
+to one value. They were briefly `qwer12324!` and `qwer1234!` — one digit apart, which is exactly the
+difference nobody notices while staring at "Wrong username or password" for an account they know
+exists.
 
-Full context: `scripts/mint-portal-jwt.java` header comment and
-`docs/po/prototypes/web/PORTAL-open-requests/README.md`.
+**The board itself needs no account.** `/<locale>/portal` is public (DEC-009) — anyone can read
+who needs blood, where and when. Signing in adds the staff actions on the same page: confirming a
+donation, the recently-fulfilled section, and for an ADMIN the staff page. Open it signed out at
+least once before a demo; explaining "and this part anyone can see" is half the pitch.
+
+> ⚠ **Every password above is in the repository**, readable by anyone with the code. That is
+> acceptable only while every account in this pilot is team-created test data. Section 9 has the
+> one command that changes them, and it has to run before this app holds one real donor's record.
+
+`PORTAL_DEV_JWT` is **gone** — removed from `.env.example` and `docker-compose.yml`. It was a
+token pasted in by hand, shared by whoever had the file, owned by nobody, and impossible to revoke
+from inside the product. `scripts/mint-portal-jwt.py` and its `.java` twin still exist for one
+narrow job: minting a **DONOR** or **REQUESTER** token to poke the mobile API with `curl` without
+running the app.
 
 ## 5. Adding staff after the first one (no SQL required)
 
@@ -86,7 +94,7 @@ Every staff account **after** that is provisioned through the app, not a migrati
 1. The person signs in once via the mobile app as an ordinary donor/requester — this is
    what captures their `display_name` for the next step (TM-AUTH-001 E1).
 2. An `ADMIN` opens **Manage staff** (top of the portal, ADMIN sessions only) at
-   `/portal/admin`, picks that person by name from the dropdown, chooses `HOSPITAL` (with
+   `/portal/staff`, picks that person by name from the dropdown, chooses `HOSPITAL` (with
    their hospital) or `ADMIN`, and submits.
 3. They now have portal access — no password, no invite email, nothing stored beyond the
    name already captured at sign-in.
@@ -94,14 +102,23 @@ Every staff account **after** that is provisioned through the app, not a migrati
 `V8__portal_access.sql`'s hand-run insert is now only a bootstrap for the first `ADMIN`,
 the one account that has to exist before anyone can use step 2 on anyone else.
 
+**The exception is an account with no mobile history at all.** The candidate dropdown is built from
+users who have already signed in on the app, so a portal-only account — `tepi` and `july` are both
+this — cannot be created through the page. Those come from a migration, following the pattern in
+`V15__more_hospital_staff.sql`: username, BCrypt hash, `role = 'HOSPITAL'`, and a `hospital_id`
+looked up by name.
+
 ## 6. Known gaps — say these before someone asks
 
-- **No Google Sign-In button on the portal itself.** A `HOSPITAL`/`ADMIN` account still
-  can't sign in *from the portal* — section 4's bridge stands in for that. Once granted
-  (section 5), they'd sign in the same way the mobile app does, once that button exists.
-- **No seed request data.** A freshly-started stack's portal shows the empty state until
-  step 3 of the golden path has been run at least once. Run the golden path *before* the
-  audience is watching, or narrate it live — don't open the portal cold.
+- **The portal signs in with a username and password, not Google.** Deliberate, and worth saying
+  before someone asks why it differs from the mobile app: ADR 0002 moved *donor* authentication to
+  Google because a donor should not hold a password for an app they open three times a year. Portal
+  staff are a handful of named accounts reaching a desktop browser with no phone in the loop, so
+  they get credentials instead. No self-service sign-up, no password reset — an admin grants
+  access, and a forgotten password is a new hash set by a migration.
+- **A cold stack's portal is empty** until either the golden path has run once or
+  `scripts/seed-demo-request.sql` has been applied (section 8.1). Run one of the two
+  *before* the audience is watching — don't open the portal cold.
 - **`FR-SECURITY-001` (account/data deletion) is deferred**, on purpose, per `docs/scope.md`
   — say this only if pushed on privacy, and be clear it comes back in scope before any real
   donor (outside the team) touches the app.
@@ -117,3 +134,189 @@ docker compose logs --tail=60 backend    # or postgres / web
 
 `scripts/verify-all.sh` runs every client's checks in one pass if you need to confirm
 nothing regressed before the demo, not during it.
+
+## 8. Testing every surface
+
+Section 3 is the demo — one path, told as a story. This section is the opposite: how to get
+into each of the four surfaces deliberately, including the two portal roles that behave
+differently and are easy to confuse for one another.
+
+### 8.1 Stack and data
+
+```bash
+bash scripts/dev-up.sh
+curl -s http://127.0.0.1:8080/api/health              # {"status":"UP"}
+
+# Optional but usually what you want: three requests, three hospitals, all three urgency
+# tiers, two with an accepted donor. Beats an empty table for exercising anything.
+docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink \
+  < scripts/seed-demo-request.sql
+```
+
+Postgres is on host port **5433**, not 5432 — a host PostgreSQL install usually owns 5432,
+and the resulting "connection refused against the wrong database" is a confusing five
+minutes. Inside the compose network the backend still reaches it at `postgres:5432`.
+
+### 8.2 The board, signed out
+
+```bash
+open http://localhost:3000/en/portal      # or /km
+```
+
+No account. What proves you are genuinely signed out rather than looking at a cached page:
+
+- **Staff sign-in** in the header, where a signed-in session shows a name and Sign out.
+- Expanding a row lists accepted donors but offers **no confirm-donation control**.
+- No **Recently fulfilled** section — that is a record of staff work, not a call for help.
+
+### 8.3 Portal as HOSPITAL staff
+
+Sign in at `/en/sign-in` as `tepi` (or `july`, or `calmette`) — password in section 4.
+
+- The list shows **only that hospital's** requests. `tepi` sees 49, `july` sees 1, and the public
+  board shows all 52 — the fastest way to tell which session you are in.
+- The header shows the name and a grey **HOSPITAL STAFF** chip.
+- **No "Manage staff" link**, and `/en/portal/staff` renders `admin-forbidden`.
+- `GET /api/admin/staff` with that session answers **403**. The link's absence is not the control;
+  `SecurityConfig` is.
+
+### 8.4 Portal as ADMIN
+
+Sign in as `soborey`.
+
+- Every hospital's requests, not one — 52 against `july`'s 1.
+- A red **ADMIN** chip, and **Manage staff** appears in the header.
+- `/en/portal/staff` renders the grant form. Granting access is the real path for staff who already
+  use the mobile app (section 5); accounts with no mobile history come from a migration instead.
+
+### 8.5 Mobile — donor and requester
+
+```bash
+cd mobile
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/api   # Android emulator
+flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8080/api  # iOS simulator
+```
+
+`10.0.2.2` is the Android emulator's alias for the host. Getting this wrong looks exactly
+like a backend that is down.
+
+Use **two accounts** — the roles diverge at the shell, so one account cannot show both tab
+sets. A donor gets Home / History / Me; a requester gets Home / Me and the oversized
+"request blood" button.
+
+Worth exercising deliberately, because none of it is on the golden path:
+
+- **Me → language.** Switch to English and back. Every screen re-renders, the choice
+  survives a restart, and the app re-registers `users.language` so push alerts follow —
+  check with `SELECT language FROM users WHERE id = '<donor>';`.
+- **Donor Home ordering.** With several open requests, CRITICAL sorts above URGENT above
+  ROUTINE regardless of age, closest first within a tier, and anything already answered
+  drops into "Already answered".
+- **Offline behaviour.** Stop the backend (`docker compose stop backend`) and pull to
+  refresh each list. Every one should offer a retry that works once the backend is back —
+  not a bare error string.
+
+### 8.6 Checking a role boundary directly
+
+Faster than clicking, and it tests the control rather than the UI that hides it:
+
+```bash
+login() {
+  curl -s -X POST -H 'Content-Type: application/json' \
+    -d "{\"username\":\"$1\",\"password\":\"$2\"}" \
+    http://127.0.0.1:8080/api/auth/portal/login |
+    python3 -c 'import sys,json; print(json.load(sys.stdin)["token"])'
+}
+
+STAFF=$(login tepi 'qwer1234!')   # section 4's password
+
+curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $STAFF" \
+  http://127.0.0.1:8080/api/admin/staff                      # 403 — staff are not admins
+curl -s -o /dev/null -w '%{http_code}\n' \
+  http://127.0.0.1:8080/api/portal/requests                  # 401 — no session at all
+curl -s -o /dev/null -w '%{http_code}\n' \
+  http://127.0.0.1:8080/api/public/requests                  # 200 — the board is public
+```
+
+A wrong password and an unknown username both answer **401 `INVALID_CREDENTIALS`**, byte for byte
+and in the same time. That is deliberate — anything that told them apart would enumerate the staff
+list one guess at a time.
+
+### 8.7 Automated checks
+
+```bash
+bash scripts/verify-all.sh          # every client, one pass
+```
+
+Or individually: `cd backend && ./mvnw verify` (needs Docker — Testcontainers starts a real
+PostgreSQL), `cd frontend && npm test -- --run && npm run lint`, `cd mobile && flutter
+analyze && flutter test`.
+
+Backend output is worth piping to a file rather than reading through `tee`: `./mvnw -q test
+| tee` has twice looked like a hang mid-run when it was Spring's console logging fighting
+the pipe. A truncated tail is not a failure — re-run unpiped before believing it.
+
+### 8.8 Symptoms that are not bugs
+
+| What you see | What it actually is |
+|---|---|
+| Bounced to `/sign-in` mid-session | The session is one hour, matching the JWT (ADR 0007 has no refresh). Sign in again |
+| Portal shows "Could not load the request list" while signed in | The backend is down or unreachable, not the session. `docker compose ps` |
+| "Wrong username or password" and you are sure it is right | All four accounts share one password (section 4). If it still fails the row may predate `V16` — check `flyway_schema_history` |
+| "Too many attempts. Wait a minute" | The per-IP limiter, 20/minute. Not a rejected password — the sign-in page tells these apart |
+| Every portal route 500s right after a build | `npm run build` was run while `next dev` was live; they share `.next`. Stop dev, `rm -rf .next`, restart |
+| Mobile can't reach anything on Android | `API_BASE_URL` points at `127.0.0.1`, which is the emulator itself. Use `10.0.2.2` |
+| `POST /auth/google` answers 503 | No `GOOGLE_APPLICATION_CREDENTIALS` in `.env`. Everything else still serves |
+| Portal list is empty | Cold stack. Seed it (8.1) or run the golden path once |
+
+## 9. Changing the seeded passwords
+
+The portal password in section 4 is written into a migration and therefore into the repository, and
+since `V16` all four accounts share it — so one leaked string is every portal account, including the
+admin. Anyone who can read the code can sign in as any of them. That is acceptable **only**
+while every account in this pilot is team-created test data, on the same footing as
+`FR-SECURITY-001` in `docs/scope.md`.
+
+**This has to run before this app holds one real donor's record.** Not "should" — the accounts
+below can confirm donations and grant portal access.
+
+BCrypt hashes cannot be written by hand, so generate one with the app's own encoder:
+
+```bash
+cd backend
+./mvnw -q dependency:build-classpath -Dmdep.outputFile=/tmp/cp.txt
+
+cat > /tmp/Hash.java <<'JAVA'
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+public class Hash {
+    public static void main(String[] args) {
+        System.out.println(new BCryptPasswordEncoder().encode(args[0]));
+    }
+}
+JAVA
+
+java -cp "target/classes:$(cat /tmp/cp.txt)" /tmp/Hash.java 'the-new-password'
+```
+
+Then set it, once per account:
+
+```bash
+docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink \
+  -c "UPDATE users SET password_hash = '<paste-the-hash>' WHERE username = 'soborey';"
+```
+
+Three things worth getting right:
+
+- **Quote the hash in single quotes.** A BCrypt digest contains `$`, which a shell will expand into
+  nothing if the string is double-quoted — producing a truncated hash that verifies against no
+  password at all, and an account nobody can sign in to.
+- **One hash per account.** BCrypt salts per row, so reusing one digest across accounts undoes that
+  and makes a single crack open all of them.
+- **Do not edit V13/V14/V15 instead.** Flyway records a checksum per migration file; changing one
+  that has already run makes the next startup fail rather than applying the change. A `UPDATE`
+  against the running database is the correct tool, and a new `V<n>` migration is correct for a
+  fresh environment.
+
+There is no password-reset flow in the product and no self-service change — an admin grants access,
+and a forgotten password is a new hash set exactly like this. That is a deliberate limit of the
+pilot's scope, not an oversight; say so if asked.

@@ -99,6 +99,11 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 > to simulator/device, no signing, no App Store/TestFlight, no Apple Developer account. Play Store
 > internal testing (M7) is still the only store release in scope.
 >
+> **Grown after M7 on 2026-09-06 — not a milestone.** A public request board (DEC-009), portal
+> staff sign-in replacing the hand-minted `PORTAL_DEV_JWT` (DEC-010), the staff lifecycle around it,
+> and the mobile half of `FR-GLOBAL-001`. None is a new FR and none is graded; `docs/scope.md`'s
+> "Grown after M7" section records what was added and the two debts it carries.
+>
 > **Added 2026-08-29 by DEC-008 — M8, demo scenario.** Not a course requirement (the course grades
 > M1–M7 only) and not an FR — a narrative script for walking a first-time viewer through the app,
 > distinct from `docs/demo-runbook.md` (the Tech Lead's own command-by-command runbook for standing

@@ -31,13 +31,16 @@ This works because `POST /auth/google` honours the `role` field only on first si
 account returns its stored role and ignores anything the client sends. So a privileged account cannot
 be created through the front door (`TM-AUTH-001` E1), and a seeded one signs in with no extra code.
 
-> **Not wired yet.** No Firebase Web app is registered, so `frontend/` has no Google Sign-In button
-> and cannot call `POST /auth/google` itself
-> (`docs/po/prototypes/web/PORTAL-open-requests/README.md`). Until it is, the portal page reads a
-> session minted directly for the seeded `HOSPITAL` account via `PORTAL_DEV_JWT`
-> (`frontend/src/lib/api/portal.ts`) — same token shape, same one-hour expiry (ADR 0007), just no
-> sign-in screen producing it. Registering the Web app and building the button does not change this
-> contract; it only changes how the bearer token in every `/portal/*` call gets minted.
+> **Wired as of 2026-09-06, and not with Google.** The portal signs in at `/<locale>/sign-in` with a
+> username and password against `POST /auth/portal/login`, and the session JWT it returns lives in an
+> httpOnly cookie the browser's own scripts cannot read (`frontend/src/lib/api/session.ts`). Same
+> token shape and same one-hour expiry (ADR 0007) as before; what changed is that a person produces
+> it by signing in rather than a Tech Lead minting it into `.env`. `PORTAL_DEV_JWT` is gone.
+>
+> No Firebase Web app is registered, so there is still no Google button here — deliberate rather
+> than pending: ADR 0002 moved *donor* auth to Google because a donor should not hold a password,
+> and portal staff are a handful of named desktop accounts with the opposite need. See
+> `V13__staff_password_login.sql` for the reasoning and `docs/demo-runbook.md` §4 for the accounts.
 
 > **The seeding itself is an unreviewed privileged path.** Creating the first `HOSPITAL`/`ADMIN` rows
 > in `V1__init.sql` bypasses every check in the application. Flagged in `TM-AUTH-001` residual risk;
@@ -47,6 +50,14 @@ RBAC is enforced server-side on both `/portal/*` endpoints. A `DONOR` JWT reachi
 portal not linking to them is not a control.
 
 ## Open requests table
+
+`status` takes `OPEN` (the default) or `FULFILLED`; anything else — `CANCELLED` included — is a
+422 `UNSUPPORTED_STATUS`. `FULFILLED` exists so the portal's "recently fulfilled" section can show
+work that has already been confirmed: `PORTAL-open-requests` settled that a confirmed row *"shows
+requestStatus inline rather than disappearing, so staff can see today's work at a glance"*, and
+while only `OPEN` was listable, confirming the last unit a request needed made the row vanish with
+nothing to show for it. `openapi.yaml` has declared the wider enum since M4; this narrows the gap to
+`CANCELLED` alone.
 
 ```
 GET /portal/requests?status=OPEN

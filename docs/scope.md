@@ -106,3 +106,36 @@ Two items have external lead time and will block M3/M7 if left:
 | Deploy runbook | **Written** — [`tech-lead/deploy-runbook.md`](tech-lead/deploy-runbook.md). Backend-host question resolved by [DEC-007](decisions.md#dec-007--m7-internal-testing-backend-reached-via-tunnel-not-a-hosted-deploy) (tunnel, not hosted). No signed AAB actually built yet — that's execution, not a doc gap |
 
 Both are Tech Lead's.
+
+## Grown after M7 — 2026-09-06
+
+DEC-004's cut still stands: eight FRs built, eight deferred, and none of the deferred eight has
+been started. What follows was added *after* the graded milestones, on the same day, and is
+recorded here rather than quietly enlarging the table above — the point of this document is that
+scope changes are visible.
+
+None of these is a new FR. Two are the completion of an FR that shipped half-finished, and two are
+decisions with their own DEC record.
+
+| Added | What it actually is | Where it is argued |
+|---|---|---|
+| Public request board | `/portal` is readable with no account, including accepted donor names — a deliberate override of `TM-AUTH-001` I1 | [DEC-009](decisions.md) |
+| Portal staff sign-in | Username and password replacing `PORTAL_DEV_JWT`, a token pasted into `.env` by hand | [DEC-010](decisions.md) |
+| Staff lifecycle | Create, promote, demote, revoke. Password login without an account lifecycle was half a feature | DEC-010's consequences |
+| In-app language switch (mobile) | `FR-GLOBAL-001`'s mobile half. The locale was pinned to `km` with no way to change it, so an English speaker could not read one screen | — |
+| Push alert language | `users.language` decided the language of every urgent-request alert and **no client had ever written it** — every push in the product was Khmer regardless of the app's setting | — |
+
+### What this costs, said plainly
+
+Two debts, both with the same deadline as `FR-SECURITY-001` — *before any real donor's data is in
+this database*:
+
+1. **A password sits in the repository.** V13-V16 seed it, and since V16 all four portal accounts
+   share one value. Anyone who can read the code can sign in as the admin.
+   [`demo-runbook.md`](demo-runbook.md) section 9 rotates it.
+2. **Donor names are world-readable.** DEC-009 publishes a named person's blood type and district
+   to anyone with the link. Safe only because every donor row is a team-created test account, and
+   there is no consent step because until that day there was nothing to consent to.
+
+Neither is an oversight to be discovered at the defence. Both are choices with a recorded reason
+and a recorded expiry.
