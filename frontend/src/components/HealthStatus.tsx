@@ -5,22 +5,34 @@ type Props = { reachable: boolean; status?: string };
 /**
  * Presentational only, so the reachable and unreachable states are both testable
  * without a running backend.
+ *
+ * Deliberately quiet since the landing page stopped being the M2 health page: it still
+ * proves the whole chain (browser → Next server → backend → PostgreSQL, nothing mocked),
+ * which is worth keeping on screen, but a bordered card gave a diagnostic the same
+ * visual weight as the portal itself. A dot and a line of small text says the same
+ * thing without competing.
  */
 export default function HealthStatus({ reachable, status }: Props) {
     const t = useTranslations('app');
 
     return (
-        <section className="rounded-lg border border-black/10 p-4 dark:border-white/20">
-            <h2 className="mb-2 text-lg font-medium">{t('healthHeading')}</h2>
+        <section className="flex items-center gap-2 text-xs text-black/50 dark:text-white/50">
+            <span
+                className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                    reachable ? 'bg-emerald-500' : 'bg-red-500'
+                }`}
+                aria-hidden="true"
+            />
+            <span className="font-medium">{t('healthHeading')}</span>
             {reachable ? (
-                <p data-testid="health-up" className="text-green-700 dark:text-green-400">
+                <span data-testid="health-up">
                     {t('healthUp')}
                     {status ? ` (${status})` : null}
-                </p>
+                </span>
             ) : (
-                <p data-testid="health-down" className="text-red-700 dark:text-red-400">
+                <span data-testid="health-down" className="text-red-600 dark:text-red-400">
                     {t('healthUnreachable')}
-                </p>
+                </span>
             )}
         </section>
     );

@@ -1,14 +1,25 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+// The API modules read the session from an httpOnly cookie now, not from PORTAL_DEV_JWT.
+// `next/headers` only exists inside a request, so it is stubbed here — these tests are
+// about what the API module sends, not about how Next stores a cookie.
+const cookieStore = { value: 'session-token' as string | null };
+vi.mock('next/headers', () => ({
+    cookies: async () => ({
+        get: () => (cookieStore.value === null ? undefined : { value: cookieStore.value }),
+    }),
+}));
 import { assignStaffRole, listCandidates, listStaff } from './admin';
 
 afterEach(() => {
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
+    cookieStore.value = 'session-token';
 });
 
 describe('listCandidates', () => {
     it('sends the dev JWT as a bearer credential', async () => {
-        vi.stubEnv('PORTAL_DEV_JWT', 'dev-token');
+        cookieStore.value = 'session-token';
         const fetchMock = vi
             .fn()
             .mockResolvedValue({ ok: true, status: 200, json: async () => [] });
@@ -18,13 +29,13 @@ describe('listCandidates', () => {
 
         const [url, init] = fetchMock.mock.calls[0];
         expect(url).toContain('/admin/users');
-        expect(init.headers.Authorization).toBe('Bearer dev-token');
+        expect(init.headers.Authorization).toBe('Bearer session-token');
     });
 });
 
 describe('listStaff', () => {
     it('reads /admin/staff', async () => {
-        vi.stubEnv('PORTAL_DEV_JWT', 'dev-token');
+        cookieStore.value = 'session-token';
         const fetchMock = vi
             .fn()
             .mockResolvedValue({ ok: true, status: 200, json: async () => [] });
@@ -38,7 +49,7 @@ describe('listStaff', () => {
 
 describe('assignStaffRole', () => {
     it('posts userId, role and hospitalId', async () => {
-        vi.stubEnv('PORTAL_DEV_JWT', 'dev-token');
+        cookieStore.value = 'session-token';
         const fetchMock = vi
             .fn()
             .mockResolvedValue({ ok: true, status: 200, json: async () => ({}) });
@@ -57,7 +68,7 @@ describe('assignStaffRole', () => {
     });
 
     it('sends hospitalId as null for ADMIN', async () => {
-        vi.stubEnv('PORTAL_DEV_JWT', 'dev-token');
+        cookieStore.value = 'session-token';
         const fetchMock = vi
             .fn()
             .mockResolvedValue({ ok: true, status: 200, json: async () => ({}) });

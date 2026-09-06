@@ -2,14 +2,45 @@
 
 import { useState } from 'react';
 import EmptyState from '@/components/EmptyState';
+import RelativeTime from '@/components/RelativeTime';
 import type { PortalRequest } from '@/lib/api/portal';
+import type { PublicRequest } from '@/lib/api/board';
 import ConfirmDonationForm from './confirm-donation-form';
-import { IconBell, IconBuilding, IconCheck, IconChevron, IconDroplet, IconInbox, IconSearch } from './icons';
+import {
+    IconAlertTriangle,
+    IconBell,
+    IconBuilding,
+    IconCheck,
+    IconChevron,
+    IconDroplet,
+    IconInbox,
+    IconSearch,
+} from '@/components/icons';
 
-/** A `PortalRequest` plus its already-interpolated "N unit(s) needed" string — computed
- * server-side in `page.tsx`, since a Client Component can't receive the `t()` function
- * itself as a prop (functions can't cross the server/client boundary). */
-export type RequestViewModel = PortalRequest & { unitsLabel: string };
+/**
+ * A request row as this list renders it, from **either** source, plus its
+ * already-interpolated "N unit(s) needed" string — computed server-side in `page.tsx`,
+ * since a Client Component can't receive the `t()` function itself as a prop (functions
+ * can't cross the server/client boundary).
+ *
+ * The union is the point. A public row's donors carry no `matchId` (DEC-009: the public
+ * DTO omits the confirm-donation handle on purpose), so `matchId` is optional here and
+ * every use of it has to say what happens when it is absent. Typing this as `PortalRequest`
+ * and casting the public data to it — which is what the first version did — compiled fine
+ * and shipped `key={undefined}` on every donor row of the public board.
+ */
+export type RequestViewModel = (PortalRequest | PublicRequest) & { unitsLabel: string };
+
+type DonorViewModel = RequestViewModel['acceptedDonors'][number];
+
+/**
+ * Stable within one request's donor list. `matchId` when the caller is staff; otherwise the
+ * moment they answered, which is unique per donor on a request because one donor can accept
+ * a given request only once (`request_matches_unique_pair`).
+ */
+function donorKey(donor: DonorViewModel): string {
+    return 'matchId' in donor ? donor.matchId : `${donor.respondedAt}-${donor.displayName}`;
+}
 
 type Copy = {
     noAcceptedDonors: string;
@@ -26,6 +57,8 @@ type Copy = {
     filterUrgent: string;
     filterRoutine: string;
     pageLabel: string;
+    unitsProgress: string;
+    acceptedAtLabel: string;
 };
 
 /** Rows per page. Not a network page — the whole list is already in memory
@@ -65,10 +98,17 @@ type UrgencyFilter = 'ALL' | 'CRITICAL' | 'URGENT' | 'ROUTINE';
  */
 export default function RequestList({
     requests,
+    canConfirm,
     locale,
     copy,
 }: {
     requests: RequestViewModel[];
+    /**
+     * False for a signed-out visitor reading the public board. The rows, the counts and the
+     * donors are the same; only the write disappears. It is not the real control either —
+     * `SecurityConfig` refuses the POST without a staff session regardless of what renders.
+     */
+    canConfirm: boolean;
     locale: string;
     copy: Copy;
 }) {
@@ -147,7 +187,13 @@ export default function RequestList({
                 <>
                     <ul data-testid="portal-request-list" className="flex flex-col gap-4">
                         {visible.map((request) => (
-                            <RequestRow key={request.id} request={request} locale={locale} copy={copy} />
+                            <RequestRow
+                                key={request.id}
+                                request={request}
+                                canConfirm={canConfirm}
+                                locale={locale}
+                                copy={copy}
+                            />
                         ))}
                     </ul>
                     {totalPages > 1 ? (
@@ -199,12 +245,39 @@ export default function RequestList({
     );
 }
 
+/**
+ * The row's one triage signal, and the reason the accepted count is a chip rather than a
+ * bare number: "0" and "2" look identical at a glance down a list of fifty.
+ *
+ * Severity is `acceptedCount === 0` crossed with urgency, not elapsed minutes — the age
+ * next to it already carries time, and a minutes threshold computed during render would
+ * have the server and the browser disagreeing about which style to paint.
+ */
+function progressStyle(request: RequestViewModel): string {
+    if (request.acceptedCount >= request.unitsNeeded) {
+        return 'bg-emerald-600/10 text-emerald-700 dark:text-emerald-400';
+    }
+    if (request.acceptedCount > 0) {
+        return 'bg-black/[0.04] text-black/70 dark:bg-white/10 dark:text-white/70';
+    }
+    switch (request.urgency) {
+        case 'CRITICAL':
+            return 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300';
+        case 'URGENT':
+            return 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300';
+        default:
+            return 'bg-black/[0.04] text-black/60 dark:bg-white/10 dark:text-white/60';
+    }
+}
+
 function RequestRow({
     request,
+    canConfirm,
     locale,
     copy,
 }: {
     request: RequestViewModel;
+    canConfirm: boolean;
     locale: string;
     copy: Copy;
 }) {
@@ -232,6 +305,13 @@ function RequestRow({
                             <span className="text-sm text-black/60 dark:text-white/60">
                                 {request.unitsLabel}
                             </span>
+                            {/* How old the request is, live. Staff triage on elapsed
+                                time before anything else — this was fetched on every row
+                                and rendered on none. */}
+                            <RelativeTime
+                                iso={request.createdAt}
+                                className="text-sm text-black/50 tabular-nums dark:text-white/50"
+                            />
                         </div>
                         {request.hospital ? (
                             <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-black/80 dark:text-white/80">
@@ -246,14 +326,26 @@ function RequestRow({
                             <IconBell className="h-4 w-4" />
                             {request.alertedCount}
                         </span>
-                        <span className="flex items-center gap-1.5 font-medium text-emerald-700 dark:text-emerald-400">
-                            <IconCheck className="h-4 w-4" />
-                            {request.acceptedCount}
+                        {/* Accepted against units needed, not a bare count: "2" reads as
+                            done when the request wanted three. */}
+                        <span
+                            data-testid={`portal-request-${request.id}-progress`}
+                            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 font-medium ${progressStyle(request)}`}
+                        >
+                            {request.acceptedCount === 0 ? (
+                                <IconAlertTriangle className="h-4 w-4" />
+                            ) : (
+                                <IconCheck className="h-4 w-4" />
+                            )}
+                            {copy.unitsProgress
+                                .replace('{accepted}', String(request.acceptedCount))
+                                .replace('{needed}', String(request.unitsNeeded))}
                         </span>
                     </div>
 
                     <IconChevron className="h-5 w-5 shrink-0 text-black/40 transition-transform duration-200 group-open:rotate-180 dark:text-white/40" />
                 </summary>
+
 
                 <div className="border-t border-black/10 bg-black/[0.015] p-5 dark:border-white/10 dark:bg-white/[0.02]">
                     {request.acceptedDonors.length === 0 ? (
@@ -267,8 +359,8 @@ function RequestRow({
                         <ul className="flex flex-col gap-3">
                             {request.acceptedDonors.map((donor) => (
                                 <li
-                                    key={donor.matchId}
-                                    data-testid={`portal-donor-${donor.matchId}`}
+                                    key={donorKey(donor)}
+                                    data-testid={`portal-donor-${donorKey(donor)}`}
                                     className="flex flex-col gap-3 rounded-xl border border-black/10 bg-white p-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/[0.04]"
                                 >
                                     <div className="flex items-center gap-3">
@@ -282,8 +374,17 @@ function RequestRow({
                                                 {donor.bloodType}
                                                 {donor.districtName ? ` · ${donor.districtName}` : ''}
                                             </span>
+                                            {/* `respondedAt` was fetched for every donor
+                                                and rendered for none. Staff coordinating
+                                                arrivals need to see who answered an hour
+                                                ago and still has not turned up. */}
+                                            <span className="block text-xs text-black/45 dark:text-white/45">
+                                                {copy.acceptedAtLabel}{' '}
+                                                <RelativeTime iso={donor.respondedAt} />
+                                            </span>
                                         </span>
                                     </div>
+                                    {canConfirm && 'matchId' in donor ? (
                                     <div className="flex flex-wrap items-end gap-2">
                                         <ConfirmDonationForm
                                             requestId={request.id}
@@ -300,6 +401,7 @@ function RequestRow({
                                             }}
                                         />
                                     </div>
+                                    ) : null}
                                 </li>
                             ))}
                         </ul>

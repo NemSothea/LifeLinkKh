@@ -1,19 +1,29 @@
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
+import AutoRefresh from '@/components/AutoRefresh';
 import EmptyState from '@/components/EmptyState';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { portalRole } from '@/lib/api/dev-auth';
-import { listOpenRequests, type PortalRequest } from '@/lib/api/portal';
-import { IconAlertTriangle, IconCheck, IconInbox } from './icons';
+import RelativeTime from '@/components/RelativeTime';
+import { hasPortalSession, portalDisplayName, portalRole } from '@/lib/api/session';
+import SignOutButton from '@/components/SignOutButton';
+import { listPublicRequests } from '@/lib/api/board';
+import { listFulfilledRequests, listOpenRequests, type PortalRequest } from '@/lib/api/portal';
+import { IconAlertTriangle, IconCheck, IconChevron, IconDroplet, IconInbox } from '@/components/icons';
 import RequestList, { type RequestViewModel } from './request-list';
 
 /**
- * FR-PORTAL-001, trimmed by DEC-004 to one page: a table of open requests, each
- * expandable to its accepted donors, each donor row carrying the one write this page
- * has — confirm a donation.
+ * The live board, and the portal, on one page.
  *
- * A Server Component, like the M2 health page: `listOpenRequests()` runs on the Next
- * server, never in the browser, which is also where `PORTAL_DEV_JWT` has to stay.
+ * **Signed out** it is a public read of `GET /public/requests` (DEC-009): who needs blood,
+ * where, how urgently, when they asked, and who has accepted. No session, no redirect —
+ * anyone with the link sees the need, which is the entire point of a board.
+ *
+ * **Signed in** the same page reads the authenticated endpoint instead, which adds the one
+ * thing the public copy deliberately omits: the `matchId` each confirm-donation write needs.
+ * So staff get the board plus its actions rather than a different screen.
+ *
+ * A Server Component either way: both fetches run on the Next server, which is also where
+ * the session cookie stays, since it is httpOnly and page script cannot read it.
  */
 export default async function PortalPage({
     params,
@@ -25,7 +35,26 @@ export default async function PortalPage({
     const { locale } = await params;
     const { confirmError, confirmed } = await searchParams;
     const t = await getTranslations('portal');
-    const result = await listOpenRequests();
+    const isStaff = await hasPortalSession();
+    const [role, displayName] = isStaff
+        ? await Promise.all([portalRole(), portalDisplayName()])
+        : [null, null];
+
+    // Staff read the authenticated endpoints — the open list carries the matchId a
+    // confirmation writes against, and the fulfilled list is what the
+    // `PORTAL-open-requests` prototype meant by *"a confirmed row shows requestStatus
+    // inline rather than disappearing, so staff can see today's work at a glance"*.
+    //
+    // A signed-out visitor reads the public board instead. Same rows, same counts, minus
+    // the write handle — and no "recently fulfilled" section, which is a record of staff
+    // work rather than a call for help.
+    const [result, fulfilledResult] = isStaff
+        ? await Promise.all([listOpenRequests(), listFulfilledRequests()])
+        : [await listPublicRequests(), { ok: false } as const];
+    const fulfilled = fulfilledResult.ok ? fulfilledResult.data : [];
+    // No cast: the two sources have genuinely different donor shapes, and `sortByUrgency`
+    // only reads `urgency`. Casting the public rows to `PortalRequest` is what let a
+    // missing `matchId` reach the DOM as `key={undefined}`.
     const requests = result.ok ? sortByUrgency(result.data) : [];
     const criticalCount = requests.filter((r) => r.urgency === 'CRITICAL').length;
     // Interpolated server-side because a Client Component (RequestList) cannot receive
@@ -45,9 +74,9 @@ export default async function PortalPage({
                     <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
                 </div>
                 <div className="flex items-center gap-3">
-                    {portalRole() === 'ADMIN' ? (
+                    {role === 'ADMIN' ? (
                         <Link
-                            href={`/${locale}/portal/admin`}
+                            href={`/${locale}/portal/staff`}
                             data-testid="manage-staff-link"
                             className="text-sm font-medium text-black/60 underline-offset-4 hover:underline dark:text-white/60"
                         >
@@ -55,6 +84,19 @@ export default async function PortalPage({
                         </Link>
                     ) : null}
                     <LanguageSwitcher />
+                    {isStaff ? (
+                        <SignOutButton locale={locale} displayName={displayName} role={role} />
+                    ) : (
+                        // The only thing a visitor is offered. Not a wall in front of the
+                        // board — a door beside it, for the people who have a key.
+                        <Link
+                            href={`/${locale}/sign-in`}
+                            data-testid="staff-sign-in-link"
+                            className="rounded-full border border-black/10 px-3 py-1.5 text-sm font-medium text-black/70 transition-colors hover:bg-black/[0.03] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:border-white/15 dark:text-white/70 dark:hover:bg-white/[0.05]"
+                        >
+                            {t('staffSignInCta')}
+                        </Link>
+                    )}
                     {result.ok ? (
                         <div
                             data-testid="portal-summary"
@@ -77,6 +119,12 @@ export default async function PortalPage({
                     ) : null}
                 </div>
             </header>
+
+            {result.ok ? (
+                <div className="mb-6 flex justify-end">
+                    <AutoRefresh />
+                </div>
+            ) : null}
 
             {confirmed ? (
                 <p
@@ -109,7 +157,13 @@ export default async function PortalPage({
             ) : (
                 <RequestList
                     requests={requestViewModels}
+                    canConfirm={isStaff}
                     locale={locale}
+                    // `.raw()` on the two below, not `t()`: both carry `{placeholder}`
+                    // tokens that `RequestList` fills in per row on the client, and
+                    // next-intl's `t()` refuses a message whose placeholders it was
+                    // given no values for — it renders the key path instead. That is
+                    // what put a literal "portal.unitsProgress" on every row.
                     copy={{
                         noAcceptedDonors: t('noAcceptedDonors'),
                         donatedOnLabel: t('donatedOnLabel'),
@@ -124,11 +178,90 @@ export default async function PortalPage({
                         filterCritical: t('filterCritical'),
                         filterUrgent: t('filterUrgent'),
                         filterRoutine: t('filterRoutine'),
-                        pageLabel: t('pageLabel'),
+                        pageLabel: t.raw('pageLabel'),
+                        unitsProgress: t.raw('unitsProgress'),
+                        acceptedAtLabel: t('acceptedAtLabel'),
                     }}
                 />
             )}
+
+            {isStaff && result.ok ? (
+                <FulfilledSection
+                    requests={fulfilled}
+                    heading={t('fulfilledHeading')}
+                    emptyLabel={t('fulfilledEmpty')}
+                    unitsLabelFor={(request) => t('unitsNeeded', { count: request.unitsNeeded })}
+                />
+            ) : null}
         </main>
+    );
+}
+
+/**
+ * Work already done, kept on screen instead of vanishing.
+ *
+ * Collapsed by default — the open list is the job; this is the receipt. Newest first,
+ * because the question it answers is "did that confirmation go through", asked minutes
+ * after the confirmation.
+ */
+function FulfilledSection({
+    requests,
+    heading,
+    emptyLabel,
+    unitsLabelFor,
+}: {
+    requests: PortalRequest[];
+    heading: string;
+    emptyLabel: string;
+    unitsLabelFor: (request: PortalRequest) => string;
+}) {
+    const newestFirst = [...requests].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+    return (
+        <details data-testid="portal-fulfilled" className="group mt-10">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-black/60 select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:text-white/60">
+                <IconChevron className="h-4 w-4 transition-transform duration-200 group-open:rotate-180" />
+                <IconCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                {heading}
+                <span className="tabular-nums">({newestFirst.length})</span>
+            </summary>
+
+            {newestFirst.length === 0 ? (
+                <p
+                    data-testid="portal-fulfilled-empty"
+                    className="mt-3 text-sm text-black/50 dark:text-white/50"
+                >
+                    {emptyLabel}
+                </p>
+            ) : (
+                <ul className="mt-3 flex flex-col gap-2">
+                    {newestFirst.map((request) => (
+                        <li
+                            key={request.id}
+                            data-testid={`portal-fulfilled-${request.id}`}
+                            className="flex flex-wrap items-center gap-3 rounded-xl border border-black/10 bg-black/[0.015] px-4 py-3 text-sm dark:border-white/10 dark:bg-white/[0.02]"
+                        >
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-600/10 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                                <IconDroplet className="mr-0.5 -ml-0.5 h-3 w-3 opacity-70" />
+                                {request.patientBloodType}
+                            </span>
+                            <span className="text-black/70 dark:text-white/70">
+                                {unitsLabelFor(request)}
+                            </span>
+                            {request.hospital ? (
+                                <span className="text-black/50 dark:text-white/50">
+                                    {request.hospital.name}
+                                </span>
+                            ) : null}
+                            <RelativeTime
+                                iso={request.createdAt}
+                                className="ml-auto text-xs text-black/45 tabular-nums dark:text-white/45"
+                            />
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </details>
     );
 }
 
@@ -139,7 +272,7 @@ const URGENCY_RANK: Record<string, number> = { CRITICAL: 0, URGENT: 1, ROUTINE: 
  * it — staff scan top to bottom, not the whole list. Ties keep the server's own order
  * (newest first), which is the only ordering `GET /portal/requests` promises.
  */
-function sortByUrgency(requests: PortalRequest[]): PortalRequest[] {
+function sortByUrgency<T extends { urgency: string }>(requests: T[]): T[] {
     return [...requests].sort(
         (a, b) => (URGENCY_RANK[a.urgency] ?? 9) - (URGENCY_RANK[b.urgency] ?? 9),
     );

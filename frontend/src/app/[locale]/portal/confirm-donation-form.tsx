@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState } from 'react';
 import { confirmDonationAction } from './actions';
-import { IconCheck } from './icons';
+import { IconCheck } from '@/components/icons';
 
 type Copy = {
     donatedOnLabel: string;

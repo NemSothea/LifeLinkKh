@@ -28,6 +28,7 @@ export default function SearchableSelect({
     testId,
     defaultValue,
     noMatchesLabel,
+    requiredMessage,
 }: {
     name: string;
     options: SearchableOption[];
@@ -36,6 +37,8 @@ export default function SearchableSelect({
     testId: string;
     defaultValue?: string;
     noMatchesLabel: string;
+    /** Shown by the browser when [required] and nothing is chosen. */
+    requiredMessage?: string;
 }) {
     const [query, setQuery] = useState('');
     const [open, setOpen] = useState(false);
@@ -44,6 +47,7 @@ export default function SearchableSelect({
         () => options.find((option) => option.value === defaultValue) ?? null,
     );
     const containerRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
     const listboxId = useId();
 
     const filtered =
@@ -52,6 +56,21 @@ export default function SearchableSelect({
             : options.filter((option) =>
                   option.searchText.toLowerCase().includes(query.toLowerCase()),
               );
+
+    // `required` cannot live on the hidden input that actually submits: the HTML spec
+    // exempts hidden inputs from constraint validation entirely, so the attribute was
+    // silently doing nothing and the form posted an empty value — which the server then
+    // refused, and the page reported as one generic "could not grant access".
+    //
+    // The visible combobox is a real, focusable, validatable control, so the requirement
+    // goes there through the Constraint Validation API. A non-empty custom validity
+    // message blocks submission and anchors the browser's own bubble to the field the
+    // admin has to fix.
+    useEffect(() => {
+        inputRef.current?.setCustomValidity(
+            required && !selected ? (requiredMessage ?? '') : '',
+        );
+    }, [required, selected, requiredMessage]);
 
     useEffect(() => {
         if (!open) return;
@@ -91,10 +110,12 @@ export default function SearchableSelect({
 
     return (
         <div ref={containerRef} className="relative">
-            <input type="hidden" name={name} value={selected?.value ?? ''} required={required} />
+            <input type="hidden" name={name} value={selected?.value ?? ''} />
             <input
+                ref={inputRef}
                 type="text"
                 role="combobox"
+                aria-required={required}
                 aria-expanded={open}
                 aria-controls={listboxId}
                 aria-autocomplete="list"

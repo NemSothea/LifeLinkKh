@@ -1,5 +1,5 @@
 import { apiGet, apiPost, type ApiResult } from './client';
-import { portalAuthHeader } from './dev-auth';
+import { portalAuthHeader } from './session';
 
 /**
  * Typed against `GET`/`POST /api/portal/requests...` in
@@ -35,11 +35,20 @@ export type ConfirmDonationResult = {
     donorNextEligibleOn: string;
 };
 
-export function listOpenRequests(): Promise<ApiResult<PortalRequest[]>> {
-    return apiGet<PortalRequest[]>('/portal/requests?status=OPEN', portalAuthHeader());
+export async function listOpenRequests(): Promise<ApiResult<PortalRequest[]>> {
+    return apiGet<PortalRequest[]>('/portal/requests?status=OPEN', await portalAuthHeader());
 }
 
-export function confirmDonation(
+/**
+ * The same endpoint with the other status the contract allows. `status` takes one value
+ * (`openapi.yaml`: `enum: [OPEN, FULFILLED, CANCELLED]`), so "open plus what we finished"
+ * is two calls, not one filter.
+ */
+export async function listFulfilledRequests(): Promise<ApiResult<PortalRequest[]>> {
+    return apiGet<PortalRequest[]>('/portal/requests?status=FULFILLED', await portalAuthHeader());
+}
+
+export async function confirmDonation(
     requestId: string,
     matchId: string,
     donatedOn: string,
@@ -47,6 +56,6 @@ export function confirmDonation(
     return apiPost<ConfirmDonationResult>(
         `/portal/requests/${requestId}/confirm-donation`,
         { matchId, donatedOn },
-        portalAuthHeader(),
+        await portalAuthHeader(),
     );
 }
