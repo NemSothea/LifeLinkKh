@@ -6,6 +6,11 @@
      the untracked .env, and isn't even consumed server-side (Firebase Auth
      verifies Facebook natively — FR-AUTH-004 scope). -->
 <resources>
+    <!-- The launcher label. Localized in values-km/; the launcher follows the
+         device locale, not the app's in-app language switch (FR-GLOBAL-001), so
+         these two are the whole set. -->
+    <string name="app_name">LifeLink KH</string>
+
     <string name="facebook_app_id">1538785524224504</string>
     <string name="fb_login_protocol_scheme">fb1538785524224504</string>
     <!-- From the Meta App dashboard: Settings -> Advanced -> Client Token. Not

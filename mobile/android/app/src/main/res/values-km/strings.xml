@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Khmer launcher label. "ជីវិត" (life) is the product's Khmer name and what the
+     app bar shows; the Latin name is not transliterated because the brand is used
+     as-is in Khmer copy. -->
+<resources>
+    <string name="app_name">ជីវិត</string>
+</resources>
