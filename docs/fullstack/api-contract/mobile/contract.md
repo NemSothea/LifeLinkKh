@@ -23,6 +23,9 @@ Base URL `/api`. All responses JSON. All errors use the shape in "Errors" below.
 | POST | `/auth/google` | Exchange a Google ID token for our JWT; create the account on first sign-in | none | FR-AUTH-003 | M3 |
 | POST | `/auth/fcm-token` | Register/refresh this device's FCM token | JWT | FR-NOTIFY-001 | M3 |
 | DELETE | `/auth/fcm-token` | Sign-out: stop pushing to this device. No body | JWT | FR-AUTH-003, FR-NOTIFY-001 | M3 |
+| POST | `/auth/telegram/start` | Begin Telegram sign-in; returns a session token and a `t.me` deep link | none | FR-AUTH-004 | post-M7 |
+| POST | `/auth/telegram/verify` | Exchange the bot's 6-digit code for our JWT | none | FR-AUTH-004 | post-M7 |
+| POST | `/auth/telegram/webhook` | Telegram's callback. **Never called by the app**; gated on a secret header, not a JWT | secret header | FR-AUTH-004 | post-M7 |
 | GET  | `/districts` | Districts for the registration dropdown, Khmer-sorted | JWT | FR-DONOR-001 | M3 |
 | GET  | `/donors/me` | Own donor profile + computed eligibility | JWT | FR-DONOR-001/002 | M3 |
 | PUT  | `/donors/me` | Create or update own donor profile | JWT | FR-DONOR-001 | M3 |
@@ -35,11 +38,16 @@ Base URL `/api`. All responses JSON. All errors use the shape in "Errors" below.
 | POST | `/matches/{id}/respond` | Accept or decline | JWT | FR-REQUEST-002 | M4 |
 | GET  | `/donations/me` | Own donation history | JWT | FR-DONATION-001 | M5 |
 
-Thirteen endpoints for the whole product. If a fourteenth appears, check it against `scope.md` first.
+Thirteen endpoints for the product in `scope.md`'s build, plus the three `FR-AUTH-004` Telegram
+endpoints added after M7. If a seventeenth appears, check it against `scope.md` first.
 
 ## Auth
 
-`POST /auth/google` is the only unauthenticated endpoint besides `/health`.
+`POST /auth/google` is the only unauthenticated endpoint besides `/health` — and, since
+`FR-AUTH-004`, the three `/auth/telegram/*` paths, which are unauthenticated for the same
+reason: they run before a session exists. `webhook` is the exception to the exception, gated on
+`X-Telegram-Bot-Api-Secret-Token` because Telegram calls it and there is no user in the request
+(TM-AUTH-002).
 
 ```
 POST /auth/google

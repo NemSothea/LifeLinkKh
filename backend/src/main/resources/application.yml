@@ -85,3 +85,19 @@ server:
 logging:
   level:
     org.flywaydb: info
+
+# Swagger UI. Off unless a profile turns it on — see application-local.yml.
+#
+# Off by default rather than on, because this is the one dependency in the build that
+# serves a description of every endpoint to whoever asks. On a deployment it is a map of
+# the attack surface handed out for free; SecurityConfig will not permit its paths while
+# these are false, so a misconfigured deployment fails closed.
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
+    # Groups the operations the way the two hand-written contracts are split, so the UI
+    # and the contract documents can be read side by side.
+    tags-sorter: alpha
+    operations-sorter: alpha

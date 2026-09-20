@@ -22,10 +22,16 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 /**
  * M3 replaces M2's {@code anyRequest().permitAll()} wholesale, as that class said it would.
  *
- * <p><strong>Deny by default.</strong> Three things are permitted without a token and everything
- * else is authenticated — written as {@code anyRequest().authenticated()}, never as an enumerated
- * deny-list. An endpoint added later must be deliberately opened rather than accidentally left
- * open, because that mistake fails open and every existing test still passes.
+ * <p><strong>Deny by default.</strong> A small set of paths is permitted without a token and
+ * everything else is authenticated — written as {@code anyRequest().authenticated()}, never as an
+ * enumerated deny-list. An endpoint added later must be deliberately opened rather than
+ * accidentally left open, because that mistake fails open and every existing test still passes.
+ *
+ * <p>The permitted set is {@code /health}, {@code GET /public/**}, {@code POST /auth/google},
+ * {@code POST /auth/portal/login} and {@code POST /auth/telegram/**} — plus, <em>only while
+ * springdoc is enabled</em>, the Swagger paths. That last one is conditional on purpose: it is
+ * documentation, not a product surface, and it should not be reachable on a deployment that did not
+ * ask for it.
  */
 @Configuration
 @EnableWebSecurity
@@ -34,14 +40,20 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final List<String> allowedOrigins;
     private final com.fasterxml.jackson.databind.ObjectMapper json;
+    private final boolean apiDocsEnabled;
 
     SecurityConfig(
             JwtAuthFilter jwtAuthFilter,
             @Value("${lifelink.cors.allowed-origins}") List<String> allowedOrigins,
-            com.fasterxml.jackson.databind.ObjectMapper json) {
+            com.fasterxml.jackson.databind.ObjectMapper json,
+            // Read from springdoc's own switch rather than a second flag of our own, so the
+            // exemption cannot outlive the thing it exists for. Defaulted false: a property
+            // that is missing means Swagger is not running, which means no exemption.
+            @Value("${springdoc.api-docs.enabled:false}") boolean apiDocsEnabled) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.allowedOrigins = allowedOrigins;
         this.json = json;
+        this.apiDocsEnabled = apiDocsEnabled;
     }
 
     @Bean
@@ -55,40 +67,57 @@ public class SecurityConfig {
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
-                        auth ->
-                                auth.requestMatchers(HttpMethod.OPTIONS, "/**")
-                                        .permitAll()
-                                        .requestMatchers(HttpMethod.GET, "/health")
-                                        .permitAll()
-                                        // The public live board (DEC-009). Read-only, OPEN
-                                        // requests only, and served by its own service and
-                                        // DTOs so no portal field can reach it by accident.
-                                        .requestMatchers(HttpMethod.GET, "/public/**")
-                                        .permitAll()
-                                        .requestMatchers(HttpMethod.POST, "/auth/google")
-                                        .permitAll()
-                                        // Portal staff sign-in. Unauthenticated by
-                                        // definition — it is the thing that produces a
-                                        // session — and rate limited in AuthController for
-                                        // the same reason /auth/google is.
-                                        .requestMatchers(HttpMethod.POST, "/auth/portal/login")
-                                        .permitAll()
-                                        // TM-AUTH-002. /webhook is called by Telegram, never the
-                                        // app, and is gated on the secret-token header instead of a
-                                        // JWT — see TelegramAuthController.
-                                        .requestMatchers(HttpMethod.POST, "/auth/telegram/**")
-                                        .permitAll()
-                                        // FR-PORTAL-001. RBAC scoped by hospital happens in
-                                        // PortalService; this is the role half — a DONOR or
-                                        // REQUESTER JWT gets 403 before the controller runs.
-                                        .requestMatchers("/portal/**")
-                                        .hasAnyRole("HOSPITAL", "ADMIN")
-                                        // TM-AUTH-001 E1 — staff provisioning. HOSPITAL and
-                                        // REQUESTER/DONOR JWTs get 403 before AdminController runs.
-                                        .requestMatchers("/admin/**")
-                                        .hasRole("ADMIN")
-                                        .anyRequest()
-                                        .authenticated())
+                        auth -> {
+                            auth.requestMatchers(HttpMethod.OPTIONS, "/**")
+                                    .permitAll()
+                                    .requestMatchers(HttpMethod.GET, "/health")
+                                    .permitAll()
+                                    // The public live board (DEC-009). Read-only, OPEN
+                                    // requests only, and served by its own service and
+                                    // DTOs so no portal field can reach it by accident.
+                                    .requestMatchers(HttpMethod.GET, "/public/**")
+                                    .permitAll()
+                                    .requestMatchers(HttpMethod.POST, "/auth/google")
+                                    .permitAll()
+                                    // Portal staff sign-in. Unauthenticated by
+                                    // definition — it is the thing that produces a
+                                    // session — and rate limited in AuthController for
+                                    // the same reason /auth/google is.
+                                    .requestMatchers(HttpMethod.POST, "/auth/portal/login")
+                                    .permitAll()
+                                    // TM-AUTH-002. /webhook is called by Telegram, never the
+                                    // app, and is gated on the secret-token header instead of a
+                                    // JWT — see TelegramAuthController.
+                                    .requestMatchers(HttpMethod.POST, "/auth/telegram/**")
+                                    .permitAll()
+                                    // FR-PORTAL-001. RBAC scoped by hospital happens in
+                                    // PortalService; this is the role half — a DONOR or
+                                    // REQUESTER JWT gets 403 before the controller runs.
+                                    .requestMatchers("/portal/**")
+                                    .hasAnyRole("HOSPITAL", "ADMIN")
+                                    // TM-AUTH-001 E1 — staff provisioning. HOSPITAL and
+                                    // REQUESTER/DONOR JWTs get 403 before AdminController runs.
+                                    .requestMatchers("/admin/**")
+                                    .hasRole("ADMIN");
+
+                            // Swagger UI, and only while it is switched on. The fourth
+                            // exemption in a chain that had three, so it is conditional
+                            // rather than permanent: with springdoc disabled — the default
+                            // everywhere but the `local` profile — these matchers are never
+                            // registered and the paths fall to anyRequest().authenticated()
+                            // like anything else. A deployment that forgets to think about
+                            // Swagger does not publish a map of its own attack surface.
+                            if (apiDocsEnabled) {
+                                auth.requestMatchers(
+                                                HttpMethod.GET,
+                                                "/v3/api-docs/**",
+                                                "/swagger-ui/**",
+                                                "/swagger-ui.html")
+                                        .permitAll();
+                            }
+
+                            auth.anyRequest().authenticated();
+                        })
                 .exceptionHandling(
                         handling ->
                                 handling.authenticationEntryPoint(

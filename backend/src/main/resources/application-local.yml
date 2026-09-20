@@ -1,0 +1,17 @@
+# Local development only. `local` is the profile docker-compose sets by default
+# (SPRING_PROFILES_ACTIVE:-local) and the one a developer runs on their own machine.
+#
+# Nothing in here may be a credential or a security relaxation that matters anywhere
+# else — this file is committed, and a profile is not a secret store.
+
+springdoc:
+  # Swagger UI at http://127.0.0.1:8080/api/swagger-ui/index.html
+  #
+  # Safe here and nowhere else: the stack binds to 127.0.0.1 (docker-compose.yml), and
+  # the endpoint list is already public information in docs/fullstack/api-contract/.
+  # On a deployment it would be a free map of the attack surface, which is why the
+  # default in application.yml is false and this override is scoped to one profile.
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

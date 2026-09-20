@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: LifeLink KH — Mobile API
-  version: 0.5.0
+  version: 0.6.0
   description: |
     Flutter donor/requester app. Machine twin of contract.md — this file wins on conflict.
     Scope: the 8 core FRs only (docs/scope.md). Deferred FRs have no endpoints here.
@@ -120,6 +120,155 @@ paths:
       responses:
         '204': { description: Cleared, or already empty }
         '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/telegram/start:
+    post:
+      tags: [auth]
+      summary: Begin Telegram sign-in — mint a session token and a deep link
+      description: |
+        First of the two calls the app makes (FR-AUTH-004, TM-AUTH-002). Unauthenticated, like
+        `POST /auth/google`: it is called before a session exists.
+
+        Returns a `deepLink` the app opens in Telegram. That is what associates a Telegram chat
+        with this attempt — the bot answers with a 6-digit code, and the app collects the code
+        and posts it to `/auth/telegram/verify` with the same `sessionToken`.
+
+        Rate-limited **per client IP**, not per user, because there is no user yet. A caller who
+        exceeds it gets 429.
+
+        Answers `503 AUTH_PROVIDER_UNCONFIGURED` when no bot token is set, the same shape
+        `POST /auth/google` uses without a Firebase service account. That is the designed
+        behaviour on a stack that has not been given credentials, not a fault.
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum: [DONOR, REQUESTER]
+                  default: DONOR
+                  description: |
+                    Honoured only when this Telegram chat has no account yet; ignored entirely for
+                    a returning one, so it cannot be used to escalate an existing account. HOSPITAL
+                    and ADMIN are not self-service (TM-AUTH-002 E1) and are rejected with 422.
+      responses:
+        '200':
+          description: Session started
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sessionToken, deepLink]
+                properties:
+                  sessionToken:
+                    type: string
+                    description: Opaque. Passed back unchanged to /auth/telegram/verify.
+                  deepLink:
+                    type: string
+                    format: uri
+                    example: https://t.me/lifelink_kh_bot?start=Yd3H1qk9
+        '422':
+          description: '`ROLE_NOT_SELF_SERVICE` — HOSPITAL and ADMIN are admin-provisioned'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503':
+          description: '`AUTH_PROVIDER_UNCONFIGURED` — no bot token on this deployment'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /auth/telegram/verify:
+    post:
+      tags: [auth]
+      summary: Exchange the 6-digit code for our JWT
+      description: |
+        Second of the two calls. Same response shape as `POST /auth/google` — one session JWT,
+        whichever provider proved the identity.
+
+        The code is 6 digits and lives **5 minutes**. It is stored as a SHA-256 hash and compared
+        with a constant-time comparison, so neither the database nor the comparison timing carries
+        the code itself.
+
+        Three separate failures, deliberately distinguishable to the app but not to an attacker:
+        a wrong or expired code is `401 TELEGRAM_CODE_INVALID` (the same code for both — telling
+        them apart would confirm a session token exists), too many wrong codes is
+        `422 TOO_MANY_ATTEMPTS`, and too many requests is 429.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessionToken, code]
+              properties:
+                sessionToken:
+                  type: string
+                  description: Exactly as returned by /auth/telegram/start.
+                code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+                  example: '048216'
+      responses:
+        '200':
+          description: Signed in
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401':
+          description: '`TELEGRAM_CODE_INVALID` — wrong code, expired code, or unknown session'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422':
+          description: '`TOO_MANY_ATTEMPTS` — the challenge is burned; start again'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /auth/telegram/webhook:
+    post:
+      tags: [auth]
+      summary: Telegram's callback — never called by the app
+      description: |
+        Documented because it is part of this API's public surface, **not** because a client calls
+        it. Telegram calls it; the Flutter app never does.
+
+        Authenticated by the `X-Telegram-Bot-Api-Secret-Token` header rather than a JWT — there is
+        no user in this request. A missing or wrong header is 401 with no body.
+
+        **Always 200 once the header checks out**, including for an unrecognised or already-used
+        session token. Telegram retries a webhook that does not answer promptly, so a non-2xx on
+        a message we simply do not care about would make it retry that message indefinitely. The
+        no-op is silent on purpose.
+
+        The request body is Telegram's own Update object, which this API does not define — only
+        `message.text` beginning with `/start ` is read, and everything else is ignored.
+      security: []
+      parameters:
+        - name: X-Telegram-Bot-Api-Secret-Token
+          in: header
+          required: true
+          schema: { type: string }
+          description: Shared secret configured when the webhook is registered with Telegram.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Telegram Update. Only `message.text`, `message.chat.id` and `message.from.first_name` are read.
+      responses:
+        '200': { description: Accepted, or ignored — indistinguishable by design }
+        '401': { description: Missing or wrong secret-token header. No body. }
 
   /donors/me:
     get:
