@@ -68,6 +68,23 @@ class GlobalExceptionHandlerTest {
     }
 
     /**
+     * A path no controller maps is the caller's mistake, not a server fault. Before this handler
+     * existed it reached {@code onUnexpected} and answered 500, which told a client with a typo'd
+     * URL that the backend was broken.
+     */
+    @Test
+    void unmappedPath_isFourOhFourAndDoesNotEchoThePath() {
+        ResponseEntity<ErrorResponse> response = handler.onNoResourceFound();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        ErrorResponse body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.error().code()).isEqualTo("NOT_FOUND");
+        // The requested path is attacker-supplied; reflecting it is TM-AUTH-001 I2.
+        assertThat(body.error().message()).isEqualTo("No such endpoint.");
+    }
+
+    /**
      * The contract test: the serialized JSON must be exactly the envelope declared by {@code
      * components/schemas/Error}, with no timestamp and no other top-level key.
      */

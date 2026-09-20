@@ -45,6 +45,21 @@ public class GlobalExceptionHandler {
                                 "CONSTRAINT_VIOLATED", "A referenced value does not exist."));
     }
 
+    /**
+     * A request for a path no controller maps. Spring raises this rather than returning 404 on its
+     * own, so without a handler it fell through to {@link #onUnexpected} and a typo'd URL answered
+     * {@code 500 INTERNAL_ERROR} — a client cannot tell "I got the path wrong" from "the server is
+     * broken", and an operator watching error rates sees a fault that never happened.
+     *
+     * <p>The path is not echoed back. It is attacker-supplied and would be reflected verbatim into
+     * a response body (TM-AUTH-001 I2), and it tells the caller nothing they did not just send.
+     */
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    ResponseEntity<ErrorResponse> onNoResourceFound() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of("NOT_FOUND", "No such endpoint."));
+    }
+
     @ExceptionHandler(Exception.class)
     ResponseEntity<ErrorResponse> onUnexpected(Exception ex) {
         // The cause is logged, never returned — an error body must not describe the server.
