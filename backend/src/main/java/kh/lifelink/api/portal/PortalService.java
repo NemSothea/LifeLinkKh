@@ -80,8 +80,8 @@ public class PortalService {
      * trim stands, and {@code CANCELLED} is refused rather than silently given a filter nobody
      * built.
      *
-     * {@code FULFILLED} was added because refusing it made the portal lie about its own work: the
-     * {@code PORTAL-open-requests} prototype settled that "a confirmed row shows requestStatus
+     * <p>{@code FULFILLED} was added because refusing it made the portal lie about its own work:
+     * the {@code PORTAL-open-requests} prototype settled that "a confirmed row shows requestStatus
      * inline rather than disappearing, so staff can see today's work at a glance," and with only
      * OPEN listable, confirming the last unit a request needed made the row vanish with no trace
      * that anything had happened. {@code openapi.yaml} has always declared the wider enum; this

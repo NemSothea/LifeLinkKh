@@ -90,8 +90,8 @@ class PortalServiceTest {
 
     /**
      * The portal's "recently fulfilled" section is this call with the other status. Without it,
-     * confirming the last unit a request needed made the row disappear with nothing to show for
-     * it — see {@code PortalService.listRequests}.
+     * confirming the last unit a request needed made the row disappear with nothing to show for it
+     * — see {@code PortalService.listRequests}.
      */
     @Test
     void fulfilledRequestsAreListable() {

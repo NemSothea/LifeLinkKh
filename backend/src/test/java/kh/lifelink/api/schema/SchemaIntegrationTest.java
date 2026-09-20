@@ -190,11 +190,11 @@ class SchemaIntegrationTest {
     }
 
     /**
-     * V12. The distance sort of ADR 0004/0003 is the one algorithm in this product, and
-     * {@code request_matches.distance_km} is written once at match time and never recomputed (V6).
-     * A latitude and longitude entered the wrong way round is therefore not a display bug a refresh
-     * fixes — it is a permanently wrong distance on every match that donor is ever offered.
-     * Phnom Penh's longitude, 104.92, is a plausible-looking NUMERIC(8,5) that no latitude can be.
+     * V12. The distance sort of ADR 0004/0003 is the one algorithm in this product, and {@code
+     * request_matches.distance_km} is written once at match time and never recomputed (V6). A
+     * latitude and longitude entered the wrong way round is therefore not a display bug a refresh
+     * fixes — it is a permanently wrong distance on every match that donor is ever offered. Phnom
+     * Penh's longitude, 104.92, is a plausible-looking NUMERIC(8,5) that no latitude can be.
      */
     @Test
     void aTransposedDonorCoordinateIsRejected() {

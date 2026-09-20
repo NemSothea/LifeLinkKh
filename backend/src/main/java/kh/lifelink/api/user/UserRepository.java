@@ -14,10 +14,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByTelegramChatId(Long telegramChatId);
 
     /**
-     * The portal sign-in lookup. Unique in the schema, so at most one row — and the caller
-     * must treat an empty result exactly like a wrong password (see
-     * {@code AuthService.signInWithPassword}), or the response time tells an attacker
-     * which usernames exist.
+     * The portal sign-in lookup. Unique in the schema, so at most one row — and the caller must
+     * treat an empty result exactly like a wrong password (see {@code
+     * AuthService.signInWithPassword}), or the response time tells an attacker which usernames
+     * exist.
      */
     Optional<User> findByUsername(String username);
 

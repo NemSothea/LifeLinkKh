@@ -149,9 +149,9 @@ public class SecurityConfig {
 
     /**
      * BCrypt, at Spring Security's own default cost. Chosen over a bare digest for the property a
-     * digest does not have: it is deliberately slow and individually salted, so a leaked
-     * {@code password_hash} column cannot be attacked with a rainbow table and each row has to be
-     * broken on its own.
+     * digest does not have: it is deliberately slow and individually salted, so a leaked {@code
+     * password_hash} column cannot be attacked with a rainbow table and each row has to be broken
+     * on its own.
      *
      * <p>The cost factor is left at the library default rather than pinned here, so an upgrade that
      * raises it applies without an edit — {@code matches()} reads the cost out of the stored hash,

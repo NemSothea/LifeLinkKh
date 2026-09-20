@@ -49,10 +49,10 @@ public class AdminService {
      * Creates a portal account outright, rather than promoting one that already exists.
      *
      * <p>Both paths are needed and neither replaces the other. Promotion is right for someone who
-     * already uses the mobile app — it keeps their verified Google identity and their history.
-     * This is right for a desk-only account with no phone in the loop, which promotion cannot
-     * reach because there is no row to promote; before this existed such an account could only be
-     * created by writing a Flyway migration.
+     * already uses the mobile app — it keeps their verified Google identity and their history. This
+     * is right for a desk-only account with no phone in the loop, which promotion cannot reach
+     * because there is no row to promote; before this existed such an account could only be created
+     * by writing a Flyway migration.
      *
      * <p>Role rules are the promote endpoint's, unchanged: HOSPITAL needs a hospital, ADMIN must
      * not have one. Enforcing them in one shape in two places is deliberate — a caller must not be
@@ -102,7 +102,8 @@ public class AdminService {
         User saved = users.save(user);
 
         // The username, never the password, and never a hash.
-        log.info("staff account created user={} username={} role={}", saved.getId(), username, role);
+        log.info(
+                "staff account created user={} username={} role={}", saved.getId(), username, role);
         return new StaffResponse(
                 saved.getId(),
                 saved.getDisplayName(),
@@ -137,14 +138,19 @@ public class AdminService {
                 hospitals
                         .findById(hospitalId)
                         .orElseThrow(
-                                () -> ApiException.notFound("HOSPITAL_NOT_FOUND", "No such hospital."));
+                                () ->
+                                        ApiException.notFound(
+                                                "HOSPITAL_NOT_FOUND", "No such hospital."));
 
         target.setRole("HOSPITAL");
         target.setHospitalId(hospitalId);
         log.info("staff demoted user={} by={} hospital={}", targetId, callerId, hospitalId);
         return new StaffResponse(
-                target.getId(), target.getDisplayName(), target.getRole(),
-                target.getHospitalId(), hospital.getName());
+                target.getId(),
+                target.getDisplayName(),
+                target.getRole(),
+                target.getHospitalId(),
+                hospital.getName());
     }
 
     /**
@@ -156,9 +162,9 @@ public class AdminService {
      *       or Telegram credential, so it goes back to {@code DONOR} and keeps working as an
      *       ordinary app account. Nothing is destroyed.
      *   <li>A <strong>portal-only</strong> account has nowhere to go back to — it exists only to
-     *       sign in here — so it is deactivated instead. The row stays because
-     *       {@code donations.confirmed_by_user_id} points at it; deleting it would either fail on
-     *       the foreign key or erase who confirmed a donation.
+     *       sign in here — so it is deactivated instead. The row stays because {@code
+     *       donations.confirmed_by_user_id} points at it; deleting it would either fail on the
+     *       foreign key or erase who confirmed a donation.
      * </ul>
      */
     @Transactional
@@ -173,7 +179,10 @@ public class AdminService {
         if (canStillAuthenticateElsewhere) {
             target.setRole("DONOR");
             target.setHospitalId(null);
-            log.info("staff access revoked user={} by={} outcome=RETURNED_TO_DONOR", targetId, callerId);
+            log.info(
+                    "staff access revoked user={} by={} outcome=RETURNED_TO_DONOR",
+                    targetId,
+                    callerId);
         } else {
             target.setDeactivatedAt(java.time.OffsetDateTime.now());
             target.setHospitalId(null);
@@ -184,9 +193,11 @@ public class AdminService {
     private User requireStaff(UUID userId) {
         User user =
                 users.findById(userId)
-                        .orElseThrow(() -> ApiException.notFound("USER_NOT_FOUND", "No such user."));
+                        .orElseThrow(
+                                () -> ApiException.notFound("USER_NOT_FOUND", "No such user."));
         if (!STAFF_ROLES.contains(user.getRole()) || user.getDeactivatedAt() != null) {
-            throw ApiException.unprocessable("NOT_STAFF", "That account does not have portal access.");
+            throw ApiException.unprocessable(
+                    "NOT_STAFF", "That account does not have portal access.");
         }
         return user;
     }
@@ -209,7 +220,8 @@ public class AdminService {
      * access to anyone ever again.
      */
     private void refuseLastAdmin(User target) {
-        if ("ADMIN".equals(target.getRole()) && users.countByRoleAndDeactivatedAtIsNull("ADMIN") <= 1) {
+        if ("ADMIN".equals(target.getRole())
+                && users.countByRoleAndDeactivatedAtIsNull("ADMIN") <= 1) {
             throw ApiException.unprocessable(
                     "LAST_ADMIN", "This is the only administrator. Grant another one first.");
         }

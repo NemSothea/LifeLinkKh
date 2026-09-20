@@ -8,11 +8,11 @@ import java.util.UUID;
 /**
  * {@code POST /admin/staff/accounts} — create a portal account outright, username and password.
  *
- * <p>The sibling of {@code AssignStaffRoleRequest}, for the case that one cannot serve.
- * Promotion requires an existing self-service account, because it turns a verified Google identity
- * into a staff one. But a hospital clerk who will only ever use a desktop browser has no mobile
- * account to promote, and until this endpoint existed the only way to give them one was a Flyway
- * migration written by a developer — which is not a workable way to hire someone.
+ * <p>The sibling of {@code AssignStaffRoleRequest}, for the case that one cannot serve. Promotion
+ * requires an existing self-service account, because it turns a verified Google identity into a
+ * staff one. But a hospital clerk who will only ever use a desktop browser has no mobile account to
+ * promote, and until this endpoint existed the only way to give them one was a Flyway migration
+ * written by a developer — which is not a workable way to hire someone.
  *
  * <p>Creating an identity here does not reopen {@code TM-AUTH-001} S1. That rule protects
  * <em>self-service</em> sign-up: nobody may claim to be someone by typing their name. This path is

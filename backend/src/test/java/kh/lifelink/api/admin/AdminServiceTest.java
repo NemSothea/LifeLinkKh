@@ -19,9 +19,9 @@ import kh.lifelink.api.hospital.Hospital;
 import kh.lifelink.api.hospital.HospitalRepository;
 import kh.lifelink.api.user.User;
 import kh.lifelink.api.user.UserRepository;
-import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -190,7 +190,9 @@ class AdminServiceTest {
         verify(users).save(saved.capture());
         // The plaintext must not reach the row, and the digest must verify.
         assertThat(saved.getValue().getPasswordHash()).isNotEqualTo("a-good-password");
-        assertThat(new BCryptPasswordEncoder().matches("a-good-password", saved.getValue().getPasswordHash()))
+        assertThat(
+                        new BCryptPasswordEncoder()
+                                .matches("a-good-password", saved.getValue().getPasswordHash()))
                 .isTrue();
     }
 
@@ -202,14 +204,21 @@ class AdminServiceTest {
                         () ->
                                 service.createStaffAccount(
                                         new CreateStaffAccountRequest(
-                                                "clerk", "a-good-password", "Clerk", "ADMIN", null)))
+                                                "clerk",
+                                                "a-good-password",
+                                                "Clerk",
+                                                "ADMIN",
+                                                null)))
                 .isInstanceOf(ApiException.class)
                 .extracting(ex -> ((ApiException) ex).getStatus())
                 .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
         verify(users, never()).save(any());
     }
 
-    /** The same role rules as promotion — a caller must not reach through this door what the other refuses. */
+    /**
+     * The same role rules as promotion — a caller must not reach through this door what the other
+     * refuses.
+     */
     @Test
     void refusesHospitalStaffWithNoHospital() {
         when(users.findByUsername("clerk")).thenReturn(Optional.empty());
@@ -218,7 +227,11 @@ class AdminServiceTest {
                         () ->
                                 service.createStaffAccount(
                                         new CreateStaffAccountRequest(
-                                                "clerk", "a-good-password", "Clerk", "HOSPITAL", null)))
+                                                "clerk",
+                                                "a-good-password",
+                                                "Clerk",
+                                                "HOSPITAL",
+                                                null)))
                 .isInstanceOf(ApiException.class);
         verify(users, never()).save(any());
     }
@@ -231,7 +244,11 @@ class AdminServiceTest {
                         () ->
                                 service.createStaffAccount(
                                         new CreateStaffAccountRequest(
-                                                "boss", "a-good-password", "Boss", "ADMIN", UUID.randomUUID())))
+                                                "boss",
+                                                "a-good-password",
+                                                "Boss",
+                                                "ADMIN",
+                                                UUID.randomUUID())))
                 .isInstanceOf(ApiException.class);
         verify(users, never()).save(any());
     }
@@ -242,7 +259,11 @@ class AdminServiceTest {
                         () ->
                                 service.createStaffAccount(
                                         new CreateStaffAccountRequest(
-                                                "someone", "a-good-password", "Someone", "DONOR", null)))
+                                                "someone",
+                                                "a-good-password",
+                                                "Someone",
+                                                "DONOR",
+                                                null)))
                 .isInstanceOf(ApiException.class);
         verify(users, never()).save(any());
     }
@@ -306,7 +327,9 @@ class AdminServiceTest {
                 .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
-    /** A promoted account keeps its Google credential, so it goes back to being an ordinary donor. */
+    /**
+     * A promoted account keeps its Google credential, so it goes back to being an ordinary donor.
+     */
     @Test
     void revokingAPromotedAccountReturnsItToDonor() {
         UUID caller = UUID.randomUUID();

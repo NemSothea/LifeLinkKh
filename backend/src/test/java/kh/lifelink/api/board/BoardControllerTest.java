@@ -5,13 +5,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import kh.lifelink.api.auth.JwtAuthFilter;
+import kh.lifelink.api.auth.JwtService;
 import kh.lifelink.api.board.dto.PublicRequestResponse;
+import kh.lifelink.api.config.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import kh.lifelink.api.auth.JwtAuthFilter;
-import kh.lifelink.api.auth.JwtService;
-import kh.lifelink.api.config.SecurityConfig;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -37,7 +37,9 @@ class BoardControllerTest {
         Mockito.when(rateLimiter.tryAcquire(Mockito.anyString())).thenReturn(true);
         Mockito.when(board.listOpenRequests()).thenReturn(List.<PublicRequestResponse>of());
 
-        mvc.perform(get("/public/requests")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
+        mvc.perform(get("/public/requests"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
     }
 
     /** Opening the board must not have opened the portal next to it. */

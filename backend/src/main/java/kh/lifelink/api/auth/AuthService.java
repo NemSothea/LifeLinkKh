@@ -82,7 +82,8 @@ public class AuthService {
         String storedHash = user == null ? null : user.getPasswordHash();
 
         // Always runs, always on a real digest, so every path costs the same time.
-        boolean hashMatches = passwords.matches(password, storedHash == null ? TIMING_DECOY_HASH : storedHash);
+        boolean hashMatches =
+                passwords.matches(password, storedHash == null ? TIMING_DECOY_HASH : storedHash);
 
         // Separate from the comparison on purpose: an account with no stored hash is refused
         // because it has no hash, not because the decoy failed to match. That ordering is what
@@ -175,7 +176,8 @@ public class AuthService {
         }
         if (passwords.matches(newPassword, user.getPasswordHash())) {
             throw ApiException.unprocessable(
-                    "PASSWORD_UNCHANGED", "The new password must be different from the current one.");
+                    "PASSWORD_UNCHANGED",
+                    "The new password must be different from the current one.");
         }
 
         user.setPasswordHash(passwords.encode(newPassword));

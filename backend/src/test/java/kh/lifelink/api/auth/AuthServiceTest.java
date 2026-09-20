@@ -167,9 +167,9 @@ class AuthServiceTest {
     }
 
     /**
-     * {@code users.language} decides which language an urgent-request alert is sent in
-     * ({@code RequestAlertNotifier}), and before this parameter existed nothing anywhere wrote it —
-     * every row kept V1's {@code 'km'} default whatever the donor had the app set to.
+     * {@code users.language} decides which language an urgent-request alert is sent in ({@code
+     * RequestAlertNotifier}), and before this parameter existed nothing anywhere wrote it — every
+     * row kept V1's {@code 'km'} default whatever the donor had the app set to.
      */
     @Test
     void registeringAnFcmTokenAlsoRecordsTheDonorsLanguage() {
@@ -475,7 +475,9 @@ class AuthServiceTest {
         assertThat(admin.getPasswordHash()).isEqualTo(before);
     }
 
-    /** A donor authenticates through Google or Telegram; giving them a password is a second way in. */
+    /**
+     * A donor authenticates through Google or Telegram; giving them a password is a second way in.
+     */
     @Test
     void aDonorHasNoPasswordToChange() {
         User donor = portalUser("DONOR", "old-password");
