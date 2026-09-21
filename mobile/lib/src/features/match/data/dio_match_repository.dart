@@ -41,11 +41,22 @@ final class DioMatchRepository implements MatchRepository {
     }
 
     @override
-    Future<Result<RespondResult>> respond(String matchId, MatchResponseType response) async {
+    Future<Result<RespondResult>> respond(
+        String matchId,
+        MatchResponseType response, {
+        String? idempotencyKey,
+    }) async {
         try {
             final result = await _dio.post<Map<String, dynamic>>(
                 '$matchesPath/$matchId/respond',
                 data: {'response': response.wireValue},
+                // Sent on every replay of a queued write. The backend does not read
+                // it yet — CR-MAPI is filed in docs/mobile/local-db-and-sync.md —
+                // and an unknown header is ignored, so sending it now costs nothing
+                // and means the client half is already in place when it lands.
+                options: idempotencyKey == null
+                    ? null
+                    : Options(headers: {'Idempotency-Key': idempotencyKey}),
             );
             final body = result.data;
             if (body == null) {

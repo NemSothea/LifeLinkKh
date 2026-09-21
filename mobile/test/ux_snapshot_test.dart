@@ -39,7 +39,11 @@ final class _FakeMatchRepository implements MatchRepository {
     @override
     Future<Result<List<Match>>> fetchMine() async => Success(matches);
     @override
-    Future<Result<RespondResult>> respond(String matchId, MatchResponseType response) =>
+    Future<Result<RespondResult>> respond(
+        String matchId,
+        MatchResponseType response, {
+        String? idempotencyKey,
+    }) =>
         throw UnimplementedError();
 }
 

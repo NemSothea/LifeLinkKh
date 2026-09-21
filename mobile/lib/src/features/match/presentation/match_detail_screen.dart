@@ -159,11 +159,56 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
                         key: const Key('match-compatible'),
                     ),
                     const SizedBox(height: 32),
+                    if (match.rejectedReason != null && match.response == null)
+                        Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Text(
+                                l10n.matchRejectedAfterQueue,
+                                key: const Key('match-rejected-after-queue'),
+                            ),
+                        ),
+                    if (match.isPending) _pendingBadge(context, l10n),
                     if (match.response == null) ..._respondActions(l10n),
                     if (match.response == MatchResponseType.accepted)
                         _acceptedResult(context, l10n, request),
                     if (match.response == MatchResponseType.declined)
                         Text(l10n.matchDeclinedTitle, key: const Key('match-declined')),
+                ],
+            ),
+        );
+    }
+
+    /// The donor answered, the answer is on the device, the hospital has not heard
+    /// it yet. Saying "not sent yet" is the honest version — a spinner would imply
+    /// the app is still trying, and silence would imply the hospital knows.
+    Widget _pendingBadge(BuildContext context, AppLocalizations l10n) {
+        final scheme = Theme.of(context).colorScheme;
+        return Container(
+            key: const Key('match-pending'),
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                    Row(
+                        children: [
+                            Icon(Icons.cloud_off, size: 16, color: scheme.onSurfaceVariant),
+                            const SizedBox(width: 6),
+                            Text(
+                                l10n.matchPendingBadge,
+                                style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                        ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                        l10n.matchPendingExplanation,
+                        style: Theme.of(context).textTheme.bodySmall,
+                    ),
                 ],
             ),
         );

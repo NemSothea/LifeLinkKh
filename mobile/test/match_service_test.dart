@@ -55,7 +55,11 @@ final class _FakeMatchRepository implements MatchRepository {
     Future<Result<List<Match>>> fetchMine() async => Success([_match()]);
 
     @override
-    Future<Result<RespondResult>> respond(String matchId, MatchResponseType response) async {
+    Future<Result<RespondResult>> respond(
+        String matchId,
+        MatchResponseType response, {
+        String? idempotencyKey,
+    }) async {
         respondedWith = response;
         return Success(
             RespondResult(matchId: matchId, response: response, respondedAt: DateTime(2026, 8, 7)),

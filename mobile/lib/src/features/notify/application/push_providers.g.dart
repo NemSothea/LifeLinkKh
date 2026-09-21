@@ -45,7 +45,7 @@ final pushTokenSourceProvider = Provider<PushTokenSource>.internal(
 // ignore: unused_element
 typedef PushTokenSourceRef = ProviderRef<PushTokenSource>;
 String _$pushRegistrationServiceHash() =>
-    r'7659127466f81cbbbfd8f59367c5c692dd6ed001';
+    r'653b33dacb4221e634f48d91d175c51c94e36bdb';
 
 /// See also [pushRegistrationService].
 @ProviderFor(pushRegistrationService)

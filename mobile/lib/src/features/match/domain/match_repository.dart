@@ -10,5 +10,13 @@ abstract interface class MatchRepository {
 
     /// Accept or decline. A second call on the same match is a 409, mapped to a
     /// [Failure] — one response, never overwritten in this build.
-    Future<Result<RespondResult>> respond(String matchId, MatchResponseType response);
+    ///
+    /// [idempotencyKey] is set when the call is a replay of a queued write. The
+    /// same key on a retry lets the server recognise a write it already applied,
+    /// rather than recording the donor's acceptance twice.
+    Future<Result<RespondResult>> respond(
+        String matchId,
+        MatchResponseType response, {
+        String? idempotencyKey,
+    });
 }

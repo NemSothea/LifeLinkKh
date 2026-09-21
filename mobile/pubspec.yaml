@@ -51,6 +51,11 @@ dependencies:
   # and it is a preference, not a credential — flutter_secure_storage (the Keystore /
   # Keychain, used for the session JWT) would be the wrong store for it.
   shared_preferences: ^2.5.5
+  drift: ^2.22.0
+  sqlite3_flutter_libs: ^0.6.0+eol
+  connectivity_plus: ^7.3.1
+  path_provider: ^2.1.6
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +72,7 @@ dev_dependencies:
   # Re-run after editing the source art:
   #   dart run flutter_launcher_icons
   flutter_launcher_icons: ^0.14.4
+  drift_dev: ^2.22.0
 
   # custom_lint + riverpod_lint are deliberately absent. The course lists them as
   # recommended rather than required (Week 4), and they cannot be solved on this

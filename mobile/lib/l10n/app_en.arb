@@ -539,6 +539,18 @@
     "@matchRespondFailed": {
         "description": "Error shown when POST /matches/{id}/respond fails"
     },
+    "matchPendingBadge": "Not sent yet",
+    "@matchPendingBadge": {
+        "description": "Badge on an answer written offline and still queued"
+    },
+    "matchPendingExplanation": "Saved on your phone. It will be sent as soon as you have a connection — you do not need to answer again.",
+    "@matchPendingExplanation": {
+        "description": "Caption under the pending badge, explaining the queued answer"
+    },
+    "matchRejectedAfterQueue": "This request was already closed before your answer reached the hospital.",
+    "@matchRejectedAfterQueue": {
+        "description": "Shown when a queued answer was refused on arrival — server wins"
+    },
     "matchAcceptedTitle": "Thank you — you accepted",
     "@matchAcceptedTitle": {
         "description": "Heading shown after accepting"
