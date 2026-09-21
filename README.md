@@ -1,159 +1,254 @@
-# LifeLink KH (ជីវិត) — Blood Donor Matching App
+<div align="center">
 
-Connecting patients and families who urgently need blood with nearby eligible
-voluntary donors in Cambodia — replacing the slow, ad-hoc Facebook-post approach
-hospitals use today.
+# LifeLink KH · ជីវិត
 
-> **Group 2** · Track B team product · Cross-Platform Mobile App Development (16-week course).
-> Course milestone **M7** = published to Google Play internal testing by Week 15.
+**Blood emergencies in Cambodia are coordinated by Facebook post. This is the alternative.**
+
+A donor-matching app that pushes a location-aware alert to compatible donors within seconds —
+Flutter for donors, Next.js for hospitals, one Spring Boot + PostgreSQL API behind both.
+
+![Flutter](https://img.shields.io/badge/Flutter-Android-02569B?logo=flutter&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-Java_21-6DB33F?logo=springboot&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-App_Router-000000?logo=nextdotjs&logoColor=white)
+![Khmer + English](https://img.shields.io/badge/i18n-ខ្មែរ_%2B_English-C8102E)
+![Tests](https://img.shields.io/badge/tests-382_passing-success)
+
+</div>
 
 ---
 
-## Why
+<div align="center">
 
-Cambodia faces chronic blood shortages. When a patient needs blood fast, there is no
-systematic way to alert compatible donors nearby. LifeLink KH sends **instant,
-location-aware push alerts** to matching donors' phones — something a website cannot do.
+![The hospital request board, in Khmer](docs/assets/screens/portal-board-km.jpg)
+
+*The public request board — Khmer is the default, because the users are Cambodian.*
+
+</div>
+
+| | |
+|---|---|
+| ![English portal](docs/assets/screens/portal-board-en.jpg) | ![Swagger UI](docs/assets/screens/swagger-ui.jpg) |
+| **Same board, one tap later.** Every screen ships Khmer and English. | **A live API console**, generated from the running code — not from a spec that drifted. |
+
+> Phone screenshots land with the demo recording. The images in `mobile/test/goldens/` are
+> layout goldens rendered with the test font, so every string is a black box — correct for
+> catching layout regressions, useless as a screenshot.
+
+---
+
+## The problem, stated honestly
+
+Cambodia has chronic blood shortages. When a patient needs blood *now*, there is no systematic way
+to reach compatible donors nearby — hospitals and families post to Facebook and hope. A post reaches
+whoever happens to be scrolling; it cannot filter by blood type, it cannot filter by distance, and it
+cannot wake a phone at 2am.
+
+**Why an app and not a website:** a website cannot push a time-critical notification to a donor's
+phone, and cannot read GPS in the background. Those two capabilities *are* the product.
 
 ## What it does
 
-1. **Donor register** — blood type, location, last-donation date, with an automatic
-   56-day eligibility check.
-2. **Urgent request broadcast** — a family or hospital posts a need; the app push-notifies
-   matching donors filtered by ABO/Rh compatibility and distance.
-3. **Donation history + eligibility reminder** — tracks the 56-day cooldown and reminds a
-   donor when they can give again.
+1. **Donor register** — blood type, district, last-donation date, with an automatic 56-day
+   eligibility check.
+2. **Urgent request broadcast** — a family or hospital posts a need; matching donors are selected by
+   **ABO/Rh compatibility** (a 27-row lookup table, not a string match) and distance, then alerted by
+   push.
+3. **Donation history and eligibility** — the 56-day cooldown, visible, with the date a donor becomes
+   eligible again.
 
-## Users
-
-- **Donor / Requester** → Flutter mobile app (Android, Play Store).
-- **Hospital staff / Admin** → Next.js web portal.
-
----
+Donors answer **offline-first**: an accept is written to SQLite and shown immediately, then synced
+when signal returns. A hospital basement is exactly where this app gets used.
 
 ## Architecture
 
-```
-                 Spring Boot API  ──>  PostgreSQL (Flyway migrations)
-                     ▲        ▲
-        REST/HTTPS   │        │   REST/HTTPS
-        Flutter app ─┘        └─ Next.js web portal
-     (donors/patients)          (hospitals/admin)
-      → Play Store
-```
+```mermaid
+flowchart TB
+    subgraph clients [" "]
+        M["📱 Flutter app<br/>donors · requesters<br/><i>Riverpod · go_router · Drift</i>"]
+        W["🖥️ Next.js portal<br/>hospitals · admin<br/><i>App Router · Tailwind</i>"]
+    end
 
-| Layer      | Tech |
-|------------|------|
-| Backend    | Spring Boot · PostgreSQL · Flyway · Spring Security (JWT) |
-| Web portal | Next.js (App Router, TypeScript, Tailwind) |
-| Mobile     | Flutter (native Android → Play Store) |
-| Push       | Firebase Cloud Messaging (FCM) |
-| Location   | geolocator (no map widget — see `docs/scope.md`) |
-| Local dev  | Docker · docker-compose (postgres + backend + web) |
-| CI         | GitHub Actions (owned by Tech Lead) |
+    API["⚙️ Spring Boot API<br/><i>JWT · Flyway · Spring Security</i>"]
+    DB[("🗄️ PostgreSQL 16")]
+    FCM["🔔 Firebase Cloud Messaging"]
 
-## Repository layout
+    M -->|REST / JSON| API
+    W -->|REST / JSON| API
+    API --> DB
+    API -->|push alert| FCM
+    FCM -.->|wakes the phone| M
 
-```
-backend/            Spring Boot + PostgreSQL API        (scaffolded at M2)
-frontend/           Next.js web portal, hospital/admin  (scaffolded at M2)
-mobile/             Flutter app, donors/patients        (scaffolded at M2)
-.github/workflows/  CI pipeline (owned by Tech Lead)
-docker-compose.yml  postgres + backend + web, local dev only (owned by Tech Lead)
-docs/               Capybara multi-role docs (see below)
-.capybara/          Framework state — brief.md, setup.md, validate.sh
+    style API fill:#C8102E,color:#fff
+    style DB fill:#4169E1,color:#fff
+    style FCM fill:#FFA000,color:#000
 ```
 
-## Getting started
+| Layer | Technology | Note |
+|---|---|---|
+| Mobile | Flutter → native Android | Four layers per feature, Riverpod 2.x with code generation ([ADR 0006](docs/tech-lead/adr/0006-flutter-course-architecture.md)) |
+| Backend | Spring Boot · Java 21 · Flyway | JWT sessions, ASVS Level 1 baseline ([ADR 0005](docs/tech-lead/adr/0005-asvs-level-1.md)) |
+| Database | PostgreSQL 16 | Schema below, migrations in `backend/src/main/resources/db/migration/` |
+| Web | Next.js App Router · TypeScript · Tailwind | Hospital board + staff admin |
+| Push | Firebase Cloud Messaging | Alert language follows the donor's own setting |
+| Location | `geolocator`, no map widget | Coordinates satisfy GPS; a map is a week of work for no gain ([DEC-004](docs/decisions.md)) |
 
-> Prerequisites: Docker Desktop (Compose v2), **JDK 21**, **Node 22**, Flutter SDK.
+### Data model
+
+```mermaid
+erDiagram
+    users ||--o| donor_profiles : "has profile (0..1)"
+    users ||--o{ blood_requests : "creates"
+    hospitals ||--o{ users : "employs (HOSPITAL role)"
+    hospitals ||--o{ blood_requests : "hosts"
+    hospitals ||--o{ donations : "receives at"
+    districts ||--o{ donor_profiles : "locates"
+    blood_requests ||--o{ request_matches : "alerts"
+    donor_profiles ||--o{ request_matches : "is alerted by"
+    donor_profiles ||--o{ donations : "gives"
+    blood_requests ||--o| donations : "fulfilled by"
+```
+
+`blood_compatibility` holds 27 recipient/donor pairs and is reference data, never user input — a
+28th row would mean giving somebody incompatible blood, so a test asserts the count
+([ADR 0004](docs/tech-lead/adr/0004-abo-rh-compatibility-lookup-table.md)).
+The full ERD with every column is in [`docs/tech-lead/data-model.md`](docs/tech-lead/data-model.md).
+
+---
+
+## Run it
+
+> **Prerequisites:** Docker Desktop (Compose v2), **JDK 21**, **Node 22**, Flutter SDK.
 > Node 20 trips `EBADENGINE` — CI and both Dockerfiles pin 22.
 
 ```bash
-cp .env.example .env       # then fill it in — see the runbook. NEVER commit .env
-bash scripts/dev-up.sh     # → API on :8080, web on :3000, postgres on :5433
-                           #   all bound to 127.0.0.1 (5433, not 5432: a host
-                           #   PostgreSQL install already owns 5432)
+cp .env.example .env       # fill it in — see the runbook. NEVER commit .env
+bash scripts/dev-up.sh     # API :8080 · web :3000 · postgres :5433, all on 127.0.0.1
+```
 
-# Flutter app (device or emulator, against the local API)
+| What | Where |
+|---|---|
+| Web portal | http://localhost:3000 |
+| API health | http://localhost:8080/api/health |
+| Swagger UI | http://localhost:8080/api/swagger-ui/index.html |
+
+```bash
+# Flutter app, against the local API
 cd mobile
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/api
 ```
 
-**Full runbook — install, `.env` values, and every failure we have actually hit:
-[`docs/tech-lead/local-development.md`](docs/tech-lead/local-development.md).** Read it before your
-first run. `POSTGRES_DB` and `POSTGRES_USER` are a shared team convention documented there; only
-`POSTGRES_PASSWORD` is yours alone.
+`--dart-define=API_BASE_URL` is **required** — the app fails fast rather than falling back to a
+default host. `10.0.2.2` is the Android emulator's alias for your machine.
 
-Use `scripts/dev-up.sh` rather than a bare `docker compose up` — it waits for health and then prints
-the applied Flyway migrations, which is the evidence QA signs each milestone against.
+Port 5433, not 5432: a host PostgreSQL install already owns 5432 on at least one dev machine, and
+the bind fails outright ([BUG-INFRA-001](docs/qa/bugs/BUG-INFRA-001-postgres-port-5432-occupied.md)).
 
-`--dart-define=API_BASE_URL` is **required** — the app fails fast with a clear error rather than
-falling back to a default host. `10.0.2.2` is the Android emulator's alias for your machine, where
-Compose publishes the backend.
+Use `scripts/dev-up.sh` rather than a bare `docker compose up` — it waits for health, then prints the
+applied Flyway migrations, which is the evidence QA signs each milestone against.
 
-Layer-by-layer setup, including the Flyway schema and the Compose service definitions, is specified in
-[`docs/fullstack/specs/foundation/`](docs/fullstack/specs/foundation/).
+**Full runbook, including every failure we have actually hit:**
+[`docs/tech-lead/local-development.md`](docs/tech-lead/local-development.md).
 
-_(All three code directories were scaffolded at M2 — see `docs/decisions.md`.)_
+### What you have to bring yourself
+
+| Needed for | What | Without it |
+|---|---|---|
+| Google Sign-In, push | A Firebase project + `mobile/android/app/google-services.json` | `POST /auth/google` answers `503 AUTH_PROVIDER_UNCONFIGURED` — by design, not a bug |
+| Push send | `secrets/firebase-service-account.json`, via `docker-compose.firebase.yml` | The API runs; alerts are recorded but not delivered |
+| Telegram sign-in | A bot token | That auth path is inert; Google still works |
+
+### ⚠️ Before you deploy this anywhere
+
+Two deliberate, documented debts make this **unsafe for real donor data as it stands**:
+
+1. **A seeded password is in the repository.** Migrations `V13`–`V16` create portal accounts, and
+   since `V16` all four share one value. Rotate before anything real —
+   [`docs/demo-runbook.md`](docs/demo-runbook.md) §9.
+2. **Donor names on the public board are world-readable** — a deliberate override of the auth threat
+   model for the pilot ([DEC-009](docs/decisions.md)), safe only because every donor row is a
+   team-created test account.
+
+Both have a recorded reason and a recorded expiry: *before any real donor's data is in this
+database*. See [`docs/scope.md`](docs/scope.md).
 
 ---
 
-## Team — Group 2
+## What makes this repo worth reading
+
+The code is ordinary. **The decision record is not** — every non-obvious choice here was argued in
+writing, including the ones we rejected and the ones we got wrong and reversed.
+
+| Start here | What it holds |
+|---|---|
+| [`docs/decisions.md`](docs/decisions.md) | Ten decisions (DEC-001…010) with the reasoning, the alternatives, and what each one cost |
+| [`docs/scope.md`](docs/scope.md) | **19 features requested, 8 built, 8 deferred — and why each cut was made.** The answer to "why isn't feature X in your app" |
+| [`docs/tech-lead/adr/`](docs/tech-lead/adr/) | 8 ADRs: Google Sign-In over phone OTP, location precision, the ABO/Rh table, session lifetime, why microservices was raised and rejected |
+| [`docs/security/`](docs/security/) | Threat models and security reviews, ASVS Level 1 baseline |
+| [`docs/qa/`](docs/qa/) | Test strategy, and a bug registry where each entry says what the green build was hiding |
+| [`docs/mobile/local-db-and-sync.md`](docs/mobile/local-db-and-sync.md) | Offline-first design: what syncs, what never leaves the server, and the conflict rule for each |
+| [`docs/po/prd.md`](docs/po/prd.md) | Product requirements and acceptance criteria |
+| [`docs/po/features/index.md`](docs/po/features/index.md) | Feature registry — all 19 FRs with status and milestone |
+
+A sample of what that looks like in practice:
+
+- **Phone OTP was replaced by Google Sign-In**, which made every donor's phone number *unverified* —
+  so the risk register gained an entry, the contact card ships a visible caveat, and coordination
+  moved in-app ([ADR 0002](docs/tech-lead/adr/0002-auth-google-sign-in.md)).
+- **Riverpod was downgraded 3.4.2 → 2.6.x** because `riverpod_generator` cannot resolve against 3.x
+  on this SDK. Code generation was the graded requirement; the runtime version was not
+  ([ADR 0006](docs/tech-lead/adr/0006-flutter-course-architecture.md)).
+- **`BUILD SUCCESS` is not a pass.** Testcontainers integration tests skip silently with no Docker
+  daemon, so a green build once proved nothing about the schema
+  ([BUG-BUILD-003](docs/qa/bugs/BUG-BUILD-003-testcontainers-skips-with-docker-running.md)).
+
+### Testing
+
+```bash
+bash scripts/verify-all.sh   # every client, one command — the same script CI runs
+```
+
+| Client | Tests | Layers |
+|---|---|---|
+| Backend | 180 | JUnit 5 unit · `@WebMvcTest` slices · Testcontainers PostgreSQL integration |
+| Mobile | 173 | `flutter_test` unit · widget · layout goldens |
+| Web | 29 | Vitest + React Testing Library (Playwright e2e is planned, not built) |
+
+A skipped test is not a pass. The backend's integration layer needs a running Docker daemon; without
+one, 30 tests disable themselves and the build still exits 0.
+
+---
+
+## Repository layout
+
+```
+backend/            Spring Boot + PostgreSQL API
+frontend/           Next.js web portal (hospital/admin)
+mobile/             Flutter app (donors/patients)
+docs/               Decisions, ADRs, specs, threat models, QA — see above
+scripts/            dev-up.sh, verify-all.sh, seed helpers
+docker-compose.yml  postgres + backend + web, local development only
+.capybara/          Multi-role framework state
+```
+
+## Project context
+
+Built by **Group 2** for Cross-Platform Mobile Application Development (16 weeks, Asia Euro
+University). The milestone table lives in [`CLAUDE.md`](CLAUDE.md) §4 and nowhere else — a second
+copy would go stale.
 
 | Name | Role |
-|------|------|
+|---|---|
 | Nem Sothea | Tech Lead / Mobile (Flutter) · also PO, Security |
 | Moeun Nithvaraman | Backend / Database |
 | Suon Pisey | Frontend (Next.js) |
 | Sourn SAVOURN | PO |
 | Oun Sreynich | QA |
 
-See [`docs/team.md`](docs/team.md) for write scopes (R2) and the acting-role overlays.
-
-> There is no separate DevOps/Infra role, and `infra/` has been removed. CI
-> Tech Lead absorbs all of it: `docker-compose.yml`, CI (`.github/workflows/`), the deploy runbook,
-> and the Play Store release. **QA keeps Definition-of-Done tracking**, so one signature on a merge
-> still comes from outside Tech Lead. No deploy runbook exists yet — needed before M7.
-
-> Tech Lead also holding Security, and co-holding PO, collapses Definition of Done step 1 toward
-> self-approval — Sourn as second PO restores an independent product-sign-off voice, but QA remains
-> the only independent gate on Security. Logged in [`docs/risks.md`](docs/risks.md).
-
-## Milestones
-
-M1 → M7, ending with the Flutter app published to Play Store internal testing by Week 15.
-
-The milestone table lives in **[`CLAUDE.md`](CLAUDE.md) section 4 and nowhere else** — it is not
-copied here. Milestone assignments change (see [`docs/decisions.md`](docs/decisions.md)), and a
-second copy would silently go stale.
-
-## Development framework
-
-This repo runs the **Capybara** multi-role framework (KOSIGN ADK). Start here:
-
-- [`ONBOARDING.md`](ONBOARDING.md) — Day 1/2/3 for new contributors
-- [`docs/roles-and-flows.md`](docs/roles-and-flows.md) — who owns what + how work flows
-- [`docs/cheat-sheet.md`](docs/cheat-sheet.md) — lifecycle, IDs, Definition of Done
-
-**Picking up work — start here:**
-
-| File | What it holds |
-|---|---|
-| [`docs/po/features/index.md`](docs/po/features/index.md) | **Feature registry** — all 19 FRs with area, priority, status, milestone, and which are blocked |
-| [`docs/po/prd.md`](docs/po/prd.md) | Product requirements and acceptance criteria for FR-01..FR-12 |
-| [`docs/fullstack/specs/foundation/`](docs/fullstack/specs/foundation/) | Per-layer M2 build specs, each with a binary done-when checklist |
-| [`docs/po/briefs/roadmap.md`](docs/po/briefs/roadmap.md) | Product decisions still open, and the milestone each one blocks |
-| [`docs/po/prototypes/roadmap.md`](docs/po/prototypes/roadmap.md) | Which screens get wireframed by which milestone |
-| [`docs/decisions.md`](docs/decisions.md) | Decisions taken (DEC), with rationale |
-| [`docs/risks.md`](docs/risks.md) | Open risks and agreed mitigations |
-| [`docs/tech-lead/adr/`](docs/tech-lead/adr/) | Architecture decision records |
-
-Lifecycle: `init → project → plan → dev → review → deploy`. Check status any time with
-`/capybara-adk:status`.
-## Google Drive
-### Cross-Platform Mobile Application Development ៖ https://drive.google.com/drive/folders/1hdO18bbErVAlMxPNut1zn1_rcU6RVyFu?usp=drive_link
+Write scopes and role overlays: [`docs/team.md`](docs/team.md). New contributors start at
+[`ONBOARDING.md`](ONBOARDING.md).
 
 ## License
 
-Course project — not for production use.
+Course project. Not licensed for production use, and **not safe for real donor data** until the two
+debts above are closed.
