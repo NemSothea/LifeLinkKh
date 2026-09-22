@@ -6,7 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'src/app.dart';
 import 'src/core/network/auth_token_gateway.dart';
 import 'src/core/settings/locale_controller.dart';
+import 'src/core/settings/onboarding_controller.dart';
 import 'src/core/settings/preferences_locale_store.dart';
+import 'src/core/settings/preferences_onboarding_store.dart';
 import 'src/features/auth/application/auth_providers.dart';
 
 /// Composition root, and the only place that knows both `core/` and the auth feature.
@@ -41,6 +43,11 @@ Future<void> main() async {
                 // is the one line that makes the choice survive a restart.
                 localeStoreProvider.overrideWithValue(
                     PreferencesLocaleStore(preferences),
+                ),
+                // And the intro flag, for the same reason: the default store forgets it
+                // at exit, which would show the carousel on every single launch.
+                onboardingStoreProvider.overrideWithValue(
+                    PreferencesOnboardingStore(preferences),
                 ),
             ],
             child: const LifeLinkApp(),

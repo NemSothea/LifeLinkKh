@@ -124,6 +124,7 @@ decisions with their own DEC record.
 | Staff lifecycle | Create, promote, demote, revoke. Password login without an account lifecycle was half a feature | DEC-010's consequences |
 | In-app language switch (mobile) | `FR-GLOBAL-001`'s mobile half. The locale was pinned to `km` with no way to change it, so an English speaker could not read one screen | — |
 | Push alert language | `users.language` decided the language of every urgent-request alert and **no client had ever written it** — every push in the product was Khmer regardless of the app's setting | — |
+| Intro carousel (mobile) | Three skippable slides before sign-in, shown once per install. The app asked for a Google account before saying what it wanted one for | [DEC-011](decisions.md) |
 
 ### What this costs, said plainly
 

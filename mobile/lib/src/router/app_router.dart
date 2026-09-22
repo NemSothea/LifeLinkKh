@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../core/settings/onboarding_controller.dart';
 import '../features/auth/application/auth_providers.dart';
 import '../features/auth/presentation/sign_in_screen.dart';
 import '../features/donation/presentation/donation_history_screen.dart';
 import '../features/donor/presentation/donor_profile_screen.dart';
 import '../features/donor/presentation/donor_setup_screen.dart';
 import '../features/home/presentation/home_screen.dart';
+import '../features/onboarding/presentation/intro_screen.dart';
 import '../features/match/presentation/match_detail_screen.dart';
 import '../features/request/presentation/request_detail_screen.dart';
 import '../features/request/presentation/request_form_screen.dart';
@@ -39,12 +41,26 @@ GoRouter appRouter(AppRouterRef ref) {
 
             final signedIn = auth.valueOrNull != null;
             final atSignIn = state.matchedLocation == SignInScreen.path;
+            final atIntro = state.matchedLocation == IntroScreen.path;
+
+            // The intro sits *before* sign-in, not after: it exists to answer "why should
+            // I?" before the app asks for a Google account. Only a first launch reaches
+            // it, and only while signed out — a donor woken by an alert at 03:00 must
+            // never be shown a carousel on the way to the request.
+            final seenIntro = ref.read(onboardingControllerProvider);
+            if (!signedIn && !seenIntro) return atIntro ? null : IntroScreen.path;
+            // Seen it, or signed in: the intro is no longer a place this app can be.
+            if (atIntro) return signedIn ? HomeScreen.path : SignInScreen.path;
 
             if (!signedIn && !atSignIn) return SignInScreen.path;
             if (signedIn && atSignIn) return HomeScreen.path;
             return null;
         },
         routes: [
+            GoRoute(
+                path: IntroScreen.path,
+                builder: (context, state) => const IntroScreen(),
+            ),
             GoRoute(
                 path: SignInScreen.path,
                 builder: (context, state) => const SignInScreen(),

@@ -16,27 +16,27 @@
     "@timeMinutesAgo": {
         "description": "Relative timestamp, under an hour",
         "placeholders": {
-                "count": {
-                        "type": "int"
-                }
+            "count": {
+                "type": "int"
+            }
         }
     },
     "timeHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
     "@timeHoursAgo": {
         "description": "Relative timestamp, under a day",
         "placeholders": {
-                "count": {
-                        "type": "int"
-                }
+            "count": {
+                "type": "int"
+            }
         }
     },
     "timeDaysAgo": "{count, plural, =1{Yesterday} other{{count} days ago}}",
     "@timeDaysAgo": {
         "description": "Relative timestamp, under a week. Past a week the absolute date is shown instead — 'nine days ago' is harder to place than a date.",
         "placeholders": {
-                "count": {
-                        "type": "int"
-                }
+            "count": {
+                "type": "int"
+            }
         }
     },
     "requestPostedLabel": "Requested",
@@ -187,12 +187,12 @@
     "@donorStepOf": {
         "description": "Progress label above the setup progress bar",
         "placeholders": {
-                "current": {
-                        "type": "int"
-                },
-                "total": {
-                        "type": "int"
-                }
+            "current": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
         }
     },
     "donorIdentityStepTitle": "Your name and blood type",
@@ -223,7 +223,7 @@
     "@donorDistrictHint": {
         "description": "Empty-state text inside the district dropdown"
     },
-    "donorLocationPrivacy": "Other people only ever see your district \u2014 never your exact location.",
+    "donorLocationPrivacy": "Other people only ever see your district — never your exact location.",
     "@donorLocationPrivacy": {
         "description": "The user-facing half of ADR 0003, shown on the location step"
     },
@@ -231,7 +231,7 @@
     "@donorUseCurrentLocation": {
         "description": "Button on the location step that acquires a GPS fix (FR-DONOR-001, M6)"
     },
-    "donorAcquiringLocation": "Finding your location\u2026",
+    "donorAcquiringLocation": "Finding your location…",
     "@donorAcquiringLocation": {
         "description": "Shown on the button while a GPS fix is being acquired"
     },
@@ -241,7 +241,7 @@
     },
     "donorLocationUnavailable": "Could not get your location. You can still save with just your district.",
     "@donorLocationUnavailable": {
-        "description": "Shown when GPS is off, permission is denied, or the fix times out \u2014 never blocks saving (ADR 0003)"
+        "description": "Shown when GPS is off, permission is denied, or the fix times out — never blocks saving (ADR 0003)"
     },
     "donorDistrictsFailed": "Could not load the district list.",
     "@donorDistrictsFailed": {
@@ -275,7 +275,7 @@
     "@donorSave": {
         "description": "Final button of the setup flow"
     },
-    "donorSaving": "Saving\u2026",
+    "donorSaving": "Saving…",
     "@donorSaving": {
         "description": "Shown while PUT /donors/me is in flight"
     },
@@ -289,14 +289,14 @@
     },
     "donorEligibleIn": "Eligible in {days} days ({date})",
     "@donorEligibleIn": {
-        "description": "Result screen, cooldown case \u2014 both the count and the absolute date, per FR-DONOR-001",
+        "description": "Result screen, cooldown case — both the count and the absolute date, per FR-DONOR-001",
         "placeholders": {
-                "days": {
-                        "type": "int"
-                },
-                "date": {
-                        "type": "String"
-                }
+            "days": {
+                "type": "int"
+            },
+            "date": {
+                "type": "String"
+            }
         }
     },
     "donorDone": "Done",
@@ -403,9 +403,9 @@
     "@requestConfirmCompat": {
         "description": "Confirmation dialog body explaining ABO/Rh compatibility (ADR 0004) made visible",
         "placeholders": {
-                "type": {
-                        "type": "String"
-                }
+            "type": {
+                "type": "String"
+            }
         }
     },
     "requestConfirmEdit": "Edit",
@@ -452,18 +452,18 @@
     "@requestAlertedCount": {
         "description": "The single most important number on the waiting screen — request_matches rows written",
         "placeholders": {
-                "count": {
-                        "type": "int"
-                }
+            "count": {
+                "type": "int"
+            }
         }
     },
     "requestAcceptedCount": "{count} accepted",
     "@requestAcceptedCount": {
         "description": "Count of donors who have accepted so far, computed on read",
         "placeholders": {
-                "count": {
-                        "type": "int"
-                }
+            "count": {
+                "type": "int"
+            }
         }
     },
     "requestWaitingForResponders": "Waiting for the first donor to accept",
@@ -522,9 +522,9 @@
     "@inboxYourBloodTypeCompatible": {
         "description": "Reassures a donor that an alert for a different patient type is not a mistake",
         "placeholders": {
-                "type": {
-                        "type": "String"
-                }
+            "type": {
+                "type": "String"
+            }
         }
     },
     "matchDeclineCta": "Decline",
@@ -591,9 +591,45 @@
     "@donationHistoryImpact": {
         "description": "The impact line under the count circle — FR-08's 'feel their impact' user story",
         "placeholders": {
-                "count": {
-                        "type": "int"
-                }
+            "count": {
+                "type": "int"
+            }
         }
+    },
+    "introSkip": "Skip",
+    "@introSkip": {
+        "description": "Intro carousel — leaves the intro from any slide. Skipping is a legitimate way to finish it, not an escape."
+    },
+    "introNext": "Next",
+    "@introNext": {
+        "description": "Intro carousel — advances one slide."
+    },
+    "introStart": "Get started",
+    "@introStart": {
+        "description": "Intro carousel — the last slide's button, which ends the intro and goes to sign-in."
+    },
+    "introLivesTitle": "One donation, up to three lives",
+    "@introLivesTitle": {
+        "description": "Intro slide 1 title. The separation claim is standard transfusion practice, not marketing."
+    },
+    "introLivesBody": "A single unit is separated into red cells, plasma and platelets — so one visit can reach three different patients.",
+    "@introLivesBody": {
+        "description": "Intro slide 1 body."
+    },
+    "introAlertTitle": "Alerted only when you match",
+    "@introAlertTitle": {
+        "description": "Intro slide 2 title — answers the fear that installing this means being pestered."
+    },
+    "introAlertBody": "A request reaches the donors whose blood type is compatible and who are near the hospital. No one else is disturbed.",
+    "@introAlertBody": {
+        "description": "Intro slide 2 body. Matching is ABO/Rh compatibility plus distance (ADR 0003, ADR 0004)."
+    },
+    "introEligibleTitle": "Every 56 days, and we track it",
+    "@introEligibleTitle": {
+        "description": "Intro slide 3 title — the 56-day rule, FR-DONOR-002."
+    },
+    "introEligibleBody": "Your body replaces what you give. The app counts the days for you and says when you are eligible again.",
+    "@introEligibleBody": {
+        "description": "Intro slide 3 body."
     }
 }

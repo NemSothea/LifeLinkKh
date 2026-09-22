@@ -412,3 +412,39 @@ which is what the alternative actually was, not what it looked like on paper.
   the change-password page says so, because otherwise someone will use it expecting otherwise.
 - The account lifecycle this created — create, promote, demote, revoke — is `/admin/*`, documented
   in `docs/fullstack/api-contract/web/openapi.yaml` 0.3.0.
+
+## DEC-011 — A skippable three-slide intro before sign-in
+
+**Date:** 2026-09-22 · **Raised by:** Nem Sothea (Tech Lead / PO) · **Status:** accepted
+
+### Context
+The first screen of a fresh install was the sign-in screen. The app asked for a Google account
+before it had said what it wanted one for, and a donor opens this app perhaps three times a year —
+there is no daily use to teach them what it does. Nothing anywhere in the product explains why
+donating matters, who gets alerted, or what the 56-day rule is; all three were facts the code knew
+and the interface never said.
+
+### Decision
+Three slides at `/intro`, shown once per install, ahead of sign-in: one donation reaching up to
+three patients, alerts going only to compatible nearby donors, and the 56-day cooldown the app
+tracks. Skippable from the first slide. The flag lives in `SharedPreferences`
+(`lifelink.onboarding.seen`), next to the language choice and for the same reason — it is a
+preference, not a credential.
+
+### Why before sign-in, not after
+The question it answers is "why should I hand over an account", which stops being worth answering
+once the account has been handed over.
+
+### Why one flag, not a resume point
+A donor who quit halfway through three slides has seen enough of them. Resuming someone mid-intro
+two days later is worse than either finishing or skipping.
+
+### Consequence
+- **The router gains a state.** `redirect` now has to distinguish first launch from signed out, and
+  the guard that matters most is the one keeping a *signed-in* donor out of the intro: a push tap at
+  03:00 must reach the request, never a carousel. `test/intro_flow_test.dart` pins that case.
+- **Not an FR, and not graded.** Recorded in `docs/scope.md` under "Grown after M7" with everything
+  else added after the graded milestones.
+- **The claims have to stay true.** The three-patient figure is component separation (red cells,
+  plasma, platelets), and the 56 days is `FR-DONOR-002`. If either changes, the slides are wrong in
+  the most embarrassing possible place.
