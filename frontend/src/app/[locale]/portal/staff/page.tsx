@@ -10,6 +10,7 @@ import SearchableSelect from './searchable-select';
 import StaffRoleFields from './staff-role-fields';
 import CreateAccountForm from './create-account-form';
 import StaffRowActions from './staff-row-actions';
+import StaffFilter from './staff-filter';
 import { portalUserId } from '@/lib/api/session';
 
 /**
@@ -39,6 +40,8 @@ export default async function AdminPage({
         revoked?: string;
         demoted?: string;
         actionError?: string;
+        role?: string;
+        hospital?: string;
     }>;
 }) {
     const { locale } = await params;
@@ -46,7 +49,7 @@ export default async function AdminPage({
         redirect(`/${locale}/sign-in`);
     }
 
-    const { promoted, promoteError, created, createError, revoked, demoted, actionError } =
+    const { promoted, promoteError, created, createError, revoked, demoted, actionError, role, hospital } =
         await searchParams;
     const signedInAs = await portalUserId();
     const t = await getTranslations('admin');
@@ -72,7 +75,13 @@ export default async function AdminPage({
         listHospitals(),
     ]);
 
-    const staff = staffResult.ok ? staffResult.data : [];
+    const allStaff = staffResult.ok ? staffResult.data : [];
+    // Filtered here rather than in the browser: the list is already on the server, and a
+    // filter that lives in the URL survives a refresh and can be sent to someone else.
+    const staff = allStaff.filter(
+        (member) =>
+            (!role || member.role === role) && (!hospital || member.hospitalId === hospital),
+    );
     const candidates = candidatesResult.ok ? candidatesResult.data : [];
     const hospitals = hospitalsResult.ok ? hospitalsResult.data : [];
 
@@ -155,12 +164,31 @@ export default async function AdminPage({
 
             <section className="mb-10">
                 <h2 className="mb-3 text-lg font-semibold">{t('currentStaffHeading')}</h2>
+                {/* Only worth showing once there is enough of a list to lose someone in.
+                    Three chips over three rows is decoration, and the seeded install is
+                    exactly that size. */}
+                {allStaff.length > 4 ? (
+                    <StaffFilter
+                        staff={allStaff}
+                        locale={locale}
+                        role={role}
+                        hospital={hospital}
+                        copy={{
+                            all: t('filterAll'),
+                            admins: t('filterAdmins'),
+                            hospitalStaff: t('filterHospitalStaff'),
+                        }}
+                    />
+                ) : null}
                 {staff.length === 0 ? (
                     <p
                         data-testid="staff-empty"
                         className="text-sm text-black/50 dark:text-white/50"
                     >
-                        {t('noStaffYet')}
+                        {/* "Nobody matches this filter" and "nobody has access yet" are
+                            different facts, and an admin who just filtered needs to be told
+                            which one they are looking at. */}
+                        {allStaff.length === 0 ? t('noStaffYet') : t('noStaffMatch')}
                     </p>
                 ) : (
                     <ul data-testid="staff-list" className="flex flex-col gap-2">

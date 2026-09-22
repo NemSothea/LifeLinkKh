@@ -134,6 +134,10 @@
         "actionFailedSelf": "You cannot change your own access. Ask another administrator.",
         "actionFailedLastAdmin": "This is the only administrator. Grant another one first.",
         "actionFailed": "Could not complete that. Try again.",
-        "youLabel": "you"
+        "youLabel": "you",
+        "filterAll": "All",
+        "filterAdmins": "Admins",
+        "filterHospitalStaff": "Hospital staff",
+        "noStaffMatch": "No staff match this filter."
     }
 }
