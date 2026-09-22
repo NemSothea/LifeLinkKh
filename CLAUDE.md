@@ -75,6 +75,14 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 
 ## 4. Milestones (course requirement: M1 → M7, from Week 3, M7 by Week 15)
 
+> **Week numbering corrected 2026-09-21.** The lecture slides date Week 8 (mid-term demo day) to
+> **29 Aug 2026**, which puts W13 at 3 Oct, W15 at 17 Oct and W16 (final pitches + ADR defense) at
+> 24 Oct. On 2026-09-21 this project was in **Week 11, not Week 15** — every "Week 15" below, and
+> the v2 pitch deck's "Week 15 of 16" footer, was written against a calendar four weeks ahead of
+> the real one. The lecturer's own back half: W10 networking · W11 auth/JWT · W12 testing ·
+> **W13 CI/CD and publishing (signing, Play Store internal)** · W14 platform channels · W15 Kotlin
+> Multiplatform · W16 final pitches. M7 therefore lines up with **W13 ≈ 3 Oct**, not mid-September.
+
 | Milestone | Week   | Deliverable |
 |-----------|--------|-------------|
 | M1 | W3-4   | ERD (done), wireframes for the 4 core screens only, API spec for the 8 core FRs |
