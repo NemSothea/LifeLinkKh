@@ -18,22 +18,44 @@ Flutter for donors, Next.js for hospitals, one Spring Boot + PostgreSQL API behi
 
 ---
 
-<div align="center">
+## The public request board
 
-![The hospital request board, in Khmer](docs/assets/screens/portal-board-km.jpg)
+Anyone can read it — no account, no login. Khmer is the default, because the users are Cambodian.
 
-*The public request board — Khmer is the default, because the users are Cambodian.*
-
-</div>
+![The public request board, in Khmer](docs/assets/screens/board-public-km.png)
 
 | | |
 |---|---|
-| ![English portal](docs/assets/screens/portal-board-en.jpg) | ![Swagger UI](docs/assets/screens/swagger-ui.jpg) |
-| **Same board, one tap later.** Every screen ships Khmer and English. | **A live API console**, generated from the running code — not from a spec that drifted. |
+| ![The same board in English](docs/assets/screens/board-public-en.png) | ![The front door](docs/assets/screens/landing-km.png) |
+| **The same board, one tap later.** Every string in both clients ships in Khmer and English. | **The front door.** The board is one card away; the API health line proves browser → Next → Spring Boot → PostgreSQL, unmocked. |
 
-> Phone screenshots land with the demo recording. The images in `mobile/test/goldens/` are
-> layout goldens rendered with the test font, so every string is a black box — correct for
-> catching layout regressions, useless as a screenshot.
+## The hospital staff portal
+
+The same URL, signed in. Staff get the board *plus* its actions — confirming a donation, the
+recently-fulfilled list — rather than a separate screen. An `ADMIN` also gets staff management.
+
+| | |
+|---|---|
+| ![The board, signed in as staff](docs/assets/screens/portal-staff-km.png) | ![Managing staff accounts](docs/assets/screens/portal-staff-manage.png) |
+| **Signed in.** Same four requests, now with the confirm action and the fulfilled section. | **Staff management.** Grant portal access to someone who already signed in on the app, or create an account for someone who never will. |
+
+## The donor app
+
+Flutter, on the donor's phone. This is where a blood emergency actually reaches a human being.
+
+| | |
+|---|---|
+| ![The intro, first slide](docs/assets/screens/mobile-intro-km.png) | ![Donor home](docs/assets/screens/mobile-home-km.png) |
+| **First launch explains itself.** Three slides — one donation reaching three patients, who gets alerted, the 56-day rule — skippable from the first one and never shown twice. | **Eligible, one request nearby.** Blood type, distance and how long ago it was posted. |
+| ![Donation history](docs/assets/screens/mobile-history-km.png) | ![Donor profile](docs/assets/screens/mobile-profile-km.png) |
+| **History and the 56-day cooldown**, with the date eligibility returns. | **Profile**, and the language switch that flips the whole app. |
+
+<details>
+<summary><b>The API console</b> — generated from the running code, not from a spec that drifted</summary>
+
+![Swagger UI, generated from the running backend](docs/assets/screens/swagger-ui.png)
+
+</details>
 
 ---
 
