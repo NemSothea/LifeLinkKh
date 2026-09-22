@@ -1,1 +1,9 @@
+#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
 #include "Generated.xcconfig"
+
+// Xcode 27's lipo rejects `lipo <bin> -verify_arch arm64 x86_64` ("requires exactly one input
+// file"), and Flutter 3.44.6 still verifies both archs in one call (thinFramework, darwin.dart).
+// A two-arch simulator build therefore fails before it compiles anything. One arch avoids the
+// call's second argument. This machine is Apple Silicon, so arm64 is the only simulator arch that
+// runs natively anyway; an Intel Mac would need this line removed and a Flutter upgrade instead.
+ARCHS[sdk=iphonesimulator*] = arm64

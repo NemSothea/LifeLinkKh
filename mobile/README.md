@@ -50,6 +50,53 @@ Code generation — leave this running while developing:
 dart run build_runner watch -d
 ```
 
+## iOS build (M6, build-only)
+
+DEC-006 put iOS in scope as a **build target only**: the app compiles and runs on a
+simulator or a tethered device, and that is where it stops. No signing, no TestFlight, no
+App Store, no Apple Developer account. Play Store internal testing (M7) is still the only
+store release in scope.
+
+Proven on Xcode 27.0 / Flutter 3.44.6, all three configurations:
+
+```bash
+flutter build ios --simulator --debug     # build/ios/iphonesimulator/Runner.app
+flutter build ios --no-codesign --debug   # build/ios/iphoneos/Runner.app
+flutter build ios --no-codesign --release # build/ios/iphoneos/Runner.app, 34.7 MB
+```
+
+The iOS half uses **CocoaPods**, not Swift Package Manager: `firebase_messaging` pulls in
+FirebaseCore, and the SwiftPM path left the workspace without a resolvable Flutter
+framework. `ios/Pods/` is gitignored; `Podfile` and `Podfile.lock` are committed, so
+`pod install` reproduces the same pod versions.
+
+Two Xcode 27 traps are already worked around in this repo. Both fail *before* any of our
+code compiles, so neither error mentions LifeLink at all.
+
+**1. `lipo` no longer takes two architectures.** Xcode 27's `lipo` answers
+`-verify_arch requires exactly one input file` when handed `arm64 x86_64` together, and
+Flutter 3.44.6's `thinFramework` (`flutter_tools/.../build_system/targets/darwin.dart`)
+still passes both in one call. A two-architecture simulator build therefore dies in the
+scheme's *pre-action* with a message that contradicts itself — it claims the framework
+lacks `arm64 x86_64` and then prints a `lipo -info` showing both. `flutter build` hides
+this entirely behind `Uncategorized (Xcode): Exited with status code 255`; the real text
+only appears by running `xcodebuild` on `Runner.xcworkspace` directly.
+
+`ios/Flutter/Debug.xcconfig` pins `ARCHS[sdk=iphonesimulator*] = arm64`, which leaves one
+architecture and so one argument. `EXCLUDED_ARCHS` does **not** work here — the pre-action
+script reads `ARCHS` before exclusions apply. This assumes an Apple Silicon Mac, where
+arm64 is the only simulator architecture that runs natively anyway. On an Intel Mac, drop
+that line and upgrade Flutter instead.
+
+**2. Pods below iOS 15.0 are rejected outright.** Xcode 27 supports 15.0–27.0 only, and
+`flutter_additional_ios_build_settings` still leaves some pods at 12.0:
+`The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 12.0, but the range of
+supported deployment target versions is 15.0 to 27.0.x`. The `post_install` hook in
+`ios/Podfile` raises every pod to 15.0, matching the Runner target.
+
+`ios/Runner/GoogleService-Info.plist` is committed for the same reason
+`google-services.json` is — client configuration, restricted by bundle ID, not a secret.
+
 ## Architecture — four layers, one direction
 
 ```
