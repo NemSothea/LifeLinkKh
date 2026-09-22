@@ -56,8 +56,16 @@ class AppTheme {
             ),
             navigationBarTheme: NavigationBarThemeData(
                 height: 68,
+                // The Kantumruy Pro fallback is not optional here. This style is built
+                // directly rather than through _textTheme, so it was the one piece of text
+                // in the app with no Khmer fallback — and Inter has no Khmer glyphs, so in
+                // Khmer the three tab labels rendered as empty boxes while every other
+                // string on the same screen was fine.
                 labelTextStyle: WidgetStatePropertyAll(
-                    GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                    GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                    ).copyWith(fontFamilyFallback: [GoogleFonts.kantumruyPro().fontFamily!]),
                 ),
             ),
             filledButtonTheme: FilledButtonThemeData(
