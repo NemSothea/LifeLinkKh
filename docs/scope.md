@@ -126,6 +126,7 @@ decisions with their own DEC record.
 | Push alert language | `users.language` decided the language of every urgent-request alert and **no client had ever written it** — every push in the product was Khmer regardless of the app's setting | — |
 | Intro carousel (mobile) | Three skippable slides before sign-in, shown once per install. The app asked for a Google account before saying what it wanted one for | [DEC-011](decisions.md) |
 | Staff filtering (portal) | Role and hospital filters on `/portal/staff`, in the URL rather than in client state. Appears only above four staff — three chips over three rows is decoration | — |
+| Public board on mobile | The donor home screen reads `/public/requests` under the alert inbox. `GET /matches/me` is empty most days by design, and that emptiness was the entire screen | — |
 
 ### What this costs, said plainly
 

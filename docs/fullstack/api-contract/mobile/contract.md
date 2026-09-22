@@ -137,6 +137,31 @@ donors still match.
 `status` can be `OPEN`, `FULFILLED`, or `CANCELLED`. **`EXPIRED` is unreachable in this build** —
 `FR-REQUEST-005` is deferred, so a request closes only when a person closes it (DEC-004).
 
+## The public board
+
+```
+GET /public/requests          // no Authorization header required
+200 [ { "id": "uuid", "patientBloodType": "O-", "unitsNeeded": 4, "urgency": "URGENT",
+        "status": "OPEN",
+        "hospital": { "id": "uuid", "name": "...",
+                      "districtName": { "km": "...", "en": "..." } },
+        "alertedCount": 1, "acceptedCount": 1, "createdAt": "...",
+        "acceptedDonors": [ ... ] } ]
+```
+
+Already served to the web portal (DEC-009); the Flutter app now reads it too, on the donor
+home screen under the alert inbox. The two answer different questions and the app needs
+both: `GET /matches/me` is *what was I alerted to*, which is empty for a donor between
+emergencies — the normal state, most days — and `/public/requests` is *who needs blood
+right now*, which rarely is. Before the app called this, a donor opening it unprompted saw
+an eligibility banner, an empty inbox and nothing else while four hospitals had open
+requests.
+
+The mobile client ignores `acceptedDonors`. Those are named people (DEC-009's deliberate
+override of `TM-AUTH-001` I1), and a donor browsing the board has no reason to see who
+else volunteered — the rows here are not tappable and carry no accept action, because this
+donor was not matched to them.
+
 ## Donor inbox and responding
 
 ```

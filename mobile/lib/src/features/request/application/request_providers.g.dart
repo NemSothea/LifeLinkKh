@@ -247,6 +247,31 @@ class _RequestDetailProviderElement
   String get requestId => (origin as RequestDetailProvider).requestId;
 }
 
+String _$publicBoardControllerHash() =>
+    r'8cf661294a934abd57f3fc8000cc6c595bfa1c77';
+
+/// Every open request in the country, newest first.
+///
+/// Separate from `myMatchesControllerProvider` because it answers a different question.
+/// A donor between emergencies has an empty match inbox — that is the normal state, not a
+/// failure — and before this provider the home screen had nothing to show them while four
+/// hospitals were asking for blood. `keepAlive` so switching tabs does not refetch, and
+/// the pull-to-refresh on home invalidates it explicitly.
+///
+/// Copied from [PublicBoardController].
+@ProviderFor(PublicBoardController)
+final publicBoardControllerProvider =
+    AsyncNotifierProvider<PublicBoardController, List<BloodRequest>>.internal(
+      PublicBoardController.new,
+      name: r'publicBoardControllerProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$publicBoardControllerHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+typedef _$PublicBoardController = AsyncNotifier<List<BloodRequest>>;
 String _$myRequestsControllerHash() =>
     r'621db222dca1520ebd8259862fcbc2d354a31671';
 

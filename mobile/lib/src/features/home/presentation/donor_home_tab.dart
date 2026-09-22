@@ -14,6 +14,8 @@ import '../../match/application/match_providers.dart';
 import '../../match/domain/match.dart';
 import '../../match/domain/match_response_type.dart';
 import '../../match/presentation/match_detail_screen.dart';
+import '../../request/application/request_providers.dart';
+import '../../request/domain/blood_request.dart';
 import '../../request/domain/urgency.dart';
 import '../../request/presentation/urgency_badge.dart';
 
@@ -34,6 +36,11 @@ class DonorHomeTab extends ConsumerWidget {
         // call's own error, so a donor with no profile never sees a heading with
         // nothing under it while the "become a donor" card above says the same thing.
         final hasDonorProfile = profile.valueOrNull != null;
+        // Whether the board below has anything to show decides how loudly the empty inbox
+        // says it is empty: a full-height reassurance card above a populated list is two
+        // answers to a question nobody asked twice.
+        final boardHasRequests = (ref.watch(publicBoardControllerProvider).valueOrNull ?? const [])
+            .isNotEmpty;
 
         return Scaffold(
             appBar: AppBar(title: Text(l10n.appTitle)),
@@ -42,6 +49,7 @@ class DonorHomeTab extends ConsumerWidget {
                     onRefresh: () => Future.wait([
                         ref.refresh(donorProfileControllerProvider.future),
                         ref.refresh(myMatchesControllerProvider.future),
+                        ref.refresh(publicBoardControllerProvider.future),
                     ]),
                     child: ListView(
                         key: const Key('donor-home-list'),
@@ -89,10 +97,19 @@ class DonorHomeTab extends ConsumerWidget {
                                         context,
                                         l10n,
                                         list ?? const [],
+                                        boardHasRequests: boardHasRequests,
                                     ),
                                     _ => const SizedBox.shrink(),
                                 },
                             ],
+                            // Shown to every signed-in donor, profile or not. The match
+                            // inbox above answers "what was I alerted about" and is empty
+                            // most days by design; this answers "who needs blood right
+                            // now", which is the question someone opening the app
+                            // unprompted actually has. Before it existed, the common case
+                            // for this screen was a status banner and blank space.
+                            const SizedBox(height: 24),
+                            _BoardSection(alerted: matches.valueOrNull ?? const []),
                         ],
                     ),
                 ),
@@ -120,9 +137,40 @@ class DonorHomeTab extends ConsumerWidget {
         );
     }
 
-    Widget _nearbyList(BuildContext context, AppLocalizations l10n, List<Match> matches) {
+    Widget _nearbyList(
+        BuildContext context,
+        AppLocalizations l10n,
+        List<Match> matches, {
+        required bool boardHasRequests,
+    }) {
         if (matches.isEmpty) {
-            final scheme = Theme.of(context).colorScheme;
+            final theme = Theme.of(context);
+            final scheme = theme.colorScheme;
+            // With a populated board underneath, "you have no alerts" is a caption, not an
+            // event: one muted line, and the ~200px the card used to take goes to the
+            // requests that actually need reading.
+            if (boardHasRequests) {
+                return Padding(
+                    key: const Key('donor-home-matches-empty'),
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                        children: [
+                            Icon(Icons.check_circle_outline, size: 18, color: scheme.primary),
+                            const SizedBox(width: 8),
+                            Expanded(
+                                child: Text(
+                                    l10n.inboxEmpty,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: scheme.onSurfaceVariant,
+                                    ),
+                                ),
+                            ),
+                        ],
+                    ),
+                );
+            }
+            // Nothing below it either — then this card is the screen, and it should look
+            // like something rather than a stray line.
             return Card(
                 key: const Key('donor-home-matches-empty'),
                 margin: EdgeInsets.zero,
@@ -332,6 +380,134 @@ class _AnsweredChip extends StatelessWidget {
                             ),
                         ),
                     ],
+                ),
+            ),
+        );
+    }
+}
+
+/// "Who needs blood right now", for a donor whose own alert inbox is empty.
+///
+/// Reads the same public board the web portal serves (DEC-009), minus the requests this
+/// donor was already alerted to — those are shown above with accept and decline on them,
+/// and repeating them here would make one request look like two.
+class _BoardSection extends ConsumerWidget {
+    const _BoardSection({required this.alerted});
+
+    /// The donor's own matches, used only to subtract them from the board.
+    final List<Match> alerted;
+
+    @override
+    Widget build(BuildContext context, WidgetRef ref) {
+        final l10n = AppLocalizations.of(context)!;
+        final board = ref.watch(publicBoardControllerProvider);
+        final alertedIds = {for (final match in alerted) match.request.id};
+
+        return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+                Text(l10n.homeBoardHeading, style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Text(
+                    l10n.homeBoardSubheading,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                ),
+                const SizedBox(height: 8),
+                switch (board) {
+                    AsyncValue(isLoading: true, hasValue: false) => const Center(
+                        child: CircularProgressIndicator(key: Key('donor-home-board-loading')),
+                    ),
+                    AsyncValue(hasError: true) => RetryableFailure(
+                        key: const Key('donor-home-board-failed'),
+                        message: l10n.homeBoardFailed,
+                        onRetry: () => ref.invalidate(publicBoardControllerProvider),
+                    ),
+                    AsyncValue(hasValue: true, value: final list) => _boardList(
+                        context,
+                        l10n,
+                        [for (final r in list ?? const <BloodRequest>[]) if (!alertedIds.contains(r.id)) r],
+                    ),
+                    _ => const SizedBox.shrink(),
+                },
+            ],
+        );
+    }
+
+    Widget _boardList(BuildContext context, AppLocalizations l10n, List<BloodRequest> requests) {
+        if (requests.isEmpty) {
+            return Padding(
+                key: const Key('donor-home-board-empty'),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                    l10n.homeBoardEmpty,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                ),
+            );
+        }
+        // Most urgent first, then newest. The server returns newest-first, which buries a
+        // CRITICAL request under routine ones posted minutes later.
+        final sorted = [...requests]..sort((a, b) {
+            final byUrgency = a.urgency.index.compareTo(b.urgency.index);
+            return byUrgency != 0 ? byUrgency : b.createdAt.compareTo(a.createdAt);
+        });
+        return Column(
+            key: const Key('donor-home-board-list'),
+            children: [for (final request in sorted) _BoardRequestTile(request: request)],
+        );
+    }
+}
+
+/// One row of the public board. Deliberately not tappable: this donor was not alerted to
+/// this request, so there is no match to open and nothing to accept. It is information —
+/// where blood is needed and how badly — not a call to action aimed at them.
+class _BoardRequestTile extends StatelessWidget {
+    const _BoardRequestTile({required this.request});
+
+    final BloodRequest request;
+
+    @override
+    Widget build(BuildContext context) {
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
+        final district = request.hospitalDistrictLabel(
+            Localizations.localeOf(context).languageCode,
+        );
+
+        return Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            child: ListTile(
+                key: Key('donor-home-board-${request.id}'),
+                leading: CircleAvatar(
+                    backgroundColor: scheme.surfaceContainerHighest,
+                    foregroundColor: scheme.onSurfaceVariant,
+                    child: Text(
+                        request.patientBloodType.wireValue,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                    ),
+                ),
+                title: Text(request.hospitalName, overflow: TextOverflow.ellipsis),
+                subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                            UrgencyBadge(urgency: request.urgency),
+                            if (district != null)
+                                Text(district, style: theme.textTheme.bodySmall),
+                            Text(
+                                formatRelativeTime(context, request.createdAt),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                ),
+                            ),
+                        ],
+                    ),
                 ),
             ),
         );

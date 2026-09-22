@@ -37,6 +37,25 @@ Future<List<Hospital>> hospitals(HospitalsRef ref) async {
     };
 }
 
+/// Every open request in the country, newest first.
+///
+/// Separate from `myMatchesControllerProvider` because it answers a different question.
+/// A donor between emergencies has an empty match inbox — that is the normal state, not a
+/// failure — and before this provider the home screen had nothing to show them while four
+/// hospitals were asking for blood. `keepAlive` so switching tabs does not refetch, and
+/// the pull-to-refresh on home invalidates it explicitly.
+@Riverpod(keepAlive: true)
+class PublicBoardController extends _$PublicBoardController {
+    @override
+    Future<List<BloodRequest>> build() async {
+        final result = await ref.watch(requestServiceProvider).loadPublicBoard();
+        return switch (result) {
+            Success(value: final requests) => requests,
+            Failed(failure: final failure) => throw failure,
+        };
+    }
+}
+
 /// The requester's own requests, most recent first. `keepAlive` so the list
 /// survives navigating into and back out of a request's detail screen.
 @Riverpod(keepAlive: true)

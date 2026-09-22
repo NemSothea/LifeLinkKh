@@ -31,6 +31,9 @@ final class RequestService {
 
     Future<Result<List<BloodRequest>>> loadMine() => _repository.fetchMine();
 
+    /// The public board — every open request, whether or not this donor was alerted to it.
+    Future<Result<List<BloodRequest>>> loadPublicBoard() => _repository.fetchPublicBoard();
+
     Future<Result<BloodRequest>> loadDetail(String requestId) =>
         _repository.fetchDetail(requestId);
 

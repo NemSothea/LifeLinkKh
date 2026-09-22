@@ -111,8 +111,15 @@ BloodRequest _request() => BloodRequest(
 );
 
 final class _FakeRequestRepository implements RequestRepository {
+    /// The public board this fake serves. Empty unless a test sets it — most tests
+    /// are not about the board and an unexpected list would change what they render.
+    List<BloodRequest> board = const [];
+
     RequestDraft? created;
     String? cancelled;
+
+    @override
+    Future<Result<List<BloodRequest>>> fetchPublicBoard() async => Success(board);
 
     @override
     Future<Result<List<Hospital>>> fetchHospitals() async =>

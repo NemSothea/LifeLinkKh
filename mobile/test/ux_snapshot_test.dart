@@ -56,8 +56,15 @@ final class _FakeMatchRepository implements MatchRepository {
 }
 
 final class _FakeRequestRepository implements RequestRepository {
+    /// The public board this fake serves. Empty unless a test sets it — most tests
+    /// are not about the board and an unexpected list would change what they render.
+    List<BloodRequest> board = const [];
+
     _FakeRequestRepository(this.requests);
     final List<BloodRequest> requests;
+    @override
+    Future<Result<List<BloodRequest>>> fetchPublicBoard() async => Success(board);
+
     @override
     Future<Result<List<BloodRequest>>> fetchMine() async => Success(requests);
     @override

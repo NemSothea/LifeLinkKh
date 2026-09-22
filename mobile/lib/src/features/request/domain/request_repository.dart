@@ -14,6 +14,15 @@ abstract interface class RequestRepository {
     /// (`prd.md` FR-04), so a `Success` here means donors are already being notified.
     Future<Result<BloodRequest>> create(RequestDraft draft);
 
+    /// Every open request in the country, newest first — the same public board the web
+    /// portal serves unauthenticated (DEC-009).
+    ///
+    /// Deliberately *not* `/matches/me`. That call answers "what was I alerted about",
+    /// which is empty for a donor between emergencies; this one answers "who needs blood
+    /// right now", which is almost never empty. A donor who opens the app unprompted is
+    /// asking the second question.
+    Future<Result<List<BloodRequest>>> fetchPublicBoard();
+
     /// The caller's own requests, most recent first.
     Future<Result<List<BloodRequest>>> fetchMine();
 

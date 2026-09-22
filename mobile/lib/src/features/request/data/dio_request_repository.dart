@@ -22,6 +22,11 @@ final class DioRequestRepository implements RequestRepository {
     static const String hospitalsPath = '/hospitals';
     static const String requestsPath = '/requests';
 
+    /// Unauthenticated server-side (DEC-009). It still goes out on the intercepted client
+    /// like everything else — a bearer token this endpoint ignores costs nothing, and a
+    /// second Dio instance for one call would be a whole parallel network stack.
+    static const String publicBoardPath = '/public/requests';
+
     @override
     Future<Result<List<Hospital>>> fetchHospitals() async {
         try {
@@ -30,6 +35,22 @@ final class DioRequestRepository implements RequestRepository {
             return Success([
                 for (final row in rows)
                     if (row is Map<String, dynamic>) _hospitalFromJson(row),
+            ]);
+        } on DioException catch (error) {
+            return Failed(failureFromDio(error));
+        } on FormatException catch (error) {
+            return Failed(UnknownFailure(message: error.message));
+        }
+    }
+
+    @override
+    Future<Result<List<BloodRequest>>> fetchPublicBoard() async {
+        try {
+            final response = await _dio.get<List<dynamic>>(publicBoardPath);
+            final rows = response.data ?? const [];
+            return Success([
+                for (final row in rows)
+                    if (row is Map<String, dynamic>) _summaryFromJson(row),
             ]);
         } on DioException catch (error) {
             return Failed(failureFromDio(error));

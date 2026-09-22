@@ -631,5 +631,21 @@
     "introEligibleBody": "Your body replaces what you give. The app counts the days for you and says when you are eligible again.",
     "@introEligibleBody": {
         "description": "Intro slide 3 body."
+    },
+    "homeBoardHeading": "Who needs blood now",
+    "@homeBoardHeading": {
+        "description": "Donor home — heading over the public board (DEC-009). Answers 'who needs blood', unlike the match inbox above it which answers 'what was I alerted to'."
+    },
+    "homeBoardSubheading": "Every open request, not only the ones you were alerted to.",
+    "@homeBoardSubheading": {
+        "description": "Donor home — says why this list is longer than the alert inbox, so an empty inbox does not read as a broken app."
+    },
+    "homeBoardEmpty": "No hospital has an open request right now.",
+    "@homeBoardEmpty": {
+        "description": "Donor home — the board itself is empty. Rare, and genuinely good news."
+    },
+    "homeBoardFailed": "Could not load the request board.",
+    "@homeBoardFailed": {
+        "description": "Donor home — the board call failed; retryable."
     }
 }
