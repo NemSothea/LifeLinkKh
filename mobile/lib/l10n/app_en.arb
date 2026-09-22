@@ -647,5 +647,27 @@
     "homeBoardFailed": "Could not load the request board.",
     "@homeBoardFailed": {
         "description": "Donor home — the board call failed; retryable."
+    },
+    "donationHistoryReach": "Up to {count} patients reached",
+    "@donationHistoryReach": {
+        "description": "Donation history — the ceiling one unit can reach (red cells, plasma, platelets), never a claim about people actually helped.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "donationHistoryEligibleNow": "You can donate again now.",
+    "@donationHistoryEligibleNow": {
+        "description": "Donation history — the 56-day cycle, when it has already elapsed."
+    },
+    "donationHistoryEligibleOn": "You can donate again on {date}.",
+    "@donationHistoryEligibleOn": {
+        "description": "Donation history — the date the 56-day cooldown ends.",
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
     }
 }

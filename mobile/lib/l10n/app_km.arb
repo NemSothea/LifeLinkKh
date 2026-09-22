@@ -147,5 +147,8 @@
     "homeBoardHeading": "អ្នកណាត្រូវការឈាមឥឡូវនេះ",
     "homeBoardSubheading": "សំណើបើកចំហទាំងអស់ មិនត្រឹមតែសំណើដែលអ្នកទទួលបានការជូនដំណឹងទេ។",
     "homeBoardEmpty": "គ្មានមន្ទីរពេទ្យណាមានសំណើបើកចំហឥឡូវនេះទេ។",
-    "homeBoardFailed": "មិនអាចទាញបញ្ជីសំណើបានទេ។"
+    "homeBoardFailed": "មិនអាចទាញបញ្ជីសំណើបានទេ។",
+    "donationHistoryReach": "ជួយបានរហូតដល់ {count} អ្នកជំងឺ",
+    "donationHistoryEligibleNow": "អ្នកអាចបរិច្ចាគម្តងទៀតបានឥឡូវនេះ។",
+    "donationHistoryEligibleOn": "អ្នកអាចបរិច្ចាគម្តងទៀតនៅថ្ងៃទី {date}។"
 }

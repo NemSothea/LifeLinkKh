@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/widgets/retryable_failure.dart';
+import '../../donor/application/donor_providers.dart';
 import '../application/donation_providers.dart';
+import '../../donor/domain/donor_profile.dart';
 import '../domain/donation.dart';
 
 /// `GET /donations/me` — `DONATION-history` prototype: an impact number first, the
@@ -50,6 +52,7 @@ class DonationHistoryScreen extends ConsumerWidget {
                         ),
                         AsyncValue(hasValue: true, value: final list) => _body(
                             context,
+                            ref,
                             l10n,
                             list ?? const [],
                         ),
@@ -60,13 +63,25 @@ class DonationHistoryScreen extends ConsumerWidget {
         );
     }
 
-    Widget _body(BuildContext context, AppLocalizations l10n, List<Donation> donations) {
+    Widget _body(
+        BuildContext context,
+        WidgetRef ref,
+        AppLocalizations l10n,
+        List<Donation> donations,
+    ) {
         return ListView(
             key: const Key('donation-history-list'),
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(24),
             children: [
                 _ImpactCount(count: donations.length),
+                // The screen's whole subject is the 56-day cycle, and until now it never
+                // said where in that cycle this donor was — the countdown lived only on
+                // the home tab. A history is also a "when can I do this again".
+                _CycleLine(
+                    profile: ref.watch(donorProfileControllerProvider).valueOrNull,
+                    donations: donations.length,
+                ),
                 const SizedBox(height: 24),
                 if (donations.isEmpty)
                     Card(
@@ -174,6 +189,69 @@ class _DonationRow extends StatelessWidget {
                         ),
                 ],
             ),
+        );
+    }
+}
+
+
+/// Reach, and the next date this donor can add to it.
+///
+/// The multiplier is the same claim the intro makes and the same one transfusion practice
+/// makes: a unit is separated into red cells, plasma and platelets, so one donation can
+/// reach up to three patients. Written as "up to", because it is a ceiling, not a count of
+/// people who were actually helped — this app cannot know that and must not imply it.
+class _CycleLine extends StatelessWidget {
+    const _CycleLine({required this.profile, required this.donations});
+
+    final DonorProfile? profile;
+    final int donations;
+
+    @override
+    Widget build(BuildContext context) {
+        final l10n = AppLocalizations.of(context)!;
+        final theme = Theme.of(context);
+        final eligibility = profile?.eligibility;
+
+        final next = eligibility == null
+            ? null
+            : eligibility.isEligible
+                ? l10n.donationHistoryEligibleNow
+                : eligibility.eligibleOn != null
+                    ? l10n.donationHistoryEligibleOn(
+                        DateFormat.yMMMMd(Localizations.localeOf(context).toString())
+                            .format(eligibility.eligibleOn!),
+                    )
+                    : null;
+
+        final muted = theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+        );
+
+        return Column(
+            children: [
+                // Nothing donated yet means no reach to state, and inventing "up to 0
+                // patients" would be a worse first impression than saying nothing.
+                if (donations > 0)
+                    Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                            l10n.donationHistoryReach(donations * 3),
+                            key: const Key('donation-history-reach'),
+                            textAlign: TextAlign.center,
+                            style: muted,
+                        ),
+                    ),
+                if (next != null)
+                    Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                            next,
+                            key: const Key('donation-history-cycle'),
+                            textAlign: TextAlign.center,
+                            style: muted,
+                        ),
+                    ),
+            ],
         );
     }
 }
