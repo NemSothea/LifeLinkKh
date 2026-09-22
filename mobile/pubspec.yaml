@@ -29,9 +29,11 @@ dependencies:
   go_router: ^17.4.0
   dio: ^5.11.0
 
-  # Pinned exactly: flutter_localizations from the SDK depends on intl 0.20.2, so a
-  # caret range above that makes version solving fail outright.
-  intl: 0.20.2
+  # flutter_localizations pins intl from the SDK, so this constraint has to contain
+  # whatever the SDK asks for: 0.20.2 on Flutter 3.44.6, ^0.20.3 on newer stables. A caret
+  # resolves to exactly 0.20.2 here and still solves on a newer SDK; the old exact pin did
+  # not, and broke CI the day stable moved.
+  intl: ^0.20.2
   firebase_core: ^4.13.0
   firebase_auth: ^6.5.7
   google_sign_in: ^7.2.0

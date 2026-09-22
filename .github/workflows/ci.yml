@@ -84,9 +84,14 @@ jobs:
             echo "yes=false" >> "$GITHUB_OUTPUT"
             echo "::notice::mobile/ not scaffolded yet (M2 step 4) — nothing to check."
           fi
+      # Pinned, not `channel: stable`. An unpinned stable moved under us and broke
+      # `flutter pub get` for two days — the SDK's own flutter_localizations started
+      # requiring a newer intl than the app pins. CI has to run the version the Android
+      # release is built with, or a green CI says nothing about the artifact we ship.
       - uses: subosito/flutter-action@v2
         if: steps.scaffolded.outputs.yes == 'true'
         with:
+          flutter-version: 3.44.6
           channel: stable
       - if: steps.scaffolded.outputs.yes == 'true'
         working-directory: mobile
