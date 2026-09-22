@@ -120,6 +120,71 @@ class MatchServiceTest {
     }
 
     /**
+     * The offline-first replay. The donor's phone queued an acceptance, sent it, and never saw the
+     * reply — so the sync engine sent the same write again, carrying the key it was queued with.
+     * Answering 409 there would clear the pending badge with an error on a device whose acceptance
+     * actually landed, and a hospital counting on that donor would never learn they accepted.
+     */
+    @Test
+    void replayingAQueuedAnswerReturnsTheStoredOne() {
+        RequestMatch answered = unanswered(MY_PROFILE);
+        answered.setResponse("ACCEPTED");
+        answered.setRespondedAt(java.time.OffsetDateTime.now());
+        answered.setIdempotencyKey("a1b2c3");
+        when(matches.findById(MATCH_ID)).thenReturn(Optional.of(answered));
+
+        RespondResponse replay =
+                service.respond(CALLER, MATCH_ID, new RespondRequest("ACCEPTED"), "a1b2c3");
+
+        assertThat(replay.response()).isEqualTo("ACCEPTED");
+        assertThat(replay.requesterContact()).isNotNull();
+        verify(matches, never()).save(any());
+    }
+
+    /** A replay is recognised by its key, not by arriving second. */
+    @Test
+    void aDifferentKeyOnAnAnsweredMatchStillConflicts() {
+        RequestMatch answered = unanswered(MY_PROFILE);
+        answered.setResponse("ACCEPTED");
+        answered.setIdempotencyKey("a1b2c3");
+        when(matches.findById(MATCH_ID)).thenReturn(Optional.of(answered));
+
+        assertThatThrownBy(
+                        () ->
+                                service.respond(
+                                        CALLER, MATCH_ID, new RespondRequest("DECLINED"), "zzz999"))
+                .isInstanceOf(ApiException.class)
+                .extracting(ex -> ((ApiException) ex).getStatus())
+                .isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    /** The key is stored on the first write, or there is nothing for a replay to match against. */
+    @Test
+    void theKeyIsStoredWithTheAnswer() {
+        when(matches.findById(MATCH_ID)).thenReturn(Optional.of(unanswered(MY_PROFILE)));
+
+        service.respond(CALLER, MATCH_ID, new RespondRequest("DECLINED"), "a1b2c3");
+
+        org.mockito.ArgumentCaptor<RequestMatch> saved =
+                org.mockito.ArgumentCaptor.forClass(RequestMatch.class);
+        verify(matches).save(saved.capture());
+        assertThat(saved.getValue().getIdempotencyKey()).isEqualTo("a1b2c3");
+    }
+
+    /** A live connection has nothing to replay, so it sends no key and the column stays NULL. */
+    @Test
+    void anOnlineAnswerStoresNoKey() {
+        when(matches.findById(MATCH_ID)).thenReturn(Optional.of(unanswered(MY_PROFILE)));
+
+        service.respond(CALLER, MATCH_ID, new RespondRequest("DECLINED"));
+
+        org.mockito.ArgumentCaptor<RequestMatch> saved =
+                org.mockito.ArgumentCaptor.forClass(RequestMatch.class);
+        verify(matches).save(saved.capture());
+        assertThat(saved.getValue().getIdempotencyKey()).isNull();
+    }
+
+    /**
      * WITHDRAWN is a valid column value with no FR behind it. Accepting it here would create a
      * state nothing in the system knows how to leave.
      */

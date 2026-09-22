@@ -42,6 +42,16 @@ public class RequestMatch {
     private OffsetDateTime respondedAt;
 
     /**
+     * The key the client generated when it queued this answer offline, replayed unchanged on every
+     * retry. NULL when the answer arrived over a live connection and there was nothing to replay.
+     *
+     * <p>It exists so a retry after a lost response is recognisable as the same write rather than a
+     * second one — see V18 and {@code docs/mobile/local-db-and-sync.md}.
+     */
+    @Column(name = "idempotency_key", length = 64)
+    private String idempotencyKey;
+
+    /**
      * How far this donor was when they were matched, rounded to 0.5 km (ADR 0003). NULL when the
      * donor had no coordinates. Written once and never recomputed — a donor who has since moved
      * would otherwise see their alert list re-rank itself under them.
@@ -51,6 +61,14 @@ public class RequestMatch {
 
     public UUID getId() {
         return id;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 
     public UUID getBloodRequestId() {

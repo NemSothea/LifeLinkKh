@@ -78,6 +78,20 @@ public class MatchService {
      */
     @Transactional
     public RespondResponse respond(UUID userId, UUID matchId, RespondRequest body) {
+        return respond(userId, matchId, body, null);
+    }
+
+    /**
+     * The same call, carrying the key a queued offline answer was written with.
+     *
+     * <p>A replay of a write the server already applied returns that stored answer instead of 409
+     * ALREADY_RESPONDED. The donor did not answer twice — their phone lost the reply on the way
+     * back and the sync engine sent the same write again. Answering 409 there would clear the
+     * pending badge with an error on a device whose acceptance actually landed.
+     */
+    @Transactional
+    public RespondResponse respond(
+            UUID userId, UUID matchId, RespondRequest body, String idempotencyKey) {
         String response = body.response();
         if (!RESPONSES.contains(response)) {
             throw ApiException.unprocessable(
@@ -95,6 +109,15 @@ public class MatchService {
                     HttpStatus.FORBIDDEN, "NOT_YOUR_MATCH", "That is not your match.");
         }
         if (match.getResponse() != null) {
+            // Same key on the same match: this is the reply already applied, arriving again because
+            // the client never saw the answer. Hand back what was stored.
+            if (idempotencyKey != null && idempotencyKey.equals(match.getIdempotencyKey())) {
+                return new RespondResponse(
+                        match.getId(),
+                        match.getResponse(),
+                        match.getRespondedAt(),
+                        contactFor(match));
+            }
             // One response, never overwritten. Changing your mind is FR-REQUEST-004, deferred.
             throw new ApiException(
                     HttpStatus.CONFLICT, "ALREADY_RESPONDED", "You have already answered this.");
@@ -102,20 +125,28 @@ public class MatchService {
 
         match.setResponse(response);
         match.setRespondedAt(OffsetDateTime.now());
+        match.setIdempotencyKey(idempotencyKey);
         matches.save(match);
 
-        RequesterContact contact = null;
-        if ("ACCEPTED".equals(response)) {
-            BloodRequest request =
-                    requests.findById(match.getBloodRequestId())
-                            .orElseThrow(
-                                    () ->
-                                            ApiException.notFound(
-                                                    "REQUEST_NOT_FOUND", "No such request."));
-            contact = RequesterContact.of(request.getContactName(), request.getContactPhone());
-        }
+        return new RespondResponse(
+                match.getId(), response, match.getRespondedAt(), contactFor(match));
+    }
 
-        return new RespondResponse(match.getId(), response, match.getRespondedAt(), contact);
+    /**
+     * The requester's contact details, revealed only to a donor who accepted. A replay has to
+     * return the same thing the original call did, so this is one method rather than two.
+     */
+    private RequesterContact contactFor(RequestMatch match) {
+        if (!"ACCEPTED".equals(match.getResponse())) {
+            return null;
+        }
+        BloodRequest request =
+                requests.findById(match.getBloodRequestId())
+                        .orElseThrow(
+                                () ->
+                                        ApiException.notFound(
+                                                "REQUEST_NOT_FOUND", "No such request."));
+        return RequesterContact.of(request.getContactName(), request.getContactPhone());
     }
 
     private DonorProfile requireProfile(UUID userId) {

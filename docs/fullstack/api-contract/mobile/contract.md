@@ -147,6 +147,7 @@ GET /matches/me
         "myBloodType": "O-", "response": null, "notifiedAt": "..." } ]
 
 POST /matches/{matchId}/respond
+Idempotency-Key: a1b2c3...       // optional; only a replayed offline write sends one
 { "response": "ACCEPTED" }        // or "DECLINED"
 
 200 { "matchId": "uuid", "response": "ACCEPTED", "respondedAt": "...",
@@ -161,7 +162,13 @@ knows they are O− and sees an A+ request assumes the app is broken.
 stopped being verified when auth moved to Google Sign-In (ADR 0002); returning the number without the
 flag would let the app promise a call that may not connect.
 
-A donor may respond once. A second POST → 409.
+A donor may respond once. A second POST → 409 `ALREADY_RESPONDED`.
+
+**`Idempotency-Key` (optional).** The Flutter app writes an answer to its local database first and
+sends it when it has signal, so a reply lost on the way back is re-sent with the same key. A POST
+carrying the key already stored against that match returns the **stored answer**, not a 409 — the
+donor did not answer twice, their phone never heard the first answer. A live connection sends no
+key and nothing changes. Client side: `docs/mobile/local-db-and-sync.md`.
 
 ## Errors
 

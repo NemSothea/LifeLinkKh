@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,11 +31,17 @@ public class MatchController {
         return matches.listMine(userId);
     }
 
+    /**
+     * {@code Idempotency-Key} is optional and sent only by a client replaying a write it queued
+     * offline. Absent, this behaves exactly as before; present and matching an answer already
+     * stored, the stored answer comes back instead of 409. See docs/mobile/local-db-and-sync.md.
+     */
     @PostMapping("/{id}/respond")
     RespondResponse respond(
             @AuthenticationPrincipal UUID userId,
             @PathVariable("id") UUID id,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @Valid @RequestBody RespondRequest body) {
-        return matches.respond(userId, id, body);
+        return matches.respond(userId, id, body, idempotencyKey);
     }
 }
