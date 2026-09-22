@@ -99,9 +99,12 @@ jobs:
       - if: steps.scaffolded.outputs.yes == 'true'
         working-directory: mobile
         run: flutter analyze
+      # Goldens excluded: they compare PNGs captured on macOS, and the Linux runner
+      # antialiases text differently even with the fonts bundled. Flutter only guarantees
+      # golden equality on the capture platform. Everything else runs.
       - if: steps.scaffolded.outputs.yes == 'true'
         working-directory: mobile
-        run: flutter test
+        run: flutter test --exclude-tags golden
 
   # The signed AAB build lands at M7 and needs the upload keystore in repository
   # secrets plus a written deploy runbook. Neither exists — docs/risks.md.

@@ -1,0 +1,5 @@
+# Declares the tag used by test/ux_snapshot_test.dart, so `flutter test` does not warn
+# about an unknown tag. CI excludes it — see the note at the top of that file.
+tags:
+  golden:
+    description: Pixel-compares rendered screens against committed PNGs. macOS only.

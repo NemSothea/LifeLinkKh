@@ -85,6 +85,12 @@ flutter:
   uses-material-design: true
   # Generates lib/l10n/app_localizations.dart from the ARB files (see l10n.yaml).
   generate: true
+  assets:
+    # google_fonts loads these instead of fetching from fonts.gstatic.com. A donor with no
+    # signal would otherwise get the platform fallback — tofu boxes for Khmer — and the
+    # golden tests would render a different font on Linux CI than on macOS.
+    # See assets/google_fonts/README.md; the filenames are load-bearing.
+    - assets/google_fonts/
 
 # Launcher icons, generated from the same mark the sign-in screen draws
 # (Icons.bloodtype on AppTheme._seed). See assets/branding/README.md for why the

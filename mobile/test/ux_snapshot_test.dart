@@ -1,3 +1,11 @@
+@Tags(['golden'])
+// Goldens are a macOS review tool, not a CI gate: Flutter guarantees pixel equality only
+// on the platform the PNGs were captured on, and the Linux runner antialiases text
+// differently even with the same font bundled. CI runs everything else with
+// `--exclude-tags golden` (see .github/workflows/ci.yml); regenerate these locally with
+// `flutter test --update-goldens test/ux_snapshot_test.dart` and look at the diff.
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
