@@ -140,8 +140,28 @@ The full ERD with every column is in [`docs/tech-lead/data-model.md`](docs/tech-
 
 ## Run it
 
-> **Prerequisites:** Docker Desktop (Compose v2), **JDK 21**, **Node 22**, Flutter SDK.
+> **Prerequisites:** Docker Desktop (Compose v2), **JDK 21**, **Node 22**, **Flutter 3.44.6**.
 > Node 20 trips `EBADENGINE` — CI and both Dockerfiles pin 22.
+
+### Supported platforms
+
+| | Minimum | Target / built against | Where it comes from |
+|---|---|---|---|
+| **Android** | **API 24** (7.0 Nougat) | **API 36** (Android 16), compiled against 36 | Flutter's defaults — `build.gradle.kts` uses `flutter.minSdkVersion` / `targetSdkVersion` rather than pinning its own |
+| **iOS** | **15.0** | Built with **Xcode 27** | `IPHONEOS_DEPLOYMENT_TARGET` in `Runner.xcodeproj`, plus `platform :ios, '15.0'` and a `post_install` hook that forces every pod to match |
+| **Flutter** | 3.44.6 | Dart SDK `^3.12.2` | Pinned exactly in `.github/workflows/ci.yml` — never `stable`, which moves under CI |
+
+Two things the table does not say out loud:
+
+- **The iOS target is build-only** ([DEC-006](docs/decisions.md)). It compiles and runs on a device
+  or simulator; there is no signing, no TestFlight and no App Store submission. The only store
+  release in scope is Play Store internal testing.
+- **The Podfile pins pods to 15.0 for a reason.** Xcode 27 rejects any deployment target outside
+  15.0–27.0, and `flutter_additional_ios_build_settings` still leaves some pods at 12.0, which
+  fails the build before any LifeLink code compiles. `ios/Podfile`'s `post_install` is what keeps
+  that from coming back.
+
+Verified on both: Android API 36 emulator (Google Play image), iOS Simulator 18.6 and 27.0.
 
 ```bash
 cp .env.example .env       # fill it in — see the runbook. NEVER commit .env
