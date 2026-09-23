@@ -36,20 +36,70 @@ the demo confusing to watch, not clearer.
 
 ## 3. The golden path (what to actually show)
 
-1. **Account A** — Google Sign-In, register as donor: blood type, district, leave
-   last-donation date blank (fresh donor → immediately eligible).
-2. **Account B** — Google Sign-In, create an urgent request: matching blood type, a district
-   near Account A's, urgency `CRITICAL`.
+**The values below are pinned, not examples.** Matching is a filter chain, and a request that
+passes none of it is not an error anywhere in the product: the API answers 201, the portal lists
+the request, and the donor's phone stays silent. `FR-MATCH-002` (retry with a wider radius) is
+deferred, so nothing widens and nothing on screen explains the silence. Improvising a blood type
+in front of an audience is how that happens.
+
+| Step | Field | Pinned value | Why this one |
+|---|---|---|---|
+| 1 | **Account A** — blood type | **O−** | Universal donor: compatible with all eight recipient types (`blood_compatibility`, ADR 0004). No demo request can miss it on compatibility |
+| 1 | Account A — district | **Doun Penh (1202)** | Calmette's own district. If the donor grants GPS, the distance is ~0 km, far inside the 10 km radius |
+| 1 | Account A — last donation | **leave blank** | NULL means never donated, which means immediately eligible. Any date inside 56 days removes the donor from every match |
+| 2 | **Account B** — hospital | **Calmette Hospital** | Seeded by `V7__seed_hospitals.sql`, and the district above is chosen against it |
+| 2 | Account B — patient type | **AB+** | Universal recipient. With an O− donor the pair is compatible from both directions, so a typo in either field still matches |
+| 2 | Account B — urgency | **CRITICAL** | Top tier reads clearest on the portal list, and urgency does not affect matching |
+
+1. **Account A** — Google Sign-In, register as donor with the values above.
+2. **Account B** — Google Sign-In, create an urgent request with the values above.
 3. Matching + push fires. Account A gets a push notification within seconds (FCM). Open it.
 4. Account A **accepts**.
 5. Switch to the **web portal** (`http://localhost:3000/km` — Khmer by default, English via
-   the language switcher top-right). Open the request row — Account A is listed as an
-   accepted donor. Click **confirm donation**.
+   the language switcher top-right). Sign in as staff (section 4), open the request row —
+   Account A is listed as an accepted donor. Click **confirm donation**.
 6. Back on Account A's app — donation history now shows the entry, eligibility flips to
    "next eligible in 56 days."
 
 That loop — register, request, match, push, accept, confirm, history — is the whole product.
 Everything else in `docs/scope.md`'s "8 FRs built" table supports one of these six steps.
+
+### Prove the match before the room does
+
+```bash
+docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink < scripts/preflight-match.sql
+```
+
+One row per donor, with the verdict spelled out: `MATCH — the alert fires`, or the specific
+reason it will not. Run it after Account A registers and before Account B posts the request. If
+no row says MATCH, the demo is about to show an empty screen and there is still time to fix it.
+
+### The five ways this goes silent
+
+Each one is a real filter in `DonorCandidateRepository.findCandidates`, and none of them
+produces an error the audience can see.
+
+1. **One account playing both roles.** `dp.user_id <> :requesterUserId` — a donor never matches
+   their own request. Deliberate (nobody should be alerted to donate to themselves), and the
+   fastest way to a silent demo. Two accounts, always.
+2. **Step 6 already ran today.** Confirming a donation starts the 56-day cooldown, and that donor
+   is then excluded from every match. **Rehearsing the full loop twice with the same donor gives
+   a silent second run.** Use a different donor account for the rehearsal, or clear the donation
+   row before the real thing.
+3. **Donor marked unavailable.** `is_available` is a toggle in the app, and a rehearsal may have
+   left it off.
+4. **GPS granted from a district too far out.** A donor with no coordinates matches regardless
+   and simply ranks last; a donor **with** coordinates is cut at 10 km (`MATCHING_RADIUS_KM`).
+   Granting location from outside Phnom Penh's centre is therefore *worse* than declining it. The
+   pinned district avoids the question.
+5. **No FCM token on that install.** The match row is still written and the portal still shows
+   the request — only the push is missing, which looks identical to "matching is broken" from the
+   audience's side. Tokens are per-install: a reflashed or reinstalled device has a new one, and
+   `scripts/preflight-match.sql` reports this case separately as `matched, but SILENT`.
+
+Sixth, not a matching rule but the same silent shape: `REQUEST_RATE_LIMIT_MAX_ATTEMPTS` is 5
+requests per 10 minutes per user. A long rehearsal that posts request after request from Account
+B will hit it and the next create answers 429.
 
 ## 4. Signing in to the portal
 

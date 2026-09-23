@@ -67,6 +67,10 @@ fills up.
 > nobody can trust the app to call is worse than not collecting it. Coordination happens through
 > the app's own push notifications instead."
 
+Use the pinned values, do not improvise them: **O−**, **Doun Penh**, last-donation date left
+blank. `../demo-runbook.md` §3 has the table and the reason for each one — every field on this
+screen is a filter that can quietly remove this donor from the match you are about to demo.
+
 If asked why district and not exact GPS coordinates: *"Exact coordinates would publish someone's
 home address next to their blood type. District-level distance is accurate enough for triage, not
 precise enough to find a specific house."* (`ADR 0003`, don't cite the number out loud, just the
@@ -74,7 +78,7 @@ reasoning.)
 
 **Step 2 — requester creates an urgent request.**
 > "Account B — different person, same app, same sign-in. They pick blood type, urgency, hospital,
-> units needed. One screen, not a wizard — someone doing this is frightened, not calm, so the form
+> units needed. Pinned: **Calmette**, patient type **AB+**, **CRITICAL**. One screen, not a wizard — someone doing this is frightened, not calm, so the form
 > defaults to something valid even if they touch nothing."
 
 **Step 3 — the match happens, the push fires.**
@@ -186,6 +190,13 @@ Six things, in the order they bite:
    that was reflashed or reinstalled since the last rehearsal has a different token. This is the
    single step whose failure is most visible, because the whole pitch is "the alert arrives."
 6. **Fresh install on the donor device** if you want Step 0 to appear at all.
+7. **Run the pre-flight after Account A registers, before Account B posts:**
+   `docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink < scripts/preflight-match.sql`.
+   One row per donor, each with `MATCH — the alert fires` or the exact reason it will not. A
+   request that matches nobody is silent, not an error — nothing on screen explains it, because
+   `FR-MATCH-002` is deferred. The two that bite in rehearsal: one account playing both roles
+   (a donor never matches their own request), and having already confirmed a donation with that
+   donor, which starts the 56-day cooldown and removes them from every match.
 
 ---
 
@@ -197,3 +208,5 @@ Six things, in the order they bite:
 - [`prd.md`](prd.md) — the full product spec, for anything this script's narration compresses away
 - [`../../scripts/metrics.sql`](../../scripts/metrics.sql) — the five PRD success metrics, computed
   off the live database in one run
+- [`../../scripts/preflight-match.sql`](../../scripts/preflight-match.sql) — whether the request you
+  are about to post will actually reach a donor, run before the room sees it
