@@ -153,6 +153,16 @@ docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink \
   < scripts/seed-demo-request.sql
 ```
 
+The five PRD success metrics come out of the same database, in one run:
+
+```bash
+docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink < scripts/metrics.sql
+```
+
+Read the `sample` column before quoting any percentage out loud — it carries the denominator,
+and two of three requests accepted inside an hour is 67% of nothing. Metric 5 is FCM *accepting*
+the send, not a phone displaying it; call it send-success, not delivery.
+
 Postgres is on host port **5433**, not 5432 — a host PostgreSQL install usually owns 5432,
 and the resulting "connection refused against the wrong database" is a confusing five
 minutes. Inside the compose network the backend still reaches it at `postgres:5432`.

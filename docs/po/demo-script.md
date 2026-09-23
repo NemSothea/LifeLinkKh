@@ -9,7 +9,7 @@ Read this once before a defense, then talk from memory — a script read verbati
 script. The point is to know the shape of the story well enough to tell it naturally, and to have
 the right sentence ready for the moments people always ask about.
 
-Read [section 7](#7-the-day-before) first if the demo is soon — two of the items there take
+Read [section 8](#8-the-day-before) first if the demo is soon — two of the items there take
 longer than an evening.
 
 ---
@@ -136,13 +136,32 @@ ask about most:
   `google_maps_flutter` widget. Rendering an interactive map was roughly a week of work for a
   requirement ("GPS") that a coordinate read already satisfies.
 
-## 6. Closing line
+## 6. If someone asks "do you have any numbers?"
+
+Run them, do not quote them from memory:
+
+```bash
+docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink < scripts/metrics.sql
+```
+
+All five PRD targets, computed off the database in front of the room. The sentence that has to
+go with it:
+
+> "The query is real. The pilot data is not — every row in here is an account this team made.
+> So read these as the measurement working, not as a result."
+
+Quote the denominator, never the percentage alone: the output prints one beside every figure
+because "67% accepted within the hour" over three requests is not a finding. And metric 5 is
+Firebase *accepting* the send, not a phone displaying it — say send-success, not delivery. Being
+precise costs a sentence; being caught overstating costs the room.
+
+## 7. Closing line
 
 > "Everything you just watched maps onto one of eight features we chose to build completely,
 > out of nineteen we could have built halfway. That trade is documented, not accidental —
 > `docs/scope.md` is the paper trail if anyone wants to check."
 
-## 7. The day before
+## 8. The day before
 
 The demo runs on **one local machine** — `docker compose` for backend, database and portal, the
 app on an emulator or a phone plugged into the same laptop. No store install, no tunnel, no
@@ -176,3 +195,5 @@ Six things, in the order they bite:
   portal accounts, seeding demo data, and section 8's per-surface test pass
 - [`../scope.md`](../scope.md) — the eight built FRs, the eight deferred, and why
 - [`prd.md`](prd.md) — the full product spec, for anything this script's narration compresses away
+- [`../../scripts/metrics.sql`](../../scripts/metrics.sql) — the five PRD success metrics, computed
+  off the live database in one run

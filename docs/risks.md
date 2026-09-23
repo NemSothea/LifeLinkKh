@@ -99,7 +99,7 @@ Eight FRs deferred, M3/M4 given three weeks each ([`scope.md`](scope.md)). Effec
 | M4 overloaded | **Reduced, not closed.** M4 keeps request create, matching, eligibility computation, push and accept/decline — but now over three weeks instead of two, and `FR-REQUEST-003` and `FR-MATCH-002` (the pre-agreed cut order below) are already out |
 | Low donor density early | **Unmitigated in the build.** `FR-MATCH-002` zero-match fallback was its direct mitigation and is deferred. A zero-match now just tells the requester none were found |
 | New — personal data deletion not built | `FR-SECURITY-001` deferred. Safe only while the pilot uses team test accounts. **Blocks any real-donor use** |
-| New — no metrics instrumentation | DEC-003 withdrawn. The five PRD metrics must be produced by SQL queries at demo time; if the pilot data is thin, the defence has no numbers |
+| New — no metrics instrumentation | DEC-003 withdrawn. The five PRD metrics come from SQL at demo time — **written 2026-09-23 as `scripts/metrics.sql`**, verified against the schema on a throwaway database. The remaining half of this risk stands: the query is real, the pilot data is not, so every figure ships with its denominator |
 
 ## Changes on 2026-08-07
 

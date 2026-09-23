@@ -494,7 +494,7 @@ questions" with no visible proof in between.
 
 Fallback if the live app cannot run in the room (no network, no projector HDMI for a
 device, borrowed machine): the two screenshot slides before this one, or the screen
-recording from docs/po/demo-script.md section 7, which is the checklist for the day
+recording from docs/po/demo-script.md section 8, which is the checklist for the day
 before — recording, cold rehearsal, and rotating the seeded portal password before it is
 typed on a projector.
 
@@ -682,10 +682,20 @@ Note that hospital-verified matters in the fourth metric. A self-reported donati
 evidence; a donation confirmed by hospital staff is.
 
 LIKELY QUESTION: "How will you measure these?"
-ANSWER: With SQL COUNT queries against the pilot database at demo time. We originally planned
-event-capture instrumentation on every milestone and cut it — for a pilot this size the
-queries give the same five numbers for none of the build cost. Be honest about the limit: if
-pilot data is thin, these stay targets rather than results.
+ANSWER: scripts/metrics.sql — it produces all five off the live database in one run, and it
+can be run in front of the room. We originally planned event-capture instrumentation on every
+milestone and cut it (DEC-003 withdrawn by DEC-004); for a pilot this size the queries give
+the same five numbers for none of the build cost.
+
+Be honest about the limit, in the same breath: the query is real, the pilot data is not. Every
+row today is a team-created test account. The output carries a `sample` column next to every
+percentage for exactly that reason — quote the denominator out loud, never the percentage
+alone. Two of three requests accepted inside an hour is 67% and it proves nothing.
+
+Metric 5 is the one to be careful with: notified_at is set when Firebase ACCEPTS the send, not
+when a phone displays it. Call it send-success, not delivery, and say true delivery lives in
+Firebase's own reporting. Being precise here costs nothing and being caught overstating it
+costs the whole slide.
 """)
     return s
 

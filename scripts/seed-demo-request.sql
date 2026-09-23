@@ -5,6 +5,13 @@
 -- V7__seed_hospitals.sql. Not a Flyway migration — demo data, not schema.
 -- See docs/demo-runbook.md section 3.
 --
+-- Timestamps are staggered on purpose. Every row used to be written at now(), which meant a
+-- request was created, the donor notified and the donor's answer recorded in the same instant:
+-- scripts/metrics.sql then reported a median time-to-first-acceptance of 0.0 minutes. A number
+-- that cannot happen is worse than no number. The two accepted requests here answer in 12 and
+-- 25 minutes, both inside the PRD's 60-minute window and straddling its 30-minute median target,
+-- and the third is never answered — so metric 2 reads 2 of 3, not a clean 100%.
+--
 -- Usage:
 --   docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink < scripts/seed-demo-request.sql
 
@@ -27,7 +34,7 @@ INSERT INTO users (id, firebase_uid, role, display_name)
 VALUES ('33333333-3333-3333-3333-333333333333', 'DEMO-REQUESTER-CHEA-SREY', 'REQUESTER', 'Chea Srey')
 ON CONFLICT (firebase_uid) DO NOTHING;
 
-INSERT INTO blood_requests (id, created_by_user_id, hospital_id, patient_blood_type, units_needed, urgency, status, contact_name, contact_phone)
+INSERT INTO blood_requests (id, created_by_user_id, hospital_id, patient_blood_type, units_needed, urgency, status, contact_name, contact_phone, created_at)
 SELECT
     '44444444-4444-4444-4444-444444444444',
     '33333333-3333-3333-3333-333333333333',
@@ -37,7 +44,8 @@ SELECT
     'CRITICAL',
     'OPEN',
     'Chea Srey',
-    '+85512345678'
+    '+85512345678',
+    now() - interval '2 hours'
 FROM hospitals WHERE name = 'Calmette Hospital'
 ON CONFLICT (id) DO NOTHING;
 
@@ -46,9 +54,9 @@ VALUES (
     '55555555-5555-5555-5555-555555555555',
     '44444444-4444-4444-4444-444444444444',
     '22222222-2222-2222-2222-222222222222',
-    now(),
+    now() - interval '2 hours' + interval '40 seconds',
     'ACCEPTED',
-    now()
+    now() - interval '2 hours' + interval '12 minutes'
 )
 ON CONFLICT (id) DO NOTHING;
 
@@ -76,7 +84,7 @@ INSERT INTO users (id, firebase_uid, role, display_name)
 VALUES ('99999999-9999-9999-9999-999999999999', 'DEMO-REQUESTER-VANN-SOPHEAK', 'REQUESTER', 'Vann Sopheak')
 ON CONFLICT (firebase_uid) DO NOTHING;
 
-INSERT INTO blood_requests (id, created_by_user_id, hospital_id, patient_blood_type, units_needed, urgency, status, contact_name, contact_phone)
+INSERT INTO blood_requests (id, created_by_user_id, hospital_id, patient_blood_type, units_needed, urgency, status, contact_name, contact_phone, created_at)
 SELECT
     'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     '99999999-9999-9999-9999-999999999999',
@@ -86,7 +94,8 @@ SELECT
     'URGENT',
     'OPEN',
     'Vann Sopheak',
-    '+85511122233'
+    '+85511122233',
+    now() - interval '50 minutes'
 FROM hospitals WHERE name = 'National Pediatric Hospital'
 ON CONFLICT (id) DO NOTHING;
 
@@ -95,9 +104,9 @@ VALUES (
     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
     'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     '88888888-8888-8888-8888-888888888888',
-    now(),
+    now() - interval '50 minutes' + interval '25 seconds',
     'ACCEPTED',
-    now()
+    now() - interval '50 minutes' + interval '25 minutes'
 )
 ON CONFLICT (id) DO NOTHING;
 
