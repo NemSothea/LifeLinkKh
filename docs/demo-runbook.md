@@ -183,9 +183,11 @@ who needs blood, where and when. Signing in adds the staff actions on the same p
 donation, the recently-fulfilled section, and for an ADMIN the staff page. Open it signed out at
 least once before a demo; explaining "and this part anyone can see" is half the pitch.
 
-> ⚠ **Every password above is in the repository**, readable by anyone with the code. That is
-> acceptable only while every account in this pilot is team-created test data. Section 9 has the
-> one command that changes them, and it has to run before this app holds one real donor's record.
+> ✅ **No password is in the repository any more** (DEC-013, 2026-09-23). The four rows carry
+> BCrypt hashes of random values nobody holds until `.env` supplies the real ones. What remains,
+> narrower: `PORTAL_STAFF_PASSWORD` is one value for three hospital accounts, so three people
+> share a credential. Same expiry as `FR-SECURITY-001` — before anyone outside the team uses the
+> portal.
 
 `PORTAL_DEV_JWT` is **gone** — removed from `.env.example` and `docker-compose.yml`. It was a
 token pasted in by hand, shared by whoever had the file, owned by nobody, and impossible to revoke
@@ -195,8 +197,8 @@ running the app.
 
 ## 5. Adding staff after the first one (no SQL required)
 
-The dev-JWT bridge above is only for standing up the very first `ADMIN` session locally.
-Every staff account **after** that is provisioned through the app, not a migration:
+The four accounts in section 4 exist so a fresh clone has a portal to sign in to. Every staff
+account **after** those is provisioned through the app, not a migration:
 
 1. The person signs in once via the mobile app as an ordinary donor/requester — this is
    what captures their `display_name` for the next step (TM-AUTH-001 E1).
@@ -206,8 +208,9 @@ Every staff account **after** that is provisioned through the app, not a migrati
 3. They now have portal access — no password, no invite email, nothing stored beyond the
    name already captured at sign-in.
 
-`V8__portal_access.sql`'s hand-run insert is now only a bootstrap for the first `ADMIN`,
-the one account that has to exist before anyone can use step 2 on anyone else.
+`V8__portal_access.sql`'s insert is only a bootstrap for the first `ADMIN` — the one account that
+has to exist before anyone can use step 2 on anyone else. It carries no password: since
+`V19__unseed_portal_passwords.sql` that comes from `.env` at startup (section 9).
 
 **The exception is an account with no mobile history at all.** The candidate dropdown is built from
 users who have already signed in on the app, so a portal-only account — `tepi` and `july` are both
@@ -222,7 +225,7 @@ looked up by name.
   Google because a donor should not hold a password for an app they open three times a year. Portal
   staff are a handful of named accounts reaching a desktop browser with no phone in the loop, so
   they get credentials instead. No self-service sign-up, no password reset — an admin grants
-  access, and a forgotten password is a new hash set by a migration.
+  access, and a forgotten password is a new value in `.env` and a backend restart (section 9).
 - **A cold stack's portal is empty** until either the golden path has run once or
   `scripts/seed-demo-request.sql` has been applied (section 8.1). Run one of the two
   *before* the audience is watching — don't open the portal cold.
@@ -327,10 +330,14 @@ No account. What proves you are genuinely signed out rather than looking at a ca
 
 ### 8.3 Portal as HOSPITAL staff
 
-Sign in at `/en/sign-in` as `tepi` (or `july`, or `calmette`) — password in section 4.
+Sign in at `/en/sign-in` as `calmette` (or `july`, or `tepi`) — password from `.env`, section 4.
+**Use `calmette` for a demo**: the golden path's request is at Calmette, so that session has
+something to confirm.
 
-- The list shows **only that hospital's** requests. `tepi` sees 49, `july` sees 1, and the public
-  board shows all 52 — the fastest way to tell which session you are in.
+- The list shows **only that hospital's** requests. On the seed alone (section 8.1) `calmette`
+  sees 1, `july` sees 1, `tepi` sees **0**, and the public board shows all 3 — which is the
+  fastest proof the scoping is real rather than cosmetic, and worth showing on purpose. `tepi` is
+  National Blood Transfusion Center staff and the seed puts no request there.
 - The header shows the name and a grey **HOSPITAL STAFF** chip.
 - **No "Manage staff" link**, and `/en/portal/staff` renders `admin-forbidden`.
 - `GET /api/admin/staff` with that session answers **403**. The link's absence is not the control;
@@ -340,7 +347,7 @@ Sign in at `/en/sign-in` as `tepi` (or `july`, or `calmette`) — password in se
 
 Sign in as `soborey`.
 
-- Every hospital's requests, not one — 52 against `july`'s 1.
+- Every hospital's requests, not one — 3 against `july`'s 1, on the seed alone.
 - A red **ADMIN** chip, and **Manage staff** appears in the header.
 - `/en/portal/staff` renders the grant form. Granting access is the real path for staff who already
   use the mobile app (section 5); accounts with no mobile history come from a migration instead.
@@ -355,6 +362,14 @@ flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8080/api  # iOS simulato
 
 `10.0.2.2` is the Android emulator's alias for the host. Getting this wrong looks exactly
 like a backend that is down.
+
+**Put the donor on Android.** The iOS Simulator has no APNs, so `FirebaseMessaging.getToken()`
+returns null there — `FirebasePushTokenSource.currentToken()` catches it and sign-in still works,
+which is why nothing looks wrong. That account simply registers no token and never receives the
+alert; `scripts/preflight-match.sql` reports it as `matched, but SILENT`. A donor on iOS needs a
+physical device. The requester can sit on the simulator quite happily — posting a request needs no
+push. The Android AVD must be a **Google Play** image (`tag.id=google_apis_playstore`); a plain
+AOSP image has neither Play services nor FCM.
 
 Use **two accounts** — the roles diverge at the shell, so one account cannot show both tab
 sets. A donor gets Home / History / Me; a requester gets Home / Me and the oversized
@@ -398,6 +413,62 @@ A wrong password and an unknown username both answer **401 `INVALID_CREDENTIALS`
 and in the same time. That is deliberate — anything that told them apart would enumerate the staff
 list one guess at a time.
 
+### 8.6b Driving the whole loop without the app
+
+Every step of section 3 except the push arriving and the screens themselves. Useful when no
+device is to hand, and the fastest way to tell an app problem from an API problem. Run verbatim —
+this is the transcript of the 2026-09-23 rehearsal, not a sketch.
+
+```bash
+set -a; . ./.env; set +a          # PORTAL_STAFF_PASSWORD for the confirm step
+
+DONOR_ID=$(docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink -t -A \
+  -c "select id from users where firebase_uid='DEMO-DONOR-SOK-DARA'")
+REQ_ID=$(docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink -t -A \
+  -c "select id from users where firebase_uid='DEMO-REQUESTER-CHEA-SREY'")
+HOSPITAL=$(docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink -t -A \
+  -c "select id from hospitals where name='Calmette Hospital'")
+
+DONOR=$(python3 scripts/mint-portal-jwt.py DONOR "$DONOR_ID" | tail -1)
+REQUESTER=$(python3 scripts/mint-portal-jwt.py DONOR "$REQ_ID" | tail -1)
+
+# 1 — the requester posts. alertedCount is how many donors were matched and alerted.
+curl -s -X POST http://127.0.0.1:8080/api/requests \
+  -H "Authorization: Bearer $REQUESTER" -H 'Content-Type: application/json' \
+  -d "{\"patientBloodType\":\"AB+\",\"unitsNeeded\":1,\"hospitalId\":\"$HOSPITAL\",
+       \"urgency\":\"CRITICAL\",\"contactName\":\"Rehearsal\",\"contactPhone\":\"+85512000000\"}"
+
+# 2 — the donor's inbox. Take the matchId whose "response" is null.
+curl -s -H "Authorization: Bearer $DONOR" http://127.0.0.1:8080/api/matches/me
+
+# 3 — accept. The response carries requesterContact: revealed only now, never before.
+curl -s -X POST "http://127.0.0.1:8080/api/matches/<matchId>/respond" \
+  -H "Authorization: Bearer $DONOR" -H 'Content-Type: application/json' \
+  -d '{"response":"ACCEPTED"}'
+
+# 4 — staff confirm. 201, and donorNextEligibleOn is 56 days out.
+STAFF=$(curl -s -X POST http://127.0.0.1:8080/api/auth/portal/login \
+  -H 'Content-Type: application/json' \
+  -d "{\"username\":\"calmette\",\"password\":\"$PORTAL_STAFF_PASSWORD\"}" |
+  python3 -c 'import sys,json; print(json.load(sys.stdin)["token"])')
+
+curl -s -X POST "http://127.0.0.1:8080/api/portal/requests/<requestId>/confirm-donation" \
+  -H "Authorization: Bearer $STAFF" -H 'Content-Type: application/json' \
+  -d "{\"matchId\":\"<matchId>\",\"donatedOn\":\"$(date +%F)\"}"
+
+# 5 — the history the donor sees, and the cooldown that now blocks them.
+curl -s -H "Authorization: Bearer $DONOR" http://127.0.0.1:8080/api/donations/me
+curl -s -H "Authorization: Bearer $DONOR" http://127.0.0.1:8080/api/donors/me
+```
+
+`mint-portal-jwt.py DONOR <user-id>` signs with `JWT_SECRET` from `.env`, so the token is
+indistinguishable from one the server issued — local stacks only, never anything else. It prints a
+`# DONOR <id> — expires in 60 minutes` line alongside the token, which is why every call above
+ends in `| tail -1`.
+
+**This leaves the seeded donor in a 56-day cooldown**, exactly as the real loop does. Reset and
+re-seed (8.1) before the demo, or the next request matches nobody.
+
 ### 8.7 Automated checks
 
 ```bash
@@ -418,11 +489,11 @@ the pipe. A truncated tail is not a failure — re-run unpiped before believing 
 |---|---|
 | Bounced to `/sign-in` mid-session | The session is one hour, matching the JWT (ADR 0007 has no refresh). Sign in again |
 | Portal shows "Could not load the request list" while signed in | The backend is down or unreachable, not the session. `docker compose ps` |
-| "Wrong username or password" and you are sure it is right | All four accounts share one password (section 4). If it still fails the row may predate `V16` — check `flyway_schema_history` |
+| "Wrong username or password" and you are sure it is right | Nothing seeds a password since `V19`. Check the backend log for `portal password bootstrap`: `is not set` means `.env` is missing the variable, `REFUSED` means the value is under 12 characters (section 9) |
 | "Too many attempts. Wait a minute" | The per-IP limiter, 20/minute. Not a rejected password — the sign-in page tells these apart |
 | Every portal route 500s right after a build | `npm run build` was run while `next dev` was live; they share `.next`. Stop dev, `rm -rf .next`, restart |
 | Mobile can't reach anything on Android | `API_BASE_URL` points at `127.0.0.1`, which is the emulator itself. Use `10.0.2.2` |
-| `POST /auth/google` answers 503 | No `GOOGLE_APPLICATION_CREDENTIALS` in `.env`. Everything else still serves |
+| `POST /auth/google` answers 503 | No Firebase key mounted — either `GOOGLE_APPLICATION_CREDENTIALS` is missing from `.env`, or the backend was rebuilt with a bare `docker compose` command, which drops the overlay (section 6). Everything else still serves |
 | Portal list is empty | Cold stack. Seed it (8.1) or run the golden path once |
 
 ## 9. Setting and rotating the portal passwords
