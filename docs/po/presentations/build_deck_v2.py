@@ -617,7 +617,7 @@ def slide_09_status(prs):
         "Backend: 184 tests green against real PostgreSQL via Testcontainers",
         "Mobile: 189 tests green — iOS and Android both build today",
         "Since M7: public request board, portal staff accounts, mobile language switch",
-        "M7 remains: signed AAB and Play Console internal-testing upload",
+        "Demo runs on one local machine — store release sequenced after it",
     ])
     footer(s, FOOT)
     notes(s, """
@@ -641,10 +641,19 @@ user's setting. None of it is a new FR; docs/scope.md records all of it, includi
 debts it carries. Say "grown, and written down" — the point is that scope changes are
 visible, not that nothing changed.
 
-M7's remaining steps are execution, not design: generate the upload keystore
-(docs/tech-lead/deploy-runbook.md), build the signed AAB, upload to Play Console's internal
-testing track. Backend during the testing window is a tunneled laptop, not a hosted deploy
-— DEC-007, and the risks slide carries it openly.
+On the last bullet, if asked: the demo you just watched runs entirely on one laptop —
+compose for backend, database and portal, the app on an emulator or a tethered phone. The
+signed AAB and the Play Store internal-testing upload are written up end to end in
+docs/tech-lead/deploy-runbook.md and sequenced AFTER the demo, deliberately (DEC-012). A
+store upload changes nothing about what this room sees; what it adds is a distribution
+channel, and Play Console identity verification plus review latency is days of waiting
+outside our control. Behind the demo, its worst case is a late release. In front of it, its
+worst case is a missed defense.
+
+Say the cost of that choice in the same breath, do not let it be found: if M7's clause is
+graded literally as a store release, this leaves a graded milestone open today. The runbook
+is written, the account is being opened, and executing it is about a day once the demo is
+behind us.
 
 LIKELY QUESTION: "Can you show us the app?"
 ANSWER: Already did — the two screenshot slides earlier, and the live walkthrough after them.

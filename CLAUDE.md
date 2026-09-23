@@ -112,6 +112,15 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 > and the mobile half of `FR-GLOBAL-001`. None is a new FR and none is graded; `docs/scope.md`'s
 > "Grown after M7" section records what was added and the two debts it carries.
 >
+> **Resequenced 2026-09-23 by DEC-012 — the demo comes first, the store release after.** The M7
+> row below keeps the course's own wording; the *order of work* changed. What happens on defense
+> day is a live demo from one local machine — `docker compose` on a laptop, the app on an emulator
+> or tethered device, the portal in a browser — and nothing in it touches the Play Store. The
+> signed AAB and the internal-testing upload are done after the demo, and only if the store link
+> is actually required. `docs/decisions.md` DEC-012 states the risk this accepts: if M7's clause is
+> graded literally, a graded milestone is open on the day. Open the Play Console account now
+> regardless — identity verification takes days and is the only part that cannot be compressed.
+>
 > **Added 2026-08-29 by DEC-008 — M8, demo scenario.** Not a course requirement (the course grades
 > M1–M7 only) and not an FR — a narrative script for walking a first-time viewer through the app,
 > distinct from `docs/demo-runbook.md` (the Tech Lead's own command-by-command runbook for standing

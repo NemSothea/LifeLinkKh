@@ -2,6 +2,11 @@
 
 **Owner:** Tech Lead. This is the second half of the deploy runbook M7 needs —
 [`local-development.md`](local-development.md) is the first half (running the stack on a laptop).
+> **When to run this: after the demo, not before.** [DEC-012](../decisions.md) resequenced it.
+> The defense is a live demo from one local machine and never touches the Play Store, so nothing
+> here is on the critical path for it. Do open the Play Console account early anyway ($25,
+> one-time) — identity verification takes days and is the only step that cannot be compressed.
+
 This half covers turning a working local build into a **signed AAB on Play Store's internal
 testing track**, which is what M7 (root `CLAUDE.md` §4) actually requires. A sideloaded APK does
 not satisfy it — testers must install through the Play Store app itself.

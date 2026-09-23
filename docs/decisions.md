@@ -448,3 +448,63 @@ two days later is worse than either finishing or skipping.
 - **The claims have to stay true.** The three-patient figure is component separation (red cells,
   plasma, platelets), and the 56 days is `FR-DONOR-002`. If either changes, the slides are wrong in
   the most embarrassing possible place.
+
+---
+
+## DEC-012 — The demo is the deliverable; the Play Store release comes after it, if at all
+
+**Date:** 2026-09-23 · **Raised by:** Nem Sothea (Tech Lead / PO) · **Status:** accepted
+
+### Context
+M7 was written as "test pass, signed AAB, Flutter app published to Play Store internal testing",
+and every plan in this repo treated the store upload as a gate standing in front of the defense.
+What actually happens in the room is a **live demo run from a local machine** — `docker compose`
+on a laptop, the app on an emulator or a tethered device, the portal in a browser on the same
+machine. Nothing in that sequence touches the Play Store. Yet the store release was sequenced
+first, which put a Play Console account, identity verification, a keystore and an upload review in
+front of the one thing the room actually sees.
+
+### Decision
+The **local demo is the deliverable**. It runs entirely on one machine, with no store install and
+no tunnel required for the demo itself.
+
+The **signed AAB and the Play Store internal-testing upload happen after the demo**, and only if
+the course actually requires the store link. The work is not cancelled and the runbook is not
+deleted — it is resequenced behind the demo.
+
+### Why this order
+Nothing about a store upload changes what the audience sees. The demo shows the same build,
+installed the same way, doing the same thing. What the upload adds is a distribution channel, and
+a distribution channel is worth nothing on a day when the distribution is "this phone, in my hand".
+
+The reverse order carries real risk. Play Console identity verification takes days and is outside
+the team's control; an upload rejected for a missing privacy policy or a wrong target SDK burns the
+week before the defense on a problem the demo never had. Put it behind the demo and its worst case
+is a late release. Put it in front and its worst case is a missed defense.
+
+### The risk this accepts, said plainly
+Root `CLAUDE.md` §4 records M7 as a Play Store internal-testing release because that is how the
+course brief words it. If the lecturer grades that clause literally, **this decision leaves a
+graded milestone open on defense day.** That is the trade, made knowingly and not discovered later.
+
+Two things keep it cheap to reverse:
+
+1. `docs/tech-lead/deploy-runbook.md` is written end to end. Executing it is roughly a day of work,
+   not a design problem.
+2. **Open the Play Console account now anyway** ($25, one-time). Identity verification is the only
+   part of this that cannot be compressed, and opening the account commits nothing. Everything else
+   — keystore, `--dart-define`, AAB, upload — can be done in an afternoon once the demo is behind us.
+
+### Consequence
+- `CLAUDE.md` §4's milestone table keeps M7 as the course wrote it, with a note recording the real
+  order of work. The table is not rewritten to match our sequencing — the course's wording is not
+  ours to edit.
+- Demo preparation is now the critical path: [`po/demo-script.md`](po/demo-script.md) §7 is the
+  day-before checklist, [`demo-runbook.md`](demo-runbook.md) §§1-3 the commands.
+- [`tech-lead/deploy-runbook.md`](tech-lead/deploy-runbook.md) gains a "when to run this" line, so
+  nobody opens it the week before the defense thinking it is due.
+- The defense deck's status slide says the demo is the deliverable and the store release is
+  sequenced behind it, rather than listing the AAB as the last thing standing.
+- [DEC-007](#dec-007--m7-internal-testing-backend-reached-via-tunnel-not-a-hosted-deploy) is
+  unaffected but no longer urgent: the tunnel exists for *remote* internal testers. A demo on one
+  machine reaches the backend at `127.0.0.1` and needs no tunnel at all.

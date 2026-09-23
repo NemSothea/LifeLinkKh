@@ -103,9 +103,13 @@ Two items have external lead time and will block M3/M7 if left:
 | Open item | Status |
 |---|---|
 | Max notified donor count | **Closed** 2026-08-19 by [ADR 0008](tech-lead/adr/0008-max-notified-donor-count.md) — `FR-MATCH-001` no longer blocked |
-| Deploy runbook | **Written** — [`tech-lead/deploy-runbook.md`](tech-lead/deploy-runbook.md). Backend-host question resolved by [DEC-007](decisions.md#dec-007--m7-internal-testing-backend-reached-via-tunnel-not-a-hosted-deploy) (tunnel, not hosted). No signed AAB actually built yet — that's execution, not a doc gap |
+| Deploy runbook | **Written** — [`tech-lead/deploy-runbook.md`](tech-lead/deploy-runbook.md). Backend-host question resolved by [DEC-007](decisions.md#dec-007--m7-internal-testing-backend-reached-via-tunnel-not-a-hosted-deploy) (tunnel, not hosted). No signed AAB built yet, and [DEC-012](decisions.md) moves that behind the demo deliberately — the demo runs on one local machine and never touches the store |
 
 Both are Tech Lead's.
+
+The critical path is now the **local demo**, not the store release ([DEC-012](decisions.md)):
+[`po/demo-script.md`](po/demo-script.md) §7 for what to do the day before, and
+[`demo-runbook.md`](demo-runbook.md) §§1-3 for the commands.
 
 ## Grown after M7 — 2026-09-06
 

@@ -144,6 +144,11 @@ ask about most:
 
 ## 7. The day before
 
+The demo runs on **one local machine** — `docker compose` for backend, database and portal, the
+app on an emulator or a phone plugged into the same laptop. No store install, no tunnel, no
+network dependency beyond the room's power socket ([DEC-012](../decisions.md)). That is the whole
+point of the checklist below: everything that can fail is on a machine you control.
+
 Six things, in the order they bite:
 
 1. **Rotate the seeded portal password.** All four portal accounts share one value, and it is
