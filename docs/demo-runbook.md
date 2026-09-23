@@ -74,6 +74,11 @@ One row per donor, with the verdict spelled out: `MATCH — the alert fires`, or
 reason it will not. Run it after Account A registers and before Account B posts the request. If
 no row says MATCH, the demo is about to show an empty screen and there is still time to fix it.
 
+The seeded donors always read `matched, but SILENT` — they are database rows, not installs, so
+they have no FCM token and never will. Only a donor registered from a real device shows
+`MATCH — the alert fires`. Seeing SILENT for Sok Dara and Ly Ratanak is the expected state, not
+a fault.
+
 ### The five ways this goes silent
 
 Each one is a real filter in `DonorCandidateRepository.findCandidates`, and none of them
@@ -100,6 +105,35 @@ produces an error the audience can see.
 Sixth, not a matching rule but the same silent shape: `REQUEST_RATE_LIMIT_MAX_ATTEMPTS` is 5
 requests per 10 minutes per user. A long rehearsal that posts request after request from Account
 B will hit it and the next create answers 429.
+
+### Measured, 2026-09-23
+
+A cold rehearsal on this machine — `docker compose down`, then the commands above, images
+already built:
+
+| From `docker compose down` to | Elapsed |
+|---|---|
+| `/api/health` answering `{"status":"UP"}` | **40 s** |
+| portal answering 200 on `/km/portal` | **43 s** |
+| reset + seed applied | **49 s** |
+| pre-flight and board verified | **55 s** |
+
+So the stack is demo-ready inside a minute, and the six-minute budget in
+[`po/demo-script.md`](po/demo-script.md) §8 is nearly all narration. First build is another
+matter — if the images are not on the machine, `dev-up.sh` compiles the backend and builds Next,
+which is minutes. Build them the day before, not in the room.
+
+The same rehearsal drove the whole loop through the API rather than the UI (mint a DONOR token
+with `scripts/mint-portal-jwt.py`, POST `/requests`, POST `/matches/{id}/respond`, POST
+`/portal/requests/{id}/confirm-donation`): request created with `alertedCount: 2`, accept
+revealed the requester's contact, confirm answered 201 with
+`"donorNextEligibleOn": "2026-11-18"`, and `/donations/me` showed the entry. That is the golden
+path minus the two things curl cannot check — the push arriving on a phone, and the screens.
+
+It also demonstrated trap 2 above in the most direct way available: the rehearsal's own confirm
+put Sok Dara into cooldown until 18 November, and the next pre-flight reported
+`no — in cooldown until 2026-11-18` instead of a match. **Reset and re-seed after every
+rehearsal that reaches step 6.**
 
 ## 4. Signing in to the portal
 

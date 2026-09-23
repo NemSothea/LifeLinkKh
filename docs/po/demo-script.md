@@ -182,7 +182,10 @@ Eight things, in the order they bite:
    that from a failure into a shrug. Make it after any golden-path change, not the morning of.
 3. **Rehearse from cold.** Docker down, `.env` fresh, both emulators closed. Run
    `../demo-runbook.md` sections 1-3 start to finish and time it. Over six minutes means cutting
-   a step, not talking faster.
+   a step, not talking faster. Measured on 2026-09-23 with the images already built: backend
+   healthy at 40 s, portal at 43 s, seeded and verified at 55 s — so the budget is nearly all
+   narration, provided nothing has to compile. A rehearsal that reaches step 6 puts that donor
+   into a 56-day cooldown; reset and re-seed afterwards or the next run matches nobody.
 4. **Two devices and a browser, laid out before you speak.** One donor, one requester, portal on
    the laptop. Decide which screen is projected when — switching devices mid-sentence is where
    demos lose the room.
