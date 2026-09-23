@@ -614,19 +614,18 @@ def slide_09_status(prs):
     heading(s, "ស្ថានភាពបច្ចុប្បន្ន", "Where We Are Today", kicker="When")
     bullets(s, [
         "M1 through M6 complete — verified live on device, not just tests",
-        "Backend: 184 tests green against real PostgreSQL via Testcontainers",
+        "Backend: 196 tests green against real PostgreSQL via Testcontainers",
         "Mobile: 189 tests green — iOS and Android both build today",
         "Since M7: public request board, portal staff accounts, mobile language switch",
         "Demo runs on one local machine — store release sequenced after it",
     ])
     footer(s, FOOT)
     notes(s, """
-Test counts are re-run before every rebuild of this deck, not copied forward — the previous
-version of this slide said 138 backend tests, which was true in August and is not now (184).
-Both numbers come from a full unpiped run on 2026-09-23: `./mvnw test` with Docker up
-(184 passed, 0 skipped — the Testcontainers integration tests silently skip when Docker is
-down, so "0 skipped" is the number that matters, not "BUILD SUCCESS") and `flutter test`
-(189 passed).
+Test counts are re-run before every rebuild of this deck, not copied forward — this slide has
+said 138 and then 184 on the way to today's 196, each one true when it was written. Both
+numbers come from a full unpiped run on 2026-09-23: `./mvnw test` with Docker up (196 passed,
+0 skipped — the Testcontainers integration tests silently skip when Docker is down, so "0
+skipped" is the number that matters, not "BUILD SUCCESS") and `flutter test` (189 passed).
 
 "Verified live" is a deliberate phrase, not filler: a green suite has been insufficient
 before on this project — a schema mismatch once shipped behind a green build because the
@@ -708,7 +707,7 @@ def slide_11_risks(prs):
         "Donor phone numbers unverified — coordination happens through push, not calls",
         "Low donor density early — needs campus and NGO onboarding drives",
         "Account and data deletion deferred — must ship before real donors",
-        "Seeded portal password sits in the repository — rotate before real data",
+        "Three hospital staff accounts share one password — one credential, three people",
         "Public board shows donor names — deliberate, no consent step yet",
     ])
     footer(s, FOOT)
@@ -724,15 +723,19 @@ deploy. Chosen deliberately — a hosted deploy is new infrastructure work M7's 
 doesn't need, and the pilot is still team-only test accounts. Revisit before any real donor
 outside the team uses the app, the same trigger that brings account deletion back into scope.
 
-On the two security bullets, both dated the same way in docs/scope.md — fix before any real
-donor's data is in this database, which is also FR-SECURITY-001's trigger. The seeded portal
-password is in migrations V13-V16 and since V16 all four portal accounts share one value;
-demo-runbook.md section 9 rotates it, and it must be rotated before this is demoed from a
-projector. The public board publishes a named donor's blood type and district to anyone with
-the link (DEC-009) — safe only because every donor row today is a team-created test account,
-and there is no consent step because until that day there was nothing to consent to. Say both
-out loud rather than waiting to be asked: each is a recorded choice with a recorded expiry,
-which is a different thing from an oversight found at the defense.
+On the two security bullets. The bigger one closed on 23 September and is worth saying out
+loud as a closed item rather than leaving off the slide: until that day a password committed in
+migrations V13-V16 opened all four portal accounts, including the ADMIN. V19 replaced those
+digests with hashes of random values nobody holds, and the real passwords now come from the
+environment at startup (DEC-013). What is left is narrower and is what the bullet says: one
+environment value covers three hospital accounts, so three people share a credential. Each row
+still carries its own salt, so cracking one does not open the others.
+
+The public board publishes a named donor's blood type and district to anyone with the link
+(DEC-009) — safe only because every donor row today is a team-created test account, and there
+is no consent step because until that day there was nothing to consent to. Say it rather than
+waiting to be asked: a recorded choice with a recorded expiry is a different thing from an
+oversight found at the defense.
 
 The language switch is no longer a risk — the mobile app got one on 2026-09-06, alongside a
 fix for push alerts that had been going out in Khmer no matter what the user chose. The team-
