@@ -151,6 +151,42 @@ def bullets(slide, items, top=Inches(2.7), left=Inches(0.9), width=Inches(11.5),
     return tf
 
 
+def shots(slide, items, height=Inches(3.5), gap=Inches(0.3), top=Inches(2.62)):
+    """One centred row of screenshots, all scaled to a common height, captioned underneath.
+
+    Widths are derived from each file's own aspect ratio rather than fixed, so a 1080x2400
+    phone portrait and a 2880x1412 browser window sit in the same row without either being
+    stretched. python-pptx computes the width itself when only a height is given, so the row
+    is added once to measure, then repositioned to centre it.
+
+    A missing file raises. A defense deck that silently drops the only picture of the working
+    product is worse than one that refuses to build.
+    """
+    pics = []
+    for name, _caption in items:
+        path = REPO / "docs/assets/screens" / name
+        if not path.exists():
+            sys.exit(f"ERROR: screenshot not found: {path.relative_to(REPO)}. "
+                     "Regenerate it (see README) or drop it from the deck.")
+        pics.append(slide.shapes.add_picture(str(path), Inches(0), top, height=height))
+
+    total = sum(pic.width for pic in pics) + gap * (len(pics) - 1)
+    if total > SLIDE_W - Inches(1.4):
+        sys.exit(f"ERROR: screenshot row is {total / 914400:.2f}in wide, past the margins. "
+                 "Lower `height` for this slide.")
+
+    x = int((SLIDE_W - total) / 2)
+    for pic, (_name, caption) in zip(pics, items):
+        pic.left = x
+        tf = textbox(slide, x, top + height + Inches(0.08), pic.width, Inches(0.5))
+        pr = tf.paragraphs[0]
+        pr.alignment = PP_ALIGN.CENTER
+        run = pr.add_run()
+        run.text = caption
+        style(run, 13, MUTED)
+        x += pic.width + gap
+
+
 def footer(slide, text):
     tf = textbox(slide, Inches(0.85), Inches(6.85), Inches(11.6), Inches(0.4))
     run = tf.paragraphs[0].add_run()
@@ -162,7 +198,11 @@ def notes(slide, text):
     slide.notes_slide.notes_text_frame.text = text.strip()
 
 
-FOOT = "LifeLink KH · Group 2 · Track B · Week 15 of 16 · Defense"
+# No week number in the footer. The first version of this deck said "Week 15 of 16" while the
+# project was actually in Week 11 — the repo's whole calendar was four weeks fast until commit
+# 214f15e corrected it (see CLAUDE.md section 4). A number that has already been wrong once,
+# printed on every slide, is not worth re-earning: the defense is W16 and that is what this says.
+FOOT = "LifeLink KH · Group 2 · Track B · Final Defense (Week 16)"
 
 
 # --- Slides ------------------------------------------------------------------
@@ -193,7 +233,7 @@ def slide_01_title(prs):
     style(r, 16, INK)
     p2 = tf2.add_paragraph()
     r2 = p2.add_run()
-    r2.text = "Group 2 · Cross-Platform Mobile App Development · Track B · Week 15 of 16 · Defense"
+    r2.text = "Group 2 · Cross-Platform Mobile App Development · Track B · Final Defense"
     style(r2, 14, MUTED)
 
     notes(s, """
@@ -453,13 +493,80 @@ no map). This slide exists so the deck doesn't go straight from "here's our scop
 questions" with no visible proof in between.
 
 Fallback if the live app cannot run in the room (no network, no projector HDMI for a
-device, borrowed machine): docs/demo-runbook.md's golden path is short enough to walk
-through as a screen-recording instead. Have one ready; do not discover you need it live.
+device, borrowed machine): the two screenshot slides before this one, or the screen
+recording from docs/po/demo-script.md section 7, which is the checklist for the day
+before — recording, cold rehearsal, and rotating the seeded portal password before it is
+typed on a projector.
 
 LIKELY QUESTION: "What if the demo breaks?"
 ANSWER: Say so plainly rather than fighting it in front of the room, then either retry
 once or switch to the fallback recording. A visible recovery reads better than a
 stalled silence.
+""")
+    return s
+
+
+def slide_07c_screens_mobile(prs):
+    """Screenshots, not a description. Added 2026-09-23 — v2 shipped with no picture of the
+    product anywhere in thirteen slides, which left the live demo as the only proof and no
+    fallback if the demo could not run. Images are the same ones README publishes, so there
+    is one set to regenerate, not two."""
+    s = blank(prs)
+    heading(s, "អេក្រង់ក្នុងទូរស័ព្ទ", "The App, on a Phone", kicker="Proof")
+    shots(s, [
+        ("mobile-intro-km.png", "Intro — what the app is, before asking for an account"),
+        ("mobile-home-km.png", "Home — alerts for you, then who else needs blood"),
+        ("mobile-history-km.png", "History — what your donations added up to"),
+        ("mobile-profile-km.png", "Profile — blood type, district, eligibility"),
+    ], height=Inches(3.5))
+    footer(s, FOOT)
+    notes(s, """
+Four screens, Khmer, from a real build on a real device — not mockups, and not the
+wireframes from M1. Say that once; nobody believes a screenshot is live, and it costs one
+sentence to say the app is running behind it.
+
+Left to right is the donor's actual order: the intro carousel runs once per install
+(DEC-011 — the app used to ask for a Google account before saying what it wanted one for),
+then home, then the two tabs a returning donor lives in.
+
+Home is worth one extra sentence if the room is quiet: the top half is alerts matched to
+you, the bottom half is the public board. GET /matches/me is empty most days by design — a
+donor is only matched when someone nearby needs their type — and that emptiness used to be
+the whole screen.
+
+If the live demo cannot run in the room, this slide and the next are the fallback. Narrate
+them from docs/po/demo-script.md rather than reading the captions aloud.
+""")
+    return s
+
+
+def slide_07d_screens_portal(prs):
+    s = blank(prs)
+    heading(s, "អេក្រង់ក្នុងកុំព្យូទ័រ", "The Portal, in a Browser", kicker="Proof")
+    # Two, not three: a third image caps the row height at 2.5in, and a browser window
+    # shrunk that far stops being readable from the back of a classroom. The admin
+    # staff-management screen (portal-staff-manage.png) is a side quest anyway — it lives
+    # in the README and comes out only if someone asks how hospitals get accounts.
+    shots(s, [
+        ("board-public-km.png", "Public board — open requests, no account needed"),
+        ("portal-staff-km.png", "The same board, signed in as hospital staff"),
+    ], height=Inches(3.1))
+    footer(s, FOOT)
+    notes(s, """
+The web half, and the answer to "why two clients" made visible: donors are on a phone
+because emergencies happen away from a desk, hospital staff are at a desk with a browser.
+
+The public board (left) needs no account at all — a deliberate override of the auth threat
+model, argued in DEC-009, so that a request can be shared as a link to someone who has not
+installed anything. It also publishes a named donor's blood type and district, which is on
+the risks slide as a debt with an expiry, not as a feature.
+
+Staff accounts (right) replaced a JWT pasted into a .env file by hand (DEC-010). Nobody
+self-signs-up for the portal: an admin grants access to someone who has already signed in
+once as an ordinary user. Mention that only if asked how hospitals get accounts.
+
+All three images are regenerated by the same pass that updates the README's screenshots —
+docs/assets/screens/. If a screen changes, regenerate there and re-run this script.
 """)
     return s
 
@@ -506,31 +613,41 @@ def slide_09_status(prs):
     s = blank(prs)
     heading(s, "ស្ថានភាពបច្ចុប្បន្ន", "Where We Are Today", kicker="When")
     bullets(s, [
-        "M1 through M6 complete — verified live, not just green tests",
-        "Backend: 138 tests passing, real PostgreSQL via Testcontainers, BUILD SUCCESS",
-        "Web portal and mobile app both running, tested on iOS and Android",
-        "M7 in progress — signed AAB and Play Store upload remain",
-        "Cross-client design pass done: shared brand color, typography, sign-in screen",
+        "M1 through M6 complete — verified live on device, not just tests",
+        "Backend: 184 tests green against real PostgreSQL via Testcontainers",
+        "Mobile: 189 tests green — iOS and Android both build today",
+        "Since M7: public request board, portal staff accounts, mobile language switch",
+        "M7 remains: signed AAB and Play Console internal-testing upload",
     ])
     footer(s, FOOT)
     notes(s, """
-This slide replaces the Week-2 version of itself, which said "not yet built." Say that
-change out loud if it's a returning audience — it's the actual headline.
+Test counts are re-run before every rebuild of this deck, not copied forward — the previous
+version of this slide said 138 backend tests, which was true in August and is not now (184).
+Both numbers come from a full unpiped run on 2026-09-23: `./mvnw test` with Docker up
+(184 passed, 0 skipped — the Testcontainers integration tests silently skip when Docker is
+down, so "0 skipped" is the number that matters, not "BUILD SUCCESS") and `flutter test`
+(189 passed).
 
-"Verified live" is a deliberate phrase, not filler: `flutter test`/`./mvnw verify` passing
-is necessary but has been insufficient before on this project — a schema mismatch shipped
-once behind a green build because the integration test that would have caught it silently
-skips without Docker running. Every milestone since has been checked on an actual device or
-browser, not just a green CI run.
+"Verified live" is a deliberate phrase, not filler: a green suite has been insufficient
+before on this project — a schema mismatch once shipped behind a green build because the
+integration test that would have caught it skipped without Docker. Every milestone since is
+checked on an actual device or browser.
 
-M7's two remaining steps are both execution, not design: generate the upload keystore
-(`docs/tech-lead/deploy-runbook.md`), then upload to Play Console's internal testing track.
-Backend for the testing window is a tunneled laptop, not a hosted deploy — `DEC-007`,
-slide 12 covers it as a live risk, not a hidden one.
+The fourth bullet is work that grew AFTER the graded milestones, in September: the public
+request board (DEC-009), portal staff sign-in and the staff lifecycle replacing a
+hand-pasted PORTAL_DEV_JWT (DEC-010), the mobile language switch, the intro carousel
+(DEC-011), and a push-language bug where every alert went out in Khmer regardless of the
+user's setting. None of it is a new FR; docs/scope.md records all of it, including the two
+debts it carries. Say "grown, and written down" — the point is that scope changes are
+visible, not that nothing changed.
+
+M7's remaining steps are execution, not design: generate the upload keystore
+(docs/tech-lead/deploy-runbook.md), build the signed AAB, upload to Play Console's internal
+testing track. Backend during the testing window is a tunneled laptop, not a hosted deploy
+— DEC-007, and the risks slide carries it openly.
 
 LIKELY QUESTION: "Can you show us the app?"
-ANSWER: Already did, a few slides back — this slide is what's left after that, not a
-substitute for it.
+ANSWER: Already did — the two screenshot slides earlier, and the live walkthrough after them.
 """)
     return s
 
@@ -572,8 +689,8 @@ def slide_11_risks(prs):
         "Donor phone numbers unverified — coordination happens through push, not calls",
         "Low donor density early — needs campus and NGO onboarding drives",
         "Account and data deletion deferred — must ship before real donors",
-        "Mobile has no language switch yet — Khmer only until built",
-        "Five-person team versus the assignment's three — open with instructor",
+        "Seeded portal password sits in the repository — rotate before real data",
+        "Public board shows donor names — deliberate, no consent step yet",
     ])
     footer(s, FOOT)
     notes(s, """
@@ -588,9 +705,19 @@ deploy. Chosen deliberately — a hosted deploy is new infrastructure work M7's 
 doesn't need, and the pilot is still team-only test accounts. Revisit before any real donor
 outside the team uses the app, the same trigger that brings account deletion back into scope.
 
-On the language switch: the web portal has one (top-right, `LanguageSwitcher`); the mobile
-app defaults to Khmer correctly now but has no in-app way to change it yet. Say this
-plainly if asked why the phone stays in Khmer during a demo for an English speaker.
+On the two security bullets, both dated the same way in docs/scope.md — fix before any real
+donor's data is in this database, which is also FR-SECURITY-001's trigger. The seeded portal
+password is in migrations V13-V16 and since V16 all four portal accounts share one value;
+demo-runbook.md section 9 rotates it, and it must be rotated before this is demoed from a
+projector. The public board publishes a named donor's blood type and district to anyone with
+the link (DEC-009) — safe only because every donor row today is a team-created test account,
+and there is no consent step because until that day there was nothing to consent to. Say both
+out loud rather than waiting to be asked: each is a recorded choice with a recorded expiry,
+which is a different thing from an oversight found at the defense.
+
+The language switch is no longer a risk — the mobile app got one on 2026-09-06, alongside a
+fix for push alerts that had been going out in Khmer no matter what the user chose. The team-
+size question moved to the closing slide, where it is asked directly.
 
 LIKELY QUESTION: "Isn't it a problem that so much is still open this late?"
 ANSWER: Compare this list to the Week-2 one — most of that list closed. What's open now is
@@ -651,7 +778,8 @@ each person owns a directory and a document set, so a split is a reassignment, n
 If asked who does what day to day: there is no separate DevOps or PM role. Tech Lead absorbed that
 work — Docker, CI, deploy, release. Definition-of-Done tracking deliberately stayed with QA, because
 with Tech Lead also holding Security and co-PO, QA is the only gate outside one person.
-We know the gap: there is no deploy runbook yet, and it has to exist before the M7 release. Product definition is co-held by Sourn and Sothea, so PRD and FR sign-off is
+The deploy runbook that gap referred to is written (docs/tech-lead/deploy-runbook.md); what is
+left of M7 is running it. Product definition is co-held by Sourn and Sothea, so PRD and FR sign-off is
 not one person's signature. Tech Lead still holds Security, which concentrates approval there;
 QA sign-off is kept independent for exactly that reason.
 """)
@@ -674,12 +802,14 @@ def main():
         ("5", "ហេតុអ្វីត្រូវជាកម្មវិធីទូរស័ព្ទ · Why Mobile", lambda: slide_05_why_mobile(prs)),
         ("6", "ស្ថាបត្យកម្មប្រព័ន្ធ · Architecture", lambda: slide_06_architecture(prs)),
         ("7", "ការគ្រប់គ្រងវិសាលភាព · How We Manage Scope", lambda: slide_07_scope(prs)),
-        ("8", "ការបង្ហាញផ្ទាល់ · Live Walkthrough (M8 / DEC-008)", lambda: slide_07b_demo(prs)),
-        ("9", "ដំណាក់កាលការងារ · Milestones", lambda: slide_08_milestones(prs, milestones)),
-        ("10", "ស្ថានភាពបច្ចុប្បន្ន · Where We Are Today", lambda: slide_09_status(prs)),
-        ("11", "សូចនាករជោគជ័យ · Success Metrics", lambda: slide_10_metrics(prs)),
-        ("12", "ហានិភ័យ · Risks + Open Decisions", lambda: slide_11_risks(prs)),
-        ("13", "ក្រុមការងារ · Team + One Open Question", lambda: slide_12_team(prs)),
+        ("8", "អេក្រង់ក្នុងទូរស័ព្ទ · The App, on a Phone", lambda: slide_07c_screens_mobile(prs)),
+        ("9", "អេក្រង់ក្នុងកុំព្យូទ័រ · The Portal, in a Browser", lambda: slide_07d_screens_portal(prs)),
+        ("10", "ការបង្ហាញផ្ទាល់ · Live Walkthrough (M8 / DEC-008)", lambda: slide_07b_demo(prs)),
+        ("11", "ដំណាក់កាលការងារ · Milestones", lambda: slide_08_milestones(prs, milestones)),
+        ("12", "ស្ថានភាពបច្ចុប្បន្ន · Where We Are Today", lambda: slide_09_status(prs)),
+        ("13", "សូចនាករជោគជ័យ · Success Metrics", lambda: slide_10_metrics(prs)),
+        ("14", "ហានិភ័យ · Risks + Open Decisions", lambda: slide_11_risks(prs)),
+        ("15", "ក្រុមការងារ · Team + One Open Question", lambda: slide_12_team(prs)),
     ]
     for num, label, build in builders:
         build()

@@ -9,6 +9,9 @@ Read this once before a defense, then talk from memory — a script read verbati
 script. The point is to know the shape of the story well enough to tell it naturally, and to have
 the right sentence ready for the moments people always ask about.
 
+Read [section 7](#7-the-day-before) first if the demo is soon — two of the items there take
+longer than an evening.
+
 ---
 
 ## 1. The hook (30 seconds, before touching a device)
@@ -37,10 +40,25 @@ Four roles, two apps:
 Two devices (or two emulators) side by side is the whole demo. One phone plays donor, one plays
 requester, the laptop's browser plays the hospital portal.
 
+Both clients open in Khmer and both can switch to English in-app — the portal from the top-right
+switcher, the phone from the **Me** tab, one item above sign-out. Say it only if someone in the
+room cannot read Khmer, then switch the phone and keep going; a demo where half the audience is
+decoding glyphs is not a demo.
+
 ## 3. The walkthrough — narrate each step as you (or your partner) click it
 
 Match this to `../demo-runbook.md` §3's golden path. The commands are there; here's what to *say*
 at each one.
+
+**Step 0 — the app introduces itself (fresh install only).**
+> "Before anything asks for an account, three slides say what the app does — one donation reaching
+> up to three patients, alerts sent only to compatible donors nearby, and the app counting the
+> cooldown for you. Skippable, and never shown again after the first launch."
+
+Ten seconds, then move on. It matters because the version before it opened straight onto a Google
+Sign-In button — asking a stranger for their identity before telling them why. If the demo device
+has already run the app, this screen will not appear: either say so or reinstall before the room
+fills up.
 
 **Step 1 — donor registers.**
 > "This is Account A. Google Sign-In, no password, no OTP to wait for — one tap and they're
@@ -68,11 +86,21 @@ reasoning.)
 **Step 4 — donor accepts.**
 > "One tap. The requester and the hospital can now both see this donor is coming."
 
+**Step 4b — the same need, seen from outside.**
+> "Look at the bottom of this donor's home screen — every open request nearby, not only the ones
+> matched to them. A donor who wasn't alerted can still choose to help, and the same board is a
+> public web page: no app, no account, just a link you can send to someone."
+
+This is worth the extra thirty seconds. Matched alerts are empty most days by design — a donor is
+only matched when someone nearby needs their type — and a demo that lands on an empty inbox looks
+like a broken product instead of a calm one.
+
 **Step 5 — switch to the browser, hospital confirms the donation.**
-> "This is the portal — the one piece of this product that isn't a phone screen, because a hospital
-> desk isn't reaching for a phone mid-shift. They see the accepted donor, and once the donation
-> actually happens, they click confirm. That single click is what starts the donor's 56-day
-> cooldown — the system doesn't trust a self-report, it trusts the hospital."
+> "This is the portal — the one piece of this product that isn't a phone screen, because a
+> hospital desk isn't reaching for a phone mid-shift. Staff sign in with a username and password;
+> nobody self-registers here, an admin grants the access. They see the accepted donor, and once
+> the donation actually happens, they click confirm. That single click is what starts the donor's
+> 56-day cooldown — the system doesn't trust a self-report, it trusts the hospital."
 
 **Step 6 — back on the donor's phone, show the history.**
 > "Donation history updates, eligibility flips to a countdown. That's the loop closing — register,
@@ -98,6 +126,12 @@ ask about most:
   reason out loud: it's a privacy obligation, deferred only because every account in this pilot is
   a team-created test account, and it comes back into scope before any real donor's data is in
   this database.
+- **"Anyone can see that donor's name and blood type?"** → yes, and it was decided that way
+  (`DEC-009`), not missed. A request has to be shareable with someone who has not installed
+  anything, or the link is useless in the exact emergency it exists for. Every donor row today is
+  a team-created test account, and `docs/scope.md` carries the consent step as a debt with the
+  same deadline as account deletion — before real donor data exists in this database. Do not
+  defend it as harmless; say it is a trade with a written expiry.
 - **"Is there a map?"** → no, on purpose. `geolocator` reads coordinates; there's no
   `google_maps_flutter` widget. Rendering an interactive map was roughly a week of work for a
   requirement ("GPS") that a coordinate read already satisfies.
@@ -108,11 +142,32 @@ ask about most:
 > out of nineteen we could have built halfway. That trade is documented, not accidental —
 > `docs/scope.md` is the paper trail if anyone wants to check."
 
+## 7. The day before
+
+Six things, in the order they bite:
+
+1. **Rotate the seeded portal password.** All four portal accounts share one value, and it is
+   committed in migrations V13-V16 — you will type it on a projector in front of a room that can
+   read the repository. `../demo-runbook.md` section 9 is the procedure.
+2. **Record the fallback.** A screen recording of the golden path, narrated or silent. No network,
+   no HDMI for a phone, a borrowed laptop — any of those ends a live demo, and a recording turns
+   that from a failure into a shrug. Make it after any golden-path change, not the morning of.
+3. **Rehearse from cold.** Docker down, `.env` fresh, both emulators closed. Run
+   `../demo-runbook.md` sections 1-3 start to finish and time it. Over six minutes means cutting
+   a step, not talking faster.
+4. **Two devices and a browser, laid out before you speak.** One donor, one requester, portal on
+   the laptop. Decide which screen is projected when — switching devices mid-sentence is where
+   demos lose the room.
+5. **Check push actually fires on these two devices.** FCM registration is per-install; a device
+   that was reflashed or reinstalled since the last rehearsal has a different token. This is the
+   single step whose failure is most visible, because the whole pitch is "the alert arrives."
+6. **Fresh install on the donor device** if you want Step 0 to appear at all.
+
 ---
 
 ## Related
 
-- [`../demo-runbook.md`](../demo-runbook.md) — the commands: bringing the stack up, minting a
-  portal token, seeding demo data
+- [`../demo-runbook.md`](../demo-runbook.md) — the commands: bringing the stack up, the seeded
+  portal accounts, seeding demo data, and section 8's per-surface test pass
 - [`../scope.md`](../scope.md) — the eight built FRs, the eight deferred, and why
 - [`prd.md`](prd.md) — the full product spec, for anything this script's narration compresses away
