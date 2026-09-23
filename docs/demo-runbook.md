@@ -223,6 +223,34 @@ looked up by name.
 - Eight other FRs are deferred by `docs/scope.md` (DEC-004) — point there rather than
   improvising a reason per feature.
 
+### `docker compose up --build backend` drops the Firebase key
+
+Found on 2026-09-23, an hour before a mobile rehearsal. Rebuilding one service by hand uses the
+base file only:
+
+```bash
+docker compose up -d --build backend        # ⚠ no overlay — Google Sign-In then 503s
+```
+
+`scripts/dev-up.sh` adds `-f docker-compose.firebase.yml` when `.env` names a
+`GOOGLE_APPLICATION_CREDENTIALS`; a bare `docker compose` command does not, and the container
+comes up healthy with no key mounted. Everything a browser touches keeps working — the board, the
+portal, the metrics — so nothing looks wrong until a phone tries to sign in and
+`POST /auth/google` answers `503 AUTH_PROVIDER_UNCONFIGURED`.
+
+Re-run `bash scripts/dev-up.sh` instead of rebuilding a single service, and check before trusting
+it:
+
+```bash
+docker exec lifelinkkh-backend-1 sh -c 'echo $GOOGLE_APPLICATION_CREDENTIALS'
+# /run/secrets/firebase-service-account.json  — empty means the overlay is missing
+
+curl -s -X POST http://127.0.0.1:8080/api/auth/google \
+  -H 'Content-Type: application/json' -d '{"idToken":"nonsense"}'
+# {"error":{"code":"INVALID_ID_TOKEN"}}  — good: the verifier ran
+# 503 AUTH_PROVIDER_UNCONFIGURED        — bad: no key, sign-in will fail on the device
+```
+
 ## 7. If something's broken instead of empty
 
 ```bash
