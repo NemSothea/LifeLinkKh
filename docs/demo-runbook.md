@@ -169,6 +169,11 @@ looked up by name.
 - **A cold stack's portal is empty** until either the golden path has run once or
   `scripts/seed-demo-request.sql` has been applied (section 8.1). Run one of the two
   *before* the audience is watching — don't open the portal cold.
+- **A rehearsed-on stack is the opposite problem.** On 2026-09-23 this database held 54 requests,
+  48 of them cancelled leftovers against one hospital, and `scripts/metrics.sql` read 5.6%
+  against a 70% target because of them. The board also showed CRITICAL requests dated three
+  weeks earlier. `scripts/reset-demo-data.sql` clears the transactional rows and keeps the
+  reference data; run it, then re-seed, before any demo that will show numbers.
 - **`FR-SECURITY-001` (account/data deletion) is deferred**, on purpose, per `docs/scope.md`
   — say this only if pushed on privacy, and be clear it comes back in scope before any real
   donor (outside the team) touches the app.
@@ -197,8 +202,14 @@ differently and are easy to confuse for one another.
 bash scripts/dev-up.sh
 curl -s http://127.0.0.1:8080/api/health              # {"status":"UP"}
 
-# Optional but usually what you want: three requests, three hospitals, all three urgency
-# tiers, two with an accepted donor. Beats an empty table for exercising anything.
+# On a laptop that has been rehearsed on, clear the rehearsals FIRST. Reference data
+# (districts, hospitals, staff accounts) survives; requests, matches, donations and donor
+# accounts do not. Irreversible, local stacks only.
+docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink \
+  < scripts/reset-demo-data.sql
+
+# Three requests, three hospitals, all three urgency tiers, two with an accepted donor,
+# aged 2 hours / 50 minutes / 20 minutes. Re-running refreshes those ages.
 docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink \
   < scripts/seed-demo-request.sql
 ```

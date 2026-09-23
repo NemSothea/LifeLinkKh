@@ -33,6 +33,12 @@ donors AS (
 -- One row per request, carrying the first ACCEPTED response it ever got. LEFT JOIN on purpose:
 -- a request nobody accepted still counts in the denominator, which is the whole point of
 -- metric 2. FR-MATCH-002 (retry with a wider radius) is deferred, so those rows stay unaccepted.
+--
+-- CANCELLED and EXPIRED requests are excluded, and this is a methodology choice worth being able
+-- to defend out loud: the metric asks how often a live need reaches a donor. A requester who
+-- withdrew their own request was never waiting for an acceptance, and counting it as a failure
+-- measures rehearsal habits rather than the product. The count excluded is printed in metric 2's
+-- note so the exclusion is never silent.
 request_acceptance AS (
     SELECT
         r.id,
@@ -40,7 +46,14 @@ request_acceptance AS (
         min(m.responded_at) FILTER (WHERE m.response = 'ACCEPTED') AS first_accepted_at
     FROM blood_requests r
     LEFT JOIN request_matches m ON m.blood_request_id = r.id
+    WHERE r.status NOT IN ('CANCELLED', 'EXPIRED')
     GROUP BY r.id, r.created_at
+),
+
+excluded AS (
+    SELECT count(*) AS cancelled_or_expired
+    FROM blood_requests
+    WHERE status IN ('CANCELLED', 'EXPIRED')
 ),
 
 acceptance AS (
@@ -95,8 +108,9 @@ SELECT * FROM (
            CASE WHEN requests = 0 THEN NULL
                 ELSE to_char(100.0 * within_hour / requests, 'FM990.0') || '%' END,
            to_char(within_hour, 'FM999990') || ' of ' || to_char(requests, 'FM999990') || ' requests',
-           to_char(ever_accepted, 'FM999990') || ' accepted at any point; the rest are the '
-             || 'zero-match case FR-MATCH-002 would have retried'
+           to_char(ever_accepted, 'FM999990') || ' accepted at any point · '
+             || to_char((SELECT cancelled_or_expired FROM excluded), 'FM999990')
+             || ' cancelled/expired requests excluded from both'
     FROM acceptance
 
     UNION ALL

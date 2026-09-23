@@ -172,7 +172,7 @@ app on an emulator or a phone plugged into the same laptop. No store install, no
 network dependency beyond the room's power socket ([DEC-012](../decisions.md)). That is the whole
 point of the checklist below: everything that can fail is on a machine you control.
 
-Six things, in the order they bite:
+Eight things, in the order they bite:
 
 1. **Rotate the seeded portal password.** All four portal accounts share one value, and it is
    committed in migrations V13-V16 — you will type it on a projector in front of a room that can
@@ -190,7 +190,11 @@ Six things, in the order they bite:
    that was reflashed or reinstalled since the last rehearsal has a different token. This is the
    single step whose failure is most visible, because the whole pitch is "the alert arrives."
 6. **Fresh install on the donor device** if you want Step 0 to appear at all.
-7. **Run the pre-flight after Account A registers, before Account B posts:**
+7. **Reset and re-seed the database.** A laptop rehearsed on for a month shows it: stale
+   "urgent" requests dated weeks ago, and the metrics in section 6 computed over dozens of
+   abandoned rehearsal rows. `scripts/reset-demo-data.sql` then `scripts/seed-demo-request.sql`
+   (`../demo-runbook.md` §8.1). Reference data survives; rehearsals do not.
+8. **Run the pre-flight after Account A registers, before Account B posts:**
    `docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink < scripts/preflight-match.sql`.
    One row per donor, each with `MATCH — the alert fires` or the exact reason it will not. A
    request that matches nobody is silent, not an error — nothing on screen explains it, because

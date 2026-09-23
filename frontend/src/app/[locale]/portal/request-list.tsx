@@ -76,14 +76,31 @@ const URGENCY_STYLE: Record<string, string> = {
         'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-300 dark:bg-slate-800/60 dark:text-slate-300 dark:ring-slate-700',
 };
 
-export function UrgencyBadge({ urgency }: { urgency: string }) {
+/** The urgency enum is the API's word, not the reader's. The filter chips above the list have
+ * been translated since the portal shipped; the badge on every card rendered the raw
+ * `CRITICAL`/`URGENT`/`ROUTINE` instead, so the Khmer board — the default locale — printed one
+ * English word on every row. Same copy keys as the chips, so the two can never disagree. */
+export function urgencyLabel(urgency: string, copy: Copy): string {
+    switch (urgency) {
+        case 'CRITICAL':
+            return copy.filterCritical;
+        case 'URGENT':
+            return copy.filterUrgent;
+        case 'ROUTINE':
+            return copy.filterRoutine;
+        default:
+            return urgency;
+    }
+}
+
+export function UrgencyBadge({ urgency, label }: { urgency: string; label?: string }) {
     return (
         <span
             className={`rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide uppercase ${
                 URGENCY_STYLE[urgency] ?? URGENCY_STYLE.ROUTINE
             }`}
         >
-            {urgency}
+            {label ?? urgency}
         </span>
     );
 }
@@ -301,7 +318,10 @@ function RequestRow({
 
                     <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                            <UrgencyBadge urgency={request.urgency} />
+                            <UrgencyBadge
+                                urgency={request.urgency}
+                                label={urgencyLabel(request.urgency, copy)}
+                            />
                             <span className="text-sm text-black/60 dark:text-white/60">
                                 {request.unitsLabel}
                             </span>
