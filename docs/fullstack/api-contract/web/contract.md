@@ -63,13 +63,23 @@ nothing to show for it. `openapi.yaml` has declared the wider enum since M4; thi
 GET /portal/requests?status=OPEN
 
 200 [ { "id": "uuid", "patientBloodType": "A+", "unitsNeeded": 1, "urgency": "URGENT",
-         "status": "OPEN", "hospital": { "id": "uuid", "name": "Calmette Hospital" },
+         "status": "OPEN",
+         "hospital": { "id": "uuid", "name": "Calmette Hospital",
+                       "districtName": { "km": "ដូនពេញ", "en": "Doun Penh" } },
          "alertedCount": 12, "acceptedCount": 1,
          "createdAt": "2026-08-07T09:14:00+07:00",
          "acceptedDonors": [ { "matchId": "uuid", "displayName": "Sothea",
-                               "bloodType": "O-", "districtName": "Toul Kork",
+                               "bloodType": "O-",
+                               "districtName": { "km": "ទួលគោក", "en": "Tuol Kouk" },
                                "respondedAt": "..." } ] } ]
 ```
+
+**Every `districtName` is a `{ km, en }` pair**, on the hospital and on the donor alike (openapi
+0.4.0). The donor's was a bare English string until `BUG-API-004`: the Khmer board — the default
+locale — rendered the hospital's district in Khmer and the donor's, one line below it on the same
+card, in Latin. The portal switches locale in the browser with no re-fetch, so a server that picks
+one language picks it for the wrong reader half the time. Same rule and same reasoning as the
+mobile contract's `CR-MAPI-001`.
 
 `acceptedDonors` contains **only donors who have accepted**. A hospital does not see the alerted-but-
 silent list — that is 11 people's blood type and district for no operational reason

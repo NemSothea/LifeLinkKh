@@ -114,7 +114,10 @@ public class BoardService {
                             return new PublicDonorResponse(
                                     profile.getFullName(),
                                     profile.getBloodType(),
-                                    district == null ? null : district.getNameEn(),
+                                    district == null
+                                            ? null
+                                            : new DistrictName(
+                                                    district.getNameKm(), district.getNameEn()),
                                     match.getRespondedAt());
                         })
                 .orElse(null);

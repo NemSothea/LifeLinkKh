@@ -3,7 +3,7 @@ id: BUG-API-004
 title: A donor's district stays English on the Khmer board — the hospital's does not
 area: API
 severity: medium
-status: open
+status: closed
 found_in: demo verification 2026-09-23, GET /api/public/requests
 reported_by: QA
 ---
@@ -29,6 +29,29 @@ The API is where they diverge — `GET /api/public/requests`:
 
 `hospital.districtName` is the bilingual object the portal can pick from. `acceptedDonors[].districtName`
 is a bare English string, so the client has nothing to localize with.
+
+## Fix
+Closed 2026-09-23. `AcceptedDonorResponse.districtName` and `PublicDonorResponse.districtName`
+became `DistrictName{km, en}` — the same record the hospital's district already used — and both
+mappers in `BoardService` and `PortalService` now build it. The portal picks the label with
+`districtLabel(district, locale)` (`frontend/src/lib/api/district.ts`), a leaf type shared by
+`board.ts` and `portal.ts` so the two cannot drift apart again in exactly this way.
+
+Contract: `api-contract/web/openapi.yaml` 0.3.0 → 0.4.0, with a `DistrictName` schema. The same
+bump documents `Hospital.districtName`, which the API had always sent and the web spec had never
+declared.
+
+Tests: `PortalServiceTest.anAcceptedDonorsDistrictCarriesBothLabels` and
+`anUnknownDistrictLeavesTheLabelNull`, `BoardControllerTest.anAcceptedDonorsDistrictIsAnObjectWithBothLabels`
+(the wire shape, since that is what the portal reads), and `district.test.ts` for the client-side
+pick including the unknown-locale fallback.
+
+Verified live on the running stack: `GET /api/public/requests` returns
+`"districtName": {"km": "ទួលគោក", "en": "Tuol Kouk"}` for an accepted donor, the Khmer board renders
+`Sok Dara · O+ · ដូនពេញ`, and the English board renders `Sok Dara · O+ · Doun Penh`.
+
+The mobile client was checked and needed no change: it reads `/public/requests` for the board but
+ignores `acceptedDonors`, and it already parsed every other `districtName` as a km/en map.
 
 ## Notes
 - The web contract documents the current shape, so it is a contract decision, not an oversight

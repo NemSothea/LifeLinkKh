@@ -1,5 +1,6 @@
 import { apiGet, apiPost, type ApiResult } from './client';
 import { portalAuthHeader } from './session';
+import type { DistrictName } from './district';
 
 /**
  * Typed against `GET`/`POST /api/portal/requests...` in
@@ -10,7 +11,7 @@ export type AcceptedDonor = {
     matchId: string;
     displayName: string;
     bloodType: string;
-    districtName: string | null;
+    districtName: DistrictName | null;
     respondedAt: string;
 };
 

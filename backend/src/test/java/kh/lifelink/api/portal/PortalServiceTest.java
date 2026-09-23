@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import kh.lifelink.api.common.error.ApiException;
+import kh.lifelink.api.district.District;
 import kh.lifelink.api.district.DistrictRepository;
 import kh.lifelink.api.donation.Donation;
 import kh.lifelink.api.donation.DonationRepository;
@@ -149,6 +150,42 @@ class PortalServiceTest {
         assertThat(result.get(0).acceptedDonors())
                 .extracting(d -> d.displayName())
                 .containsExactly("Sophea", "Dara");
+    }
+
+    /**
+     * BUG-API-004. The hospital's district arrived as a km/en pair and the donor's as a bare
+     * English string, so the Khmer board — the default locale — printed one Latin place name on
+     * every card that had an accepted donor, directly under a Khmer one.
+     */
+    @Test
+    void anAcceptedDonorsDistrictCarriesBothLabels() {
+        when(requests.findByStatusAndHospitalIdOrderByCreatedAtDesc("OPEN", CALMETTE))
+                .thenReturn(List.of(openRequest(CALMETTE)));
+        when(matches.findByBloodRequestIdAndResponse(REQUEST_ID, "ACCEPTED"))
+                .thenReturn(List.of(acceptedMatch(DONOR_PROFILE_ID, OffsetDateTime.now())));
+        when(donorProfiles.findById(DONOR_PROFILE_ID))
+                .thenReturn(Optional.of(donorProfile(DONOR_PROFILE_ID, "Sophea")));
+        when(districts.findAll()).thenReturn(List.of(district("1204", "ទួលគោក", "Tuol Kouk")));
+
+        List<PortalRequestResponse> result = service.listRequests(HOSPITAL_STAFF, "OPEN");
+
+        assertThat(result.get(0).acceptedDonors().get(0).districtName().km()).isEqualTo("ទួលគោក");
+        assertThat(result.get(0).acceptedDonors().get(0).districtName().en()).isEqualTo("Tuol Kouk");
+    }
+
+    /** A donor whose district code has no row is a null label, not a crash or an empty string. */
+    @Test
+    void anUnknownDistrictLeavesTheLabelNull() {
+        when(requests.findByStatusAndHospitalIdOrderByCreatedAtDesc("OPEN", CALMETTE))
+                .thenReturn(List.of(openRequest(CALMETTE)));
+        when(matches.findByBloodRequestIdAndResponse(REQUEST_ID, "ACCEPTED"))
+                .thenReturn(List.of(acceptedMatch(DONOR_PROFILE_ID, OffsetDateTime.now())));
+        when(donorProfiles.findById(DONOR_PROFILE_ID))
+                .thenReturn(Optional.of(donorProfile(DONOR_PROFILE_ID, "Sophea")));
+
+        List<PortalRequestResponse> result = service.listRequests(HOSPITAL_STAFF, "OPEN");
+
+        assertThat(result.get(0).acceptedDonors().get(0).districtName()).isNull();
     }
 
     @Test
@@ -385,6 +422,15 @@ class PortalServiceTest {
         match.setResponse("ACCEPTED");
         match.setRespondedAt(respondedAt);
         return match;
+    }
+
+    /** Reference data has no setters — the application never writes this table (see District). */
+    private static District district(String code, String km, String en) {
+        District district = new District();
+        ReflectionTestUtils.setField(district, "code", code);
+        ReflectionTestUtils.setField(district, "nameKm", km);
+        ReflectionTestUtils.setField(district, "nameEn", en);
+        return district;
     }
 
     private static DonorProfile donorProfile(UUID id, String fullName) {

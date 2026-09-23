@@ -5,6 +5,7 @@ import EmptyState from '@/components/EmptyState';
 import RelativeTime from '@/components/RelativeTime';
 import type { PortalRequest } from '@/lib/api/portal';
 import type { PublicRequest } from '@/lib/api/board';
+import { districtLabel } from '@/lib/api/district';
 import ConfirmDonationForm from './confirm-donation-form';
 import {
     IconAlertTriangle,
@@ -392,7 +393,9 @@ function RequestRow({
                                             <span className="text-black/50 dark:text-white/50">
                                                 {' · '}
                                                 {donor.bloodType}
-                                                {donor.districtName ? ` · ${donor.districtName}` : ''}
+                                                {districtLabel(donor.districtName, locale)
+                                                    ? ` · ${districtLabel(donor.districtName, locale)}`
+                                                    : ''}
                                             </span>
                                             {/* `respondedAt` was fetched for every donor
                                                 and rendered for none. Staff coordinating

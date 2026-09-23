@@ -1,4 +1,5 @@
 import { apiGet, type ApiResult } from './client';
+import type { DistrictName } from './district';
 
 /**
  * `GET /public/requests` — the live board, readable with no session at all.
@@ -14,7 +15,7 @@ import { apiGet, type ApiResult } from './client';
 export type PublicDonor = {
     displayName: string;
     bloodType: string;
-    districtName: string | null;
+    districtName: DistrictName | null;
     respondedAt: string;
 };
 

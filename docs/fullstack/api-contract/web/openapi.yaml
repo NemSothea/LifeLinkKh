@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: LifeLink KH — Web API
-  version: 0.3.0
+  version: 0.4.0
   description: |
     Hospital portal (Next.js). Machine twin of contract.md — this file wins on conflict.
 
@@ -462,12 +462,27 @@ components:
       description: EXPIRED is unreachable in this build — FR-REQUEST-005 deferred (DEC-004).
       enum: [OPEN, FULFILLED, CANCELLED]
 
+    DistrictName:
+      type: object
+      description: |
+        Both labels, never one. The portal switches locale at runtime, so picking a language
+        server-side would show a district in the language the reader just left. Same shape and
+        same reasoning as the mobile contract's DistrictName (CR-MAPI-001).
+      required: [km, en]
+      properties:
+        km: { type: string, example: ដូនពេញ }
+        en: { type: string, example: Doun Penh }
+
     Hospital:
       type: object
       required: [id, name]
       properties:
         id: { type: string, format: uuid }
         name: { type: string, example: Calmette Hospital }
+        districtName:
+          allOf: [{ $ref: '#/components/schemas/DistrictName' }]
+          nullable: true
+          description: Null for a hospital with no district code. Was undocumented here until 0.4.0, though the API has always sent it.
 
     AcceptedDonor:
       type: object
@@ -479,7 +494,12 @@ components:
         matchId: { type: string, format: uuid }
         displayName: { type: string }
         bloodType: { $ref: '#/components/schemas/BloodType' }
-        districtName: { type: string }
+        districtName:
+          allOf: [{ $ref: '#/components/schemas/DistrictName' }]
+          nullable: true
+          description: |
+            A pair since 0.4.0 (BUG-API-004). It was a bare English string, which left the Khmer
+            board printing one Latin place name per card, directly under a Khmer one.
         respondedAt: { type: string, format: date-time }
 
     PublicDonor:
@@ -492,7 +512,10 @@ components:
       properties:
         displayName: { type: string }
         bloodType: { $ref: '#/components/schemas/BloodType' }
-        districtName: { type: string, nullable: true }
+        districtName:
+          allOf: [{ $ref: '#/components/schemas/DistrictName' }]
+          nullable: true
+          description: A pair since 0.4.0 (BUG-API-004), matching AcceptedDonor and Hospital.
         respondedAt: { type: string, format: date-time }
 
     PublicRequest:
