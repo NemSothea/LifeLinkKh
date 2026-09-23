@@ -44,11 +44,11 @@ in front of an audience is how that happens.
 
 | Step | Field | Pinned value | Why this one |
 |---|---|---|---|
-| 1 | **Account A** — blood type | **O−** | Universal donor: compatible with all eight recipient types (`blood_compatibility`, ADR 0004). No demo request can miss it on compatibility |
+| 1 | **Account A** — blood type | **O−**, or the donor's real type | O− is the universal donor, so nothing can miss it. But the pin that actually protects this demo is the patient's type below — with an AB+ patient, **any** donor type matches, so use whatever the account already has if it is registered |
 | 1 | Account A — district | **Doun Penh (1202)** | Calmette's own district. If the donor grants GPS, the distance is ~0 km, far inside the 10 km radius |
 | 1 | Account A — last donation | **leave blank** | NULL means never donated, which means immediately eligible. Any date inside 56 days removes the donor from every match |
 | 2 | **Account B** — hospital | **Calmette Hospital** | Seeded by `V7__seed_hospitals.sql`, and the district above is chosen against it |
-| 2 | Account B — patient type | **AB+** | Universal recipient. With an O− donor the pair is compatible from both directions, so a typo in either field still matches |
+| 2 | Account B — patient type | **AB+** | **The one value not to improvise.** AB+ is the universal recipient — it accepts all eight donor types, so the match survives whatever the donor registered. Change this field and compatibility becomes a real filter again: an A+ donor, for instance, can give only to A+ and AB+ |
 | 2 | Account B — urgency | **CRITICAL** | Top tier reads clearest on the portal list, and urgency does not affect matching |
 
 1. **Account A** — Google Sign-In, register as donor with the values above.
@@ -78,6 +78,20 @@ The seeded donors always read `matched, but SILENT` — they are database rows, 
 they have no FCM token and never will. Only a donor registered from a real device shows
 `MATCH — the alert fires`. Seeing SILENT for Sok Dara and Ly Ratanak is the expected state, not
 a fault.
+
+Who can give to whom, if the question comes up mid-demo (`blood_compatibility`, ADR 0004 —
+whole blood and red cells only):
+
+| Patient | Accepts blood from |
+|---|---|
+| AB+ | everyone — A+, A−, AB+, AB−, B+, B−, O+, O− |
+| AB− | A−, AB−, B−, O− |
+| A+ | A+, A−, O+, O− |
+| A− | A−, O− |
+| B+ | B+, B−, O+, O− |
+| B− | B−, O− |
+| O+ | O+, O− |
+| O− | O− only |
 
 ### The five ways this goes silent
 
