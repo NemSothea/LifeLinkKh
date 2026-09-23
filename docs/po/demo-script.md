@@ -215,6 +215,8 @@ Eight things, in the order they bite:
 - [`../demo-runbook.md`](../demo-runbook.md) — the commands: bringing the stack up, the seeded
   portal accounts, seeding demo data, and section 8's per-surface test pass
 - [`../scope.md`](../scope.md) — the eight built FRs, the eight deferred, and why
+- [`presentations/run-of-show.md`](presentations/run-of-show.md) — the clock: 30 minutes of
+  slides with the 5-minute demo inside them, and what to cut if the slot is tighter
 - [`prd.md`](prd.md) — the full product spec, for anything this script's narration compresses away
 - [`../../scripts/metrics.sql`](../../scripts/metrics.sql) — the five PRD success metrics, computed
   off the live database in one run

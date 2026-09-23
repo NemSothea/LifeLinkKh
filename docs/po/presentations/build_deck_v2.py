@@ -237,6 +237,10 @@ def slide_01_title(prs):
     style(r2, 14, MUTED)
 
     notes(s, """
+30 seconds here. The clock for the whole talk — 30 minutes of slides with a 5-minute demo
+sitting inside it at 16:00 — is docs/po/presentations/run-of-show.md, along with what to cut
+first if the slot turns out to include the demo rather than sit beside it.
+
 Open with the problem, not the product. One line: "Right now, when a Cambodian hospital
 needs blood urgently, someone writes a Facebook post and hopes the right person scrolls
 past." Then move on — slide 2 does the work.
@@ -485,6 +489,13 @@ def slide_07b_demo(prs):
     notes(s, """
 This is the hand-off slide, not the demo itself. Say one sentence and switch devices:
 "Rather than describe it, let me show it" — then tab away from the deck.
+
+Five minutes, and it does not fit the six-step golden path, so the donor is PRE-STAGED:
+registered, signed in, permission granted, sitting on Home before the room walks in. The two
+screenshot slides you just showed are what registration looks like — that is why they come
+immediately before this one. The demo then runs post → push → accept → confirm → history, with
+the beats and the wording in run-of-show.md. Rehearse it to 4:30; the spare 30 seconds is where
+a slow emulator goes.
 
 Everything said out loud from here follows docs/po/demo-script.md, not this slide. That
 file has the full narration, plus ready answers for the questions people actually ask
