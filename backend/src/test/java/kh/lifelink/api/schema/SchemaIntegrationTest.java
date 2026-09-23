@@ -36,7 +36,30 @@ class SchemaIntegrationTest {
         Integer applied =
                 jdbc.queryForObject(
                         "SELECT count(*) FROM flyway_schema_history WHERE success", Integer.class);
-        assertThat(applied).isEqualTo(18);
+        assertThat(applied).isEqualTo(19);
+    }
+
+    /**
+     * V19 took the seeded portal password out of the repository. This is the assertion that
+     * notices if it ever comes back — by a migration seeding one again, or by V19 being dropped
+     * from a rebuilt schema. It checks the digests rather than attempting a sign-in, because a
+     * password nobody can produce is the property that matters: the four accounts still exist and
+     * still satisfy the username/hash pair constraint.
+     */
+    @Test
+    void noPortalAccountCarriesASeededPassword() {
+        List<String> hashes =
+                jdbc.queryForList(
+                        "SELECT password_hash FROM users WHERE username IS NOT NULL", String.class);
+
+        assertThat(hashes).isNotEmpty().allSatisfy(hash -> assertThat(hash).startsWith("$2"));
+        assertThat(hashes)
+                .describedAs("the four digests V16 committed to the repository")
+                .doesNotContain(
+                        "$2a$10$CHysYN0OLfEHlX0gCZOLMueylnz9636ifITflt0XaGR12ueSvKtQO",
+                        "$2a$10$bwoF0RI62hp/xKCcrcPn4.CfYkkbJeddoLHpOojKGKaiL4qy84lUi",
+                        "$2a$10$A3nmX4gU2esYsiMoRXpxyOgvVmMTRiePZB40QvUdcM3yLasXeQcBO",
+                        "$2a$10$kdTruDEwKBrXp6Q/.X39QOVPkf7tzgVhERxmfwsrizd2Q65/hw9fq");
     }
 
     @Test

@@ -174,9 +174,12 @@ point of the checklist below: everything that can fail is on a machine you contr
 
 Eight things, in the order they bite:
 
-1. **Rotate the seeded portal password.** All four portal accounts share one value, and it is
-   committed in migrations V13-V16 — you will type it on a projector in front of a room that can
-   read the repository. `../demo-runbook.md` section 9 is the procedure.
+1. **Check the portal passwords are set in `.env`.** Nothing is seeded any more — the four
+   accounts carry unopenable digests until `PORTAL_ADMIN_PASSWORD` and `PORTAL_STAFF_PASSWORD`
+   are set and the backend restarts (`../demo-runbook.md` §9). A stack without them reaches the
+   public board fine and refuses every sign-in, which is a bad thing to discover at step 5. If
+   you are projecting, use a value you are willing to have watched being typed — and change it
+   afterwards, which is one line in `.env` and a restart.
 2. **Record the fallback.** A screen recording of the golden path, narrated or silent. No network,
    no HDMI for a phone, a borrowed laptop — any of those ends a live demo, and a recording turns
    that from a failure into a shrug. Make it after any golden-path change, not the morning of.

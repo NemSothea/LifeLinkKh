@@ -508,3 +508,66 @@ Two things keep it cheap to reverse:
 - [DEC-007](#dec-007--m7-internal-testing-backend-reached-via-tunnel-not-a-hosted-deploy) is
   unaffected but no longer urgent: the tunnel exists for *remote* internal testers. A demo on one
   machine reaches the backend at `127.0.0.1` and needs no tunnel at all.
+
+---
+
+## DEC-013 — Portal passwords come from the environment; nothing seeds one
+
+**Date:** 2026-09-23 · **Raised by:** Nem Sothea (Tech Lead / Security) · **Status:** accepted
+
+### Context
+`V13`/`V14`/`V15` seeded portal passwords so a fresh clone had a working login on the first
+`docker compose up`, and `V16` unified them to one value on 6 September. From that day a single
+string in this repository opened all four portal accounts — including the ADMIN that grants portal
+access and confirms donations. `docs/scope.md` carried it as a debt with an expiry: before this
+app holds one real donor's record.
+
+The expiry was approaching from the wrong direction. Rotating the value — the procedure
+`demo-runbook.md` §9 used to describe — fixes one laptop and leaves the repository shipping a
+working admin password to every future clone.
+
+### Decision
+No migration seeds a password. `V19__unseed_portal_passwords.sql` replaces the four committed
+digests with BCrypt hashes of random values generated inside the database (`pgcrypto`, so nothing
+random has to be written into the file either), and `PortalPasswordBootstrap` sets the real ones
+at startup from `PORTAL_ADMIN_PASSWORD` and `PORTAL_STAFF_PASSWORD`.
+
+Rotation is therefore editing `.env` and restarting the backend.
+
+### The failure modes it chooses
+- **Unset sets nothing.** No default, no generated-and-logged password. A fresh stack with neither
+  variable serves the mobile API and the public board normally and refuses every portal sign-in.
+  An unreachable portal is a smaller problem than a public admin, and the log line says exactly
+  which variable is missing.
+- **Under 12 characters is refused, not accepted.** Silently taking `1234` would put a weaker
+  password on the admin than the seeded one this replaced.
+- **An existing password is never overwritten with the same value.** It compares before writing,
+  so restarts do not churn four rows, and an admin who changed their own password does not have it
+  reset from a file on the next boot.
+- **The value never reaches a log, an exception or a response.** `PortalPasswordBootstrapTest`
+  asserts that, along with the other four rules.
+
+### Why not fail startup when the variables are missing
+`JWT_SECRET` does exit the container when unset, and that is right: without it nothing can issue a
+session and every authenticated path is broken. A missing portal password breaks portal sign-in
+only. Taking the whole stack down — the mobile API, the public board, a demo — over one unset
+variable would trade a small failure for a total one.
+
+### What this does not fix
+`PORTAL_STAFF_PASSWORD` is one value for three hospital accounts. Each row still gets its own
+salted digest, so cracking one does not open the others, but three people sharing one password is
+three people sharing one account. Acceptable while every portal account is team-created test data;
+it is the same expiry as `FR-SECURITY-001` and it is now the only part of this debt still open.
+
+There is still no password reset and no self-service change. An admin grants access; a forgotten
+password is `.env` plus a restart, or a hand-set digest. Deliberate limit of the pilot's scope.
+
+### Consequence
+- `.env.example` names both variables with empty values and says what happens when they stay that
+  way. `.env` itself is gitignored and holds the real ones.
+- `demo-runbook.md` §4 no longer prints a password; §9 became "setting and rotating" rather than
+  "changing the seeded passwords".
+- `SchemaIntegrationTest` asserts no portal account carries any of the four digests V16 committed
+  — the test that notices if a seeded password ever comes back.
+- `docs/scope.md`'s first debt under "Grown after M7" is closed; the second (donor names on the
+  public board, DEC-009) still stands.

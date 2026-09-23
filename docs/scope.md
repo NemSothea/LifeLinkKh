@@ -137,9 +137,14 @@ decisions with their own DEC record.
 Two debts, both with the same deadline as `FR-SECURITY-001` — *before any real donor's data is in
 this database*:
 
-1. **A password sits in the repository.** V13-V16 seed it, and since V16 all four portal accounts
-   share one value. Anyone who can read the code can sign in as the admin.
-   [`demo-runbook.md`](demo-runbook.md) section 9 rotates it.
+1. ~~**A password sits in the repository.**~~ **Closed 2026-09-23.**
+   `V19__unseed_portal_passwords.sql` replaced the four seeded digests with BCrypt hashes of
+   random values generated inside the database, and `PortalPasswordBootstrap` now sets the real
+   passwords from `PORTAL_ADMIN_PASSWORD` / `PORTAL_STAFF_PASSWORD` at startup. Unset means
+   nobody can sign in; under 12 characters is refused. See [DEC-013](decisions.md) and
+   [`demo-runbook.md`](demo-runbook.md) section 9. The narrower thing that remains is not a
+   repository leak: three hospital accounts share one environment value, so three people share
+   one credential.
 2. **Donor names are world-readable.** DEC-009 publishes a named person's blood type and district
    to anyone with the link. Safe only because every donor row is a team-created test account, and
    there is no consent step because until that day there was nothing to consent to.

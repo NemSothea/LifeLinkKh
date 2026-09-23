@@ -138,9 +138,13 @@ rehearsal that reaches step 6.**
 ## 4. Signing in to the portal
 
 The portal has a real sign-in at **`/<locale>/sign-in`** — username and password, no token to
-mint, nothing to paste into `.env`. Four accounts are seeded by migration:
+mint. Four accounts exist, created by migration:
 
-**All four use the same password: `qwer1234!`**
+**The passwords come from `.env`, not from this document.** Since
+`V19__unseed_portal_passwords.sql` no migration carries one: `PORTAL_ADMIN_PASSWORD` sets
+`soborey`, `PORTAL_STAFF_PASSWORD` sets the three hospital accounts, and
+`PortalPasswordBootstrap` writes the digests at startup. Set both before a demo, or nobody can
+sign in — section 9.
 
 | Username | Role | Hospital | Sees |
 |---|---|---|---|
@@ -149,11 +153,16 @@ mint, nothing to paste into `.env`. Four accounts are seeded by migration:
 | `tepi` | HOSPITAL | National Blood Transfusion Center | that hospital only |
 | `july` | HOSPITAL | Khmer-Soviet Friendship Hospital | that hospital only |
 
-Seeded by `V13__staff_password_login.sql` (admin), `V14__hospital_staff_login.sql` (Calmette) and
-`V15__more_hospital_staff.sql` (the other two); `V16__unify_seeded_passwords.sql` then set them all
-to one value. They were briefly `qwer12324!` and `qwer1234!` — one digit apart, which is exactly the
-difference nobody notices while staring at "Wrong username or password" for an account they know
-exists.
+The rows are created by `V13__staff_password_login.sql` (admin), `V14__hospital_staff_login.sql`
+(Calmette) and `V15__more_hospital_staff.sql` (the other two). Those migrations also seeded a
+password, and `V16__unify_seeded_passwords.sql` made all four the same one — which meant one
+string in the repository opened every portal account including the ADMIN.
+`V19__unseed_portal_passwords.sql` replaced those four digests with hashes of random values
+nobody holds. The accounts survive; the credential does not.
+
+If sign-in says "Wrong username or password" on a fresh stack, read the backend log before
+retyping anything: `portal password bootstrap: PORTAL_ADMIN_PASSWORD is not set` means exactly
+what it says, and a value under 12 characters is refused with `REFUSED` rather than accepted.
 
 **The board itself needs no account.** `/<locale>/portal` is public (DEC-009) — anyone can read
 who needs blood, where and when. Signing in adds the staff actions on the same page: confirming a
@@ -333,7 +342,7 @@ login() {
     python3 -c 'import sys,json; print(json.load(sys.stdin)["token"])'
 }
 
-STAFF=$(login tepi 'qwer1234!')   # section 4's password
+STAFF=$(login tepi "$PORTAL_STAFF_PASSWORD")   # from .env — section 4
 
 curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $STAFF" \
   http://127.0.0.1:8080/api/admin/staff                      # 403 — staff are not admins
@@ -374,18 +383,55 @@ the pipe. A truncated tail is not a failure — re-run unpiped before believing 
 | `POST /auth/google` answers 503 | No `GOOGLE_APPLICATION_CREDENTIALS` in `.env`. Everything else still serves |
 | Portal list is empty | Cold stack. Seed it (8.1) or run the golden path once |
 
-## 9. Changing the seeded passwords
+## 9. Setting and rotating the portal passwords
 
-The portal password in section 4 is written into a migration and therefore into the repository, and
-since `V16` all four accounts share it — so one leaked string is every portal account, including the
-admin. Anyone who can read the code can sign in as any of them. That is acceptable **only**
-while every account in this pilot is team-created test data, on the same footing as
-`FR-SECURITY-001` in `docs/scope.md`.
+There is no seeded password any more. `V13`/`V14`/`V15` seeded one and `V16` unified it, so from
+6 September until 23 September a single string in this repository opened all four portal accounts
+— including the ADMIN that grants portal access and confirms donations.
+`V19__unseed_portal_passwords.sql` replaced those digests with BCrypt hashes of random values
+generated inside the database, which nobody has ever seen.
 
-**This has to run before this app holds one real donor's record.** Not "should" — the accounts
-below can confirm donations and grant portal access.
+Passwords now come from the environment:
 
-BCrypt hashes cannot be written by hand, so generate one with the app's own encoder:
+```bash
+# .env — gitignored, never committed
+PORTAL_ADMIN_PASSWORD=<at least 12 characters>   # soborey (ADMIN)
+PORTAL_STAFF_PASSWORD=<at least 12 characters>   # calmette, tepi, july (HOSPITAL)
+```
+
+`PortalPasswordBootstrap` reads them at startup and writes the digests, so **rotating is editing
+`.env` and restarting the backend**:
+
+```bash
+docker compose up -d --force-recreate backend
+```
+
+What it does and does not do, each one deliberate and covered by a test in
+`PortalPasswordBootstrapTest`:
+
+- **Unset sets nothing.** No default, no generated password printed to a log. The log says
+  `PORTAL_ADMIN_PASSWORD is not set, so [soborey] cannot sign in`. A portal nobody can reach is a
+  smaller problem than a portal everybody can.
+- **Under 12 characters is refused**, logged at ERROR with `REFUSED`, and the account stays
+  unopenable. A password short enough to read off a projector would be worse than the one this
+  replaced.
+- **A password already in place is left alone.** It compares before writing, so a restart does not
+  rewrite four rows, and an admin who changed their own password through the product does not get
+  it reset to the file's value on the next boot.
+- **Each row keeps its own salt.** One value in `.env` still produces three different digests for
+  the three hospital accounts, so cracking one does not open the others.
+- **The value never reaches a log, an error message or a response.** Counts and usernames only.
+
+One thing this does not fix: three people sharing `PORTAL_STAFF_PASSWORD` is three people with one
+account, and the portal still has no password reset and no self-service change — an admin grants
+access, and a forgotten password is `.env` plus a restart, or the UPDATE below. Both are
+deliberate limits of a pilot whose accounts are all team-created; say so if asked.
+
+### Setting one account's password by hand
+
+Still the right tool for an account the bootstrap does not cover, or for rotating one account
+without touching the others. BCrypt hashes cannot be written by hand, so generate one with the
+app's own encoder:
 
 ```bash
 cd backend
@@ -403,8 +449,6 @@ JAVA
 java -cp "target/classes:$(cat /tmp/cp.txt)" /tmp/Hash.java 'the-new-password'
 ```
 
-Then set it, once per account:
-
 ```bash
 docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink \
   -c "UPDATE users SET password_hash = '<paste-the-hash>' WHERE username = 'soborey';"
@@ -417,11 +461,10 @@ Three things worth getting right:
   password at all, and an account nobody can sign in to.
 - **One hash per account.** BCrypt salts per row, so reusing one digest across accounts undoes that
   and makes a single crack open all of them.
-- **Do not edit V13/V14/V15 instead.** Flyway records a checksum per migration file; changing one
-  that has already run makes the next startup fail rather than applying the change. A `UPDATE`
-  against the running database is the correct tool, and a new `V<n>` migration is correct for a
-  fresh environment.
-
-There is no password-reset flow in the product and no self-service change — an admin grants access,
-and a forgotten password is a new hash set exactly like this. That is a deliberate limit of the
-pilot's scope, not an oversight; say so if asked.
+- **Do not edit V13/V14/V15/V16 instead.** Flyway records a checksum per migration file; changing
+  one that has already run makes the next startup fail rather than applying the change. A new
+  `V<n>` migration is the tool for a schema-level change, and `.env` plus a restart is the tool for
+  a password.
+- **A hand-set password survives the bootstrap** only if it differs from what is in `.env`; the
+  bootstrap rewrites any account whose stored digest does not match its variable. Clear the
+  variable if an account should be managed by hand.

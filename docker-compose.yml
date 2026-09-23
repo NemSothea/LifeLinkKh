@@ -51,6 +51,15 @@ services:
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       # Only the local web portal. Never '*' — see SecurityConfig.
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      # The portal's passwords. Empty default on purpose: since
+      # V19__unseed_portal_passwords.sql no migration seeds one, so leaving these
+      # unset means nobody can sign in to the portal — which is the intended
+      # failure, not a broken stack. Unlike JWT_SECRET above, an empty value does
+      # not stop the container: the mobile API and the public board work without
+      # a portal login, and refusing to boot would take the whole demo down over
+      # one unset variable.
+      PORTAL_ADMIN_PASSWORD: ${PORTAL_ADMIN_PASSWORD:-}
+      PORTAL_STAFF_PASSWORD: ${PORTAL_STAFF_PASSWORD:-}
       # GOOGLE_APPLICATION_CREDENTIALS is deliberately absent here. The service
       # account is a file, not a string, and it does not exist until the Firebase
       # project does — so it lives in docker-compose.firebase.yml as an opt-in
