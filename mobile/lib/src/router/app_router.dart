@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../core/settings/onboarding_controller.dart';
 import '../features/auth/application/auth_providers.dart';
 import '../features/auth/presentation/sign_in_screen.dart';
+import '../features/donation/presentation/donation_guide_screen.dart';
 import '../features/donation/presentation/donation_history_screen.dart';
 import '../features/donor/presentation/donor_profile_screen.dart';
 import '../features/donor/presentation/donor_setup_screen.dart';
@@ -82,6 +83,12 @@ GoRouter appRouter(AppRouterRef ref) {
             GoRoute(
                 path: DonationHistoryScreen.path,
                 builder: (context, state) => const DonationHistoryScreen(),
+            ),
+            // BRIEF-DONATION-001 — static, but still behind the redirect: every entry
+            // point to it is inside the signed-in shell.
+            GoRoute(
+                path: DonationGuideScreen.path,
+                builder: (context, state) => const DonationGuideScreen(),
             ),
             // M4 — FR-REQUEST-001/002, FR-MATCH-001, FR-NOTIFY-001.
             GoRoute(

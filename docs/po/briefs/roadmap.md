@@ -15,7 +15,7 @@ Bump when you claim one.
 | DONOR | 001 |
 | REQUEST | 001 |
 | MATCH | 001 |
-| DONATION | 001 |
+| DONATION | 002 |
 | NOTIFY | 001 |
 | PORTAL | 001 |
 | GLOBAL | 001 |
@@ -26,7 +26,7 @@ Bump when you claim one.
 
 | ID | Title | Area | Milestone | Status | FR |
 |---|---|---|---|---|---|
-| _(none yet)_ | | | | | |
+| [BRIEF-DONATION-001](BRIEF-DONATION-001-what-to-expect.md) | What to expect when you donate | DONATION | post-M7 | promoted | — (not an FR; `../../scope.md` "Grown after M7") |
 
 ## Backlog — briefs due before their milestone builds
 

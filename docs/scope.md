@@ -131,6 +131,7 @@ decisions with their own DEC record.
 | Intro carousel (mobile) | Three skippable slides before sign-in, shown once per install. The app asked for a Google account before saying what it wanted one for | [DEC-011](decisions.md) |
 | Staff filtering (portal) | Role and hospital filters on `/portal/staff`, in the URL rather than in client state. Appears only above four staff — three chips over three rows is decoration | — |
 | Public board on mobile | The donor home screen reads `/public/requests` under the alert inbox. `GET /matches/me` is empty most days by design, and that emptiness was the entire screen | — |
+| Donation guide (mobile) | A static "what to expect when you donate" screen — before, at the centre, after (snack, water, possible thank-you gift), next time. Linked from Home and Me. No API. Framed as care and thanks, not a reward, because `prd.md` §2.2 rules rewards out | [BRIEF-DONATION-001](po/briefs/BRIEF-DONATION-001-what-to-expect.md) |
 
 ### Known gap — the requester is never told anyone is coming
 

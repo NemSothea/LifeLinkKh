@@ -2,6 +2,18 @@
 
 Every new/changed FR gets an entry. What + Why are mandatory.
 
+## 2026-09-24 — `BRIEF-DONATION-001`: "what to expect when you donate" guide (mobile)
+- **What:** New brief [`BRIEF-DONATION-001`](briefs/BRIEF-DONATION-001-what-to-expect.md) and the
+  static screen it justifies — before you go, at the centre, after (rest, snack and water, a
+  possible thank-you gift), next time (56 days). Linked from Home under the eligibility card and
+  from Me. Khmer and English. Not an FR, no acceptance criteria; recorded in `../scope.md`'s
+  "Grown after M7" table.
+  **Why:** Sothea's own donation experience — food, water, a snack and a T-shirt afterwards —
+  suggested telling would-be donors about it to encourage them. Kept, but reframed: `prd.md` §2.2
+  rules out rewards and voluntary donation is unpaid, so gifts appear as after-care and thanks,
+  hedged by centre, inside a guide whose real job is removing the first-timer's fear of the
+  unknown.
+
 ## 2026-08-29 — M8 added: `demo-script.md`, a narrated first-time-viewer walkthrough
 - **What:** New [`demo-script.md`](demo-script.md) — not an FR, no acceptance criteria. A script
   for narrating the app to someone seeing it for the first time (instructor, classmate, pilot

@@ -669,5 +669,77 @@
                 "type": "String"
             }
         }
+    },
+    "donateGuideCta": "What to expect when you donate",
+    "@donateGuideCta": {
+        "description": "Entry point to the static donation guide, on Home and Me"
+    },
+    "donateGuideTitle": "What to expect",
+    "@donateGuideTitle": {
+        "description": "App bar title of the donation guide screen"
+    },
+    "donateGuideIntro": "First time? Here is what happens at the blood centre, from arriving to going home.",
+    "@donateGuideIntro": {
+        "description": "Opening line of the donation guide. Written for someone who has never donated."
+    },
+    "donateGuideBeforeTitle": "Before you go",
+    "@donateGuideBeforeTitle": {
+        "description": "Guide section heading"
+    },
+    "donateGuideBeforeMeal": "Eat a proper meal and drink plenty of water.",
+    "@donateGuideBeforeMeal": {
+        "description": "Guide item"
+    },
+    "donateGuideBeforeSleep": "Sleep well the night before.",
+    "@donateGuideBeforeSleep": {
+        "description": "Guide item"
+    },
+    "donateGuideBeforeId": "Bring your ID card — the centre may ask for it.",
+    "@donateGuideBeforeId": {
+        "description": "Guide item"
+    },
+    "donateGuideDuringTitle": "At the centre",
+    "@donateGuideDuringTitle": {
+        "description": "Guide section heading"
+    },
+    "donateGuideDuringCheck": "Staff check your weight, blood pressure and haemoglobin first.",
+    "@donateGuideDuringCheck": {
+        "description": "Guide item"
+    },
+    "donateGuideDuringTime": "The donation itself takes about 10 minutes. The whole visit is usually under an hour.",
+    "@donateGuideDuringTime": {
+        "description": "Guide item"
+    },
+    "donateGuideAfterTitle": "After you donate",
+    "@donateGuideAfterTitle": {
+        "description": "Guide section heading"
+    },
+    "donateGuideAfterRest": "Rest for 10–15 minutes before you stand up and leave.",
+    "@donateGuideAfterRest": {
+        "description": "Guide item"
+    },
+    "donateGuideAfterSnack": "You will usually be given a snack and water — they help your body recover.",
+    "@donateGuideAfterSnack": {
+        "description": "Guide item. The snack is framed as recovery care, never as payment."
+    },
+    "donateGuideAfterGift": "Many centres also give a small thank-you gift, such as a T-shirt. Gifts vary by centre and campaign.",
+    "@donateGuideAfterGift": {
+        "description": "Guide item. Deliberately 'may/many', never a promise — gifts differ by centre."
+    },
+    "donateGuideAfterCare": "Drink extra water today and avoid heavy lifting with that arm.",
+    "@donateGuideAfterCare": {
+        "description": "Guide item"
+    },
+    "donateGuideNextTitle": "Next time",
+    "@donateGuideNextTitle": {
+        "description": "Guide section heading"
+    },
+    "donateGuideNextCooldown": "You can donate again after 56 days. LifeLink counts the days and tells you when.",
+    "@donateGuideNextCooldown": {
+        "description": "Guide item"
+    },
+    "donateGuideVoluntary": "Donating blood here is voluntary and unpaid. The snack and gift are the centre's way of saying thank you.",
+    "@donateGuideVoluntary": {
+        "description": "Closing note. Voluntary non-remunerated donation (WHO) — gifts are thanks, not a reward."
     }
 }

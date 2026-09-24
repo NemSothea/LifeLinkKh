@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/settings/locale_controller.dart';
 import '../../auth/application/auth_providers.dart';
+import '../../donation/presentation/donation_guide_screen.dart';
 import '../../donor/presentation/donor_profile_screen.dart';
 import '../../request/presentation/request_form_screen.dart';
 
@@ -82,6 +83,14 @@ class MeTab extends ConsumerWidget {
                                             title: Text(l10n.requestNewCta),
                                             trailing: const Icon(Icons.chevron_right),
                                             onTap: () => context.push(RequestFormScreen.path),
+                                        ),
+                                        const Divider(height: 1),
+                                        ListTile(
+                                            key: const Key('me-donation-guide'),
+                                            leading: const Icon(Icons.volunteer_activism_outlined),
+                                            title: Text(l10n.donateGuideCta),
+                                            trailing: const Icon(Icons.chevron_right),
+                                            onTap: () => context.push(DonationGuideScreen.path),
                                         ),
                                     ],
                                 ),

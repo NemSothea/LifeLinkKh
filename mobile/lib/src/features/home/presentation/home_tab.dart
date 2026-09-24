@@ -6,6 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/time/relative_time.dart';
 import '../../../core/widgets/retryable_failure.dart';
+import '../../donation/presentation/donation_guide_screen.dart';
 import '../../donor/application/donor_providers.dart';
 import '../../donor/domain/donor_profile.dart';
 import '../../donor/presentation/donor_setup_screen.dart';
@@ -83,6 +84,19 @@ class HomeTab extends ConsumerWidget {
                                     ),
                                 ),
                             },
+                            // Under the eligibility answer, for donor and not-yet-donor alike:
+                            // "can I donate?" is followed by "what happens if I do?", and the
+                            // person with no profile yet is the one who most needs the answer.
+                            if (profile.hasValue)
+                                Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: TextButton.icon(
+                                        key: const Key('home-donation-guide'),
+                                        icon: const Icon(Icons.info_outline),
+                                        label: Text(l10n.donateGuideCta),
+                                        onPressed: () => context.push(DonationGuideScreen.path),
+                                    ),
+                                ),
                             // Above the alerts, and shown to everyone. Posting a request is
                             // the one thing on this screen that cannot wait for the person to
                             // go looking for it, and the people most likely to need it are

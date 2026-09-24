@@ -20,6 +20,7 @@ import 'package:lifelink_kh/src/features/auth/domain/user_role.dart';
 import 'package:lifelink_kh/src/features/donation/application/donation_providers.dart';
 import 'package:lifelink_kh/src/features/donation/domain/donation.dart';
 import 'package:lifelink_kh/src/features/donation/domain/donation_repository.dart';
+import 'package:lifelink_kh/src/features/donation/presentation/donation_guide_screen.dart';
 import 'package:lifelink_kh/src/features/donor/application/donor_providers.dart';
 import 'package:lifelink_kh/src/features/donor/domain/blood_type.dart';
 import 'package:lifelink_kh/src/features/home/presentation/home_screen.dart';
@@ -260,4 +261,31 @@ void main() {
             matchesGoldenFile('goldens/home_requester_session.png'),
         );
     });
+
+    // Static and all text, so both languages are pinned: the Khmer copy is the one most
+    // likely to wrap badly, and the one nobody on an English-locale emulator ever looks at.
+    for (final locale in const ['en', 'km']) {
+        testWidgets('donation guide — $locale', (tester) async {
+            await _setPhoneSize(tester);
+            await tester.pumpWidget(
+                MaterialApp(
+                    theme: AppTheme.light,
+                    locale: Locale(locale),
+                    localizationsDelegates: const [
+                        AppLocalizations.delegate,
+                        GlobalMaterialLocalizations.delegate,
+                        GlobalWidgetsLocalizations.delegate,
+                        GlobalCupertinoLocalizations.delegate,
+                    ],
+                    supportedLocales: const [Locale('km'), Locale('en')],
+                    home: const DonationGuideScreen(),
+                ),
+            );
+            await tester.pumpAndSettle();
+            await expectLater(
+                find.byType(MaterialApp),
+                matchesGoldenFile('goldens/donation_guide_$locale.png'),
+            );
+        });
+    }
 }

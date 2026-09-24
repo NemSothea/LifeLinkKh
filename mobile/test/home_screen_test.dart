@@ -174,6 +174,7 @@ void main() {
 
         expect(find.byKey(const Key('me-donor-profile')), findsOneWidget);
         expect(find.byKey(const Key('me-request-blood')), findsOneWidget);
+        expect(find.byKey(const Key('me-donation-guide')), findsOneWidget);
         expect(find.byKey(const Key('sign-out')), findsOneWidget);
     });
 
