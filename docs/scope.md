@@ -132,6 +132,26 @@ decisions with their own DEC record.
 | Staff filtering (portal) | Role and hospital filters on `/portal/staff`, in the URL rather than in client state. Appears only above four staff — three chips over three rows is decoration | — |
 | Public board on mobile | The donor home screen reads `/public/requests` under the alert inbox. `GET /matches/me` is empty most days by design, and that emptiness was the entire screen | — |
 
+### Known gap — the requester is never told anyone is coming
+
+Found on 2026-09-24, running the loop on real devices for the first time.
+
+Push goes one direction only. `FR-NOTIFY-001` alerts **donors** when a request is created; nothing
+notifies the **requester** when a donor accepts. The family who posted the request has to open the
+app and look: the status and the accepted-donor list update on their Home tab (`GET /requests/me`,
+then the request detail), but no alert tells them to go and look.
+
+Not a regression and not an oversight in the code — no FR ever asked for it. It is written here
+because it is the question a marker asks after watching the demo ("so how does the family know
+someone is coming?"), and because a demo where one person holds both phones hides it completely.
+
+The honest answer at a defence: the requester sees it in the app, a push to the requester is not
+built, and the coordination the product actually promises happens through the donor's acceptance
+reaching the hospital — which is why the *hospital* confirms the donation rather than the family.
+
+Building it is small (the accept path already has the requester's user id and an FCM token field
+to read) but it is a new FR, not a bug fix, so it sits here rather than in the registry.
+
 ### What this costs, said plainly
 
 Two debts, both with the same deadline as `FR-SECURITY-001` — *before any real donor's data is in
