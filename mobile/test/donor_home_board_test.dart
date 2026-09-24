@@ -11,7 +11,7 @@ import 'package:lifelink_kh/src/features/donation/domain/donation.dart';
 import 'package:lifelink_kh/src/features/donation/domain/donation_repository.dart';
 import 'package:lifelink_kh/src/features/donor/application/donor_providers.dart';
 import 'package:lifelink_kh/src/features/donor/domain/blood_type.dart';
-import 'package:lifelink_kh/src/features/home/presentation/donor_home_tab.dart';
+import 'package:lifelink_kh/src/features/home/presentation/home_tab.dart';
 import 'package:lifelink_kh/src/features/match/application/match_providers.dart';
 import 'package:lifelink_kh/src/features/match/domain/match.dart';
 import 'package:lifelink_kh/src/features/match/domain/match_repository.dart';
@@ -132,7 +132,7 @@ Widget _wrap({
                 GlobalCupertinoLocalizations.delegate,
             ],
             supportedLocales: [Locale('km'), Locale('en')],
-            home: DonorHomeTab(),
+            home: HomeTab(),
         ),
     );
 }
@@ -216,8 +216,12 @@ void main() {
 
         expect(find.byKey(const Key('donor-home-board-failed')), findsOneWidget);
         // The eligibility card above it is unaffected — one failed call is not a failed screen.
-        expect(find.byType(DonorHomeTab), findsOneWidget);
+        expect(find.byType(HomeTab), findsOneWidget);
 
+        // The retry sits below the fold now that Home also carries the request-blood
+        // button and, when there are any, your own requests.
+        await tester.ensureVisible(find.text('Try again'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Try again'));
         await _settle(tester);
 

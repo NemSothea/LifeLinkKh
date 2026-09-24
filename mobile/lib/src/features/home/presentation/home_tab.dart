@@ -17,20 +17,32 @@ import '../../match/presentation/match_detail_screen.dart';
 import '../../request/application/request_providers.dart';
 import '../../request/domain/blood_request.dart';
 import '../../request/domain/urgency.dart';
+import '../../request/presentation/request_detail_screen.dart';
+import '../../request/presentation/request_form_screen.dart';
 import '../../request/presentation/urgency_badge.dart';
 
-/// Donor shell's Home tab — `GLOBAL-home-dashboard` prototype: the eligibility card
-/// first (the one thing a donor opens the app to check), a recovery list of nearby
-/// requests underneath it. Notifications get missed and swiped away; this is what a
-/// donor sees when they open the app unprompted instead.
-class DonorHomeTab extends ConsumerWidget {
-    const DonorHomeTab({super.key});
+/// The Home tab — `GLOBAL-home-dashboard` prototype: the eligibility card first (the one
+/// thing a donor opens the app to check), then everything they might do or be waiting on.
+/// Notifications get missed and swiped away; this is what someone sees when they open the
+/// app unprompted instead.
+///
+/// One Home for everyone, deliberately. Until 2026-09-24 this was `DonorHomeTab` and a
+/// separate `RequesterHomeTab` existed beside it, chosen by `users.role`. Nothing ever set
+/// that role to `REQUESTER` — `AuthService.DEFAULT_ROLE` is `DONOR` and no endpoint or screen
+/// changes it — so the requester screen was unreachable for every real account, and the list
+/// of your own requests along with it. The split also contradicted the product: `prd.md` says
+/// the app's expected requester IS a donor with a relative in trouble, and
+/// `RequestController` lets any signed-in user post. Asking someone to be one or the other
+/// was answering a question the product had already decided not to ask.
+class HomeTab extends ConsumerWidget {
+    const HomeTab({super.key});
 
     @override
     Widget build(BuildContext context, WidgetRef ref) {
         final l10n = AppLocalizations.of(context)!;
         final profile = ref.watch(donorProfileControllerProvider);
         final matches = ref.watch(myMatchesControllerProvider);
+        final myRequests = ref.watch(myRequestsControllerProvider);
         // Nearby-requests needs a donor profile to mean anything (`GET /matches/me` 404s
         // without one) — gated on the profile actually loading in, not on the match
         // call's own error, so a donor with no profile never sees a heading with
@@ -49,10 +61,11 @@ class DonorHomeTab extends ConsumerWidget {
                     onRefresh: () => Future.wait([
                         ref.refresh(donorProfileControllerProvider.future),
                         ref.refresh(myMatchesControllerProvider.future),
+                        ref.refresh(myRequestsControllerProvider.future),
                         ref.refresh(publicBoardControllerProvider.future),
                     ]),
                     child: ListView(
-                        key: const Key('donor-home-list'),
+                        key: const Key('home-list'),
                         // Without this the pull gesture is dead whenever the
                         // content is shorter than the viewport — which on this
                         // tab is the common case, not the edge case.
@@ -70,6 +83,15 @@ class DonorHomeTab extends ConsumerWidget {
                                     ),
                                 ),
                             },
+                            // Above the alerts, and shown to everyone. Posting a request is
+                            // the one thing on this screen that cannot wait for the person to
+                            // go looking for it, and the people most likely to need it are
+                            // frightened rather than familiar with the app.
+                            const SizedBox(height: 20),
+                            _RequestBloodButton(
+                                label: l10n.requestNewCta,
+                                onPressed: () => context.push(RequestFormScreen.path),
+                            ),
                             if (hasDonorProfile) ...[
                                 const SizedBox(height: 24),
                                 Text(
@@ -108,6 +130,7 @@ class DonorHomeTab extends ConsumerWidget {
                             // now", which is the question someone opening the app
                             // unprompted actually has. Before it existed, the common case
                             // for this screen was a status banner and blank space.
+                            ..._myRequests(context, ref, l10n, myRequests),
                             const SizedBox(height: 24),
                             _BoardSection(alerted: matches.valueOrNull ?? const []),
                         ],
@@ -115,6 +138,41 @@ class DonorHomeTab extends ConsumerWidget {
                 ),
             ),
         );
+    }
+
+    /// Your own requests, and only when you have some. An empty "your requests" card under
+    /// the button that creates one is a label for a thing that is not there — the button
+    /// above already says the feature exists. A failure still shows, because silence there
+    /// would read as "you have none" on a screen where that is a very different sentence.
+    List<Widget> _myRequests(
+        BuildContext context,
+        WidgetRef ref,
+        AppLocalizations l10n,
+        AsyncValue<List<BloodRequest>> requests,
+    ) {
+        final list = requests.valueOrNull ?? const <BloodRequest>[];
+        if (requests.hasError) {
+            return [
+                const SizedBox(height: 24),
+                RetryableFailure(
+                    key: const Key('home-my-requests-failed'),
+                    message: l10n.myRequestsFailed,
+                    onRetry: () => ref.invalidate(myRequestsControllerProvider),
+                ),
+            ];
+        }
+        if (list.isEmpty) {
+            return const [];
+        }
+        return [
+            const SizedBox(height: 24),
+            Text(l10n.myRequestsCta, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Column(
+                key: const Key('home-my-request-list'),
+                children: [for (final request in list) _RequestTile(request: request)],
+            ),
+        ];
     }
 
     Widget _becomeADonor(BuildContext context, AppLocalizations l10n) {
@@ -509,6 +567,87 @@ class _BoardRequestTile extends StatelessWidget {
                         ],
                     ),
                 ),
+            ),
+        );
+    }
+}
+
+class _RequestBloodButton extends StatelessWidget {
+    const _RequestBloodButton({required this.label, required this.onPressed});
+
+    final String label;
+    final VoidCallback onPressed;
+
+    @override
+    Widget build(BuildContext context) {
+        final scheme = Theme.of(context).colorScheme;
+        return SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+                key: const Key('home-request-new'),
+                style: FilledButton.styleFrom(
+                    backgroundColor: scheme.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    textStyle: Theme.of(context).textTheme.titleLarge,
+                ),
+                onPressed: onPressed,
+                icon: const Icon(Icons.bloodtype, size: 28),
+                label: Text(label),
+            ),
+        );
+    }
+}
+
+class _RequestTile extends StatelessWidget {
+    const _RequestTile({required this.request});
+
+    final BloodRequest request;
+
+    @override
+    Widget build(BuildContext context) {
+        final l10n = AppLocalizations.of(context)!;
+        final scheme = Theme.of(context).colorScheme;
+        return Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            child: ListTile(
+                key: Key('home-request-${request.id}'),
+                leading: CircleAvatar(
+                    backgroundColor: scheme.primary,
+                    foregroundColor: scheme.onPrimary,
+                    child: Text(
+                        request.patientBloodType.wireValue,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                    ),
+                ),
+                title: Text(request.hospitalName, overflow: TextOverflow.ellipsis),
+                subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                            UrgencyBadge(urgency: request.urgency),
+                            const SizedBox(height: 4),
+                            Text(
+                                '${l10n.requestAlertedCount(request.alertedCount)} · '
+                                '${l10n.requestAcceptedCount(request.acceptedCount)}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            // "12 alerted · 0 accepted" only means something next to how
+                            // long that has been true. Three minutes is patience; forty
+                            // is a reason to phone the hospital.
+                            Text(
+                                formatRelativeTime(context, request.createdAt),
+                                key: Key('home-request-${request.id}-age'),
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                ),
+                            ),
+                        ],
+                    ),
+                ),
+                isThreeLine: true,
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(RequestDetailScreen.routeFor(request.id)),
             ),
         );
     }

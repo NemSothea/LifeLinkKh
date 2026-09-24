@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/widgets/brand_badge.dart';
 import '../application/auth_providers.dart';
 import 'auth_failure_message.dart';
 import 'telegram_sign_in_sheet.dart';
@@ -50,7 +51,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         // resolves, whichever way.
         if (auth.isLoading && !auth.hasValue) {
             return Scaffold(
-                body: Center(child: _BrandBadge(color: theme.colorScheme.primary)),
+                body: Center(child: BrandBadge(color: theme.colorScheme.primary)),
             );
         }
 
@@ -91,7 +92,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                     child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                            _BrandBadge(color: theme.colorScheme.primary),
+                                            BrandBadge(color: theme.colorScheme.primary),
                                             const SizedBox(height: 28),
                                             // The wordmark, not translated — same literal
                                             // "LifeLink KH" the web portal's header uses, so
@@ -262,38 +263,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         ],
                     ),
                 ),
-        );
-    }
-}
-
-/// The one signature element of the app's only unauthenticated screen — blood is the
-/// subject, so the badge is a soft radial glow behind a solid droplet, not a flat icon
-/// sitting on blank space. Reused for the cold-start splash so the badge is the first
-/// and last thing this screen shows, never swapped for a plain spinner.
-class _BrandBadge extends StatelessWidget {
-    const _BrandBadge({required this.color});
-
-    final Color color;
-
-    @override
-    Widget build(BuildContext context) {
-        return Container(
-            width: 104,
-            height: 104,
-            decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                    colors: [color, Color.lerp(color, Colors.black, 0.25)!],
-                ),
-                boxShadow: [
-                    BoxShadow(
-                        color: color.withValues(alpha: 0.35),
-                        blurRadius: 32,
-                        spreadRadius: 2,
-                    ),
-                ],
-            ),
-            child: const Icon(Icons.bloodtype, size: 52, color: Colors.white),
         );
     }
 }

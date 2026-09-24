@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/settings/locale_controller.dart';
 import '../../auth/application/auth_providers.dart';
-import '../../auth/domain/user_role.dart';
 import '../../donor/presentation/donor_profile_screen.dart';
 import '../../request/presentation/request_form_screen.dart';
 
@@ -24,7 +23,6 @@ class MeTab extends ConsumerWidget {
     Widget build(BuildContext context, WidgetRef ref) {
         final l10n = AppLocalizations.of(context)!;
         final user = ref.watch(authControllerProvider).valueOrNull?.user;
-        final role = user?.role;
         final theme = Theme.of(context);
 
         return Scaffold(
@@ -59,8 +57,11 @@ class MeTab extends ConsumerWidget {
                             ],
                         ),
                         const SizedBox(height: 24),
-                        if (role == UserRole.donor)
-                            Card(
+                        // No role gate. The same dead branch that hid the requester's Home
+                        // hid these two rows from nobody — every real account is DONOR — and
+                        // would have hidden "donor profile" from the one person who needs it
+                        // if the role had ever been assigned.
+                        Card(
                                 margin: EdgeInsets.zero,
                                 child: Column(
                                     children: [
@@ -72,10 +73,9 @@ class MeTab extends ConsumerWidget {
                                             onTap: () => context.push(DonorProfileScreen.path),
                                         ),
                                         const Divider(height: 1),
-                                        // A donor whose relative needs blood is the most likely
-                                        // requester in the pilot (RequestController) — the donor
-                                        // shell's Home tab has no "request blood" button, so it
-                                        // lives here instead of being lost.
+                                        // Duplicated from Home's own button on purpose: Home is
+                                        // where someone in a hurry looks, Me is where someone
+                                        // hunting through settings looks.
                                         ListTile(
                                             key: const Key('me-request-blood'),
                                             leading: const Icon(Icons.bloodtype_outlined),
@@ -86,7 +86,7 @@ class MeTab extends ConsumerWidget {
                                     ],
                                 ),
                             ),
-                        if (role == UserRole.donor) const SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         const _LanguageCard(),
                         const SizedBox(height: 16),
                         Card(

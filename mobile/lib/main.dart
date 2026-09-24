@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,7 +22,16 @@ import 'src/features/auth/application/auth_providers.dart';
 /// file directly. Generating a Dart options file would put the same values in a third
 /// place and require the FlutterFire CLI in CI for no gain.
 Future<void> main() async {
-    WidgetsFlutterBinding.ensureInitialized();
+    final binding = WidgetsFlutterBinding.ensureInitialized();
+
+    // Keeps the native launch screen up past the first frame, until `LifeLinkApp` sees
+    // the session restore resolve — otherwise a signed-in donor watches the splash hand
+    // off to Flutter's own badge and then to Home, three screens for one launch.
+    // The timer is the backstop: a keystore read that never returns must not leave the
+    // app stuck behind a picture. Past it, `SignInScreen`'s in-Flutter badge takes over,
+    // which is the same mark on the same colour.
+    FlutterNativeSplash.preserve(widgetsBinding: binding);
+    Timer(const Duration(seconds: 4), FlutterNativeSplash.remove);
 
     // Awaited before `runApp`: `FirebaseAuth.instance` is touched by the first provider
     // read, and reaching it before this completes throws.

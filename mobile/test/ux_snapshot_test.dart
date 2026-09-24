@@ -235,7 +235,9 @@ void main() {
         await expectLater(find.byType(MaterialApp), matchesGoldenFile('goldens/donor_me.png'));
     });
 
-    testWidgets('requester Home tab — one open request', (tester) async {
+    /// Same Home as above, reached with a REQUESTER session, because the shell no longer
+    /// branches on role — the snapshot is here to catch a split creeping back in.
+    testWidgets('Home tab with a requester session — one open request', (tester) async {
         await _setPhoneSize(tester);
         await tester.pumpWidget(
             _wrap(
@@ -255,7 +257,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
         await expectLater(
             find.byType(MaterialApp),
-            matchesGoldenFile('goldens/requester_home.png'),
+            matchesGoldenFile('goldens/home_requester_session.png'),
         );
     });
 }

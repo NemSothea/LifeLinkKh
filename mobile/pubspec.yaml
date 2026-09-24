@@ -65,6 +65,10 @@ dependencies:
   connectivity_plus: ^7.3.1
   path_provider: ^2.1.6
   path: ^1.9.1
+  # Native launch screen (generated config below) plus preserve()/remove(), which hold it
+  # until the session restore resolves — so a cold start is one branded screen, not
+  # white → badge → destination.
+  flutter_native_splash: ^2.4.8
 
 dev_dependencies:
   flutter_test:
@@ -116,3 +120,33 @@ flutter_launcher_icons:
   ios: true
   # The App Store rejects an icon with an alpha channel; the source is opaque.
   remove_alpha_ios: true
+
+# Native launch screen — what shows before Flutter draws anything (Firebase init, the
+# SharedPreferences load), which used to be `flutter create`'s blank white window.
+# The art is rendered from `BrandBadge` itself and the colours are the theme's own
+# `surface`, so the hand-off to Flutter's first frame has no seam. Regenerate after
+# changing either (see assets/branding/README.md):
+#   flutter test tool/render_splash_art.dart
+#   dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#FFF8F7"          # AppTheme.light colorScheme.surface
+  color_dark: "#1A1110"     # AppTheme.dark colorScheme.surface
+  image: assets/branding/splash.png
+  image_dark: assets/branding/splash-dark.png
+
+  # Android 12+ ignores the images above: the OS draws the launcher icon in a circle
+  # itself. Same droplet, same red, on the same surface.
+  android_12:
+    image: assets/branding/icon-adaptive-foreground.png
+    icon_background_color: "#C62828"
+    image_dark: assets/branding/icon-adaptive-foreground.png
+    icon_background_color_dark: "#D15353"
+    color: "#FFF8F7"
+    color_dark: "#1A1110"
+
+  android: true
+  ios: true
+  web: false
+  # A splash is not the place to hide the clock: the status bar stays visible, as it
+  # does on every screen after it.
+  fullscreen: false

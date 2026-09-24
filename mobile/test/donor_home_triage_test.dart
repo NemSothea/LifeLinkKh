@@ -11,7 +11,7 @@ import 'package:lifelink_kh/src/features/donation/domain/donation.dart';
 import 'package:lifelink_kh/src/features/donation/domain/donation_repository.dart';
 import 'package:lifelink_kh/src/features/donor/application/donor_providers.dart';
 import 'package:lifelink_kh/src/features/donor/domain/blood_type.dart';
-import 'package:lifelink_kh/src/features/home/presentation/donor_home_tab.dart';
+import 'package:lifelink_kh/src/features/home/presentation/home_tab.dart';
 import 'package:lifelink_kh/src/features/match/application/match_providers.dart';
 import 'package:lifelink_kh/src/features/match/domain/match.dart';
 import 'package:lifelink_kh/src/features/match/domain/match_repository.dart';
@@ -142,7 +142,7 @@ Widget _wrap(_FakeMatchRepository matchRepository) {
                 GlobalCupertinoLocalizations.delegate,
             ],
             supportedLocales: [Locale('km'), Locale('en')],
-            home: DonorHomeTab(),
+            home: HomeTab(),
         ),
     );
 }

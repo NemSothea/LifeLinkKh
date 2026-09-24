@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/settings/locale_controller.dart';
@@ -34,6 +35,19 @@ class LifeLinkApp extends ConsumerWidget {
             if (ref.read(authControllerProvider).valueOrNull == null) return;
             unawaited(ref.read(pushRegistrationServiceProvider).registerThisDevice());
         });
+
+        // Drops the native launch screen (held in `main`) the moment the router knows
+        // where this launch is going — the same "still reading the keystore" test the
+        // redirect in `app_router.dart` uses. A no-op when nothing was preserved, which
+        // is every widget test.
+        ref.listen<AsyncValue<Object?>>(
+            authControllerProvider,
+            (_, auth) {
+                if (auth.isLoading && !auth.hasValue) return;
+                FlutterNativeSplash.remove();
+            },
+            fireImmediately: true,
+        );
 
         return MaterialApp.router(
             onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,

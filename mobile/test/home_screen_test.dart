@@ -177,27 +177,29 @@ void main() {
         expect(find.byKey(const Key('sign-out')), findsOneWidget);
     });
 
-    testWidgets('a requester sees two tabs and the oversized request-blood button',
+    /// The shell used to give a REQUESTER two tabs and a different Home. Nothing in the
+    /// product ever assigns that role, so the branch hid the requester's own screen from
+    /// every real account. One shell now, whatever the role says.
+    testWidgets('every role gets the same three tabs and the request-blood button',
         (tester) async {
         await tester.pumpWidget(_wrap(session: _requesterSession));
         await tester.pumpAndSettle();
 
         expect(find.byKey(const Key('dashboard-tab-home')), findsOneWidget);
-        expect(find.byKey(const Key('dashboard-tab-history')), findsNothing);
+        expect(find.byKey(const Key('dashboard-tab-history')), findsOneWidget);
         expect(find.byKey(const Key('dashboard-tab-me')), findsOneWidget);
-        expect(find.byKey(const Key('requester-home-request-new')), findsOneWidget);
-        expect(find.byKey(const Key('requester-home-empty')), findsOneWidget);
+        expect(find.byKey(const Key('home-request-new')), findsOneWidget);
     });
 
-    testWidgets("a requester's Me tab has no donor-only entries", (tester) async {
+    testWidgets('the Me tab is the same for every role', (tester) async {
         await tester.pumpWidget(_wrap(session: _requesterSession));
         await tester.pumpAndSettle();
 
         await tester.tap(find.byKey(const Key('dashboard-tab-me')));
         await tester.pumpAndSettle();
 
-        expect(find.byKey(const Key('me-donor-profile')), findsNothing);
-        expect(find.byKey(const Key('me-request-blood')), findsNothing);
+        expect(find.byKey(const Key('me-donor-profile')), findsOneWidget);
+        expect(find.byKey(const Key('me-request-blood')), findsOneWidget);
         expect(find.byKey(const Key('sign-out')), findsOneWidget);
     });
 }
