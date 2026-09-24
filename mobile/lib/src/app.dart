@@ -38,16 +38,13 @@ class LifeLinkApp extends ConsumerWidget {
 
         // Drops the native launch screen (held in `main`) the moment the router knows
         // where this launch is going — the same "still reading the keystore" test the
-        // redirect in `app_router.dart` uses. A no-op when nothing was preserved, which
-        // is every widget test.
-        ref.listen<AsyncValue<Object?>>(
-            authControllerProvider,
-            (_, auth) {
-                if (auth.isLoading && !auth.hasValue) return;
-                FlutterNativeSplash.remove();
-            },
-            fireImmediately: true,
+        // redirect in `app_router.dart` uses. A `select` on that one bool, so this widget
+        // rebuilds once when it flips, not on every session change. A no-op when nothing
+        // was preserved, which is every widget test.
+        final restoring = ref.watch(
+            authControllerProvider.select((auth) => auth.isLoading && !auth.hasValue),
         );
+        if (!restoring) FlutterNativeSplash.remove();
 
         return MaterialApp.router(
             onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,

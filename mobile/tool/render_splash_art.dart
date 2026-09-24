@@ -8,7 +8,6 @@
 // It prints the two surface colours as well — `flutter_native_splash.color` and
 // `color_dark` in pubspec.yaml must match them, or the hand-off shows a seam.
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
