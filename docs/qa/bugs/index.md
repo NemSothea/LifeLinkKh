@@ -1,5 +1,5 @@
 # Bug Registry
-next: 005
+next: 006
 
 | ID | Title | Area | Severity | Status |
 |----|-------|------|----------|--------|
@@ -7,6 +7,7 @@ next: 005
 | [BUG-WEB-002](BUG-WEB-002-next-standalone-binds-container-id.md) | web container never becomes healthy — Next standalone binds to the container ID | WEB | high | closed |
 | [BUG-BUILD-003](BUG-BUILD-003-testcontainers-skips-with-docker-running.md) | `SchemaIntegrationTest` skips with Docker running — build passes testing nothing | BUILD | blocker | closed |
 | [BUG-API-004](BUG-API-004-donor-district-not-localized.md) | a donor's district stays English on the Khmer board — the hospital's does not | API | medium | closed |
+| [BUG-MOBILE-005](BUG-MOBILE-005-missing-libsqlite3.md) | every donor with a profile hits "Failed to load libsqlite3.so" on Home — the APK ships no SQLite | MOBILE | blocker | fixed |
 
 The first three were found during M2 verification on 2026-08-17 and closed in `d1f5efd`.
 `BUG-BUILD-003` carries a follow-up for Tech Lead that is deliberately not tracked as a bug.

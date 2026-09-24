@@ -1,0 +1,21 @@
+# Opt-in overlay: publish the backend on the LAN so a PHYSICAL phone can reach it.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.firebase.yml -f docker-compose.lan.yml up -d backend
+#
+# The base file binds 127.0.0.1:8080 on purpose — a dev API carrying seeded data, a JWT secret out
+# of .env and portal accounts whose passwords come from the same file has no business on a shared
+# network. A physical device cannot reach the Mac's 127.0.0.1, though, so this overlay rebinds the
+# published port to every interface.
+#
+# `!override` is load-bearing. Compose MERGES list fields across files rather than replacing them,
+# so without it this file adds a second binding instead of replacing the first, and the container
+# fails to start with "failed to bind host port 127.0.0.1:8080/tcp: address already in use" — it
+# collides with its own other binding.
+#
+# Use it on a network you trust, only while a device test is running, and return to loopback with
+# `bash scripts/dev-up.sh` afterwards. For anything longer-lived than a test, DEC-007's tunnel is
+# the answer, not this file.
+services:
+  backend:
+    ports: !override
+      - "0.0.0.0:8080:8080"

@@ -54,7 +54,14 @@ dependencies:
   # Keychain, used for the session JWT) would be the wrong store for it.
   shared_preferences: ^2.5.5
   drift: ^2.22.0
-  sqlite3_flutter_libs: ^0.6.0+eol
+  # 0.5.x, deliberately NOT ^0.6.0+eol. Version 0.6.0 is an empty package — it exists only to
+  # assert that the old Flutter build scripts are gone, and it is meant for apps that have moved
+  # to sqlite3 3.x. Drift 2.28 still resolves sqlite3 2.9.x here, which gets its native library
+  # from THIS package, so 0.6.0 silently ships an APK with no libsqlite3.so. The app then builds,
+  # installs, signs in, and throws the first time a donor with a profile opens Home:
+  #   Failed to load dynamic library '.../lib/libsqlite3.so': dlopen failed
+  # Found on a real device 2026-09-24. Host tests never see it — macOS has a system SQLite.
+  sqlite3_flutter_libs: ^0.5.41
   connectivity_plus: ^7.3.1
   path_provider: ^2.1.6
   path: ^1.9.1
