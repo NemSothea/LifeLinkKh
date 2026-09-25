@@ -52,8 +52,17 @@ class HomeTab extends ConsumerWidget {
         // Whether the board below has anything to show decides how loudly the empty inbox
         // says it is empty: a full-height reassurance card above a populated list is two
         // answers to a question nobody asked twice.
-        final boardHasRequests = (ref.watch(publicBoardControllerProvider).valueOrNull ?? const [])
-            .isNotEmpty;
+        final board = ref.watch(publicBoardControllerProvider);
+        final boardHasRequests = (board.valueOrNull ?? const []).isNotEmpty;
+        // One spinner for the whole tab, not one per section. Each section used to show its
+        // own while its first answer was in flight, so opening the app put two or three
+        // spinners on screen at once, stacked down the list. Until every section has an
+        // answer, the tab shows one; after that, a pull-to-refresh keeps the old values up.
+        bool firstLoad(AsyncValue<Object?> value) => value.isLoading && !value.hasValue;
+        final loading = firstLoad(profile) ||
+            (hasDonorProfile && firstLoad(matches)) ||
+            firstLoad(myRequests) ||
+            firstLoad(board);
 
         return Scaffold(
             appBar: AppBar(title: Text(l10n.appTitle)),
@@ -72,17 +81,19 @@ class HomeTab extends ConsumerWidget {
                         // tab is the common case, not the edge case.
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.all(16),
-                        children: [
+                        children: loading
+                            ? const [
+                                SizedBox(height: 48),
+                                Center(
+                                    child: CircularProgressIndicator(key: Key('home-loading')),
+                                ),
+                            ]
+                            : [
                             switch (profile) {
                                 AsyncValue(hasValue: true, value: final DonorProfile loaded) =>
                                     EligibilityCard(eligibility: loaded.eligibility),
                                 AsyncValue(hasValue: true) => _becomeADonor(context, l10n),
-                                AsyncError() => const SizedBox.shrink(),
-                                _ => const Center(
-                                    child: CircularProgressIndicator(
-                                        key: Key('donor-home-profile-loading'),
-                                    ),
-                                ),
+                                _ => const SizedBox.shrink(),
                             },
                             // Under the eligibility answer, for donor and not-yet-donor alike:
                             // "can I donate?" is followed by "what happens if I do?", and the
@@ -114,11 +125,6 @@ class HomeTab extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 switch (matches) {
-                                    AsyncValue(isLoading: true, hasValue: false) => const Center(
-                                        child: CircularProgressIndicator(
-                                            key: Key('donor-home-matches-loading'),
-                                        ),
-                                    ),
                                     // Covered by `hasDonorProfile` above — kept only as a
                                     // defensive fallback if the two calls ever disagree.
                                     AsyncValue(hasError: true, error: NotFoundFailure()) =>
@@ -488,9 +494,6 @@ class _BoardSection extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 switch (board) {
-                    AsyncValue(isLoading: true, hasValue: false) => const Center(
-                        child: CircularProgressIndicator(key: Key('donor-home-board-loading')),
-                    ),
                     AsyncValue(hasError: true) => RetryableFailure(
                         key: const Key('donor-home-board-failed'),
                         message: l10n.homeBoardFailed,
