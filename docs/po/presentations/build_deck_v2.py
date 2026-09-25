@@ -561,7 +561,7 @@ def slide_07d_screens_portal(prs):
     # in the README and comes out only if someone asks how hospitals get accounts.
     shots(s, [
         ("board-public-km.png", "Public board — open requests, no account needed"),
-        ("portal-staff-km.png", "The same board, signed in as hospital staff"),
+        ("portal-staff-km.png", "Hospital staff — an accepted donor, one click to confirm"),
     ], height=Inches(3.1))
     footer(s, FOOT)
     notes(s, """
@@ -573,7 +573,9 @@ model, argued in DEC-009, so that a request can be shared as a link to someone w
 installed anything. It also publishes a named donor's blood type and district, which is on
 the risks slide as a debt with an expiry, not as a feature.
 
-Staff accounts (right) replaced a JWT pasted into a .env file by hand (DEC-010). Nobody
+The right-hand shot is the moment the demo ends on: a donor who accepted, and the confirm
+button whose click starts their 56-day cooldown. Staff accounts replaced a JWT pasted into a
+.env file by hand (DEC-010). Nobody
 self-signs-up for the portal: an admin grants access to someone who has already signed in
 once as an ordinary user. Mention that only if asked how hospitals get accounts.
 
