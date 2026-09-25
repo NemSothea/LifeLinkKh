@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+
 /// Cambodian mobile numbers, as the Telecommunication Regulator of Cambodia allocates them:
 /// https://www.trc.gov.kh/en/resources/mobile-prefixes/ (read 2026-09-25).
 ///
@@ -43,4 +45,47 @@ abstract final class CambodianPhone {
     }
 
     static bool isValid(String input) => normalize(input) != null;
+
+    /// Local digits grouped the way Cambodians write them: `010 552 563`, or `097 123 4567`
+    /// for a starred prefix. Anything past the prefix's length is dropped.
+    static String formatLocal(String digits) {
+        if (digits.length > 3 && _sixDigit.contains(digits.substring(0, 3))) {
+            digits = digits.substring(0, digits.length.clamp(0, 9));
+        } else {
+            digits = digits.substring(0, digits.length.clamp(0, 10));
+        }
+        final groups = <String>[
+            digits.substring(0, digits.length.clamp(0, 3)),
+            if (digits.length > 3) digits.substring(3, digits.length.clamp(3, 6)),
+            if (digits.length > 6) digits.substring(6),
+        ];
+        return groups.join(' ');
+    }
+}
+
+/// Spaces a local number (`0…`) into groups as it is typed. International forms
+/// (`+855…`, `855…`) are left as typed — [CambodianPhone.normalize] still accepts them.
+class CambodianPhoneFormatter extends TextInputFormatter {
+    const CambodianPhoneFormatter();
+
+    @override
+    TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+        final text = newValue.text;
+        if (!text.startsWith('0') || !RegExp(r'^[0-9 .\-()]*$').hasMatch(text)) {
+            return newValue;
+        }
+        final cursor = newValue.selection.end.clamp(0, text.length);
+        final digitsBeforeCursor = text.substring(0, cursor).replaceAll(RegExp(r'[^0-9]'), '').length;
+        final formatted = CambodianPhone.formatLocal(text.replaceAll(RegExp(r'[^0-9]'), ''));
+
+        // Put the cursor after the same number of digits it was after before spacing.
+        var offset = 0;
+        for (var seen = 0; offset < formatted.length && seen < digitsBeforeCursor; offset++) {
+            if (formatted[offset] != ' ') seen++;
+        }
+        return TextEditingValue(
+            text: formatted,
+            selection: TextSelection.collapsed(offset: offset),
+        );
+    }
 }

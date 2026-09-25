@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifelink_kh/src/core/phone/cambodian_phone.dart';
 
@@ -36,6 +37,44 @@ void main() {
             expect(CambodianPhone.normalize(''), isNull);
             expect(CambodianPhone.normalize('01'), isNull);
             expect(CambodianPhone.normalize('012 ABC 678'), isNull);
+        });
+    });
+
+    group('CambodianPhoneFormatter', () {
+        String type(String text) => const CambodianPhoneFormatter()
+            .formatEditUpdate(
+                TextEditingValue.empty,
+                TextEditingValue(text: text, selection: TextSelection.collapsed(offset: text.length)),
+            )
+            .text;
+
+        test('groups a six-digit prefix 3-3-3 and stops at nine digits', () {
+            expect(type('010'), '010');
+            expect(type('0105'), '010 5');
+            expect(type('010552'), '010 552');
+            expect(type('010552563'), '010 552 563');
+            expect(type('0105525639'), '010 552 563');
+        });
+
+        test('groups a starred prefix 3-3-4', () {
+            expect(type('0971234567'), '097 123 4567');
+        });
+
+        test('re-spaces a pasted or dashed number', () {
+            expect(type('010-552-563'), '010 552 563');
+        });
+
+        test('leaves international forms as typed', () {
+            expect(type('+855 10 552 563'), '+855 10 552 563');
+            expect(type('85510552563'), '85510552563');
+        });
+
+        test('keeps the cursor after the same digit when a space is inserted', () {
+            final result = const CambodianPhoneFormatter().formatEditUpdate(
+                TextEditingValue.empty,
+                const TextEditingValue(text: '0105', selection: TextSelection.collapsed(offset: 4)),
+            );
+            expect(result.selection.end, 5);
         });
     });
 }

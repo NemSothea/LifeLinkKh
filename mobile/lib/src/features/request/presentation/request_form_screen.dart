@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/error/result.dart';
+import '../../../core/phone/cambodian_phone.dart';
 import '../../donor/presentation/blood_type_grid.dart';
 import '../application/request_form_controller.dart';
 import '../application/request_providers.dart';
@@ -177,6 +178,7 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                                 key: const Key('request-contact-phone'),
                                 controller: _contactPhone,
                                 keyboardType: TextInputType.phone,
+                                inputFormatters: const [CambodianPhoneFormatter()],
                                 decoration: InputDecoration(
                                     labelText: l10n.requestContactPhoneLabel,
                                     hintText: '012 345 678',
