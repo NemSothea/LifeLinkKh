@@ -115,6 +115,19 @@ flowchart TB
 | Push | Firebase Cloud Messaging | Alert language follows the donor's own setting |
 | Location | `geolocator`, no map widget | Coordinates satisfy GPS; a map is a week of work for no gain ([DEC-004](docs/decisions.md)) |
 
+### Versions
+
+As of 2026-09-25. The file in the last column is the source of truth — check it before trusting
+this table.
+
+| Layer | Versions | Pinned in |
+|---|---|---|
+| **Mobile** | Flutter **3.44.6** · Dart ^3.12.2 · flutter_riverpod 2.6 · go_router 17 · Dio 5 · firebase_messaging 16 · firebase_auth 6 · google_sign_in 7 · geolocator 14 · Drift 2.22 (offline store) | `mobile/pubspec.yaml`, `.github/workflows/ci.yml` |
+| **Backend** | Spring Boot **3.5.6** · Java **21** (Temurin) · Flyway · Spring Security · firebase-admin 9.4.3 | `backend/pom.xml`, `backend/Dockerfile` |
+| **Database** | PostgreSQL **16** | `docker-compose.yml` |
+| **Web portal** | Next.js **15.5** · React **19.1** · TypeScript 5 · Tailwind CSS 4 · next-intl 4 · Node **22** | `frontend/package.json`, `frontend/Dockerfile` |
+| **Tooling** | Docker Compose v2 · GitHub Actions | `docker-compose.yml`, `.github/workflows/` |
+
 ### Data model
 
 ```mermaid
