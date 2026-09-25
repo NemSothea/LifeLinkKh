@@ -273,6 +273,22 @@ docker-compose.yml  postgres + backend + web, local development only
 .capybara/          Multi-role framework state
 ```
 
+## Final defense
+
+The slides and everything needed to run the live demo behind them:
+
+| What | Where |
+|---|---|
+| **Slide deck** (15 slides, Khmer + English) | [`docs/po/presentations/LifeLinkKH-v2.pptx`](docs/po/presentations/LifeLinkKH-v2.pptx) |
+| Deck source — edit this, then rebuild | [`docs/po/presentations/build_deck_v2.py`](docs/po/presentations/build_deck_v2.py) (`python3 docs/po/presentations/build_deck_v2.py`, needs `python-pptx`) |
+| Run of show — 30 min of slides, 5 min of demo | [`docs/po/presentations/run-of-show.md`](docs/po/presentations/run-of-show.md) |
+| Demo narration, and the day-before checklist | [`docs/po/demo-script.md`](docs/po/demo-script.md) |
+| Demo commands — stack, devices, pre-flight | [`docs/demo-runbook.md`](docs/demo-runbook.md) |
+| Screenshots used by the deck and this README | [`docs/assets/screens/`](docs/assets/screens/) |
+
+Portal passwords are not in this repository. At demo time, `bash scripts/demo-creds.sh staff`
+copies the hospital-staff password from your local `.env` to the clipboard.
+
 ## Project context
 
 Built by **Group 2** for Cross-Platform Mobile Application Development (16 weeks, Asia Euro
