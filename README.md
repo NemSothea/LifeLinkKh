@@ -12,7 +12,7 @@ Flutter for donors, Next.js for hospitals, one Spring Boot + PostgreSQL API behi
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-App_Router-000000?logo=nextdotjs&logoColor=white)
 ![Khmer + English](https://img.shields.io/badge/i18n-ខ្មែរ_%2B_English-C8102E)
-![Tests](https://img.shields.io/badge/tests-382_passing-success)
+![Tests](https://img.shields.io/badge/tests-440_passing-success)
 
 </div>
 
@@ -265,12 +265,12 @@ bash scripts/verify-all.sh   # every client, one command — the same script CI 
 
 | Client | Tests | Layers |
 |---|---|---|
-| Backend | 180 | JUnit 5 unit · `@WebMvcTest` slices · Testcontainers PostgreSQL integration |
-| Mobile | 173 | `flutter_test` unit · widget · layout goldens |
-| Web | 29 | Vitest + React Testing Library (Playwright e2e is planned, not built) |
+| Backend | 201 | JUnit 5 unit · `@WebMvcTest` slices · Testcontainers PostgreSQL integration |
+| Mobile | 202 | `flutter_test` unit · widget · layout goldens |
+| Web | 37 | Vitest + React Testing Library (Playwright e2e is planned, not built) |
 
 A skipped test is not a pass. The backend's integration layer needs a running Docker daemon; without
-one, 30 tests disable themselves and the build still exits 0.
+one, 32 tests disable themselves and the build still exits 0.
 
 ---
 
