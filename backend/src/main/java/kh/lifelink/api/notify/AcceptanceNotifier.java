@@ -16,8 +16,8 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
- * FR-NOTIFY-003 — tells the family who posted a request that a donor accepted it. The other half
- * of {@link RequestAlertNotifier}: that one pushes donors when a request is created, this one pushes
+ * FR-NOTIFY-003 — tells the family who posted a request that a donor accepted it. The other half of
+ * {@link RequestAlertNotifier}: that one pushes donors when a request is created, this one pushes
  * the requester when a donor answers yes.
  *
  * <p><strong>After commit only.</strong> An acceptance that rolls back must not have told a family
@@ -113,12 +113,14 @@ public class AcceptanceNotifier {
 
     /**
      * Blood type and hospital, as in the donor alert, and nothing about the donor — the lock screen
-     * never carries a name or a phone number (TM-AUTH-001 I2). The text promises no more than the app
-     * shows: the requester's view carries the accepted count, not the donor's identity, so it must
-     * not say "see who is coming".
+     * never carries a name or a phone number (TM-AUTH-001 I2). The text promises no more than the
+     * app shows: the requester's view carries the accepted count, not the donor's identity, so it
+     * must not say "see who is coming".
      */
     private static String title(String language) {
-        return "en".equals(language) ? "A donor accepted your request" : "មានអ្នកបរិច្ចាគទទួលយកសំណើរបស់អ្នក";
+        return "en".equals(language)
+                ? "A donor accepted your request"
+                : "មានអ្នកបរិច្ចាគទទួលយកសំណើរបស់អ្នក";
     }
 
     private static String body(String language, String patientBloodType, String hospitalName) {

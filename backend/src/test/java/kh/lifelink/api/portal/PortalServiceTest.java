@@ -170,7 +170,8 @@ class PortalServiceTest {
         List<PortalRequestResponse> result = service.listRequests(HOSPITAL_STAFF, "OPEN");
 
         assertThat(result.get(0).acceptedDonors().get(0).districtName().km()).isEqualTo("ទួលគោក");
-        assertThat(result.get(0).acceptedDonors().get(0).districtName().en()).isEqualTo("Tuol Kouk");
+        assertThat(result.get(0).acceptedDonors().get(0).districtName().en())
+                .isEqualTo("Tuol Kouk");
     }
 
     /** A donor whose district code has no row is a null label, not a crash or an empty string. */

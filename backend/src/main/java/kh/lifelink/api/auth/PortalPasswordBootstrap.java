@@ -17,8 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>Until {@code V19__unseed_portal_passwords.sql} the four portal accounts carried digests of a
  * password written into a migration, so anyone who could read the repository could sign in as the
- * ADMIN that grants portal access and confirms donations. The migration made those rows
- * unopenable; this class is the other half — the only way a password gets onto one now.
+ * ADMIN that grants portal access and confirms donations. The migration made those rows unopenable;
+ * this class is the other half — the only way a password gets onto one now.
  *
  * <p>Three rules it follows, each of which is the reason for a line below:
  *
@@ -26,10 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
  *   <li><b>An unset variable sets nothing.</b> No default, no fallback, no generated password
  *       printed to a log. A portal nobody can sign in to is a smaller problem than a portal
  *       everybody can, and the warning says exactly what to do about it.
- *   <li><b>A password already in place is left alone.</b> BCrypt salts per call, so re-encoding
- *       the same password every boot would rewrite four rows on every restart for no reason and
- *       would fight an admin who changed one through the product. {@code matches} first, write
- *       only on a real change.
+ *   <li><b>A password already in place is left alone.</b> BCrypt salts per call, so re-encoding the
+ *       same password every boot would rewrite four rows on every restart for no reason and would
+ *       fight an admin who changed one through the product. {@code matches} first, write only on a
+ *       real change.
  *   <li><b>The value never reaches a log, an exception message or a response.</b> Counts and
  *       usernames only.
  * </ul>
@@ -76,7 +76,9 @@ class PortalPasswordBootstrap implements ApplicationRunner {
         }
     }
 
-    /** @return how many rows this actually wrote */
+    /**
+     * @return how many rows this actually wrote
+     */
     private int apply(String password, List<String> usernames, String variable) {
         if (password == null || password.isBlank()) {
             log.warn(

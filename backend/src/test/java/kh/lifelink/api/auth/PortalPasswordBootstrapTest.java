@@ -56,7 +56,9 @@ class PortalPasswordBootstrapTest {
     }
 
     private String messages() {
-        return logs.list.stream().map(ILoggingEvent::getFormattedMessage).reduce("", String::concat);
+        return logs.list.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .reduce("", String::concat);
     }
 
     @Test
@@ -95,9 +97,9 @@ class PortalPasswordBootstrapTest {
     }
 
     /**
-     * BCrypt salts per call, so re-encoding on every boot would rewrite four rows for nothing —
-     * and would overwrite a password an admin had changed through the product back to the one in
-     * the environment file.
+     * BCrypt salts per call, so re-encoding on every boot would rewrite four rows for nothing — and
+     * would overwrite a password an admin had changed through the product back to the one in the
+     * environment file.
      */
     @Test
     void aPasswordAlreadyInPlaceIsLeftAlone() {
@@ -121,7 +123,8 @@ class PortalPasswordBootstrapTest {
 
         bootstrap("", GOOD).run(null);
 
-        assertThat(staff).allSatisfy(u -> assertThat(passwords.matches(GOOD, u.getPasswordHash())).isTrue());
+        assertThat(staff)
+                .allSatisfy(u -> assertThat(passwords.matches(GOOD, u.getPasswordHash())).isTrue());
     }
 
     /** Each row keeps its own salt: one cracked digest must not open the other two. */
@@ -134,7 +137,11 @@ class PortalPasswordBootstrapTest {
 
         bootstrap("", GOOD).run(null);
 
-        assertThat(List.of(calmette.getPasswordHash(), tepi.getPasswordHash(), july.getPasswordHash()))
+        assertThat(
+                        List.of(
+                                calmette.getPasswordHash(),
+                                tepi.getPasswordHash(),
+                                july.getPasswordHash()))
                 .doesNotHaveDuplicates();
     }
 

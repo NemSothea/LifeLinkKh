@@ -14,8 +14,8 @@ import kh.lifelink.api.district.dto.DistrictName;
  *
  * <p>{@code districtName} was a plain English string until {@code BUG-API-004}, which is what the
  * contract documented and what the portal then had no way to localize. It is now the same {@code
- * DistrictName} pair every other district on the page uses — the portal has a language switcher,
- * so the API cannot pick the language on its behalf.
+ * DistrictName} pair every other district on the page uses — the portal has a language switcher, so
+ * the API cannot pick the language on its behalf.
  *
  * @param bloodType the donor's own type, not the patient's — staff already know the patient's type
  *     from the request row this sits under

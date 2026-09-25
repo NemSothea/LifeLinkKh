@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>Its own bean so the {@code REQUIRES_NEW} below is real. It used to be a package-private method
  * on {@link RequestAlertNotifier} called from inside that class, which Spring's proxy never sees —
- * the {@code @Modifying} update ran with no transaction, threw, and was swallowed into a warning, so
- * no dead token was ever cleared.
+ * the {@code @Modifying} update ran with no transaction, threw, and was swallowed into a warning,
+ * so no dead token was ever cleared.
  *
  * <p>Both callers run after their own transaction has committed (or with none at all), and a
  * cleanup failure must not be able to affect what already committed. This throws; the callers

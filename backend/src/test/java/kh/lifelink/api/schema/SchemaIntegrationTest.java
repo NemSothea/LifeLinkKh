@@ -40,11 +40,11 @@ class SchemaIntegrationTest {
     }
 
     /**
-     * V19 took the seeded portal password out of the repository. This is the assertion that
-     * notices if it ever comes back — by a migration seeding one again, or by V19 being dropped
-     * from a rebuilt schema. It checks the digests rather than attempting a sign-in, because a
-     * password nobody can produce is the property that matters: the four accounts still exist and
-     * still satisfy the username/hash pair constraint.
+     * V19 took the seeded portal password out of the repository. This is the assertion that notices
+     * if it ever comes back — by a migration seeding one again, or by V19 being dropped from a
+     * rebuilt schema. It checks the digests rather than attempting a sign-in, because a password
+     * nobody can produce is the property that matters: the four accounts still exist and still
+     * satisfy the username/hash pair constraint.
      */
     @Test
     void noPortalAccountCarriesASeededPassword() {

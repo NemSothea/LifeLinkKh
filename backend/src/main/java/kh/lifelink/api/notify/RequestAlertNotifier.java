@@ -50,9 +50,8 @@ public class RequestAlertNotifier {
     /**
      * Alerts the matched donors.
      *
-     * @return the donor profile ids whose push FCM accepted — the caller stamps {@code
-     *     notified_at} on exactly these. Donors with no token are never in this set, and neither
-     *     are failures.
+     * @return the donor profile ids whose push FCM accepted — the caller stamps {@code notified_at}
+     *     on exactly these. Donors with no token are never in this set, and neither are failures.
      */
     public Set<UUID> alert(
             UUID requestId,

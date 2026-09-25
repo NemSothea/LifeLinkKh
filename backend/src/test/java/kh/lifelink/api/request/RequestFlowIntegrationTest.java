@@ -258,8 +258,8 @@ class RequestFlowIntegrationTest {
     }
 
     /**
-     * FR-NOTIFY-003's lookup, against real SQL: the creator's token and language, with the request's
-     * blood type and hospital — and nothing at all for a creator with no token.
+     * FR-NOTIFY-003's lookup, against real SQL: the creator's token and language, with the
+     * request's blood type and hospital — and nothing at all for a creator with no token.
      */
     @Test
     void theAcceptancePushFindsTheRequesterOnlyWhenTheyHaveAToken() {
