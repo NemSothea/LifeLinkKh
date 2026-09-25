@@ -33,7 +33,12 @@ Donation _donation(int day) => Donation(
     bloodRequestId: 'req-$day',
 );
 
-Widget _wrap({required List<Donation> donations, required bool isEligible}) {
+Widget _wrap({
+    required List<Donation> donations,
+    required bool isEligible,
+    FakeDonorRepository? donorRepository,
+    DonationRepository? donationRepository,
+}) {
     return ProviderScope(
         overrides: [
             sessionStoreProvider.overrideWithValue(FakeSessionStore(testSession())),
@@ -42,9 +47,12 @@ Widget _wrap({required List<Donation> donations, required bool isEligible}) {
             facebookCredentialsProvider.overrideWithValue(FakeFacebookCredentials()),
             telegramAuthRepositoryProvider.overrideWithValue(FakeTelegramAuthRepository()),
             donorRepositoryProvider.overrideWithValue(
-                FakeDonorRepository()..profile = testProfile(isEligible: isEligible),
+                donorRepository ??
+                    (FakeDonorRepository()..profile = testProfile(isEligible: isEligible)),
             ),
-            donationRepositoryProvider.overrideWithValue(_FakeDonationRepository(donations)),
+            donationRepositoryProvider.overrideWithValue(
+                donationRepository ?? _FakeDonationRepository(donations),
+            ),
         ],
         child: const MaterialApp(
             locale: Locale('en'),
@@ -97,4 +105,33 @@ void main() {
         expect(find.byKey(const Key('donation-history-cycle')), findsOneWidget);
         expect(find.textContaining('You can donate again on'), findsOneWidget);
     });
+
+    /// The hospital confirms while the donor has History open, and the donor pulls to
+    /// refresh. The new donation and the new cooldown have to arrive together.
+    testWidgets('pull to refresh updates the cooldown line with the list', (tester) async {
+        final donors = FakeDonorRepository()..profile = testProfile(isEligible: true);
+        final donations = _MutableDonationRepository();
+        await tester.pumpWidget(_wrap(
+            donations: const [],
+            isEligible: true,
+            donorRepository: donors,
+            donationRepository: donations,
+        ));
+        await tester.pumpAndSettle();
+
+        donations.donations = [_donation(1)];
+        donors.profile = testProfile(isEligible: false);
+        await tester.fling(find.byType(Scrollable).first, const Offset(0, 400), 1000);
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('You can donate again on'), findsOneWidget);
+        expect(find.text('You can donate again now.'), findsNothing);
+    });
+}
+
+final class _MutableDonationRepository implements DonationRepository {
+    List<Donation> donations = const [];
+
+    @override
+    Future<Result<List<Donation>>> fetchMine() async => Success(donations);
 }

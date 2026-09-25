@@ -26,7 +26,14 @@ class DonationHistoryScreen extends ConsumerWidget {
             appBar: AppBar(title: Text(l10n.donationHistoryTitle)),
             body: SafeArea(
                 child: RefreshIndicator(
-                    onRefresh: () => ref.refresh(myDonationsControllerProvider.future),
+                    // Both, because the screen shows both: the list, and the "you can give
+                    // again on…" line that comes from the donor profile. Refreshing only
+                    // the list right after a hospital confirms shows the new donation
+                    // under "you can donate again now" — seen in the 2026-09-25 rehearsal.
+                    onRefresh: () => Future.wait([
+                        ref.refresh(myDonationsControllerProvider.future),
+                        ref.refresh(donorProfileControllerProvider.future),
+                    ]),
                     child: switch (donations) {
                         AsyncValue(isLoading: true, hasValue: false) => const Center(
                             child: CircularProgressIndicator(key: Key('donation-history-loading')),
