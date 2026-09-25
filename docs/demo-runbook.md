@@ -156,6 +156,11 @@ rehearsal that reaches step 6.**
 The portal has a real sign-in at **`/<locale>/sign-in`** — username and password, no token to
 mint. Four accounts exist, created by migration:
 
+**Fastest way at demo time:** `bash scripts/demo-creds.sh` prints every username with its
+password from your local `.env`; `bash scripts/demo-creds.sh staff` copies the `calmette`
+password straight to the clipboard. This repository is **public** — a password written into this
+file would be readable by anyone, for ever, so it never goes here.
+
 **The passwords come from `.env`, not from this document.** Since
 `V19__unseed_portal_passwords.sql` no migration carries one: `PORTAL_ADMIN_PASSWORD` sets
 `soborey`, `PORTAL_STAFF_PASSWORD` sets the three hospital accounts, and
