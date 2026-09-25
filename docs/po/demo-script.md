@@ -173,10 +173,12 @@ precise costs a sentence; being caught overstating costs the room.
 
 ## 8. The day before
 
-The demo runs on **one local machine** — `docker compose` for backend, database and portal, the
-app on an emulator or a phone plugged into the same laptop. No store install, no tunnel, no
-network dependency beyond the room's power socket ([DEC-012](../decisions.md)). That is the whole
-point of the checklist below: everything that can fail is on a machine you control.
+The backend runs on **one local machine** — `docker compose` for backend, database and portal. The
+phones are either plugged into that laptop or, since 2026-09-25, untethered on **your own iPhone
+hotspot** (`../demo-runbook.md` §10). No store install, no tunnel, and never the room's Wi-Fi
+([DEC-012](../decisions.md) and its amendment). Google Sign-In and push do need the internet — the
+hotspot's mobile data — so sign both phones in before the room fills. Everything that can fail is
+on a device or a network you control.
 
 Eight things, in the order they bite:
 

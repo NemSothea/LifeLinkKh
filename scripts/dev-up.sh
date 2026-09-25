@@ -2,8 +2,21 @@
 # Bring up the local stack and report the truth about what came up.
 # Local development only — the M2 backend has no authentication.
 # Owner: Tech Lead. First half of the deploy runbook the M7 release still needs.
+#
+#   bash scripts/dev-up.sh          # loopback only — the default, and the safe one
+#   bash scripts/dev-up.sh --lan    # also publish the backend on this Mac's network
+#
+# --lan is for a phone that is not plugged in: the wireless demo over the iPhone
+# hotspot (docs/demo-runbook.md §10). Run without it afterwards to go back to loopback.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
+lan=false
+case "${1:-}" in
+    --lan) lan=true ;;
+    "") ;;
+    *) echo "usage: bash scripts/dev-up.sh [--lan]"; exit 2 ;;
+esac
 
 if ! command -v docker >/dev/null 2>&1; then
     echo "❌ docker is not installed. Install Docker Desktop, then re-run."
@@ -38,6 +51,15 @@ else
     echo "   503 AUTH_PROVIDER_UNCONFIGURED. Everything else serves normally."
 fi
 
+# The LAN overlay goes on top of whatever else is mounted, in the same command. Adding
+# it by hand to a one-service rebuild is how the Firebase key got dropped before
+# (demo-runbook §6).
+if $lan; then
+    compose_files+=(-f docker-compose.lan.yml)
+    echo "📡 backend will be published on every interface (docker-compose.lan.yml) —"
+    echo "   use this on a network you control, and re-run without --lan afterwards"
+fi
+
 # frontend/ is scaffolded at M2 step 3. Until then `web` has nothing to build.
 services=(postgres backend)
 if [ -f frontend/package.json ] && [ -f frontend/Dockerfile ]; then
@@ -66,6 +88,17 @@ else
     echo "❌ backend did not answer /api/health. Logs:"
     docker compose logs --tail=40 backend
     exit 1
+fi
+
+if $lan; then
+    lan_ip=$(ipconfig getifaddr en0 2>/dev/null || true)
+    if [ -n "$lan_ip" ] && curl -fsS "http://$lan_ip:8080/api/health" >/dev/null 2>&1; then
+        echo "📡 reachable from the network — http://$lan_ip:8080/api/health"
+        echo "   build the phone app with: bash scripts/build-demo-apk.sh $lan_ip"
+    else
+        echo "⚠️  --lan set, but http://${lan_ip:-<no en0 address>}:8080 did not answer."
+        echo "   Is Wi-Fi joined? Did macOS ask to allow incoming connections?"
+    fi
 fi
 
 echo "   Flyway applied:"

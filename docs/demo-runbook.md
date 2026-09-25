@@ -604,3 +604,84 @@ Three things worth getting right:
 - **A hand-set password survives the bootstrap** only if it differs from what is in `.env`; the
   bootstrap rewrites any account whose stored digest does not match its variable. Clear the
   variable if an account should be managed by hand.
+
+## 10. Wireless demo — both phones untethered, over the iPhone hotspot
+
+Added 2026-09-25 ([DEC-012](decisions.md) amendment). The phones are real devices with no cable
+during the demo. They reach the backend on this Mac over Wi-Fi, and the network is **your own
+iPhone's hotspot**, not the room's. Room Wi-Fi fails in two ways you cannot fix from the stage: it
+gives the Mac a different IP (and the IP is compiled into the app), and many campus and venue
+networks isolate clients, so the phones never reach the Mac even though every device shows
+connected.
+
+| Device | Account | Role | Push |
+|---|---|---|---|
+| iPhone (also the hotspot) | nempath2021 | Account B, requester | **none** — no APNs without an Apple Developer account (DEC-006). Say so at step 4 |
+| Android phone | nemsothea13 | Account A, donor | yes — FCM over the hotspot's mobile data |
+| Mac | staff `calmette` | portal, in its own browser | — |
+
+The iPhone as requester is forced, not chosen: the donor's alert is the pitch, and only the
+Android phone can receive it.
+
+### 10.1 Once, before the first rehearsal
+
+1. **Give the Mac a fixed IP on the hotspot.** Join the iPhone hotspot, then System Settings →
+   Wi-Fi → (the hotspot) Details → TCP/IP → Configure IPv4: **Using DHCP with manual address**,
+   address `172.20.10.5`. iPhone hotspots hand out `172.20.10.2`–`.14`; a fixed `.5` means the APK
+   below is built once and works at every rehearsal and on the day.
+2. **Build the Android app for that address** — any network will do for the build:
+   ```bash
+   bash scripts/build-demo-apk.sh 172.20.10.5
+   ```
+   It must be built on **this** Mac. The release build falls back to the debug signing key, which
+   is the SHA-1 Firebase knows; an APK built anywhere else fails Google Sign-In.
+3. **Install it on the Android phone.** Send
+   `mobile/build/app/outputs/flutter-apk/lifelink-demo-172.20.10.5.apk` through Drive or Telegram
+   and open it (allow "install unknown apps" for that one app), or `adb install -r` over USB once.
+   No cable after this.
+4. **Install on the iPhone.** Signing first, once: open `mobile/ios/Runner.xcworkspace` in Xcode,
+   Runner → Signing & Capabilities → Team: your Personal Team (free Apple ID). That writes your team
+   id into `ios/Runner.xcodeproj/project.pbxproj` — do not commit that line. Then, with the iPhone
+   on USB the first time:
+   ```bash
+   cd mobile && flutter devices        # note the iPhone's id
+   flutter run --release -d <iphone-id> --dart-define=API_BASE_URL=http://172.20.10.5:8080/api
+   ```
+   Xcode's Run button cannot pass `--dart-define`, so it would build an app with no backend address;
+   use the command. On the phone: Settings → General → VPN & Device Management → trust your
+   developer certificate. Later installs can go wireless — Xcode → Window → Devices → **Connect via
+   network**. **A free Personal Team install expires after 7 days**: install within the week of the
+   demo.
+5. First launch on the iPhone asks to find devices on the local network — **Allow**. Deny it and
+   every request fails with no useful error; fix it in Settings → Privacy → Local Network.
+
+### 10.2 On the day
+
+1. Turn on the iPhone hotspot. Join the Mac and the Android phone to it.
+2. Check the Mac got its fixed address: `ipconfig getifaddr en0` → `172.20.10.5`.
+3. Bring the stack up **published on the network**:
+   ```bash
+   bash scripts/dev-up.sh --lan
+   ```
+   It prints `📡 reachable from the network — http://172.20.10.5:8080/api/health`. If macOS asks
+   whether Docker may accept incoming connections, **Allow**.
+4. On the Android phone's browser, open `http://172.20.10.5:8080/api/health` → `{"status":"UP"}`.
+   This is the check that proves the phone, not the Mac, can reach the backend.
+5. Open the app on **each phone last** (one token per account; the last device to open the app
+   gets the push). Then run the pre-flight (§3) as usual.
+
+### 10.3 Afterwards
+
+`bash scripts/dev-up.sh` without `--lan` puts the backend back on loopback. `--lan` publishes an
+API holding the seeded data and the portal accounts on every interface — acceptable on your own
+hotspot for an hour, not on a shared network as a habit.
+
+### What this costs
+
+- **Mobile data.** Google Sign-In and FCM go out over the iPhone's cellular connection. Small, but
+  zero signal in the room means no sign-in and no push — sign both phones in *before* the room, and
+  keep the fallback recording (demo-script §8 item 2).
+- **The iPhone gets no push.** The "donor accepted" beat is seen only as the count on its request
+  after a pull-to-refresh or reopening; narrate it that way.
+- **The hotspot iPhone is also a demo device.** An incoming call or a screen lock mid-demo can drop
+  the hotspot — Do Not Disturb on, auto-lock off.

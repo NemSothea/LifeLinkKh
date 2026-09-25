@@ -1,6 +1,10 @@
 # Opt-in overlay: publish the backend on the LAN so a PHYSICAL phone can reach it.
 #
-#   docker compose -f docker-compose.yml -f docker-compose.firebase.yml -f docker-compose.lan.yml up -d backend
+#   bash scripts/dev-up.sh --lan
+#
+# Through dev-up.sh, not a hand-typed compose command: the script stacks this on top of the
+# Firebase overlay, and a hand-typed command that forgets that file drops the service-account key
+# (demo-runbook §6).
 #
 # The base file binds 127.0.0.1:8080 on purpose — a dev API carrying seeded data, a JWT secret out
 # of .env and portal accounts whose passwords come from the same file has no business on a shared

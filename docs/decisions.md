@@ -509,6 +509,24 @@ Two things keep it cheap to reverse:
   unaffected but no longer urgent: the tunnel exists for *remote* internal testers. A demo on one
   machine reaches the backend at `127.0.0.1` and needs no tunnel at all.
 
+### Amendment — 2026-09-25: phones untethered, over the presenter's own hotspot
+Raised by Nem Sothea. The demo phones are real devices with **no USB cable**: an Android phone as
+the donor and an iPhone as the requester, both reaching `docker compose` on the laptop over Wi-Fi.
+
+- **The network is the presenter's iPhone hotspot**, never the room's Wi-Fi. The backend address is
+  compiled into the app, and room networks change the laptop's IP and often isolate clients. The
+  laptop takes a fixed manual IP on the hotspot so one build works everywhere.
+- **Correction to "no network dependency" above.** It was never true: Google Sign-In and FCM both
+  need the internet, tethered or not. Now it is said plainly — the demo needs the hotspot's mobile
+  data, and the fallback recording covers a room with no signal.
+- **The backend is published beyond loopback for the demo only** (`dev-up.sh --lan`,
+  `docker-compose.lan.yml`), on a network the presenter controls. The default stays `127.0.0.1`.
+- **The iPhone receives no push** — no Apple Developer account, so no APNs (DEC-006). It plays the
+  requester, whose push (`FR-NOTIFY-003`) is the secondary beat; the donor's alert, the pitch,
+  lands on Android.
+
+Runbook: [`demo-runbook.md`](demo-runbook.md) §10.
+
 ---
 
 ## DEC-013 — Portal passwords come from the environment; nothing seeds one
