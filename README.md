@@ -280,6 +280,7 @@ The slides and everything needed to run the live demo behind them:
 | What | Where |
 |---|---|
 | **Slide deck** (15 slides, Khmer + English) | [`docs/po/presentations/LifeLinkKH-v2.pptx`](docs/po/presentations/LifeLinkKH-v2.pptx) |
+| Slide deck, online — view in the browser | [Google Slides](https://docs.google.com/presentation/d/1Ah12Kzk67C7ymulHhInhS3FJemNQU3J8/edit?usp=sharing) |
 | Deck source — edit this, then rebuild | [`docs/po/presentations/build_deck_v2.py`](docs/po/presentations/build_deck_v2.py) (`python3 docs/po/presentations/build_deck_v2.py`, needs `python-pptx`) |
 | Run of show — 30 min of slides, 5 min of demo | [`docs/po/presentations/run-of-show.md`](docs/po/presentations/run-of-show.md) |
 | Demo narration, and the day-before checklist | [`docs/po/demo-script.md`](docs/po/demo-script.md) |
