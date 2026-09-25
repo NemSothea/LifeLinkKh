@@ -5,6 +5,7 @@ import '../../../core/settings/locale_controller.dart';
 import '../data/dio_fcm_token_repository.dart';
 import '../data/firebase_push_token_source.dart';
 import '../domain/fcm_token_repository.dart';
+import '../domain/push_arrival.dart';
 import '../domain/push_token_source.dart';
 import 'push_registration_service.dart';
 
@@ -29,3 +30,9 @@ PushRegistrationService pushRegistrationService(PushRegistrationServiceRef ref) 
         // subscription `AuthController` holds against it.
         currentLanguage: () => ref.read(localeControllerProvider).languageCode,
     );
+
+/// Pushes that arrive while the app is running. Empty by default — the same seam shape
+/// as `authTokenGatewayProvider`: `main.dart` overrides it with the Firebase streams, and
+/// every widget test gets a plain app with no platform channel behind it.
+@Riverpod(keepAlive: true)
+Stream<PushArrival> pushArrivals(PushArrivalsRef ref) => const Stream.empty();

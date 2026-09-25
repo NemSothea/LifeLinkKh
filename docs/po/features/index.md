@@ -15,7 +15,7 @@ Milestones reference root `CLAUDE.md` section 4, which is the only place milesto
 | REQUEST | 006 |
 | MATCH | 003 |
 | DONATION | 002 |
-| NOTIFY | 003 |
+| NOTIFY | 004 |
 | PORTAL | 004 |
 | GLOBAL | 003 |
 | SECURITY | 002 |
@@ -49,6 +49,7 @@ cross-references still resolve.
 | [FR-DONATION-001-donation-history](FR-DONATION-001-donation-history.md) | Donation history | DONATION | Should Have | accepted | M5 |
 | [FR-NOTIFY-001-request-push-alert](FR-NOTIFY-001-request-push-alert.md) | Push alert for a matched request | NOTIFY | Must Have | accepted | M4 (tokens M3) |
 | [FR-NOTIFY-002-eligibility-reminder](FR-NOTIFY-002-eligibility-reminder.md) | Eligibility reminder when cooldown ends | NOTIFY | Should Have | **deferred** — DEC-004 | — |
+| [FR-NOTIFY-003-requester-acceptance-push](FR-NOTIFY-003-requester-acceptance-push.md) | Push the requester when a donor accepts | NOTIFY | Should Have | accepted — grown after M7 | post-M7 |
 | [FR-PORTAL-001-hospital-request-management](FR-PORTAL-001-hospital-request-management.md) | Hospital request management (web) | PORTAL | Should Have | accepted | M4 |
 | [FR-PORTAL-002-admin-dashboard](FR-PORTAL-002-admin-dashboard.md) | Admin dashboard (web) | PORTAL | Should Have | **deferred** — DEC-004 | — |
 | [FR-PORTAL-003-staff-provisioning](FR-PORTAL-003-staff-provisioning.md) | Admin-managed staff accounts | PORTAL | Must Have | accepted | M6 |
@@ -56,10 +57,11 @@ cross-references still resolve.
 | [FR-GLOBAL-002-metrics-instrumentation](FR-GLOBAL-002-metrics-instrumentation.md) | Success-metric event capture | GLOBAL | Must Have | **deferred** — DEC-004 | — |
 | [FR-SECURITY-001-account-data-deletion](FR-SECURITY-001-account-data-deletion.md) | Account and personal data deletion | SECURITY | Must Have | **deferred** — DEC-004 | — |
 
-**21 features, 9 in the build.** 12 from `prd.md` FR-01..FR-12, 9 added to close documented gaps or
-requests — `FR-PORTAL-003` (2026-08-23, closing TM-AUTH-001 E1's gap between the threat model and
+**24 features, 9 in the graded build.** 12 from `prd.md` FR-01..FR-12, 12 added to close documented
+gaps or requests — among them `FR-PORTAL-003` (2026-08-23, closing TM-AUTH-001 E1's gap between the threat model and
 `V8__portal_access.sql`'s hand-run migration) and `FR-AUTH-004` (2026-08-23, requested by PO,
-deliberately not in this build — see the FR for why).
+deliberately not in this build — see the FR for why). `FR-NOTIFY-003` (2026-09-25) was built after M7 and sits
+outside the graded nine — `../../scope.md` "Grown after M7".
 
 > **Scope cut 2026-08-07 (DEC-004).** This is a 13-week course case study, not a product. Eight FRs
 > form the buildable core; eight are `deferred`; three are `superseded`/`retired` from the auth

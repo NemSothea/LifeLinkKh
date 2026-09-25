@@ -20,6 +20,7 @@ import kh.lifelink.api.request.BloodRequestRepository;
 import kh.lifelink.api.request.RequestViews;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -37,6 +38,7 @@ class MatchServiceTest {
     private RequestMatchRepository matches;
     private DonorProfileRepository donorProfiles;
     private BloodRequestRepository requests;
+    private ApplicationEventPublisher events;
     private MatchService service;
 
     @BeforeEach
@@ -44,7 +46,10 @@ class MatchServiceTest {
         matches = mock(RequestMatchRepository.class);
         donorProfiles = mock(DonorProfileRepository.class);
         requests = mock(BloodRequestRepository.class);
-        service = new MatchService(matches, donorProfiles, requests, mock(RequestViews.class));
+        events = mock(ApplicationEventPublisher.class);
+        service =
+                new MatchService(
+                        matches, donorProfiles, requests, mock(RequestViews.class), events);
 
         DonorProfile profile = mock(DonorProfile.class);
         when(profile.getId()).thenReturn(MY_PROFILE);
@@ -182,6 +187,53 @@ class MatchServiceTest {
                 org.mockito.ArgumentCaptor.forClass(RequestMatch.class);
         verify(matches).save(saved.capture());
         assertThat(saved.getValue().getIdempotencyKey()).isNull();
+    }
+
+    /** FR-NOTIFY-003: an acceptance tells the requester, once, for this request. */
+    @Test
+    void acceptingPublishesDonorAccepted() {
+        when(matches.findById(MATCH_ID)).thenReturn(Optional.of(unanswered(MY_PROFILE)));
+
+        service.respond(CALLER, MATCH_ID, new RespondRequest("ACCEPTED"));
+
+        org.mockito.ArgumentCaptor<DonorAccepted> published =
+                org.mockito.ArgumentCaptor.forClass(DonorAccepted.class);
+        verify(events).publishEvent(published.capture());
+        assertThat(published.getValue().requestId()).isEqualTo(REQUEST_ID);
+    }
+
+    /** A decline is not news the family can act on. */
+    @Test
+    void decliningPublishesNothing() {
+        when(matches.findById(MATCH_ID)).thenReturn(Optional.of(unanswered(MY_PROFILE)));
+
+        service.respond(CALLER, MATCH_ID, new RespondRequest("DECLINED"));
+
+        verify(events, never()).publishEvent(any());
+    }
+
+    /** The replay of an acceptance that already landed already told the family once. */
+    @Test
+    void replayingAnAcceptancePublishesNothing() {
+        RequestMatch answered = unanswered(MY_PROFILE);
+        answered.setResponse("ACCEPTED");
+        answered.setIdempotencyKey("a1b2c3");
+        when(matches.findById(MATCH_ID)).thenReturn(Optional.of(answered));
+
+        service.respond(CALLER, MATCH_ID, new RespondRequest("ACCEPTED"), "a1b2c3");
+
+        verify(events, never()).publishEvent(any());
+    }
+
+    /** A refused answer changed nothing, so there is nothing to announce. */
+    @Test
+    void aRejectedAcceptancePublishesNothing() {
+        when(matches.findById(MATCH_ID)).thenReturn(Optional.of(unanswered(SOMEONE_ELSES_PROFILE)));
+
+        assertThatThrownBy(() -> service.respond(CALLER, MATCH_ID, new RespondRequest("ACCEPTED")))
+                .isInstanceOf(ApiException.class);
+
+        verify(events, never()).publishEvent(any());
     }
 
     /**

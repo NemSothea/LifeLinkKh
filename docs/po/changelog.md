@@ -2,6 +2,16 @@
 
 Every new/changed FR gets an entry. What + Why are mandatory.
 
+## 2026-09-25 — `FR-NOTIFY-003`: push the requester when a donor accepts
+- **What:** New brief [`BRIEF-NOTIFY-001`](briefs/BRIEF-NOTIFY-001-requester-acceptance-push.md)
+  promoted to [`FR-NOTIFY-003`](features/FR-NOTIFY-003-requester-acceptance-push.md). Each
+  acceptance pushes the request's creator — blood type and hospital on the lock screen, never the
+  donor's name or phone — and the open app refreshes the request when it arrives. Declines send
+  nothing. Tap routing stays out, as it is for the donor alert.
+  **Why:** Closes the gap `../scope.md` recorded on 2026-09-24 after the first two-device run:
+  push went to donors only, so the family who posted waited in silence. Accepted by Sothea as
+  co-PO; grown after M7, not part of DEC-004's graded build.
+
 ## 2026-09-24 — `BRIEF-DONATION-001`: "what to expect when you donate" guide (mobile)
 - **What:** New brief [`BRIEF-DONATION-001`](briefs/BRIEF-DONATION-001-what-to-expect.md) and the
   static screen it justifies — before you go, at the centre, after (rest, snack and water, a

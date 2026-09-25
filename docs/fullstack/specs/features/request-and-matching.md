@@ -290,6 +290,22 @@ only, which was the point of moving token registration earlier.
 - A dead token (FCM `UNREGISTERED`) should clear `users.fcm_token`. Leaving it means every future
   request pays a failed send for a phone that no longer exists.
 
+## Push to the requester — `FR-NOTIFY-003`
+
+Added after M7. A donor's `ACCEPTED` sends one push to the request's creator
+(`blood_requests.created_by_user_id`); `DECLINED` sends nothing.
+
+- **After commit, never inside the transaction.** `MatchService.respond` publishes an event; an
+  `AFTER_COMMIT` listener sends. A rolled-back acceptance must not have told the family a donor is
+  coming, and an FCM failure must not fail the respond call.
+- **Not on an idempotent replay.** A replayed acceptance returns the stored answer and publishes
+  nothing — the family was already told once.
+- Data payload `type = DONOR_ACCEPTED`, `requestId`. Same shape as the donor alert.
+- Text from the creator's `users.language`. Blood type and hospital only — the donor's name and
+  phone never reach a lock screen; the requester sees them in the app.
+- A creator with no token (every portal staff account, in practice) is skipped. A dead token is
+  cleared, as for the donor alert.
+
 ## Tests this spec is not done without
 
 Beyond the acceptance criteria in `FR-MATCH-001`:

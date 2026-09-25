@@ -741,5 +741,13 @@
     "donateGuideVoluntary": "Donating blood here is voluntary and unpaid. The snack and gift are the centre's way of saying thank you.",
     "@donateGuideVoluntary": {
         "description": "Closing note. Voluntary non-remunerated donation (WHO) — gifts are thanks, not a reward."
+    },
+    "donorAcceptedNotice": "A donor accepted your request.",
+    "@donorAcceptedNotice": {
+        "description": "In-app notice when an FR-NOTIFY-003 push arrives while the app is open. Android shows no system notification for a foreground app, so this is the only signal."
+    },
+    "donorAcceptedNoticeAction": "View",
+    "@donorAcceptedNoticeAction": {
+        "description": "Snackbar action that opens the accepted request"
     }
 }

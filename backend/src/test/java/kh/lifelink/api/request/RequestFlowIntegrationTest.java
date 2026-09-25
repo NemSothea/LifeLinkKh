@@ -3,6 +3,8 @@ package kh.lifelink.api.request;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -13,6 +15,9 @@ import java.math.BigDecimal;
 import java.util.Set;
 import java.util.UUID;
 import kh.lifelink.api.auth.JwtService;
+import kh.lifelink.api.match.DonorAccepted;
+import kh.lifelink.api.notify.AcceptanceNotifier;
+import kh.lifelink.api.notify.PushRecipientRepository;
 import kh.lifelink.api.notify.RequestAlertNotifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -48,6 +54,15 @@ class RequestFlowIntegrationTest {
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 
     @MockitoBean private RequestAlertNotifier notifier;
+
+    /**
+     * A spy, not a mock: the real bean keeps its {@code @TransactionalEventListener}, so this
+     * proves the event reaches it after the respond transaction commits. FCM is unavailable under
+     * the test profile, so the real method logs and returns without sending.
+     */
+    @MockitoSpyBean private AcceptanceNotifier acceptanceNotifier;
+
+    @Autowired private PushRecipientRepository pushRecipients;
 
     @Autowired private MockMvc mvc;
     @Autowired private JdbcTemplate jdbc;
@@ -154,6 +169,9 @@ class RequestFlowIntegrationTest {
         // Unverified in this build, and the client is required to say so (ADR 0002).
         assertThat(accepted.get("requesterContact").get("phoneVerified").asBoolean()).isFalse();
 
+        // FR-NOTIFY-003: the requester is told, exactly once, after the acceptance commits.
+        verify(acceptanceNotifier, times(1)).onDonorAccepted(new DonorAccepted(matchId, requestId));
+
         // 5. Answering twice is a conflict — one response, never overwritten.
         mvc.perform(
                         post("/matches/" + matchId + "/respond")
@@ -163,6 +181,9 @@ class RequestFlowIntegrationTest {
                 .andExpect(
                         org.springframework.test.web.servlet.result.MockMvcResultMatchers.status()
                                 .isConflict());
+
+        // A refused second answer announces nothing.
+        verify(acceptanceNotifier, times(1)).onDonorAccepted(any());
 
         // 6. The requester's own view now counts the acceptance.
         JsonNode mine =
@@ -234,6 +255,38 @@ class RequestFlowIntegrationTest {
                     .doesNotContain("11.59033")
                     .doesNotContain("104.91569");
         }
+    }
+
+    /**
+     * FR-NOTIFY-003's lookup, against real SQL: the creator's token and language, with the request's
+     * blood type and hospital — and nothing at all for a creator with no token.
+     */
+    @Test
+    void theAcceptancePushFindsTheRequesterOnlyWhenTheyHaveAToken() {
+        jdbc.update(
+                "INSERT INTO blood_requests (created_by_user_id, hospital_id, patient_blood_type,"
+                        + " units_needed, urgency, contact_name, contact_phone)"
+                        + " VALUES (?, ?, 'A+', 1, 'CRITICAL', 'Sokha', '012345678')",
+                requesterId,
+                calmetteId);
+        UUID requestId =
+                jdbc.queryForObject(
+                        "SELECT id FROM blood_requests WHERE created_by_user_id = ?",
+                        UUID.class,
+                        requesterId);
+
+        assertThat(pushRecipients.findRequester(requestId)).isEmpty();
+
+        jdbc.update(
+                "UPDATE users SET fcm_token = 'token-r', language = 'en' WHERE id = ?",
+                requesterId);
+
+        var requester = pushRecipients.findRequester(requestId).orElseThrow();
+        assertThat(requester.getUserId()).isEqualTo(requesterId);
+        assertThat(requester.getFcmToken()).isEqualTo("token-r");
+        assertThat(requester.getLanguage()).isEqualTo("en");
+        assertThat(requester.getPatientBloodType()).isEqualTo("A+");
+        assertThat(requester.getHospitalName()).isEqualTo("Calmette Hospital");
     }
 
     // ---------------------------------------------------------------------

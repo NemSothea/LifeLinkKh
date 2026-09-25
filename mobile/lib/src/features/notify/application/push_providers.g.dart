@@ -63,5 +63,26 @@ final pushRegistrationServiceProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PushRegistrationServiceRef = ProviderRef<PushRegistrationService>;
+String _$pushArrivalsHash() => r'5b904e4bac48ca587b5d241af4ad61b6ed59d038';
+
+/// Pushes that arrive while the app is running. Empty by default — the same seam shape
+/// as `authTokenGatewayProvider`: `main.dart` overrides it with the Firebase streams, and
+/// every widget test gets a plain app with no platform channel behind it.
+///
+/// Copied from [pushArrivals].
+@ProviderFor(pushArrivals)
+final pushArrivalsProvider = StreamProvider<PushArrival>.internal(
+  pushArrivals,
+  name: r'pushArrivalsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$pushArrivalsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef PushArrivalsRef = StreamProviderRef<PushArrival>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

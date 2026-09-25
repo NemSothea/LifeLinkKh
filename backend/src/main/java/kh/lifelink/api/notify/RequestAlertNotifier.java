@@ -2,7 +2,6 @@ package kh.lifelink.api.notify;
 
 import com.google.firebase.messaging.BatchResponse;
 import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.MulticastMessage;
 import com.google.firebase.messaging.Notification;
 import com.google.firebase.messaging.SendResponse;
@@ -19,8 +18,6 @@ import kh.lifelink.api.notify.PushRecipientRepository.PushRecipient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * FR-NOTIFY-001 — the send path. The tokens it sends to were registered at M3, which was the point
@@ -38,17 +35,22 @@ public class RequestAlertNotifier {
     private static final Logger log = LoggerFactory.getLogger(RequestAlertNotifier.class);
 
     private final PushRecipientRepository recipients;
+    private final DeadTokenCleaner deadTokens;
     private final FirebaseConfig firebase;
 
-    RequestAlertNotifier(PushRecipientRepository recipients, FirebaseConfig firebase) {
+    RequestAlertNotifier(
+            PushRecipientRepository recipients,
+            DeadTokenCleaner deadTokens,
+            FirebaseConfig firebase) {
         this.recipients = recipients;
+        this.deadTokens = deadTokens;
         this.firebase = firebase;
     }
 
     /**
      * Alerts the matched donors.
      *
-     * @return the donor profile ids whose push FCM accepted — the callers stamps {@code
+     * @return the donor profile ids whose push FCM accepted — the caller stamps {@code
      *     notified_at} on exactly these. Donors with no token are never in this set, and neither
      *     are failures.
      */
@@ -157,22 +159,12 @@ public class RequestAlertNotifier {
     }
 
     private static boolean isDeadToken(SendResponse response) {
-        return response.getException() != null
-                && (response.getException().getMessagingErrorCode()
-                                == MessagingErrorCode.UNREGISTERED
-                        || response.getException().getMessagingErrorCode()
-                                == MessagingErrorCode.INVALID_ARGUMENT);
+        return DeadTokenCleaner.isDead(response.getException());
     }
 
-    /**
-     * Its own transaction. The caller's transaction has already committed the request and its
-     * matches by the time we get here, and token cleanup must not be able to affect either.
-     */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    void clearDeadTokens(List<UUID> userIds) {
+    private void clearDeadTokens(List<UUID> userIds) {
         try {
-            recipients.clearTokens(userIds);
-            log.info("Cleared {} dead FCM tokens", userIds.size());
+            deadTokens.clear(userIds);
         } catch (Exception ex) {
             log.warn("Could not clear dead FCM tokens", ex);
         }

@@ -14,11 +14,12 @@ import kh.lifelink.api.request.BloodRequest;
 import kh.lifelink.api.request.BloodRequestRepository;
 import kh.lifelink.api.request.RequestViews;
 import kh.lifelink.api.request.dto.RequesterContact;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** FR-REQUEST-002 — the donor's side of the loop. */
+/** FR-REQUEST-002 — the donor's side of the loop, and the trigger for FR-NOTIFY-003. */
 @Service
 public class MatchService {
 
@@ -33,16 +34,19 @@ public class MatchService {
     private final DonorProfileRepository donorProfiles;
     private final BloodRequestRepository requests;
     private final RequestViews views;
+    private final ApplicationEventPublisher events;
 
     MatchService(
             RequestMatchRepository matches,
             DonorProfileRepository donorProfiles,
             BloodRequestRepository requests,
-            RequestViews views) {
+            RequestViews views,
+            ApplicationEventPublisher events) {
         this.matches = matches;
         this.donorProfiles = donorProfiles;
         this.requests = requests;
         this.views = views;
+        this.events = events;
     }
 
     @Transactional(readOnly = true)
@@ -127,6 +131,13 @@ public class MatchService {
         match.setRespondedAt(OffsetDateTime.now());
         match.setIdempotencyKey(idempotencyKey);
         matches.save(match);
+
+        if ("ACCEPTED".equals(response)) {
+            // FR-NOTIFY-003. Delivered only once this transaction commits — see
+            // AcceptanceNotifier. Below the replay branch above on purpose: a replayed
+            // acceptance already told the family once.
+            events.publishEvent(new DonorAccepted(match.getId(), match.getBloodRequestId()));
+        }
 
         return new RespondResponse(
                 match.getId(), response, match.getRespondedAt(), contactFor(match));

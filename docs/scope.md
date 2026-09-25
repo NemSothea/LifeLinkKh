@@ -132,14 +132,18 @@ decisions with their own DEC record.
 | Staff filtering (portal) | Role and hospital filters on `/portal/staff`, in the URL rather than in client state. Appears only above four staff — three chips over three rows is decoration | — |
 | Public board on mobile | The donor home screen reads `/public/requests` under the alert inbox. `GET /matches/me` is empty most days by design, and that emptiness was the entire screen | — |
 | Donation guide (mobile) | A static "what to expect when you donate" screen — before, at the centre, after (snack, water, possible thank-you gift), next time. Linked from Home and Me. No API. Framed as care and thanks, not a reward, because `prd.md` §2.2 rules rewards out | [BRIEF-DONATION-001](po/briefs/BRIEF-DONATION-001-what-to-expect.md) |
+| Acceptance push to the requester | `FR-NOTIFY-003`. Push went to donors only; the family who posted was never told a donor accepted. Closes the known gap below | [BRIEF-NOTIFY-001](po/briefs/BRIEF-NOTIFY-001-requester-acceptance-push.md) |
 
-### Known gap — the requester is never told anyone is coming
+### ~~Known gap~~ closed 2026-09-25 — the requester is never told anyone is coming
+
+> **Closed by `FR-NOTIFY-003`.** Each acceptance now pushes the request's creator. The text below
+> is kept as the record of why it was built.
 
 Found on 2026-09-24, running the loop on real devices for the first time.
 
 Push goes one direction only. `FR-NOTIFY-001` alerts **donors** when a request is created; nothing
 notifies the **requester** when a donor accepts. The family who posted the request has to open the
-app and look: the status and the accepted-donor list update on their Home tab (`GET /requests/me`,
+app and look: the status and the accepted count update on their Home tab (`GET /requests/me`,
 then the request detail), but no alert tells them to go and look.
 
 Not a regression and not an oversight in the code — no FR ever asked for it. It is written here

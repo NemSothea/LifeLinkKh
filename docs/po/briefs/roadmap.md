@@ -16,7 +16,7 @@ Bump when you claim one.
 | REQUEST | 001 |
 | MATCH | 001 |
 | DONATION | 002 |
-| NOTIFY | 001 |
+| NOTIFY | 002 |
 | PORTAL | 001 |
 | GLOBAL | 001 |
 | SECURITY | 001 |
@@ -27,6 +27,7 @@ Bump when you claim one.
 | ID | Title | Area | Milestone | Status | FR |
 |---|---|---|---|---|---|
 | [BRIEF-DONATION-001](BRIEF-DONATION-001-what-to-expect.md) | What to expect when you donate | DONATION | post-M7 | promoted | — (not an FR; `../../scope.md` "Grown after M7") |
+| [BRIEF-NOTIFY-001](BRIEF-NOTIFY-001-requester-acceptance-push.md) | Tell the requester a donor is coming | NOTIFY | post-M7 | promoted | [FR-NOTIFY-003](../features/FR-NOTIFY-003-requester-acceptance-push.md) |
 
 ## Backlog — briefs due before their milestone builds
 

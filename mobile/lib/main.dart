@@ -13,6 +13,8 @@ import 'src/core/settings/onboarding_controller.dart';
 import 'src/core/settings/preferences_locale_store.dart';
 import 'src/core/settings/preferences_onboarding_store.dart';
 import 'src/features/auth/application/auth_providers.dart';
+import 'src/features/notify/application/push_providers.dart';
+import 'src/features/notify/data/firebase_push_arrivals.dart';
 
 /// Composition root, and the only place that knows both `core/` and the auth feature.
 ///
@@ -61,6 +63,9 @@ Future<void> main() async {
                 onboardingStoreProvider.overrideWithValue(
                     PreferencesOnboardingStore(preferences),
                 ),
+                // Pushes that land while the app runs. Default empty, so widget tests
+                // never reach a Firebase platform channel.
+                pushArrivalsProvider.overrideWith((ref) => firebasePushArrivals()),
             ],
             child: const LifeLinkApp(),
         ),

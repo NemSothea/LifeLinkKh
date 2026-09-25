@@ -6,7 +6,7 @@ part of 'app_router.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$appRouterHash() => r'1f48cfdc0de5f00cd415d6e1109dc4c8de47a594';
+String _$appRouterHash() => r'1be76b4d18a0fa43dfb0b766c6940fd52a9990f8';
 
 /// Declarative route table. go_router is here from M2 because M4 opens a specific request
 /// from an FCM notification tap — that is a deep link, and retrofitting one onto
