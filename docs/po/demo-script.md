@@ -201,6 +201,9 @@ Eight things, in the order they bite:
 5. **Check push actually fires on these two devices.** FCM registration is per-install; a device
    that was reflashed or reinstalled since the last rehearsal has a different token. This is the
    single step whose failure is most visible, because the whole pitch is "the alert arrives."
+   One token is stored per account, so the device that last opened the app gets the push. Since
+   2026-09-25 opening the app re-registers — so **open the app on each demo device last**, after
+   any other device has used the same account.
 6. **Fresh install on the donor device** if you want Step 0 to appear at all.
 7. **Reset and re-seed the database.** A laptop rehearsed on for a month shows it: stale
    "urgent" requests dated weeks ago, and the metrics in section 6 computed over dozens of

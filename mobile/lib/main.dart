@@ -14,6 +14,7 @@ import 'src/core/settings/preferences_locale_store.dart';
 import 'src/core/settings/preferences_onboarding_store.dart';
 import 'src/features/auth/application/auth_providers.dart';
 import 'src/features/notify/application/push_providers.dart';
+import 'src/features/notify/application/push_session_sync.dart';
 import 'src/features/notify/data/firebase_push_arrivals.dart';
 
 /// Composition root, and the only place that knows both `core/` and the auth feature.
@@ -44,29 +45,41 @@ Future<void> main() async {
     // store is loaded before `runApp`.
     final preferences = await SharedPreferences.getInstance();
 
+    final container = ProviderContainer(
+        overrides: [
+            // The seam declared in `core/network/`. Its default is null — an
+            // unauthenticated Dio — and this is the one line that turns it on, so a
+            // widget test gets a plain client without stubbing Firebase.
+            authTokenGatewayProvider.overrideWith(
+                (ref) => ref.watch(authServiceProvider),
+            ),
+            // Same shape: the default store forgets the language at exit, and this
+            // is the one line that makes the choice survive a restart.
+            localeStoreProvider.overrideWithValue(
+                PreferencesLocaleStore(preferences),
+            ),
+            // And the intro flag, for the same reason: the default store forgets it
+            // at exit, which would show the carousel on every single launch.
+            onboardingStoreProvider.overrideWithValue(
+                PreferencesOnboardingStore(preferences),
+            ),
+            // Pushes that land while the app runs. Default empty, so widget tests
+            // never reach a Firebase platform channel.
+            pushArrivalsProvider.overrideWith((ref) => firebasePushArrivals()),
+        ],
+    );
+
+    // Started here and nowhere else, so no widget test that restores a session reaches
+    // Firebase through it. `keepAlive`, so this one read keeps it running for the app's
+    // lifetime. After the first frame, not before: read eagerly it pulls the keystore
+    // read and the FCM permission and token calls in front of startup, measured at about
+    // a second of extra launch time on the API 36 emulator. It loses nothing by waiting —
+    // a session already restored by then is picked up as restored.
+    binding.addPostFrameCallback((_) => container.read(pushSessionSyncProvider));
+
     runApp(
-        ProviderScope(
-            overrides: [
-                // The seam declared in `core/network/`. Its default is null — an
-                // unauthenticated Dio — and this is the one line that turns it on, so a
-                // widget test gets a plain client without stubbing Firebase.
-                authTokenGatewayProvider.overrideWith(
-                    (ref) => ref.watch(authServiceProvider),
-                ),
-                // Same shape: the default store forgets the language at exit, and this
-                // is the one line that makes the choice survive a restart.
-                localeStoreProvider.overrideWithValue(
-                    PreferencesLocaleStore(preferences),
-                ),
-                // And the intro flag, for the same reason: the default store forgets it
-                // at exit, which would show the carousel on every single launch.
-                onboardingStoreProvider.overrideWithValue(
-                    PreferencesOnboardingStore(preferences),
-                ),
-                // Pushes that land while the app runs. Default empty, so widget tests
-                // never reach a Firebase platform channel.
-                pushArrivalsProvider.overrideWith((ref) => firebasePushArrivals()),
-            ],
+        UncontrolledProviderScope(
+            container: container,
             child: const LifeLinkApp(),
         ),
     );

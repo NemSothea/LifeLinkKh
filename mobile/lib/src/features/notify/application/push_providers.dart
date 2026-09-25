@@ -27,7 +27,7 @@ PushRegistrationService pushRegistrationService(PushRegistrationServiceRef ref) 
         repository: ref.watch(fcmTokenRepositoryProvider),
         // `ref.read` inside a callback, not `ref.watch`: watching would rebuild this
         // keepAlive service on every language change and drop the token-refresh
-        // subscription `AuthController` holds against it.
+        // subscription `pushSessionSync` holds against it.
         currentLanguage: () => ref.read(localeControllerProvider).languageCode,
     );
 
