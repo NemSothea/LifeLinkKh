@@ -179,6 +179,13 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                                 keyboardType: TextInputType.phone,
                                 decoration: InputDecoration(
                                     labelText: l10n.requestContactPhoneLabel,
+                                    hintText: '012 345 678',
+                                    // Only once something is typed: an empty field is not
+                                    // wrong yet, and the disabled send button already says so.
+                                    errorText: draft.contactPhone.trim().isNotEmpty &&
+                                            draft.normalizedContactPhone == null
+                                        ? l10n.requestContactPhoneInvalid
+                                        : null,
                                 ),
                                 onChanged: controller.setContactPhone,
                             ),

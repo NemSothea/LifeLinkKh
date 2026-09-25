@@ -91,6 +91,7 @@
     "requestUrgencyRoutine": "ធម្មតា",
     "requestContactNameLabel": "ត្រូវសួររកអ្នកណា?",
     "requestContactPhoneLabel": "លេខទូរស័ព្ទទាក់ទងវិញ",
+    "requestContactPhoneInvalid": "សូមបញ្ចូលលេខទូរស័ព្ទចល័តនៅកម្ពុជា ឧ. 012 345 678",
     "requestConfirmTitle": "បញ្ជាក់ការស្នើសុំ",
     "requestConfirmCompat": "យើងនឹងជូនដំណឹងទៅអ្នកបរិច្ចាគដែលអាចផ្តល់ឈាម {type} បាន និងនៅជិត រួមទាំងក្រុមឈាមផ្សេងទៀតដែលត្រូវគ្នា — មិនត្រឹមតែ {type} ទេ។",
     "requestConfirmEdit": "កែប្រែ",

@@ -70,7 +70,7 @@ final class DioRequestRepository implements RequestRepository {
                     'hospitalId': draft.hospitalId,
                     'urgency': draft.urgency.wireValue,
                     'contactName': draft.contactName.trim(),
-                    'contactPhone': draft.contactPhone.trim(),
+                    'contactPhone': draft.normalizedContactPhone ?? draft.contactPhone.trim(),
                 },
             );
             return _summaryResult(response.data);

@@ -1,3 +1,4 @@
+import '../../../core/phone/cambodian_phone.dart';
 import '../../donor/domain/blood_type.dart';
 import 'urgency.dart';
 
@@ -25,15 +26,18 @@ final class RequestDraft {
     /// Who the donor asks for on arrival (CR-MAPI-003).
     final String contactName;
 
-    /// Revealed to a donor only after they accept.
+    /// Revealed to a donor only after they accept. Raw, as typed — see [normalizedContactPhone].
     final String contactPhone;
+
+    /// [contactPhone] as `+855XXXXXXXX`, or null if it is not a Cambodian mobile number.
+    String? get normalizedContactPhone => CambodianPhone.normalize(contactPhone);
 
     bool get isComplete =>
         patientBloodType != null &&
         unitsNeeded >= 1 &&
         hospitalId != null &&
         contactName.trim().isNotEmpty &&
-        contactPhone.trim().isNotEmpty;
+        normalizedContactPhone != null;
 
     RequestDraft copyWith({
         BloodType? patientBloodType,

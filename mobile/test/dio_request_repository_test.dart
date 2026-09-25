@@ -67,7 +67,7 @@ void main() {
             expect(body['hospitalId'], 'hosp-1');
             expect(body['urgency'], 'URGENT');
             expect(body['contactName'], 'Sophea');
-            expect(body['contactPhone'], '012345678');
+            expect(body['contactPhone'], '+85512345678');
         });
 
         test('a 201 parses alertedCount, the number the waiting screen shows', () async {

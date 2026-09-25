@@ -395,6 +395,10 @@
     "@requestContactPhoneLabel": {
         "description": "Contact phone field on the request form — revealed only after a donor accepts"
     },
+    "requestContactPhoneInvalid": "Enter a Cambodian mobile number, e.g. 012 345 678",
+    "@requestContactPhoneInvalid": {
+        "description": "Error under the request form's phone field when the number does not match a TRC mobile prefix and length"
+    },
     "requestConfirmTitle": "Confirm request",
     "@requestConfirmTitle": {
         "description": "Title of the confirmation dialog before sending"

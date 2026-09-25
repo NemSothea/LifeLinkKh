@@ -164,7 +164,8 @@ class RequestFlowIntegrationTest {
                                                 .content("{\"response\":\"ACCEPTED\"}"))
                                 .andReturn());
 
-        assertThat(accepted.get("requesterContact").get("phone").asText()).isEqualTo("012345678");
+        assertThat(accepted.get("requesterContact").get("phone").asText())
+                .isEqualTo("+85512345678"); // stored normalized, sent as 012345678
         assertThat(accepted.get("requesterContact").get("displayName").asText()).isEqualTo("Sokha");
         // Unverified in this build, and the client is required to say so (ADR 0002).
         assertThat(accepted.get("requesterContact").get("phoneVerified").asBoolean()).isFalse();
@@ -197,6 +198,31 @@ class RequestFlowIntegrationTest {
         assertThat(mine.get(0).get("acceptedCount").asInt()).isEqualTo(1);
         // Accepting does not close the request — that is the creator's call (ADR 0008 decision 2).
         assertThat(mine.get(0).get("status").asText()).isEqualTo("OPEN");
+    }
+
+    /** A callback number that is not a Cambodian mobile is refused, and nothing is written. */
+    @Test
+    void aNonCambodianCallbackNumberIsRefused() throws Exception {
+        Integer before = jdbc.queryForObject("SELECT count(*) FROM blood_requests", Integer.class);
+
+        MvcResult refused =
+                mvc.perform(
+                                post("/requests")
+                                        .header("Authorization", bearer(requesterId, "REQUESTER"))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                """
+                                                {"patientBloodType":"A+","unitsNeeded":1,
+                                                 "hospitalId":"%s","urgency":"CRITICAL",
+                                                 "contactName":"Sokha","contactPhone":"023 123 456"}
+                                                """
+                                                        .formatted(calmetteId)))
+                        .andReturn();
+
+        assertThat(refused.getResponse().getStatus()).isEqualTo(422);
+        assertThat(refused.getResponse().getContentAsString()).contains("INVALID_PHONE");
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM blood_requests", Integer.class))
+                .isEqualTo(before);
     }
 
     /**

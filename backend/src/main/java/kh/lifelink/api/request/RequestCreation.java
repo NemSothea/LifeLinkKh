@@ -64,6 +64,13 @@ class RequestCreation {
         if (!URGENCIES.contains(body.urgency())) {
             throw ApiException.unprocessable("UNKNOWN_URGENCY", "That urgency is not valid.");
         }
+        String contactPhone =
+                CambodianPhone.normalize(body.contactPhone())
+                        .orElseThrow(
+                                () ->
+                                        ApiException.unprocessable(
+                                                "INVALID_PHONE",
+                                                "That is not a Cambodian mobile number."));
 
         Hospital hospital =
                 hospitals
@@ -83,7 +90,7 @@ class RequestCreation {
         request.setUrgency(body.urgency());
         request.setStatus("OPEN");
         request.setContactName(body.contactName());
-        request.setContactPhone(body.contactPhone());
+        request.setContactPhone(contactPhone);
         BloodRequest saved = requests.save(request);
 
         List<MatchingService.Candidate> candidates =
