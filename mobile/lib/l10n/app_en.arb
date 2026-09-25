@@ -754,6 +754,14 @@
     "@donorAcceptedNoticeAction": {
         "description": "Snackbar action that opens the accepted request"
     },
+    "requestAlertNotice": "Urgent blood request near you — you are a match.",
+    "@requestAlertNotice": {
+        "description": "In-app notice when an FR-NOTIFY-001 request alert arrives while the donor has the app open. Android shows no system notification for a foreground app."
+    },
+    "requestAlertNoticeAction": "View",
+    "@requestAlertNoticeAction": {
+        "description": "Snackbar action that opens the matched request alert"
+    },
     "offlineBanner": "No internet connection. Lists will not update until you are back online.",
     "@offlineBanner": {
         "description": "Strip across the top of every screen while the phone has no network"

@@ -24,6 +24,8 @@ import 'package:lifelink_kh/src/features/request/domain/blood_request.dart';
 import 'package:lifelink_kh/src/features/request/domain/blood_request_draft.dart';
 import 'package:lifelink_kh/src/features/request/domain/hospital.dart';
 import 'package:lifelink_kh/src/features/request/domain/request_repository.dart';
+import 'package:lifelink_kh/src/features/request/presentation/request_detail_screen.dart';
+import 'package:lifelink_kh/src/router/app_router.dart';
 
 import 'support/auth_fakes.dart';
 
@@ -67,7 +69,8 @@ final class _CountingRequestRepository implements RequestRepository {
     Future<Result<BloodRequest>> create(RequestDraft draft) => throw UnimplementedError();
 
     @override
-    Future<Result<BloodRequest>> fetchDetail(String requestId) => throw UnimplementedError();
+    Future<Result<BloodRequest>> fetchDetail(String requestId) =>
+        Completer<Result<BloodRequest>>().future;
 
     @override
     Future<Result<BloodRequest>> cancel(String requestId) => throw UnimplementedError();
@@ -153,5 +156,57 @@ void main() {
 
         expect(matches.fetches, greaterThan(matchesBefore));
         expect(find.text('A donor accepted your request.'), findsNothing);
+    });
+
+    testWidgets('a donor alert that lands while the app is open says so', (tester) async {
+        await pumpApp(tester);
+
+        pushes.add(
+            PushArrival(PushArrival.requestAlert, requestId: 'req-2', foreground: true),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        expect(
+            find.text('Urgent blood request near you — you are a match.'),
+            findsOneWidget,
+        );
+        expect(find.text('View'), findsOneWidget);
+    });
+
+    testWidgets('a donor alert tapped from the tray raises no second notice',
+        (tester) async {
+        await pumpApp(tester);
+
+        pushes.add(PushArrival(PushArrival.requestAlert, requestId: 'req-2'));
+        await tester.pump();
+        await tester.pump();
+
+        expect(
+            find.text('Urgent blood request near you — you are a match.'),
+            findsNothing,
+        );
+    });
+
+    testWidgets('"View" on the request already on screen does not stack a second copy',
+        (tester) async {
+        await pumpApp(tester);
+        final router = ProviderScope.containerOf(tester.element(find.byType(LifeLinkApp)))
+            .read(appRouterProvider);
+        unawaited(router.push(RequestDetailScreen.routeFor('req-1')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        pushes.add(PushArrival(PushArrival.donorAccepted, requestId: 'req-1'));
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+        await tester.tap(find.text('View'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(
+            find.byType(RequestDetailScreen, skipOffstage: false),
+            findsOneWidget,
+        );
     });
 }

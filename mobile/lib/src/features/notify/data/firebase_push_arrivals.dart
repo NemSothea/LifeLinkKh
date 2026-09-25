@@ -13,15 +13,19 @@ Stream<PushArrival> firebasePushArrivals() {
     final subscriptions = <StreamSubscription<RemoteMessage>>[];
     controller
         ..onListen = () {
-            void forward(RemoteMessage message) => controller.add(
-                PushArrival(
-                    message.data['type'] as String? ?? '',
-                    requestId: message.data['requestId'] as String?,
-                ),
-            );
+            void Function(RemoteMessage) forward({required bool foreground}) =>
+                (message) => controller.add(
+                    PushArrival(
+                        message.data['type'] as String? ?? '',
+                        requestId: message.data['requestId'] as String?,
+                        foreground: foreground,
+                    ),
+                );
             subscriptions
-                ..add(FirebaseMessaging.onMessage.listen(forward))
-                ..add(FirebaseMessaging.onMessageOpenedApp.listen(forward));
+                ..add(FirebaseMessaging.onMessage.listen(forward(foreground: true)))
+                ..add(
+                    FirebaseMessaging.onMessageOpenedApp.listen(forward(foreground: false)),
+                );
         }
         ..onCancel = () async {
             for (final subscription in subscriptions) {

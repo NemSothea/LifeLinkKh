@@ -15,6 +15,7 @@ import 'features/match/application/match_providers.dart';
 import 'features/notify/application/push_providers.dart';
 import 'features/notify/domain/push_arrival.dart';
 import 'features/request/application/request_providers.dart';
+import 'features/match/presentation/match_detail_screen.dart';
 import 'features/request/presentation/request_detail_screen.dart';
 import 'router/app_router.dart';
 import '../l10n/app_localizations.dart';
@@ -53,7 +54,8 @@ class LifeLinkApp extends ConsumerWidget {
         // requester has a new acceptance. Refetch rather than wait for a pull-to-refresh
         // nobody knows to do. Android also shows no system notification for a foreground
         // app, so an acceptance gets its own in-app notice — the family must not miss it
-        // because they happened to be looking at the screen.
+        // because they happened to be looking at the screen. A donor alert gets one too,
+        // but only in the foreground: tapped from the tray, the donor has already seen it.
         ref.listen<AsyncValue<PushArrival>>(pushArrivalsProvider, (_, next) {
             final arrival = next.valueOrNull;
             if (arrival == null) return;
@@ -63,6 +65,9 @@ class LifeLinkApp extends ConsumerWidget {
                 ..invalidate(myRequestsControllerProvider)
                 ..invalidate(requestDetailProvider);
             if (arrival.type == PushArrival.donorAccepted) _showAcceptedNotice(ref, arrival);
+            if (arrival.type == PushArrival.requestAlert && arrival.foreground) {
+                _showRequestAlertNotice(ref, arrival);
+            }
         });
 
         // Back online after a spell without a network. Every list that failed while
@@ -133,11 +138,48 @@ class LifeLinkApp extends ConsumerWidget {
                     ? null
                     : SnackBarAction(
                         label: l10n.donorAcceptedNoticeAction,
-                        onPressed: () => ref
-                            .read(appRouterProvider)
-                            .push(RequestDetailScreen.routeFor(requestId)),
+                        onPressed: () =>
+                            _openUnlessShowing(ref, RequestDetailScreen.routeFor(requestId)),
                     ),
             ),
         );
+    }
+
+    static void _showRequestAlertNotice(WidgetRef ref, PushArrival arrival) {
+        final messenger = _messenger.currentState;
+        if (messenger == null) return;
+        final l10n = AppLocalizations.of(messenger.context)!;
+        final requestId = arrival.requestId;
+        messenger.showSnackBar(
+            SnackBar(
+                content: Text(l10n.requestAlertNotice),
+                // The payload names the request, the screen wants the match: look it up in
+                // the inbox the listener above has just refetched.
+                action: requestId == null
+                    ? null
+                    : SnackBarAction(
+                        label: l10n.requestAlertNoticeAction,
+                        onPressed: () async {
+                            final matches =
+                                await ref.read(myMatchesControllerProvider.future);
+                            final match = matches
+                                .where((m) => m.request.id == requestId)
+                                .firstOrNull;
+                            if (match == null) return;
+                            _openUnlessShowing(ref, MatchDetailScreen.routeFor(match.matchId));
+                        },
+                    ),
+            ),
+        );
+    }
+
+    /// The notice's "View" can be tapped while that very screen is already on top — the
+    /// family is usually watching their request when the acceptance lands, and the
+    /// listener above has just refetched it. Pushing again stacks a second copy of the
+    /// same screen, and back then appears to do nothing.
+    static void _openUnlessShowing(WidgetRef ref, String location) {
+        final router = ref.read(appRouterProvider);
+        if (router.state.uri.path == location) return;
+        router.push(location);
     }
 }
