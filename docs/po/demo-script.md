@@ -87,8 +87,14 @@ reasoning.)
 > This is the moment the Facebook-post version of this process can't do: instant, targeted, not
 > dependent on who happens to be scrolling."
 
-**Step 4 — donor accepts.**
-> "One tap. The requester and the hospital can now both see this donor is coming."
+**Step 4 — donor accepts, and the push goes the other way.**
+> "One tap. Now watch Account B — the family's phone. 'A donor accepted your request.' Push runs
+> in both directions: the donor was told someone needs blood, the family is told someone answered.
+> Notice what the family does *not* see — the donor's name. They see that one donor is coming; the
+> hospital sees who, because the hospital is who confirms the donation."
+
+Added 2026-09-25 (`FR-NOTIFY-003`). Account B must be on a device that receives FCM — a phone or
+an Android emulator. On the iOS Simulator this beat silently does nothing.
 
 **Step 4b — the same need, seen from outside.**
 > "Look at the bottom of this donor's home screen — every open request nearby, not only the ones

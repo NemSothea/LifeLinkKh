@@ -54,7 +54,9 @@ in front of an audience is how that happens.
 1. **Account A** — Google Sign-In, register as donor with the values above.
 2. **Account B** — Google Sign-In, create an urgent request with the values above.
 3. Matching + push fires. Account A gets a push notification within seconds (FCM). Open it.
-4. Account A **accepts**.
+4. Account A **accepts**. Account B gets "A donor accepted your request" within seconds
+   (`FR-NOTIFY-003`) — a system notification if the app is in the background, an in-app notice
+   if it is open. Account B's request now counts one acceptance.
 5. Switch to the **web portal** (`http://localhost:3000/km` — Khmer by default, English via
    the language switcher top-right). Sign in as staff (section 4), open the request row —
    Account A is listed as an accepted donor. Click **confirm donation**.
