@@ -21,7 +21,7 @@ demo, take the cut line at the bottom — do not talk faster.
 | 15:30 | 10 · Live Walkthrough | 0:30 | One sentence, then switch devices |
 | **16:00** | **— LIVE DEMO —** | **5:00** | See the cut below. Rehearse this to 4:30, not 5:00 |
 | 21:00 | 11 · Milestones | 2:00 | M1–M6 done, M7 sequenced after the demo (DEC-012) |
-| 23:00 | 12 · Where We Are Today | 2:30 | 196 backend tests, 189 mobile, verified live not just green |
+| 23:00 | 12 · Where We Are Today | 2:30 | 201 backend tests, 201 mobile, verified live not just green |
 | 25:30 | 13 · Success Metrics | 2:00 | Targets, not results. Offer to run `metrics.sql` live |
 | 27:30 | 14 · Risks | 2:30 | Say the two security items before anyone asks |
 | 30:00 | 15 · Team + Open Question | 1:30 | Ask the question, then stop talking |
@@ -29,7 +29,9 @@ demo, take the cut line at the bottom — do not talk faster.
 
 ## The 5-minute demo
 
-Five minutes does not fit the six-step golden path. **Pre-stage the donor**: registered, signed
+Five minutes does not fit the six-step golden path. **The requester must be on an FCM device** — a
+phone or an Android emulator, never the iOS Simulator — or the 1:15 beat silently does nothing.
+**Pre-stage the donor**: registered, signed
 in, notification permission granted, sitting on the Home tab before the room walks in. Registration
 is slides 8–9's job — the screenshots already show the intro and the profile, which is why they
 come immediately before the demo.
@@ -38,7 +40,7 @@ come immediately before the demo.
 |---|---|---|
 | 0:00 | Requester posts the request | "Different person, same app. Blood type, urgency, hospital. One screen, because someone doing this is frightened, not calm" |
 | 0:45 | **The push lands on the donor's phone** | Stop talking. Let the room watch the lock screen. This is the entire pitch |
-| 1:15 | Donor opens it, accepts | "One tap. The requester and the hospital both see this donor is coming" |
+| 1:15 | Donor opens it, accepts — **the requester's phone gets the push back** | "One tap. Now the family's phone: 'a donor accepted your request.' Push goes both ways. They see that someone is coming; the hospital sees who" |
 | 2:00 | Portal, signed in as `calmette` | "The hospital desk, in a browser. They see the accepted donor" |
 | 3:00 | Confirm donation | "That click starts the 56-day cooldown. The system doesn't trust a self-report, it trusts the hospital" |
 | 3:45 | Back to the phone — history | "History updates, eligibility flips to a countdown. That's the loop closing" |

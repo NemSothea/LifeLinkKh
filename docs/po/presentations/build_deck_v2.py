@@ -479,10 +479,10 @@ def slide_07b_demo(prs):
     heading(s, "ការបង្ហាញផ្ទាល់", "Live Walkthrough", kicker="Demo")
     bullets(s, [
         "Two devices, one browser — donor, requester, hospital portal side by side",
-        "Donor registers — Google Sign-in, blood type, district, no password",
         "Requester creates an urgent request — blood type, urgency, hospital",
         "Push notification fires — instant, targeted, not a Facebook scroll",
-        "Donor accepts; hospital confirms on the portal — cooldown starts",
+        "Donor accepts — and the family's phone is told a donor is coming",
+        "Hospital confirms on the portal — the 56-day cooldown starts",
         "Full script: docs/po/demo-script.md — narration for every step",
     ])
     footer(s, FOOT)
@@ -493,7 +493,8 @@ This is the hand-off slide, not the demo itself. Say one sentence and switch dev
 Five minutes, and it does not fit the six-step golden path, so the donor is PRE-STAGED:
 registered, signed in, permission granted, sitting on Home before the room walks in. The two
 screenshot slides you just showed are what registration looks like — that is why they come
-immediately before this one. The demo then runs post → push → accept → confirm → history, with
+immediately before this one. The demo then runs post → push → accept → push back → confirm →
+history, with
 the beats and the wording in run-of-show.md. Rehearse it to 4:30; the spare 30 seconds is where
 a slow emulator goes.
 
@@ -625,25 +626,28 @@ def slide_09_status(prs):
     heading(s, "ស្ថានភាពបច្ចុប្បន្ន", "Where We Are Today", kicker="When")
     bullets(s, [
         "M1 through M6 complete — verified live on device, not just tests",
-        "Backend: 196 tests green against real PostgreSQL via Testcontainers",
-        "Mobile: 189 tests green — iOS and Android both build today",
-        "Since M7: public request board, portal staff accounts, mobile language switch",
+        "Backend: 201 tests green against real PostgreSQL via Testcontainers",
+        "Mobile: 201 tests green — iOS and Android both build today",
+        "Since M7: two-way push, public board, portal staff accounts, language switch",
         "Demo runs on one local machine — store release sequenced after it",
     ])
     footer(s, FOOT)
     notes(s, """
 Test counts are re-run before every rebuild of this deck, not copied forward — this slide has
-said 138 and then 184 on the way to today's 196, each one true when it was written. Both
-numbers come from a full unpiped run on 2026-09-23: `./mvnw test` with Docker up (196 passed,
-0 skipped — the Testcontainers integration tests silently skip when Docker is down, so "0
-skipped" is the number that matters, not "BUILD SUCCESS") and `flutter test` (189 passed).
+said 138, 184 and 196 on the way to today's 201, each one true when it was written. Both
+numbers come from full runs on 2026-09-25: `./mvnw verify` with Docker up (201 passed, 0
+skipped — the Testcontainers integration tests silently skip when Docker is down, so "0
+skipped" is the number that matters, not "BUILD SUCCESS") and `flutter test` (201 passed).
+That the two are equal is a coincidence, not a typo.
 
 "Verified live" is a deliberate phrase, not filler: a green suite has been insufficient
 before on this project — a schema mismatch once shipped behind a green build because the
 integration test that would have caught it skipped without Docker. Every milestone since is
 checked on an actual device or browser.
 
-The fourth bullet is work that grew AFTER the graded milestones, in September: the public
+The fourth bullet is work that grew AFTER the graded milestones, in September. Newest first:
+two-way push (FR-NOTIFY-003, 2026-09-25) — the family who posted is now told when a donor
+accepts; until then push went to donors only and the requester waited in silence. Then the public
 request board (DEC-009), portal staff sign-in and the staff lifecycle replacing a
 hand-pasted PORTAL_DEV_JWT (DEC-010), the mobile language switch, the intro carousel
 (DEC-011), and a push-language bug where every alert went out in Khmer regardless of the
