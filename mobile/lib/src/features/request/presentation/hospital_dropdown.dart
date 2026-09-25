@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/error/failure.dart';
 import '../../../core/widgets/searchable_picker.dart';
 import '../application/request_providers.dart';
 import '../domain/hospital.dart';
@@ -25,16 +26,22 @@ class HospitalDropdown extends ConsumerWidget {
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: LinearProgressIndicator(key: Key('hospitals-loading')),
             ),
-            error: (_, _) => Row(
+            error: (error, _) => Row(
                 key: const Key('hospitals-failed'),
                 children: [
                     Icon(
-                        Icons.error_outline,
+                        error is NetworkFailure ? Icons.wifi_off : Icons.error_outline,
                         color: Theme.of(context).colorScheme.error,
                         size: 20,
                     ),
                     const SizedBox(width: 8),
-                    Flexible(child: Text(l10n.requestHospitalsFailed)),
+                    Flexible(
+                        child: Text(
+                            error is NetworkFailure
+                                ? l10n.sectionFailedNetwork
+                                : l10n.requestHospitalsFailed,
+                        ),
+                    ),
                     TextButton(
                         onPressed: () => ref.invalidate(hospitalsProvider),
                         child: Text(l10n.retry),

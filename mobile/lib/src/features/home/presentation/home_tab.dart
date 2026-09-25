@@ -129,9 +129,10 @@ class HomeTab extends ConsumerWidget {
                                     // defensive fallback if the two calls ever disagree.
                                     AsyncValue(hasError: true, error: NotFoundFailure()) =>
                                         const SizedBox.shrink(),
-                                    AsyncValue(hasError: true) => RetryableFailure(
+                                    AsyncValue(hasError: true, :final error) => RetryableFailure(
                                         key: const Key('donor-home-matches-failed'),
                                         message: l10n.inboxFailed,
+                                        error: error,
                                         onRetry: () =>
                                             ref.invalidate(myMatchesControllerProvider),
                                     ),
@@ -177,6 +178,7 @@ class HomeTab extends ConsumerWidget {
                 RetryableFailure(
                     key: const Key('home-my-requests-failed'),
                     message: l10n.myRequestsFailed,
+                    error: requests.error,
                     onRetry: () => ref.invalidate(myRequestsControllerProvider),
                 ),
             ];
@@ -494,9 +496,10 @@ class _BoardSection extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 switch (board) {
-                    AsyncValue(hasError: true) => RetryableFailure(
+                    AsyncValue(hasError: true, :final error) => RetryableFailure(
                         key: const Key('donor-home-board-failed'),
                         message: l10n.homeBoardFailed,
+                        error: error,
                         onRetry: () => ref.invalidate(publicBoardControllerProvider),
                     ),
                     AsyncValue(hasValue: true, value: final list) => _boardList(

@@ -753,5 +753,13 @@
     "donorAcceptedNoticeAction": "View",
     "@donorAcceptedNoticeAction": {
         "description": "Snackbar action that opens the accepted request"
+    },
+    "offlineBanner": "No internet connection. Lists will not update until you are back online.",
+    "@offlineBanner": {
+        "description": "Strip across the top of every screen while the phone has no network"
+    },
+    "sectionFailedNetwork": "No internet connection. Check your network and try again.",
+    "@sectionFailedNetwork": {
+        "description": "Replaces a section's own 'could not load' message when the cause was NetworkFailure"
     }
 }

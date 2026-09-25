@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/time/relative_time.dart';
 import '../application/request_providers.dart';
@@ -83,9 +84,11 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                     loading: () => const Center(
                         child: CircularProgressIndicator(key: Key('request-detail-loading')),
                     ),
-                    error: (_, _) => Center(
+                    error: (error, _) => Center(
                         child: Text(
-                            l10n.requestDetailFailed,
+                            error is NetworkFailure
+                                ? l10n.sectionFailedNetwork
+                                : l10n.requestDetailFailed,
                             key: const Key('request-detail-failed'),
                         ),
                     ),

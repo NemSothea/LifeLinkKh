@@ -5,9 +5,12 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/network/connectivity_providers.dart';
 import 'core/settings/locale_controller.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/offline_banner.dart';
 import 'features/auth/application/auth_providers.dart';
+import 'features/donation/application/donation_providers.dart';
 import 'features/match/application/match_providers.dart';
 import 'features/notify/application/push_providers.dart';
 import 'features/notify/domain/push_arrival.dart';
@@ -62,6 +65,19 @@ class LifeLinkApp extends ConsumerWidget {
             if (arrival.type == PushArrival.donorAccepted) _showAcceptedNotice(ref, arrival);
         });
 
+        // Back online after a spell without a network. Every list that failed while
+        // offline is still showing its "no connection" card; refetch them rather than
+        // leave the donor to find the retry button on each one.
+        ref.listen<AsyncValue<bool>>(isOfflineProvider, (previous, next) {
+            if (previous?.valueOrNull != true || next.valueOrNull != false) return;
+            if (ref.read(authControllerProvider).valueOrNull == null) return;
+            ref
+                ..invalidate(myMatchesControllerProvider)
+                ..invalidate(myRequestsControllerProvider)
+                ..invalidate(publicBoardControllerProvider)
+                ..invalidate(myDonationsControllerProvider);
+        });
+
         // Drops the native launch screen (held in `main`) the moment the router knows
         // where this launch is going — the same "still reading the keystore" test the
         // redirect in `app_router.dart` uses. A `select` on that one bool, so this widget
@@ -78,6 +94,8 @@ class LifeLinkApp extends ConsumerWidget {
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
             routerConfig: ref.watch(appRouterProvider),
+            builder: (context, child) =>
+                OfflineBanner(child: child ?? const SizedBox.shrink()),
             localizationsDelegates: const [
                 AppLocalizations.delegate,
                 GlobalMaterialLocalizations.delegate,

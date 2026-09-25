@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/error/failure.dart';
 import '../../../core/widgets/searchable_picker.dart';
 import '../application/donor_providers.dart';
 import '../domain/district.dart';
@@ -33,16 +34,22 @@ class DistrictDropdown extends ConsumerWidget {
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: LinearProgressIndicator(key: Key('districts-loading')),
             ),
-            error: (_, _) => Row(
+            error: (error, _) => Row(
                 key: const Key('districts-failed'),
                 children: [
                     Icon(
-                        Icons.error_outline,
+                        error is NetworkFailure ? Icons.wifi_off : Icons.error_outline,
                         color: Theme.of(context).colorScheme.error,
                         size: 20,
                     ),
                     const SizedBox(width: 8),
-                    Flexible(child: Text(l10n.donorDistrictsFailed)),
+                    Flexible(
+                        child: Text(
+                            error is NetworkFailure
+                                ? l10n.sectionFailedNetwork
+                                : l10n.donorDistrictsFailed,
+                        ),
+                    ),
                     TextButton(
                         onPressed: () => ref.invalidate(districtsProvider),
                         child: Text(l10n.retry),

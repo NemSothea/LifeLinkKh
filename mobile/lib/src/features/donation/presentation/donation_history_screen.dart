@@ -44,7 +44,7 @@ class DonationHistoryScreen extends ConsumerWidget {
                         // in the exact state where pulling to retry is the obvious move.
                         // `AlwaysScrollableScrollPhysics` keeps the gesture alive even
                         // when the content is shorter than the viewport.
-                        AsyncValue(hasError: true) => ListView(
+                        AsyncValue(hasError: true, :final error) => ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.all(24),
                             children: [
@@ -52,6 +52,7 @@ class DonationHistoryScreen extends ConsumerWidget {
                                 RetryableFailure(
                                     key: const Key('donation-history-failed'),
                                     message: l10n.donationHistoryFailed,
+                                    error: error,
                                     onRetry: () =>
                                         ref.invalidate(myDonationsControllerProvider),
                                 ),

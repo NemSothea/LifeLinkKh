@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/error/failure.dart';
 import '../../donation/presentation/donation_history_screen.dart';
 import '../application/donor_providers.dart';
 import '../domain/donor_profile.dart';
@@ -47,7 +48,7 @@ class DonorProfileScreen extends ConsumerWidget {
                     AsyncValue(hasValue: true, value: final DonorProfile loaded) =>
                         _loaded(context, ref, loaded),
                     AsyncValue(hasValue: true) => _noProfileYet(context),
-                    AsyncError() => _failed(context, ref),
+                    AsyncError(:final error) => _failed(context, ref, error),
                     _ => const Center(
                         child: CircularProgressIndicator(key: Key('donor-profile-loading')),
                     ),
@@ -142,7 +143,8 @@ class DonorProfileScreen extends ConsumerWidget {
         );
     }
 
-    Widget _failed(BuildContext context, WidgetRef ref) {
+    Widget _failed(BuildContext context, WidgetRef ref, Object error) {
+        final offline = error is NetworkFailure;
         final l10n = AppLocalizations.of(context)!;
 
         return Center(
@@ -152,13 +154,13 @@ class DonorProfileScreen extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                         Icon(
-                            Icons.cloud_off,
+                            offline ? Icons.wifi_off : Icons.cloud_off,
                             size: 48,
                             color: Theme.of(context).colorScheme.error,
                         ),
                         const SizedBox(height: 16),
                         Text(
-                            l10n.donorProfileFailed,
+                            offline ? l10n.sectionFailedNetwork : l10n.donorProfileFailed,
                             key: const Key('donor-profile-failed'),
                             textAlign: TextAlign.center,
                         ),
