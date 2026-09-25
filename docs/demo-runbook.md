@@ -367,8 +367,10 @@ like a backend that is down.
 returns null there — `FirebasePushTokenSource.currentToken()` catches it and sign-in still works,
 which is why nothing looks wrong. That account simply registers no token and never receives the
 alert; `scripts/preflight-match.sql` reports it as `matched, but SILENT`. A donor on iOS needs a
-physical device. The requester can sit on the simulator quite happily — posting a request needs no
-push. The Android AVD must be a **Google Play** image (`tag.id=google_apis_playstore`); a plain
+physical device. ~~The requester can sit on the simulator quite happily~~ — **no longer true since
+`FR-NOTIFY-003` (2026-09-25):** the requester now gets a push when a donor accepts, and on the
+simulator that push silently never arrives. Put the requester on a physical phone or a second
+Android emulator if the acceptance alert is part of the demo. The Android AVD must be a **Google Play** image (`tag.id=google_apis_playstore`); a plain
 AOSP image has neither Play services nor FCM.
 
 Use **two accounts** — the roles diverge at the shell, so one account cannot show both tab
@@ -386,6 +388,25 @@ Worth exercising deliberately, because none of it is on the golden path:
 - **Offline behaviour.** Stop the backend (`docker compose stop backend`) and pull to
   refresh each list. Every one should offer a retry that works once the backend is back —
   not a bare error string.
+
+### An emulator restored from a snapshot can hold a dead FCM connection
+
+Found on 2026-09-25. The backend logged `Acceptance push … sent (projects/lifelinkkh/messages/…)`
+— FCM had accepted the message — and nothing reached the emulator, foreground or background.
+Play services still reported `connected=mtalk.google.com` but `Seen good heartbeat in last
+connection? false`: the socket restored from yesterday's snapshot was dead and nothing had noticed.
+The queued messages arrived the moment the network was cycled:
+
+```bash
+adb shell cmd connectivity airplane-mode enable; sleep 3
+adb shell cmd connectivity airplane-mode disable
+# then confirm delivery, not just the send:
+adb shell dumpsys activity service com.google.android.gms/.gcm.GcmService | grep kosign
+```
+
+Do this once after booting the AVD, before the first push of a rehearsal. A `sent (…)` line in the
+backend log proves FCM took the message, not that the device got it — the `grep kosign` line with
+today's timestamp is the proof.
 
 ### 8.6 Checking a role boundary directly
 
