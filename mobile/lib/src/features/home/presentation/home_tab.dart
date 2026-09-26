@@ -17,6 +17,7 @@ import '../../match/domain/match_response_type.dart';
 import '../../match/presentation/match_detail_screen.dart';
 import '../../request/application/request_providers.dart';
 import '../../request/domain/blood_request.dart';
+import '../../request/domain/request_status.dart';
 import '../../request/domain/urgency.dart';
 import '../../request/presentation/request_detail_screen.dart';
 import '../../request/presentation/request_form_screen.dart';
@@ -647,10 +648,21 @@ class _RequestTile extends StatelessWidget {
                         children: [
                             UrgencyBadge(urgency: request.urgency),
                             const SizedBox(height: 4),
+                            // "0 alerted · 0 accepted" on a request still under admin
+                            // review (DEC-015) reads as failure; say where it stands.
                             Text(
-                                '${l10n.requestAlertedCount(request.alertedCount)} · '
-                                '${l10n.requestAcceptedCount(request.acceptedCount)}',
-                                style: Theme.of(context).textTheme.bodySmall,
+                                switch (request.status) {
+                                    RequestStatus.pending => l10n.requestPendingShort,
+                                    RequestStatus.rejected => l10n.requestStatusRejected,
+                                    _ => '${l10n.requestAlertedCount(request.alertedCount)} · '
+                                        '${l10n.requestAcceptedCount(request.acceptedCount)}',
+                                },
+                                key: Key('home-request-${request.id}-summary'),
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: request.status == RequestStatus.rejected
+                                        ? scheme.error
+                                        : null,
+                                ),
                             ),
                             // "12 alerted · 0 accepted" only means something next to how
                             // long that has been true. Three minutes is patience; forty

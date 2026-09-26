@@ -1,8 +1,6 @@
 // ignore_for_file: prefer_initializing_formals — the fields are private and Dart
 // forbids a named parameter that starts with an underscore, so the lint's fix does not
 // compile here.
-import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/error/failure.dart';
@@ -20,21 +18,18 @@ import '../domain/urgency.dart';
 /// `requests`, `requests/{id}/private/contact` and `hospitals` on Firestore (ADR 0009) —
 /// what `/requests`, `/public/requests` and `/hospitals` were.
 ///
-/// Posting writes the request and its contact in one batch; the `onRequestCreated`
-/// Function then matches donors, pushes them and stamps `alertedCount`. [create] waits a
-/// few seconds for that stamp so the detail screen it opens says how many were alerted,
-/// the way the synchronous `POST /requests` did.
+/// Posting writes the request (as `PENDING`, DEC-015) and its contact in one batch. No
+/// donor is matched until an admin approves it; only then does the Function match donors,
+/// push them and stamp `alertedCount`. [create] therefore returns at once — it used to
+/// wait for that stamp, but after DEC-015 the stamp can be hours away.
 final class FirestoreRequestRepository implements RequestRepository {
     FirestoreRequestRepository(
         this._db, {
         required String? Function() currentUid,
-        Duration matchWait = const Duration(seconds: 8),
-    })  : _currentUid = currentUid,
-          _matchWait = matchWait;
+    }) : _currentUid = currentUid;
 
     final FirebaseFirestore _db;
     final String? Function() _currentUid;
-    final Duration _matchWait;
 
     /// The hospital list, read once — five documents that change when a migration would
     /// have. Every request row is joined against it rather than re-reading a hospital each.
@@ -73,7 +68,9 @@ final class FirestoreRequestRepository implements RequestRepository {
                     'patientBloodType': bloodType.wireValue,
                     'unitsNeeded': draft.unitsNeeded,
                     'urgency': draft.urgency.wireValue,
-                    'status': RequestStatus.open.wireValue,
+                    // The rules refuse anything else on create: an admin reviews every
+                    // request before a donor is alerted (DEC-015).
+                    'status': RequestStatus.pending.wireValue,
                     'alertedCount': 0,
                     'acceptedCount': 0,
                     'createdAt': FieldValue.serverTimestamp(),
@@ -85,8 +82,6 @@ final class FirestoreRequestRepository implements RequestRepository {
                     'contactPhone': phone,
                 });
             await batch.commit();
-
-            await _awaitMatching(ref);
             return fetchDetail(ref.id);
         } on FirebaseException catch (error) {
             return Failed(failureFromFirebase(error));
@@ -126,8 +121,8 @@ final class FirestoreRequestRepository implements RequestRepository {
     @override
     Future<Result<BloodRequest>> cancel(String requestId) async {
         try {
-            // The rules allow exactly this change, by the creator, on an OPEN request; a
-            // closed one comes back permission-denied, which is the old 409.
+            // The rules allow exactly this change, by the creator, on a PENDING or OPEN
+            // request; a closed or rejected one comes back permission-denied, the old 409.
             await _requests.doc(requestId).update({
                 'status': RequestStatus.cancelled.wireValue,
                 'updatedAt': FieldValue.serverTimestamp(),
@@ -150,19 +145,6 @@ final class FirestoreRequestRepository implements RequestRepository {
             return Failed(failureFromFirebase(error));
         } on FormatException catch (error) {
             return Failed(UnknownFailure(message: error.message));
-        }
-    }
-
-    /// Waits until `onRequestCreated` has stamped `matchedAt`, or [_matchWait] passes.
-    /// A timeout is not an error: the request is posted and the Function will still run —
-    /// the detail screen simply opens before it has said how many donors it alerted.
-    Future<void> _awaitMatching(DocumentReference<Map<String, dynamic>> ref) async {
-        try {
-            await ref.snapshots().firstWhere((s) => s.data()?['matchedAt'] != null).timeout(_matchWait);
-        } on TimeoutException {
-            // Fall through with alertedCount still 0.
-        } on StateError {
-            // The stream closed without the stamp; same as a timeout.
         }
     }
 
@@ -233,6 +215,7 @@ final class FirestoreRequestRepository implements RequestRepository {
             // A just-written serverTimestamp reads back null until the server confirms it.
             createdAt: createdAt is Timestamp ? createdAt.toDate() : DateTime.now(),
             distanceKm: distanceKm,
+            rejectReason: data['rejectReason'] as String?,
         );
     }
 }

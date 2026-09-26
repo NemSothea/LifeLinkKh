@@ -7,7 +7,13 @@ import RelativeTime from '@/components/RelativeTime';
 import { hasPortalSession, portalDisplayName, portalRole } from '@/lib/api/session';
 import SignOutButton from '@/components/SignOutButton';
 import { listPublicRequests } from '@/lib/api/board';
-import { listFulfilledRequests, listOpenRequests, type PortalRequest } from '@/lib/api/portal';
+import {
+    listFulfilledRequests,
+    listOpenRequests,
+    listPendingRequests,
+    type PendingRequest,
+    type PortalRequest,
+} from '@/lib/api/portal';
 import {
     IconAlertTriangle,
     IconCheck,
@@ -15,6 +21,7 @@ import {
     IconDroplet,
     IconInbox,
 } from '@/components/icons';
+import PendingReviewList from './pending-review-list';
 import RequestList, { type RequestViewModel } from './request-list';
 
 /**
@@ -36,10 +43,15 @@ export default async function PortalPage({
     searchParams,
 }: {
     params: Promise<{ locale: string }>;
-    searchParams: Promise<{ confirmError?: string; confirmed?: string }>;
+    searchParams: Promise<{
+        confirmError?: string;
+        confirmed?: string;
+        reviewed?: string;
+        reviewError?: string;
+    }>;
 }) {
     const { locale } = await params;
-    const { confirmError, confirmed } = await searchParams;
+    const { confirmError, confirmed, reviewed, reviewError } = await searchParams;
     const t = await getTranslations('portal');
     const isAdmin = await hasPortalSession();
     const [role, displayName] = isAdmin
@@ -54,10 +66,12 @@ export default async function PortalPage({
     // A signed-out visitor reads the public board instead. Same rows, same counts, minus
     // the write handle — and no "recently fulfilled" section, which is a record of staff
     // work rather than a call for help.
-    const [result, fulfilledResult] = isAdmin
-        ? await Promise.all([listOpenRequests(), listFulfilledRequests()])
-        : [await listPublicRequests(), { ok: false } as const];
+    // DEC-015: the review queue is the admin's first job, so it is read with the rest.
+    const [result, fulfilledResult, pendingResult] = isAdmin
+        ? await Promise.all([listOpenRequests(), listFulfilledRequests(), listPendingRequests()])
+        : [await listPublicRequests(), { ok: false } as const, { ok: false } as const];
     const fulfilled = fulfilledResult.ok ? fulfilledResult.data : [];
+    const pending: PendingRequest[] = pendingResult.ok ? pendingResult.data : [];
     // No cast: the two sources have genuinely different donor shapes, and `sortByUrgency`
     // only reads `urgency`. Casting the public rows to `PortalRequest` is what let a
     // missing `matchId` reach the DOM as `key={undefined}`.
@@ -144,6 +158,58 @@ export default async function PortalPage({
                     <IconAlertTriangle className="h-5 w-5 shrink-0" />
                     {t('confirmFailed')}
                 </p>
+            ) : null}
+
+            {reviewed ? (
+                <p
+                    data-testid="review-success"
+                    className="mb-6 flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                >
+                    <IconCheck className="h-5 w-5 shrink-0" />
+                    {reviewed === 'approved' ? t('reviewApproved') : t('reviewRejected')}
+                </p>
+            ) : null}
+
+            {reviewError ? (
+                <p
+                    data-testid="review-error"
+                    className="mb-6 flex items-center gap-2 rounded-xl border border-red-300 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-950/60 dark:text-red-400"
+                >
+                    <IconAlertTriangle className="h-5 w-5 shrink-0" />
+                    {reviewError === 'gone' ? t('reviewGone') : t('reviewFailed')}
+                </p>
+            ) : null}
+
+            {pending.length > 0 ? (
+                <PendingReviewList
+                    requests={pending}
+                    locale={locale}
+                    copy={{
+                        heading: t('pendingHeading'),
+                        hint: t('pendingHint'),
+                        contactLabel: t('pendingContactLabel'),
+                        approveCta: t('approveCta'),
+                        rejectCta: t('rejectCta'),
+                        approveDialogTitle: t('approveDialogTitle'),
+                        approveDialogBody: t('approveDialogBody'),
+                        approveDialogCta: t('approveDialogCta'),
+                        rejectDialogTitle: t('rejectDialogTitle'),
+                        rejectDialogBody: t('rejectDialogBody'),
+                        rejectReasonLabel: t('rejectReasonLabel'),
+                        rejectReasonPlaceholder: t('rejectReasonPlaceholder'),
+                        rejectDialogCta: t('rejectDialogCta'),
+                        cancelCta: t('cancelCta'),
+                        urgency: {
+                            CRITICAL: t('filterCritical'),
+                            URGENT: t('filterUrgent'),
+                            ROUTINE: t('filterRoutine'),
+                        },
+                        // Interpolated here: a Client Component cannot receive `t()` itself.
+                        unitsLabel: Object.fromEntries(
+                            pending.map((r) => [r.id, t('unitsNeeded', { count: r.unitsNeeded })]),
+                        ),
+                    }}
+                />
             ) : null}
 
             {!result.ok ? (

@@ -25,6 +25,7 @@ final class BloodRequest {
         this.hospitalDistrictEn,
         this.distanceKm,
         this.requesterContact,
+        this.rejectReason,
     });
 
     final String id;
@@ -52,6 +53,10 @@ final class BloodRequest {
     /// Null unless the caller is a donor whose own match is ACCEPTED.
     final RequesterContact? requesterContact;
 
+    /// The admin's words when a request is `REJECTED` (DEC-015), shown to the requester
+    /// as written so they know what to fix before posting again. Null in every other state.
+    final String? rejectReason;
+
     String? hospitalDistrictLabel(String languageCode) =>
         languageCode == 'en' ? hospitalDistrictEn : hospitalDistrictKm;
 
@@ -72,5 +77,6 @@ final class BloodRequest {
         createdAt: createdAt,
         distanceKm: distanceKm,
         requesterContact: contact,
+        rejectReason: rejectReason,
     );
 }

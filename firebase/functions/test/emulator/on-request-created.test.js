@@ -1,9 +1,10 @@
-// handleRequestCreated end to end on the Firestore emulator: the documents it reads, the
+// handleRequestCreated (intake) and handleRequestApproved (matching, DEC-015) end to end on the
+// Firestore emulator: the documents it reads, the
 // documents it writes, and what it would have pushed. FCM itself is a fake that records.
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { deleteApp, initializeApp } from 'firebase-admin/app';
 import { Timestamp, getFirestore } from 'firebase-admin/firestore';
-import { handleRequestCreated } from '../../src/on-request-created.js';
+import { handleRequestApproved, handleRequestCreated } from '../../src/on-request-created.js';
 
 process.env.FIRESTORE_EMULATOR_HOST ??= '127.0.0.1:8081';
 const PROJECT = 'demo-lifelink';
@@ -23,7 +24,9 @@ const messaging = {
   },
 };
 const NOW = new Date('2026-09-26T03:00:00Z');
-const handle = (requestId, now = NOW) => handleRequestCreated({ db, messaging, requestId, now, log: quiet });
+// Matching runs on approval now; `postRequest` writes an OPEN request, as the approval leaves it.
+const handle = (requestId, now = NOW) => handleRequestApproved({ db, messaging, requestId, now, log: quiet });
+const intake = (requestId, now = NOW) => handleRequestCreated({ db, requestId, now, log: quiet });
 
 async function clear() {
   await fetch(`http://${process.env.FIRESTORE_EMULATOR_HOST}/emulator/v1/projects/${PROJECT}/databases/(default)/documents`, { method: 'DELETE' });
@@ -66,7 +69,7 @@ beforeEach(async () => {
   });
 });
 
-describe('onRequestCreated', () => {
+describe('onRequestApproved — matching', () => {
   test('the golden path: a matching donor gets a match, a push, and notifiedAt', async () => {
     await donor('sothea', { token: 'token-1', language: 'en' });
     await postRequest('r1');
@@ -102,7 +105,8 @@ describe('onRequestCreated', () => {
     await donor('requester', { token: 'self' });
     await postRequest('r1');
     expect(await handle('r1')).toMatchObject({ alerted: 0 });
-    expect(sent).toEqual([]);
+    // They get the approval notice as the requester (DEC-015) — never an alert to donate for it.
+    expect(sent.map((m) => m.data.type)).toEqual(['REQUEST_APPROVED']);
   });
 
   test('a donor in cooldown, unavailable, or incompatible is not alerted', async () => {
@@ -130,11 +134,47 @@ describe('onRequestCreated', () => {
     expect((await db.doc('matches/r1_gone').get()).get('notifiedAt')).toBeNull();
   });
 
-  test('the sixth request in ten minutes is closed before it alerts anyone', async () => {
+  test('a request that is not OPEN is not matched — PENDING waits for the admin', async () => {
     await donor('sothea', { token: 'token-1' });
-    for (let i = 1; i <= 6; i++) await postRequest(`r${i}`);
-    expect(await handle('r6')).toEqual({ outcome: 'rate-limited' });
-    expect((await db.doc('requests/r6').get()).data()).toMatchObject({ status: 'CANCELLED', cancelReason: 'RATE_LIMITED' });
+    await postRequest('r1', { status: 'PENDING' });
+    expect(await handle('r1')).toEqual({ outcome: 'already-handled' });
+    expect((await db.collection('matches').get()).size).toBe(0);
     expect(sent).toEqual([]);
+  });
+
+  test('the requester is told the request is live, in their language', async () => {
+    await donor('sothea', { token: 'token-1' });
+    await db.doc('users/requester').set({ language: 'en', role: 'REQUESTER', fcmToken: 'family-token' });
+    await postRequest('r1');
+    await handle('r1');
+    const toFamily = sent.find((m) => m.token === 'family-token');
+    expect(toFamily).toMatchObject({
+      notification: { title: 'Your request was approved' },
+      data: { type: 'REQUEST_APPROVED', requestId: 'r1' },
+    });
+  });
+});
+
+describe('onRequestCreated — intake (DEC-015)', () => {
+  test('a new PENDING request gets its hospital name and alerts nobody', async () => {
+    await donor('sothea', { token: 'token-1' });
+    await postRequest('r1', { status: 'PENDING' });
+    expect(await intake('r1')).toEqual({ outcome: 'pending-review' });
+    expect((await db.doc('requests/r1').get()).data()).toMatchObject({
+      status: 'PENDING', alertedCount: 0, hospital: { name: 'Calmette Hospital', districtCode: '1202' },
+    });
+    expect((await db.collection('matches').get()).size).toBe(0);
+    expect(sent).toEqual([]);
+  });
+
+  test('the sixth request in ten minutes is closed before it reaches the admin', async () => {
+    for (let i = 1; i <= 6; i++) await postRequest(`r${i}`, { status: 'PENDING' });
+    expect(await intake('r6')).toEqual({ outcome: 'rate-limited' });
+    expect((await db.doc('requests/r6').get()).data()).toMatchObject({ status: 'CANCELLED', cancelReason: 'RATE_LIMITED' });
+  });
+
+  test('a request that is no longer PENDING is left alone', async () => {
+    await postRequest('r1', { status: 'CANCELLED' });
+    expect(await intake('r1')).toEqual({ outcome: 'ignored' });
   });
 });

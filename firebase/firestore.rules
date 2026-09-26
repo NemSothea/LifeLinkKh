@@ -95,7 +95,8 @@ service cloud.firestore {
           && d.patientBloodType in bloodTypes()
           && d.unitsNeeded is int && d.unitsNeeded >= 1 && d.unitsNeeded <= 20
           && d.urgency in ['CRITICAL', 'URGENT', 'ROUTINE']
-          && d.status == 'OPEN'
+          // DEC-015: every request waits for an admin before it alerts anyone.
+          && d.status == 'PENDING'
           && d.alertedCount == 0 && d.acceptedCount == 0
           && d.createdAt == request.time && d.updatedAt == request.time;
     }
@@ -109,12 +110,17 @@ service cloud.firestore {
     }
 
     match /requests/{requestId} {
-      // The public board (DEC-009). Nothing private lives on this document.
-      allow read: if true;
+      // The public board (DEC-009). Nothing private lives on this document — but a request an
+      // admin has not approved yet, or rejected, is not on it (DEC-015): only its creator and
+      // the admin see those. A query must say which statuses it wants for this to answer it.
+      allow read: if resource.data.status in ['OPEN', 'FULFILLED', 'CANCELLED', 'EXPIRED']
+          || (signedIn() && resource.data.createdBy == uid())
+          || isAdmin();
       allow create: if signedIn() && validNewRequest(incoming());
-      // The creator may cancel an open request, and change nothing else.
+      // The creator may cancel a pending or open request, and change nothing else. Approving and
+      // rejecting are the reviewRequest Function's (DEC-015).
       allow update: if signedIn() && resource.data.createdBy == uid()
-          && resource.data.status == 'OPEN'
+          && resource.data.status in ['PENDING', 'OPEN']
           && incoming().status == 'CANCELLED'
           && incoming().updatedAt == request.time
           && changed().hasOnly(['status', 'updatedAt']);

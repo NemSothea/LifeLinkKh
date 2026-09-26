@@ -6,8 +6,10 @@
 final class PushArrival {
     PushArrival(this.type, {this.requestId, this.foreground = false});
 
-    /// The payload's `type` — `REQUEST_ALERT` (FR-NOTIFY-001) or `DONOR_ACCEPTED`
-    /// (FR-NOTIFY-003). Empty for a message without one.
+    /// The payload's `type` — `REQUEST_ALERT` (FR-NOTIFY-001), `DONOR_ACCEPTED`
+    /// (FR-NOTIFY-003), or `REQUEST_APPROVED` / `REQUEST_REJECTED` (DEC-015's admin
+    /// review, to the requester). Empty for a message without one; any other value is
+    /// ignored beyond the refetch every arrival triggers.
     final String type;
 
     /// The request the push is about, when the payload names one.
@@ -20,4 +22,6 @@ final class PushArrival {
 
     static const requestAlert = 'REQUEST_ALERT';
     static const donorAccepted = 'DONOR_ACCEPTED';
+    static const requestApproved = 'REQUEST_APPROVED';
+    static const requestRejected = 'REQUEST_REJECTED';
 }

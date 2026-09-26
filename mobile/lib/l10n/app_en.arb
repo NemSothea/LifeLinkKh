@@ -470,6 +470,54 @@
     "@requestCancelConfirmMessage": {
         "description": "Confirmation dialog body before cancelling"
     },
+    "requestConfirmReview": "Before any donor is alerted, an admin checks that the request is genuine. This usually takes a few minutes.",
+    "@requestConfirmReview": {
+        "description": "Second paragraph of the send-confirmation dialog: DEC-015 admin review happens before any donor alert"
+    },
+    "requestStatusPending": "Waiting for review",
+    "@requestStatusPending": {
+        "description": "blood_requests.status = PENDING (DEC-015): posted, not yet approved by an admin"
+    },
+    "requestStatusRejected": "Not approved",
+    "@requestStatusRejected": {
+        "description": "blood_requests.status = REJECTED (DEC-015): an admin refused the request"
+    },
+    "requestPendingTitle": "Sent for review",
+    "@requestPendingTitle": {
+        "description": "Heading on the request detail screen while status is PENDING"
+    },
+    "requestPendingBody": "An admin checks every request before donors are alerted. You will get a notification as soon as it is approved — no donor has been contacted yet.",
+    "@requestPendingBody": {
+        "description": "Explains on the detail screen why nothing has happened yet while PENDING; so '0 alerted' is not read as failure"
+    },
+    "requestPendingShort": "Waiting for an admin to review",
+    "@requestPendingShort": {
+        "description": "Subtitle on the home request card while PENDING, in place of the alerted/accepted counts"
+    },
+    "requestRejectedTitle": "This request was not approved",
+    "@requestRejectedTitle": {
+        "description": "Heading on the request detail screen when status is REJECTED"
+    },
+    "requestRejectedReasonLabel": "Reason from the admin",
+    "@requestRejectedReasonLabel": {
+        "description": "Label above the admin's rejectReason on the detail screen"
+    },
+    "requestRejectedNoReason": "No reason was given.",
+    "@requestRejectedNoReason": {
+        "description": "Shown when a REJECTED request carries no rejectReason"
+    },
+    "requestRejectedHint": "If the need is still real, you can post a new request with the details corrected.",
+    "@requestRejectedHint": {
+        "description": "Next step shown under a rejection"
+    },
+    "requestApprovedNotice": "Your request was approved",
+    "@requestApprovedNotice": {
+        "description": "In-app notice when a REQUEST_APPROVED push arrives; same wording as the push title"
+    },
+    "requestRejectedNotice": "Your request was not approved",
+    "@requestRejectedNotice": {
+        "description": "In-app notice when a REQUEST_REJECTED push arrives; same wording as the push title"
+    },
     "inboxTitle": "Donor inbox",
     "@inboxTitle": {
         "description": "App bar title of the donor alert inbox"

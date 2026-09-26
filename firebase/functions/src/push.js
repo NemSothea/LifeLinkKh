@@ -12,6 +12,21 @@ const TEXT = {
       km: (type, hospital) => `ត្រូវការឈាមប្រភេទ ${type} នៅ ${hospital}`,
     },
   },
+  // DEC-015. Neither names the reason or a person: it can sit on a lock screen.
+  REQUEST_APPROVED: {
+    title: { en: 'Your request was approved', km: 'សំណើរបស់អ្នកត្រូវបានអនុម័ត' },
+    body: {
+      en: (type, hospital) => `${type} at ${hospital} — donors nearby are being alerted`,
+      km: (type, hospital) => `ឈាមប្រភេទ ${type} នៅ ${hospital} — កំពុងជូនដំណឹងដល់អ្នកបរិច្ចាគនៅក្បែរ`,
+    },
+  },
+  REQUEST_REJECTED: {
+    title: { en: 'Your request was not approved', km: 'សំណើរបស់អ្នកមិនត្រូវបានអនុម័តទេ' },
+    body: {
+      en: (type, hospital) => `${type} at ${hospital} — open LifeLink to see why`,
+      km: (type, hospital) => `ឈាមប្រភេទ ${type} នៅ ${hospital} — បើក LifeLink ដើម្បីមើលមូលហេតុ`,
+    },
+  },
   DONOR_ACCEPTED: {
     title: { en: 'A donor accepted your request', km: 'មានអ្នកបរិច្ចាគទទួលយកសំណើរបស់អ្នក' },
     body: {

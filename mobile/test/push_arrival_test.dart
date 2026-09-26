@@ -125,6 +125,43 @@ void main() {
         expect(find.text('View'), findsOneWidget);
     });
 
+    // DEC-015: the admin's verdict reaches the requester the same way an acceptance does.
+    for (final (type, notice) in [
+        (PushArrival.requestApproved, 'Your request was approved'),
+        (PushArrival.requestRejected, 'Your request was not approved'),
+    ]) {
+        testWidgets('$type refetches the requester\'s requests and opens the request',
+            (tester) async {
+            await pumpApp(tester);
+            final requestsBefore = requests.fetches;
+
+            pushes.add(PushArrival(type, requestId: 'req-1'));
+            await tester.pump();
+            await tester.pump();
+
+            expect(requests.fetches, greaterThan(requestsBefore));
+            expect(find.text(notice), findsOneWidget);
+
+            await tester.pump(const Duration(seconds: 1));
+            await tester.tap(find.text('View'));
+            await tester.pump();
+            await tester.pump(const Duration(milliseconds: 500));
+            expect(find.byType(RequestDetailScreen), findsOneWidget);
+        });
+    }
+
+    testWidgets('an unknown push type refetches but raises no notice', (tester) async {
+        await pumpApp(tester);
+        final requestsBefore = requests.fetches;
+
+        pushes.add(PushArrival('SOMETHING_NEW', requestId: 'req-1'));
+        await tester.pump();
+        await tester.pump();
+
+        expect(requests.fetches, greaterThan(requestsBefore));
+        expect(find.byType(SnackBar), findsNothing);
+    });
+
     testWidgets('a second acceptance is not swallowed as unchanged', (tester) async {
         await pumpApp(tester);
 

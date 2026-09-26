@@ -64,7 +64,16 @@ class LifeLinkApp extends ConsumerWidget {
                 ..invalidate(myMatchesControllerProvider)
                 ..invalidate(myRequestsControllerProvider)
                 ..invalidate(requestDetailProvider);
-            if (arrival.type == PushArrival.donorAccepted) _showAcceptedNotice(ref, arrival);
+            // All three go to the requester and open the same screen; only the notice's
+            // wording differs. An approval or rejection is news the family has been
+            // waiting on since they pressed Send (DEC-015).
+            final requesterNotice = switch (arrival.type) {
+                PushArrival.donorAccepted => (AppLocalizations l10n) => l10n.donorAcceptedNotice,
+                PushArrival.requestApproved => (AppLocalizations l10n) => l10n.requestApprovedNotice,
+                PushArrival.requestRejected => (AppLocalizations l10n) => l10n.requestRejectedNotice,
+                _ => null,
+            };
+            if (requesterNotice != null) _showRequesterNotice(ref, arrival, requesterNotice);
             if (arrival.type == PushArrival.requestAlert && arrival.foreground) {
                 _showRequestAlertNotice(ref, arrival);
             }
@@ -124,7 +133,11 @@ class LifeLinkApp extends ConsumerWidget {
         );
     }
 
-    static void _showAcceptedNotice(WidgetRef ref, PushArrival arrival) {
+    static void _showRequesterNotice(
+        WidgetRef ref,
+        PushArrival arrival,
+        String Function(AppLocalizations) message,
+    ) {
         final messenger = _messenger.currentState;
         if (messenger == null) return;
         // The messenger sits under `MaterialApp`'s `Localizations`, so its context
@@ -133,7 +146,7 @@ class LifeLinkApp extends ConsumerWidget {
         final requestId = arrival.requestId;
         messenger.showSnackBar(
             SnackBar(
-                content: Text(l10n.donorAcceptedNotice),
+                content: Text(message(l10n)),
                 action: requestId == null
                     ? null
                     : SnackBarAction(

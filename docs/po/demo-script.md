@@ -82,10 +82,22 @@ reasoning.)
 > units needed. Pinned: **Calmette**, patient type **AB+**, **CRITICAL**. One screen, not a wizard — someone doing this is frightened, not calm, so the form
 > defaults to something valid even if they touch nothing."
 
+**Step 2b — an admin checks it first (DEC-015).** Switch to the laptop's portal, signed in as
+`soborey`.
+> "Before a single donor is disturbed, a person checks the need is real. Account B's phone says
+> 'Waiting for review'. Here, the admin sees the request with the family's phone number — in real
+> life they call the family or the hospital. A fake 'urgent' request never reaches a donor's phone.
+> Approve."
+
+Click **Approve** → **Yes, alert donors**. If asked "doesn't that slow an emergency down?" — yes,
+by however long the review takes, and `npm run metrics` shows that delay as its own line. The
+trade is one phone call against strangers being sent to a hospital for a need that doesn't exist.
+
 **Step 3 — the match happens, the push fires.** (Only on the real Firebase project. On the local
 emulator stack no push is delivered — the request simply appears in Account A's list; say "on a
 live deployment this is a notification" and move on, `../demo-runbook.md` §0.)
-> "Watch Account A's phone now — no manual refresh, no polling. A cloud function just matched
+> "Watch Account A's phone now — no manual refresh, no polling. The moment it was approved, a cloud
+> function matched
 > compatible blood type plus eligible plus nearby, and Firebase pushed it straight to the device.
 > This is the moment the Facebook-post version of this process can't do: instant, targeted, not
 > dependent on who happens to be scrolling."

@@ -46,14 +46,15 @@ The emulators start empty. After every start:
 cd firebase
 npm run seed:app                                           # districts + hospitals
 PORTAL_ADMIN_PASSWORD="$PORTAL_ADMIN_PASSWORD" npm run seed:admin:app   # soborey
-npm run seed:demo                                          # 2 O− donors, requester, CRITICAL AB+ at Calmette, 1 acceptance
+npm run seed:demo                                          # 2 O− donors, requester, CRITICAL AB+ at Calmette (approved, 1 acceptance), URGENT O+ pending review
 ```
 
 - `PORTAL_ADMIN_PASSWORD` comes from the user's `.env` (`set -a; . ./.env; set +a` from the repo
   root). Unset → the seed creates no admin; tell the user. Under 12 characters → `REFUSED`.
 - `seed:demo` deletes requests, matches and donations first. It is emulator-only, so no
   confirmation is needed on the emulator stack; it must print `… 1 accepted — ready to confirm in
-  the portal`. `onRequestCreated never ran` → the emulators lack Functions; go back to step 1.
+  the portal` and `demo-pending: waiting in the portal's review queue`. `onRequestApproved never
+  ran` → the emulators lack Functions; go back to step 1.
 - Why every rehearsal: a confirmed donation puts that donor into a 56-day cooldown, and the next
   run matches nobody (runbook §4, trap 2).
 

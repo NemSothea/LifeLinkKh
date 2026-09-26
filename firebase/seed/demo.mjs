@@ -1,8 +1,11 @@
 // Demo data for the emulator (ADR 0009, phase 6) — what scripts/seed-demo-request.sql and
-// reset-demo-data.sql did for Postgres. Two O- donors in Doun Penh, one requester, and one open
-// CRITICAL request at Calmette. The request goes through the real onRequestCreated Function, so
-// the emulator must be running with Functions (`npm run emulators:app`); this waits for it to
-// match, then has the first donor accept so the portal has a donation to confirm.
+// reset-demo-data.sql did for Postgres. Two O- donors in Doun Penh, one requester, and:
+//
+//   - one CRITICAL request at Calmette, approved (DEC-015) so the real onRequestApproved Function
+//     matches it, then accepted by the first donor — the portal has a donation to confirm;
+//   - one URGENT request left PENDING — the portal's review queue has something to approve live.
+//
+// The emulator must be running with Functions (`npm run emulators:app`).
 //
 //   npm run seed:demo             # emulator, project lifelinkkh. Clears requests/matches/donations first.
 //
@@ -32,26 +35,36 @@ for (const [uid, name] of [['demo-donor-a', 'Nem Sothea'], ['demo-donor-b', 'Sok
 }
 await db.doc('users/demo-family').set({ displayName: 'Chea Srey', language: 'km', role: 'REQUESTER', fcmToken: null, createdAt: now(), updatedAt: now() });
 
-const request = db.doc('requests/demo-request');
-const batch = db.batch();
-batch.set(request, {
-  createdBy: 'demo-family', hospitalId: CALMETTE, patientBloodType: 'AB+', unitsNeeded: 1,
-  urgency: 'CRITICAL', status: 'OPEN', alertedCount: 0, acceptedCount: 0, createdAt: now(), updatedAt: now(),
-});
-batch.set(request.collection('private').doc('contact'), { contactName: 'Chea Srey', contactPhone: '+85512345678' });
-await batch.commit();
+async function post(id, fields) {
+  const ref = db.doc(`requests/${id}`);
+  const batch = db.batch();
+  batch.set(ref, {
+    createdBy: 'demo-family', hospitalId: CALMETTE, unitsNeeded: 1, status: 'PENDING',
+    alertedCount: 0, acceptedCount: 0, createdAt: now(), updatedAt: now(), ...fields,
+  });
+  batch.set(ref.collection('private').doc('contact'), { contactName: 'Chea Srey', contactPhone: '+85512345678' });
+  await batch.commit();
+  return ref;
+}
+
+const request = await post('demo-request', { patientBloodType: 'AB+', urgency: 'CRITICAL' });
+// The admin's approval, as reviewRequest writes it — the PENDING → OPEN update is what fires matching.
+await request.update({ status: 'OPEN', reviewedBy: 'demo-seed', reviewedAt: now(), updatedAt: now() });
 
 // The match document, not `matchedAt`: the Function claims `matchedAt` first and writes the
 // matches after, so waiting on the claim races the write.
 const match = db.doc('matches/demo-request_demo-donor-a');
 for (let i = 0; i < 30 && !(await match.get()).exists; i++) await sleep(1000);
 if (!(await match.get()).exists) {
-  console.error('onRequestCreated never ran. Start the emulators with Functions: npm run emulators:app');
+  console.error('onRequestApproved never ran. Start the emulators with Functions: npm run emulators:app');
   process.exit(1);
 }
 await match.update({ response: 'ACCEPTED', respondedAt: Timestamp.now() });
 for (let i = 0; i < 30 && !(await request.collection('acceptedDonors').doc('demo-donor-a').get()).exists; i++) await sleep(1000);
 
+await post('demo-pending', { patientBloodType: 'O+', urgency: 'URGENT' });
+
 const r = (await request.get()).data();
 console.log(`demo request: ${r.alertedCount} donors alerted, ${r.acceptedCount} accepted — ready to confirm in the portal`);
+console.log('demo-pending: waiting in the portal\'s review queue');
 process.exit(0);

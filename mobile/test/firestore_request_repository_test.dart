@@ -22,11 +22,7 @@ void main() {
     setUp(() async {
         db = FakeFirebaseFirestore();
         uid = 'requester';
-        repository = FirestoreRequestRepository(
-            db,
-            currentUid: () => uid,
-            matchWait: const Duration(milliseconds: 200),
-        );
+        repository = FirestoreRequestRepository(db, currentUid: () => uid);
         await db.doc('districts/1202').set({'nameKm': 'ចំការមន', 'nameEn': 'Chamkar Mon'});
         await db.doc('hospitals/calmette').set({'name': 'Calmette Hospital', 'districtCode': '1202'});
         await db.doc('hospitals/kossamak').set({'name': 'Preah Kossamak Hospital', 'districtCode': '1202'});
@@ -41,8 +37,15 @@ void main() {
         contactPhone: '012 345 678',
     );
 
-    Future<void> request(String id, {String createdBy = 'requester', String status = 'OPEN', int minutesAgo = 0}) =>
+    Future<void> request(
+        String id, {
+        String createdBy = 'requester',
+        String status = 'OPEN',
+        int minutesAgo = 0,
+        Map<String, Object?> extra = const {},
+    }) =>
         db.doc('requests/$id').set({
+            ...extra,
             'createdBy': createdBy,
             'hospitalId': 'calmette',
             'patientBloodType': 'O-',
@@ -66,7 +69,8 @@ void main() {
 
             final stored = (await db.doc('requests/${created.id}').get()).data()!;
             expect(stored, containsPair('createdBy', 'requester'));
-            expect(stored, containsPair('status', 'OPEN'));
+            // DEC-015: never OPEN on create — the rules refuse it, an admin opens it.
+            expect(stored, containsPair('status', 'PENDING'));
             expect(stored, containsPair('patientBloodType', 'AB+'));
             expect(stored, containsPair('urgency', 'CRITICAL'));
             expect(stored['alertedCount'], 0);
@@ -83,24 +87,13 @@ void main() {
             expect(created.hospitalName, 'Calmette Hospital');
         });
 
-        test('waits for onRequestCreated, then reports how many it alerted', () async {
-            // Stands in for the Function: stamp the first request that appears.
-            final sub = db.collection('requests').snapshots().listen((s) {
-                for (final doc in s.docs) {
-                    if (doc.data()['matchedAt'] == null) {
-                        doc.reference.update({'matchedAt': Timestamp.now(), 'alertedCount': 4});
-                    }
-                }
-            });
-            addTearDown(sub.cancel);
-
+        test('returns the request as PENDING straight away, with nobody alerted yet', () async {
+            // Matching runs only after an admin approves (DEC-015), so there is nothing to
+            // wait for — a create that waited for `matchedAt` would stall every time.
             final created = (await repository.create(draft) as Success<BloodRequest>).value;
-            expect(created.alertedCount, 4);
-        });
-
-        test('a Function that never answers is not an error — the request is posted', () async {
-            final result = await repository.create(draft);
-            expect((result as Success<BloodRequest>).value.alertedCount, 0);
+            expect(created.status, RequestStatus.pending);
+            expect(created.alertedCount, 0);
+            expect(created.rejectReason, isNull);
         });
 
         test('an incomplete draft never reaches Firestore', () async {
@@ -119,6 +112,8 @@ void main() {
         await request('old', minutesAgo: 30);
         await request('new');
         await request('done', status: 'FULFILLED');
+        await request('waiting', status: 'PENDING');
+        await request('refused', status: 'REJECTED', extra: {'rejectReason': 'Duplicate'});
         final board = (await repository.fetchPublicBoard() as Success<List<BloodRequest>>).value;
         expect(board.map((r) => r.id), ['new', 'old']);
         expect(board.first.alertedCount, 3);
@@ -143,6 +138,19 @@ void main() {
 
     test('an unknown request is NotFoundFailure', () async {
         expect(((await repository.fetchDetail('nope')) as Failed<BloodRequest>).failure, isA<NotFoundFailure>());
+    });
+
+    test('a rejected request carries the admin\'s reason', () async {
+        await request('refused', status: 'REJECTED', extra: {'rejectReason': 'Hospital could not confirm'});
+        final detail = (await repository.fetchDetail('refused') as Success<BloodRequest>).value;
+        expect(detail.status, RequestStatus.rejected);
+        expect(detail.rejectReason, 'Hospital could not confirm');
+    });
+
+    test('cancel moves PENDING to CANCELLED', () async {
+        await request('r0', status: 'PENDING');
+        final cancelled = (await repository.cancel('r0') as Success<BloodRequest>).value;
+        expect(cancelled.status, RequestStatus.cancelled);
     });
 
     test('cancel moves OPEN to CANCELLED', () async {

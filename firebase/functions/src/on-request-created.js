@@ -1,6 +1,12 @@
-// What POST /requests did after the insert: rate limit, match, write the matches, push the
-// donors, stamp the counts (ADR 0009). The trigger in index.js calls this; tests call it
-// directly with an emulator Firestore and a fake messaging.
+// What POST /requests did after the insert, split in two by DEC-015 (ADR 0009):
+//
+//   handleRequestCreated  — on create, while the request is PENDING: the rate limit, and the
+//                           hospital's name stamped on for the admin's review queue.
+//   handleRequestApproved — on PENDING → OPEN (the admin approved it): match, write the matches,
+//                           push the donors, stamp the counts, tell the requester.
+//
+// The triggers in index.js call these; tests call them directly with an emulator Firestore and a
+// fake messaging.
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { COMPATIBLE_DONORS, REQUEST_RATE_LIMIT, phnomPenhDate, selectCandidates } from './matching.js';
 import { buildMessage, sendAll } from './push.js';
@@ -14,22 +20,24 @@ import { buildMessage, sendAll } from './push.js';
  * @param {{info: Function, warn: Function}} [deps.log]
  * @returns {Promise<{outcome: string, alerted?: number, pushed?: number}>}
  */
-export async function handleRequestCreated({ db, messaging, requestId, now = new Date(), log = console }) {
+/**
+ * @param {object} deps
+ * @param {import('firebase-admin/firestore').Firestore} deps.db
+ * @param {string} deps.requestId
+ * @param {Date} [deps.now]
+ * @param {{info: Function, warn: Function}} [deps.log]
+ * @returns {Promise<{outcome: string}>}
+ */
+export async function handleRequestCreated({ db, requestId, now = new Date(), log = console }) {
   const requestRef = db.doc(`requests/${requestId}`);
-
-  // Functions deliver at least once. `matchedAt` is claimed in a transaction before anything
-  // else, so a redelivered event finds it set and stops: matches are written once and donors
-  // are pushed at most once, never twice.
-  const request = await db.runTransaction(async (tx) => {
-    const snap = await tx.get(requestRef);
-    if (!snap.exists || snap.get('matchedAt')) return null;
-    tx.update(requestRef, { matchedAt: FieldValue.serverTimestamp() });
-    return snap.data();
-  });
-  if (!request) return { outcome: 'already-handled' };
+  const snap = await requestRef.get();
+  // Only a PENDING request is this handler's. Anything else was already acted on.
+  if (!snap.exists || snap.get('status') !== 'PENDING') return { outcome: 'ignored' };
+  const request = snap.data();
 
   // RequestRateLimiter, after the fact: the rules cannot count, so an over-limit request is
-  // written and then closed here, before it alerts anyone.
+  // written and then closed here, before it reaches the admin's queue. A redelivered event
+  // counts the same requests again and reaches the same answer.
   const windowStart = Timestamp.fromMillis(now.getTime() - REQUEST_RATE_LIMIT.windowMs);
   const recent = await db.collection('requests')
     .where('createdBy', '==', request.createdBy)
@@ -42,9 +50,41 @@ export async function handleRequestCreated({ db, messaging, requestId, now = new
       cancelReason: 'RATE_LIMITED',
       updatedAt: FieldValue.serverTimestamp(),
     });
-    log.warn(`request ${requestId} over the rate limit; closed without alerting`);
+    log.warn(`request ${requestId} over the rate limit; closed before review`);
     return { outcome: 'rate-limited' };
   }
+
+  // The admin reviews by hospital name, and the portal reads it off the request.
+  const hospital = (await db.doc(`hospitals/${request.hospitalId}`).get()).data() ?? {};
+  await requestRef.update({
+    hospital: { name: hospital.name ?? '', districtCode: hospital.districtCode ?? null },
+  });
+  log.info(`request ${requestId} waiting for review`);
+  return { outcome: 'pending-review' };
+}
+
+/**
+ * @param {object} deps
+ * @param {import('firebase-admin/firestore').Firestore} deps.db
+ * @param {{sendEach: Function}} deps.messaging
+ * @param {string} deps.requestId
+ * @param {Date} [deps.now]
+ * @param {{info: Function, warn: Function}} [deps.log]
+ * @returns {Promise<{outcome: string, alerted?: number, pushed?: number}>}
+ */
+export async function handleRequestApproved({ db, messaging, requestId, now = new Date(), log = console }) {
+  const requestRef = db.doc(`requests/${requestId}`);
+
+  // Functions deliver at least once. `matchedAt` is claimed in a transaction before anything
+  // else, so a redelivered event finds it set and stops: matches are written once and donors
+  // are pushed at most once, never twice.
+  const request = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(requestRef);
+    if (!snap.exists || snap.get('status') !== 'OPEN' || snap.get('matchedAt')) return null;
+    tx.update(requestRef, { matchedAt: FieldValue.serverTimestamp() });
+    return snap.data();
+  });
+  if (!request) return { outcome: 'already-handled' };
 
   const hospitalSnap = await db.doc(`hospitals/${request.hospitalId}`).get();
   const hospital = hospitalSnap.data();
@@ -126,6 +166,36 @@ export async function handleRequestCreated({ db, messaging, requestId, now = new
   }
   if (sent.length || dead.length) await stamp.commit();
 
+  // DEC-015: the requester has been waiting for review; tell them it is live.
+  await notifyRequester({ db, messaging, requestId, request, hospitalName: hospital.name, type: 'REQUEST_APPROVED', log });
+
   log.info(`request ${requestId}: ${candidates.length} matched, ${sent.length} pushed, ${dead.length} dead tokens`);
   return { outcome: 'matched', alerted: candidates.length, pushed: sent.length };
+}
+
+/**
+ * One push to the request's creator — approved or rejected (DEC-015). Never fails the caller:
+ * the status change is the fact, the push is a courtesy.
+ */
+export async function notifyRequester({ db, messaging, requestId, request, hospitalName, type, log = console }) {
+  const requester = await db.doc(`users/${request.createdBy}`).get();
+  const token = requester.get('fcmToken');
+  if (!token) return 0;
+  try {
+    const { sent, dead } = await sendAll(messaging, [{
+      uid: request.createdBy,
+      message: buildMessage(type, {
+        token,
+        language: requester.get('language'),
+        requestId,
+        patientBloodType: request.patientBloodType,
+        hospitalName: hospitalName ?? request.hospital?.name ?? '',
+      }),
+    }]);
+    if (dead.length) await requester.ref.update({ fcmToken: null });
+    return sent.length;
+  } catch (error) {
+    log.warn(`FCM send failed for requester of ${requestId}: ${error.code ?? 'unknown'}`);
+    return 0;
+  }
 }

@@ -39,6 +39,8 @@ const firstMonth = firstSeen == null ? 0 : donorTimes.filter((t) => t < firstSee
 
 // 2 and 3. First acceptance per live request. CANCELLED and EXPIRED are excluded: the metric asks
 // how often a live need reaches a donor, and a withdrawn request was never waiting for one.
+// REJECTED is excluded for the same reason (DEC-015): the admin judged it not a real need. PENDING
+// stays in — a real need still waiting for review is exactly the delay this metric should show.
 const firstAccepted = new Map();
 for (const m of matches.docs) {
   if (m.get('response') !== 'ACCEPTED') continue;
@@ -46,7 +48,7 @@ for (const m of matches.docs) {
   const id = m.get('requestId');
   if (at != null && (!firstAccepted.has(id) || at < firstAccepted.get(id))) firstAccepted.set(id, at);
 }
-const live = requests.docs.filter((r) => !['CANCELLED', 'EXPIRED'].includes(r.get('status')));
+const live = requests.docs.filter((r) => !['CANCELLED', 'EXPIRED', 'REJECTED'].includes(r.get('status')));
 const excluded = requests.size - live.length;
 const waits = live
   .filter((r) => firstAccepted.has(r.id) && ms(r.get('createdAt')) != null)
@@ -56,6 +58,17 @@ const withinHour = waits.filter((w) => w <= 60).length;
 const median = waits.length === 0 ? null
   : waits.length % 2 ? waits[(waits.length - 1) / 2]
   : (waits[waits.length / 2 - 1] + waits[waits.length / 2]) / 2;
+
+// 6. DEC-015: how long a request waits for the admin. Not a PRD target — the operational cost of
+// reviewing every request, which metric 2 already pays for (it is measured from createdAt).
+const reviews = requests.docs
+  .filter((r) => r.get('reviewedAt') && r.get('createdAt'))
+  .map((r) => (ms(r.get('reviewedAt')) - ms(r.get('createdAt'))) / 60_000)
+  .sort((a, b) => a - b);
+const reviewMedian = reviews.length === 0 ? null
+  : reviews.length % 2 ? reviews[(reviews.length - 1) / 2]
+  : (reviews[reviews.length / 2 - 1] + reviews[reviews.length / 2]) / 2;
+const waiting = requests.docs.filter((r) => r.get('status') === 'PENDING').length;
 
 // 4. Only confirmDonation writes donations, and it always sets confirmedBy — so every row is verified.
 const verified = donations.docs.filter((d) => d.get('confirmedBy')).length;
@@ -69,7 +82,7 @@ console.table([
     note: firstSeen ? `pilot clock starts ${new Date(firstSeen).toISOString().slice(0, 10)}` : 'no donors yet' },
   { metric: 'Requests accepted within 60 min', target: '>= 70%',
     actual: pct(withinHour, live.length) ?? '—', sample: `${withinHour} of ${live.length} requests`,
-    note: `${waits.length} accepted at any point · ${excluded} cancelled/expired excluded` },
+    note: `${waits.length} accepted at any point · ${excluded} cancelled/expired/rejected excluded` },
   { metric: 'Median time to first acceptance', target: '< 30 minutes',
     actual: median == null ? '—' : `${median.toFixed(1)} min`, sample: `${waits.length} accepted requests`,
     note: 'accepted requests only' },
@@ -79,5 +92,8 @@ console.table([
   { metric: 'Push send-success rate', target: '>= 95%',
     actual: pct(notified, matches.size) ?? '—', sample: `${notified} of ${matches.size} matches`,
     note: 'FCM accepted the send — not proof the device showed it' },
+  { metric: 'Median time to review (DEC-015)', target: '— (operational)',
+    actual: reviewMedian == null ? '—' : `${reviewMedian.toFixed(1)} min`, sample: `${reviews.length} reviewed requests`,
+    note: `${waiting} waiting for review now` },
 ]);
 process.exit(0);

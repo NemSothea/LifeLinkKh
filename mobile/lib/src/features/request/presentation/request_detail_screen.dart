@@ -102,7 +102,9 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
         final languageCode = Localizations.localeOf(context).languageCode;
 
         String statusLabel(RequestStatus status) => switch (status) {
+            RequestStatus.pending => l10n.requestStatusPending,
             RequestStatus.open => l10n.requestStatusOpen,
+            RequestStatus.rejected => l10n.requestStatusRejected,
             RequestStatus.fulfilled => l10n.requestStatusFulfilled,
             RequestStatus.cancelled => l10n.requestStatusCancelled,
             RequestStatus.expired => l10n.requestStatusCancelled,
@@ -149,16 +151,58 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                         ),
                     ),
                     const SizedBox(height: 24),
-                    Text(
-                        l10n.requestAlertedCount(request.alertedCount),
-                        key: const Key('request-alerted-count'),
-                        style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                        l10n.requestAcceptedCount(request.acceptedCount),
-                        key: const Key('request-accepted-count'),
-                    ),
+                    // Before approval (DEC-015) the counts are all zero by design, and
+                    // "0 donors alerted" under a request reads as "nobody could help".
+                    // Say what is actually happening instead; the counts return once an
+                    // admin has opened it to donors.
+                    switch (request.status) {
+                        RequestStatus.pending => _ReviewCard(
+                            key: const Key('request-pending'),
+                            icon: Icons.hourglass_top,
+                            title: l10n.requestPendingTitle,
+                            body: Text(l10n.requestPendingBody),
+                        ),
+                        RequestStatus.rejected => _ReviewCard(
+                            key: const Key('request-rejected'),
+                            icon: Icons.block,
+                            title: l10n.requestRejectedTitle,
+                            isError: true,
+                            body: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                    Text(
+                                        l10n.requestRejectedReasonLabel,
+                                        style: Theme.of(context).textTheme.labelLarge,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                        switch (request.rejectReason?.trim()) {
+                                            final String reason when reason.isNotEmpty => reason,
+                                            _ => l10n.requestRejectedNoReason,
+                                        },
+                                        key: const Key('request-reject-reason'),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(l10n.requestRejectedHint),
+                                ],
+                            ),
+                        ),
+                        _ => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                                Text(
+                                    l10n.requestAlertedCount(request.alertedCount),
+                                    key: const Key('request-alerted-count'),
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                    l10n.requestAcceptedCount(request.acceptedCount),
+                                    key: const Key('request-accepted-count'),
+                                ),
+                            ],
+                        ),
+                    },
                     const SizedBox(height: 8),
                     // Same change as `MatchDetailScreen`: a requester refreshing this
                     // screen is asking "how long has nobody answered", which an absolute
@@ -170,7 +214,9 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                         style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 32),
-                    if (request.acceptedCount == 0)
+                    // Only once donors can actually answer — while pending no one has been
+                    // asked yet, and a rejected request never will be.
+                    if (request.status == RequestStatus.open && request.acceptedCount == 0)
                         Text(l10n.requestWaitingForResponders, textAlign: TextAlign.center),
                     const SizedBox(height: 32),
                     if (_cancelFailed)
@@ -182,7 +228,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                                 style: TextStyle(color: Theme.of(context).colorScheme.error),
                             ),
                         ),
-                    if (request.status == RequestStatus.open)
+                    if (request.status.isCancellable)
                         SizedBox(
                             width: double.infinity,
                             child: OutlinedButton(
@@ -203,8 +249,9 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
 
 /// A request's own status, color-coded the same way `UrgencyBadge` codes urgency — a
 /// requester should be able to tell "fulfilled" (good) from "cancelled" (not) by shape
-/// and colour, not by reading a plain grey label. `open` uses `Urgency.routine`'s
-/// neutral treatment; `cancelled`/`expired` reuse the error role `UrgencyBadge` already
+/// and colour, not by reading a plain grey label. `open` and `pending` use
+/// `Urgency.routine`'s neutral treatment — waiting for review is not bad news;
+/// `rejected`/`cancelled`/`expired` reuse the error role `UrgencyBadge` already
 /// uses for `critical`; `fulfilled` hand-picks a green pair the same way `UrgencyBadge`
 /// hand-picks amber for `urgent` — Material 3 has no built-in "success" role either.
 class _StatusPill extends StatelessWidget {
@@ -219,10 +266,12 @@ class _StatusPill extends StatelessWidget {
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
         final (Color background, Color foreground) = switch (status) {
+            RequestStatus.pending ||
             RequestStatus.open => (scheme.surfaceContainerHighest, scheme.onSurfaceVariant),
             RequestStatus.fulfilled => isDark
                 ? (const Color(0xFF1B4332), const Color(0xFF8FD9B6))
                 : (const Color(0xFFDCF5E7), const Color(0xFF1B6E43)),
+            RequestStatus.rejected ||
             RequestStatus.cancelled ||
             RequestStatus.expired => (scheme.errorContainer, scheme.onErrorContainer),
         };
@@ -238,6 +287,63 @@ class _StatusPill extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         fontSize: 11,
                         letterSpacing: 0.4,
+                    ),
+                ),
+            ),
+        );
+    }
+}
+
+/// The panel that replaces the donor counts while a request is under admin review or
+/// after it was refused (DEC-015). A card, not a line of text, because it is the one
+/// thing on the screen the requester needs to read: why nothing has happened yet, or
+/// why nothing will.
+class _ReviewCard extends StatelessWidget {
+    const _ReviewCard({
+        required this.icon,
+        required this.title,
+        required this.body,
+        this.isError = false,
+        super.key,
+    });
+
+    final IconData icon;
+    final String title;
+    final Widget body;
+    final bool isError;
+
+    @override
+    Widget build(BuildContext context) {
+        final scheme = Theme.of(context).colorScheme;
+        final background = isError ? scheme.errorContainer : scheme.secondaryContainer;
+        final foreground = isError ? scheme.onErrorContainer : scheme.onSecondaryContainer;
+        return Card(
+            color: background,
+            child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: DefaultTextStyle.merge(
+                    style: TextStyle(color: foreground),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                            Row(
+                                children: [
+                                    Icon(icon, color: foreground),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                        child: Text(
+                                            title,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(color: foreground),
+                                        ),
+                                    ),
+                                ],
+                            ),
+                            const SizedBox(height: 8),
+                            body,
+                        ],
                     ),
                 ),
             ),

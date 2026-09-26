@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { confirmDonation } from '@/lib/api/portal';
+import { confirmDonation, reviewRequest } from '@/lib/api/portal';
 
 /**
  * The one write on the portal's one page (FR-PORTAL-001 / FR-DONATION-001). A plain
@@ -42,5 +42,41 @@ export async function confirmDonationAction(formData: FormData) {
         result.ok
             ? `/${locale}/portal?confirmed=${encodeURIComponent(donorName)}`
             : `/${locale}/portal?confirmError=1`,
+    );
+}
+
+/**
+ * DEC-015: approve or reject a pending request. Approving alerts donors, so the button that
+ * submits this form sits behind a confirmation step in `pending-review-list.tsx`.
+ *
+ * `failed-precondition` means the request is no longer PENDING — its creator cancelled it, or
+ * another admin reviewed it first. That gets its own message: the admin did nothing wrong, and
+ * "could not complete that" would send them to try again.
+ */
+export async function reviewRequestAction(formData: FormData) {
+    const requestId = formData.get('requestId');
+    const decision = formData.get('decision');
+    const reason = formData.get('reason');
+    const locale = formData.get('locale');
+
+    if (
+        typeof requestId !== 'string' ||
+        (decision !== 'APPROVE' && decision !== 'REJECT') ||
+        typeof locale !== 'string'
+    ) {
+        throw new Error('review-request form is missing a required field');
+    }
+
+    const result = await reviewRequest(
+        requestId,
+        decision,
+        decision === 'REJECT' && typeof reason === 'string' ? reason : undefined,
+    );
+
+    revalidatePath(`/${locale}/portal`);
+    redirect(
+        result.ok
+            ? `/${locale}/portal?reviewed=${decision === 'APPROVE' ? 'approved' : 'rejected'}`
+            : `/${locale}/portal?reviewError=${result.error === 'failed-precondition' ? 'gone' : '1'}`,
     );
 }

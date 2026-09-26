@@ -1,4 +1,4 @@
-import { callFunction, firestoreQuery, type ApiResult } from './client';
+import { callFunction, firestoreGet, firestoreQuery, type ApiResult } from './client';
 import type { DistrictName } from './district';
 import { listDistricts } from './hospitals';
 import { acceptedDonors, requestFields } from './request-docs';
@@ -125,6 +125,84 @@ export async function confirmDonation(
     return callFunction<ConfirmDonationResult>(
         'confirmDonation',
         { requestId, matchId, donatedOn },
+        await requirePortalToken(),
+    );
+}
+
+/**
+ * A request waiting for the admin (DEC-015). Carries the requester's contact, which the rules let
+ * the admin read, because checking the need is real usually means calling the family or the
+ * hospital — and it is the one screen where that is the job.
+ */
+export type PendingRequest = {
+    id: string;
+    patientBloodType: string;
+    unitsNeeded: number;
+    urgency: string;
+    hospital: { id: string; name: string } | null;
+    createdAt: string;
+    contactName: string | null;
+    contactPhone: string | null;
+};
+
+const URGENCY_ORDER: Record<string, number> = { CRITICAL: 0, URGENT: 1, ROUTINE: 2 };
+
+/** Most urgent first, then oldest first: the order they should be reviewed in. */
+export async function listPendingRequests(): Promise<ApiResult<PendingRequest[]>> {
+    const token = await requirePortalToken();
+    const requests = await firestoreQuery(
+        {
+            collection: 'requests',
+            where: { status: 'PENDING' },
+            orderBy: { field: 'createdAt', direction: 'DESCENDING' },
+        },
+        token,
+    );
+    if (!requests.ok) return requests;
+
+    const rows = await Promise.all(
+        requests.data.map(async (doc): Promise<ApiResult<PendingRequest>> => {
+            const contact = await firestoreGet(`requests/${doc.id}/private/contact`, token);
+            if (!contact.ok) return contact;
+            const request = requestFields(doc);
+            return {
+                ok: true,
+                data: {
+                    id: request.id,
+                    patientBloodType: request.patientBloodType,
+                    unitsNeeded: request.unitsNeeded,
+                    urgency: request.urgency,
+                    hospital: request.hospital,
+                    createdAt: request.createdAt,
+                    contactName: (contact.data?.data.contactName as string | undefined) ?? null,
+                    contactPhone: (contact.data?.data.contactPhone as string | undefined) ?? null,
+                },
+            };
+        }),
+    );
+    const failed = rows.find((row) => !row.ok);
+    if (failed && !failed.ok) return failed;
+    return {
+        ok: true,
+        data: rows
+            .flatMap((row) => (row.ok ? [row.data] : []))
+            .sort(
+                (a, b) =>
+                    (URGENCY_ORDER[a.urgency] ?? 9) - (URGENCY_ORDER[b.urgency] ?? 9) ||
+                    a.createdAt.localeCompare(b.createdAt),
+            ),
+    };
+}
+
+/** The `reviewRequest` callable (DEC-015). Approving is what alerts the donors. */
+export async function reviewRequest(
+    requestId: string,
+    decision: 'APPROVE' | 'REJECT',
+    reason?: string,
+): Promise<ApiResult<{ requestId: string; status: string }>> {
+    return callFunction<{ requestId: string; status: string }>(
+        'reviewRequest',
+        { requestId, decision, ...(reason === undefined ? {} : { reason }) },
         await requirePortalToken(),
     );
 }

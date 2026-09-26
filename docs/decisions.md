@@ -621,3 +621,38 @@ require both, so deleting the record ends access on the next read. The old `/por
 
 Hospital staff can come back as a v2 decision; the Spring Boot implementation (`AdminService`,
 V13–V15) is the reference for what that needs.
+
+## DEC-015 — An admin approves every request before any donor is alerted
+
+**Date:** 2026-09-26 · **Raised by:** Nem Sothea (Tech Lead / PO) · **Status:** accepted
+
+### Context
+Until now a signed-in user posting a request alerted up to 25 donors at once (ADR 0008). That is
+the fastest possible path, and in a class pilot it was fine. For real use in Cambodia it is also
+the easiest thing to abuse: a fake "urgent" request can send strangers to a hospital, or be a
+pretext for asking donors for money. Nothing checked that the need was real. DEC-014 left one
+portal role, ADMIN, which is the obvious person to check.
+
+### Decision
+A request starts as **`PENDING`**. It is not on the public board and alerts nobody. An admin
+reviews it on the portal, where they can see the patient's blood type, units, urgency, hospital and
+the requester's contact, and either:
+
+- **approves** it → `OPEN`. Matching and the donor alert run then, exactly as before
+  (`onRequestCreated`'s matching moves to a trigger on the `PENDING → OPEN` transition). The
+  requester gets a push: approved, donors are being alerted.
+- **rejects** it → `REJECTED`, with a short reason (1–200 characters) the requester sees in the
+  app and in a push.
+
+The requester can cancel their own request while it is `PENDING` or `OPEN`. The rate limit stays
+at creation, so a flood of requests is closed before it reaches the admin's queue. Only the
+`reviewRequest` callable (admin by claim and record) moves a request out of `PENDING`.
+
+### What it costs
+- **Time.** Every request now waits for a human. PRD metric 2 ("accepted within 60 minutes") is
+  measured from `createdAt`, so review time counts against it, which is the honest way to count it.
+  `npm run metrics` adds a sixth line, median time to review, so the delay is visible.
+- **Someone must be on duty.** A pending request with no admin awake alerts nobody. Before a
+  public launch, decide the review hours and publish them in the app, and consider a hospital
+  partner as a second reviewer (a v2 role; DEC-014 kept v1 admin-only).
+- A request left `PENDING` never expires on its own. `FR-REQUEST-005` (expiry) is still deferred.

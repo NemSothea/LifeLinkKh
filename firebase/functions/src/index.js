@@ -8,7 +8,8 @@ import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/fire
 import { onCall } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
 import { handleMatchAnswered } from './on-match-answered.js';
-import { handleRequestCreated } from './on-request-created.js';
+import { handleRequestApproved, handleRequestCreated } from './on-request-created.js';
+import { reviewRequest as reviewRequestHandler } from './review-request.js';
 import { confirmDonation as confirmDonationHandler } from './confirm-donation.js';
 
 initializeApp();
@@ -33,14 +34,28 @@ function messaging() {
   };
 }
 
+// DEC-015: a new request is PENDING. On create: the rate limit and the hospital's name, nothing
+// more. Matching and the donor alert wait for an admin's approval.
 export const onRequestCreated = onDocumentCreated('requests/{requestId}', (event) =>
   handleRequestCreated({
     db: getFirestore(),
-    messaging: messaging(),
     requestId: event.params.requestId,
     log: logger,
   }),
 );
+
+// PENDING → OPEN is the admin's approval (reviewRequest). Only that transition matches.
+export const onRequestApproved = onDocumentUpdated('requests/{requestId}', (event) => {
+  const before = event.data?.before.data();
+  const after = event.data?.after.data();
+  if (before?.status !== 'PENDING' || after?.status !== 'OPEN') return null;
+  return handleRequestApproved({
+    db: getFirestore(),
+    messaging: messaging(),
+    requestId: event.params.requestId,
+    log: logger,
+  });
+});
 
 export const onMatchAnswered = onDocumentUpdated('matches/{matchId}', (event) =>
   handleMatchAnswered({
@@ -59,6 +74,16 @@ export const onMatchAnswered = onDocumentUpdated('matches/{matchId}', (event) =>
 export const confirmDonation = onCall((request) =>
   confirmDonationHandler({
     db: getFirestore(),
+    caller: request.auth,
+    data: request.data,
+    log: logger,
+  }),
+);
+
+export const reviewRequest = onCall((request) =>
+  reviewRequestHandler({
+    db: getFirestore(),
+    messaging: messaging(),
     caller: request.auth,
     data: request.data,
     log: logger,

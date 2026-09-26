@@ -47,8 +47,17 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
             context: context,
             builder: (dialogContext) => AlertDialog(
                 title: Text(l10n.requestConfirmTitle),
-                content: Text(
-                    l10n.requestConfirmCompat(draft.patientBloodType?.wireValue ?? ''),
+                // The review line is new with DEC-015: the family must know before they
+                // press Send that no donor hears of it until an admin approves, or the
+                // quiet minutes that follow look like the app failed them.
+                content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                        Text(l10n.requestConfirmCompat(draft.patientBloodType?.wireValue ?? '')),
+                        const SizedBox(height: 12),
+                        Text(l10n.requestConfirmReview, key: const Key('request-confirm-review')),
+                    ],
                 ),
                 actions: [
                     TextButton(

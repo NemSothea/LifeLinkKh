@@ -40,14 +40,22 @@ Doc id is the uid — one profile per account, which was `UNIQUE (user_id)`. Own
 ### `requests/{requestId}` — was `blood_requests`
 `createdBy` uid · `hospitalId` · `hospital` {name, districtCode} (written by the Function) ·
 `patientBloodType` · `unitsNeeded` 1–20 · `urgency` `'CRITICAL'|'URGENT'|'ROUTINE'` ·
-`status` `'OPEN'|'FULFILLED'|'CANCELLED'|'EXPIRED'` · `alertedCount` · `acceptedCount` ·
+`status` `'PENDING'|'OPEN'|'REJECTED'|'FULFILLED'|'CANCELLED'|'EXPIRED'` · `alertedCount` · `acceptedCount` ·
 `createdAt` · `updatedAt` · and three the `onRequestCreated` Function adds: `matchedAt` (its
 at-most-once claim — a redelivered event that finds it set does nothing), `hospital`, and
 `cancelReason: 'RATE_LIMITED'` on the sixth request from one creator inside ten minutes.
 
-**Public read** — this document is the public board (DEC-009), so nothing on it is private.
-Create: signed in, `createdBy` is you, `status OPEN`, counts `0`. Update: the creator may move
-`OPEN → CANCELLED` and touch nothing else. Counts and `FULFILLED` belong to Functions.
+**Public read once approved** — this document is the public board (DEC-009), so nothing on it is private.
+Create: signed in, `createdBy` is you, `status PENDING`, counts `0`. Update: the creator may move
+`PENDING|OPEN → CANCELLED` and touch nothing else. Counts and `FULFILLED` belong to Functions.
+
+**Review (DEC-015).** A request starts `PENDING`: not on the public board, alerting nobody. The
+`reviewRequest` callable (admin only) moves it to `OPEN` — the `onRequestApproved` trigger then
+matches and alerts — or to `REJECTED` with `rejectReason` (1–200 characters, shown to the
+requester). Both write `reviewedBy` and `reviewedAt`. `PENDING` and `REJECTED` are readable only by
+the creator and the admin, so the read rule above is public only for `OPEN`, `FULFILLED`,
+`CANCELLED` and `EXPIRED`, and a list query must filter on one of those statuses (the board asks
+for `OPEN`).
 
 ### `requests/{requestId}/private/contact` — was `contact_name`, `contact_phone`
 `contactName` 1–120 · `contactPhone` normalized `+855…` Cambodian mobile

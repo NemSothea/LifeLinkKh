@@ -57,7 +57,7 @@ const newRequest = (createdBy, overrides = {}) => ({
   patientBloodType: 'AB+',
   unitsNeeded: 2,
   urgency: 'CRITICAL',
-  status: 'OPEN',
+  status: 'PENDING',
   alertedCount: 0,
   acceptedCount: 0,
   createdAt: serverTimestamp(),
@@ -207,7 +207,8 @@ describe('requests', () => {
     await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('someone-else')));
   });
 
-  test('a new request starts OPEN with zero counts — counts belong to the Function', async () => {
+  test('a new request starts PENDING with zero counts — approval and counts belong to Functions', async () => {
+    await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('req-1', { status: 'OPEN' })));
     await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('req-1', { status: 'FULFILLED' })));
     await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('req-1', { alertedCount: 25 })));
     await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('req-1', { acceptedCount: 1 })));
@@ -241,13 +242,13 @@ describe('requests', () => {
   });
 
   test('the public board reads requests signed out (DEC-009)', async () => {
-    await seed((db) => setDoc(doc(db, 'requests/r1'), newRequest('req-1')));
+    await seed((db) => setDoc(doc(db, 'requests/r1'), newRequest('req-1', { status: 'OPEN' })));
     await assertSucceeds(getDoc(doc(anon(), 'requests/r1')));
     await assertSucceeds(getDoc(doc(anon(), 'requests/r1/acceptedDonors/d1')));
   });
 
   test('the creator cancels an open request and changes nothing else', async () => {
-    await seed((db) => setDoc(doc(db, 'requests/r1'), newRequest('req-1')));
+    await seed((db) => setDoc(doc(db, 'requests/r1'), newRequest('req-1', { status: 'OPEN' })));
     const db = as('req-1');
     await assertFails(updateDoc(doc(db, 'requests/r1'), { status: 'CANCELLED', updatedAt: serverTimestamp(), unitsNeeded: 9 }));
     await assertFails(updateDoc(doc(db, 'requests/r1'), { status: 'FULFILLED', updatedAt: serverTimestamp() }));
@@ -259,6 +260,41 @@ describe('requests', () => {
     await assertFails(updateDoc(doc(as('req-1'), 'requests/r1'), { status: 'CANCELLED', updatedAt: serverTimestamp() }));
     await seed((db) => setDoc(doc(db, 'requests/r2'), newRequest('req-1')));
     await assertFails(updateDoc(doc(as('other'), 'requests/r2'), { status: 'CANCELLED', updatedAt: serverTimestamp() }));
+  });
+
+  test('a pending or rejected request is not on the public board — only its creator and the admin see it (DEC-015)', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'requests/r1'), newRequest('req-1'));
+      await setDoc(doc(db, 'requests/r2'), newRequest('req-1', { status: 'REJECTED' }));
+    });
+    for (const id of ['r1', 'r2']) {
+      await assertFails(getDoc(doc(anon(), `requests/${id}`)));
+      await assertFails(getDoc(doc(as('d1'), `requests/${id}`)));
+      await assertSucceeds(getDoc(doc(as('req-1'), `requests/${id}`)));
+      await assertSucceeds(getDoc(doc(admin(), `requests/${id}`)));
+    }
+  });
+
+  test('the board\'s query asks for OPEN, so the rules can answer it signed out', async () => {
+    await seed((db) => setDoc(doc(db, 'requests/r1'), newRequest('req-1', { status: 'OPEN' })));
+    await assertSucceeds(getDocs(query(collection(anon(), 'requests'), where('status', '==', 'OPEN'))));
+    await assertFails(getDocs(collection(anon(), 'requests')));
+    await assertSucceeds(getDocs(query(collection(as('req-1'), 'requests'), where('createdBy', '==', 'req-1'))));
+    await assertSucceeds(getDocs(query(collection(admin(), 'requests'), where('status', '==', 'PENDING'))));
+  });
+
+  test('the creator cancels a pending request, but cannot approve or reject it', async () => {
+    await seed((db) => setDoc(doc(db, 'requests/r1'), newRequest('req-1')));
+    const db = as('req-1');
+    await assertFails(updateDoc(doc(db, 'requests/r1'), { status: 'OPEN', updatedAt: serverTimestamp() }));
+    await assertFails(updateDoc(doc(db, 'requests/r1'), { status: 'REJECTED', updatedAt: serverTimestamp() }));
+    await assertFails(updateDoc(doc(admin(), 'requests/r1'), { status: 'OPEN', updatedAt: serverTimestamp() }));
+    await assertSucceeds(updateDoc(doc(db, 'requests/r1'), { status: 'CANCELLED', updatedAt: serverTimestamp() }));
+  });
+
+  test('a rejected request stays rejected', async () => {
+    await seed((db) => setDoc(doc(db, 'requests/r1'), newRequest('req-1', { status: 'REJECTED' })));
+    await assertFails(updateDoc(doc(as('req-1'), 'requests/r1'), { status: 'CANCELLED', updatedAt: serverTimestamp() }));
   });
 
   test('the board\'s accepted-donor list is written by the Function only', async () => {

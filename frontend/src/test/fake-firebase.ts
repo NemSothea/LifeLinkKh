@@ -47,6 +47,26 @@ export function fakeFirebase(
                 return { ok: status < 300, status, json: async () => answer.body };
             }
 
+            // A single-document GET: `documents/requests/r1/private/contact`, looked up by its
+            // collection path and id. Missing is a 404, as Firestore answers it.
+            if (!url.endsWith(':runQuery')) {
+                const path = url.slice(url.indexOf('/documents/') + '/documents/'.length);
+                const id = path.slice(path.lastIndexOf('/') + 1);
+                const row = (tables[path.slice(0, path.lastIndexOf('/'))] ?? []).find(
+                    (r) => r.id === id,
+                );
+                if (!row) return { ok: false, status: 404, json: async () => ({}) };
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({
+                        name: `projects/lifelinkkh/databases/(default)/documents/${path}`,
+                        fields: (encode(row.fields) as { mapValue: { fields: unknown } }).mapValue
+                            .fields,
+                    }),
+                };
+            }
+
             const parent = url.match(/documents\/?(.*):runQuery$/)?.[1] ?? '';
             const collection = body.structuredQuery.from[0].collectionId;
             const key = parent ? `${parent}/${collection}` : collection;

@@ -8,7 +8,7 @@ The Firebase backend that replaces Spring Boot + PostgreSQL — ADR 0009, branch
 | `rules-tests/` | One emulator test per rule. A rule without a test is treated as absent |
 | `firestore.indexes.json` | Composite indexes for the board, "my requests", "my matches", history |
 | `firebase.json` | Emulator ports: auth 9099, firestore 8081, functions 5001, UI 4000 |
-| `functions/` | Cloud Functions. `onRequestCreated`: rate limit, matching, match documents, donor alert. `onMatchAnswered`: accepted count, public board row, "donor accepted" push. The portal's one callable: `confirmDonation` (admin only) |
+| `functions/` | Cloud Functions. `onRequestCreated`: rate limit and hospital name while `PENDING`. `onRequestApproved`: matching, match documents, donor alert, requester told. `onMatchAnswered`: accepted count, public board row, "donor accepted" push. Callables for the portal admin: `reviewRequest` (approve/reject, DEC-015), `confirmDonation` |
 | `seed/` | Districts and hospitals (V3, V7), same ids as Postgres. `reference-data.json` is the source. `admin.mjs`: the portal's admin account (V13's `soborey`) |
 
 The data model and the reason behind each rule: `docs/tech-lead/firestore-data-model.md`.

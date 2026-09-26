@@ -18,7 +18,7 @@ stage: **whether a push arrives.**
 | | Emulator stack (section 1) | Real project (section 2) |
 |---|---|---|
 | Data | Local Firestore + Auth emulators, wiped when they stop | `lifelinkkh` in the cloud, persistent |
-| Matching | The real `onRequestCreated`, in the Functions emulator | The deployed Function |
+| Matching | The real `onRequestApproved`, in the Functions emulator, once the admin approves (DEC-015) | The deployed Function |
 | Pushes | **None.** FCM has no emulator; the Function tries real FCM and fails without credentials | Real FCM, to the real phones |
 | Needs | Java 21, Node, no internet for the data (Google Sign-In on the phone still needs it) | Blaze plan, Functions deployed, internet on every device |
 | Good for | Rehearsal, portal work, a demo where the push is narrated | The defense, if the alert arriving on a phone is the moment you want |
@@ -63,13 +63,15 @@ PORTAL_ADMIN_PASSWORD='<12+ chars>' npm run seed:admin:app   # the portal admin,
 npm run seed:demo                                    # the demo request, see below
 ```
 
-`seed:demo` writes two O− donors in Doun Penh (Nem Sothea, Sok Dara), a requester (Chea Srey)
-and one **CRITICAL AB+ request at Calmette**. The request goes through the real
-`onRequestCreated` Function, which is why Functions must be running; the script waits for the
-match, then has the first donor accept, so the portal has a donation to confirm. It deletes
+`seed:demo` writes two O− donors in Doun Penh (Nem Sothea, Sok Dara), a requester (Chea Srey),
+one **CRITICAL AB+ request at Calmette** and one **URGENT O+ request left PENDING**. The CRITICAL
+one is approved as an admin would (DEC-015), so the real `onRequestApproved` Function matches it —
+which is why Functions must be running; the script waits for the match, then has the first donor
+accept, so the portal has a donation to confirm. The PENDING one sits in the portal's **Waiting
+for review** queue, so approving a request can be shown live. It deletes
 `requests`, `matches` and `donations` first and it only ever talks to the emulator — it prints
 `… donors alerted, 1 accepted — ready to confirm in the portal` when it worked, and
-`onRequestCreated never ran` when the emulators were started without Functions.
+`onRequestApproved never ran` when the emulators were started without Functions.
 
 **Terminal 3** — the portal:
 
@@ -176,17 +178,21 @@ in front of an audience is how that happens.
 
 1. **Account A** — Google Sign-In, register as donor with the values above.
 2. **Account B** — Google Sign-In, create an urgent request with the values above.
-3. `onRequestCreated` matches and pushes. On the real project Account A gets a notification
+3. **The request waits for review (DEC-015).** Account B's app shows "Waiting for review"; no
+   donor is alerted yet. On the portal (signed in as `soborey`), the request is at the top under
+   **Waiting for review** with the requester's phone number. Click **Approve** → **Yes, alert
+   donors**. Rejecting needs a reason, which Account B then sees in the app.
+4. `onRequestApproved` matches and pushes. On the real project Account A gets a notification
    within seconds; on the emulator stack the request appears in Account A's matches with no
    notification — say so, don't wait for it.
-4. Account A **accepts**. `onMatchAnswered` bumps the accepted count, adds the donor to the
+5. Account A **accepts**. `onMatchAnswered` bumps the accepted count, adds the donor to the
    public board row, and pushes "A donor accepted your request" to Account B (`FR-NOTIFY-003`,
    real project only).
-5. Switch to the **web portal** (`http://localhost:3000/km` — Khmer by default, English via the
+6. Switch to the **web portal** (`http://localhost:3000/km` — Khmer by default, English via the
    switcher top-right). Sign in as the admin `soborey` (section 5), open the request row —
    Account A is listed as an accepted donor. Click **confirm donation** (the `confirmDonation`
    callable, admin only).
-6. Back on Account A's app — donation history shows the entry, eligibility flips to "next
+7. Back on Account A's app — donation history shows the entry, eligibility flips to "next
    eligible in 56 days."
 
 That loop — register, request, match, accept, confirm, history — is the whole product.
@@ -415,7 +421,7 @@ Rules tests, Functions unit and emulator tests, web lint/types/tests, `flutter a
 | Every portal route 500s right after a build | `npm run build` was run while `next dev` was live; they share `.next`. Stop dev, `rm -rf .next`, restart |
 | Mobile shows an empty app on the emulator stack | Wrong `FIRESTORE_EMULATOR` for that device — `127.0.0.1` from an Android emulator is the emulator itself. Use `scripts/demo-mobile.sh` |
 | The match exists, no notification arrived | Emulator stack (no pushes, section 0), `fcmToken` null, or a dead FCM socket (section 7) |
-| `seed:demo` says `onRequestCreated never ran` | Emulators started without Functions — use `npm run emulators:app`, not `npm run emulators` |
+| `seed:demo` says `onRequestApproved never ran` | Emulators started without Functions — use `npm run emulators:app`, not `npm run emulators` |
 | Emulators fail to start | Java older than 21 on the `PATH` |
 
 ## 9. Setting and rotating the admin password
