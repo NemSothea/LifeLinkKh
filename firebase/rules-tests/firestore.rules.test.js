@@ -9,11 +9,16 @@ import {
 } from '@firebase/rules-unit-testing';
 import {
   Timestamp,
+  collection,
+  deleteDoc,
   doc,
   getDoc,
+  getDocs,
+  query,
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
   writeBatch,
 } from 'firebase/firestore';
 
@@ -25,7 +30,8 @@ let env;
 
 const anon = () => env.unauthenticatedContext().firestore();
 const as = (uid, claims = {}) => env.authenticatedContext(uid, claims).firestore();
-const staff = (hospitalId = HOSPITAL) => as('staff-1', { role: 'HOSPITAL', hospitalId });
+// v1 has no hospital staff. A HOSPITAL claim left on some token must grant nothing.
+const hospitalClaim = (hospitalId = HOSPITAL) => as('staff-1', { role: 'HOSPITAL', hospitalId });
 const admin = () => as('admin-1', { role: 'ADMIN' });
 
 /** Writes with rules off — the Admin SDK's view, used to arrange each test. */
@@ -94,6 +100,8 @@ beforeEach(async () => {
     await setDoc(doc(db, `districts/${DISTRICT}`), { nameEn: 'Doun Penh', nameKm: 'ដូនពេញ' });
     await setDoc(doc(db, `hospitals/${HOSPITAL}`), { name: 'Calmette Hospital', districtCode: DISTRICT });
     await setDoc(doc(db, `hospitals/${OTHER_HOSPITAL}`), { name: 'Khmer-Soviet Friendship Hospital', districtCode: DISTRICT });
+    // seed/admin.mjs writes this record alongside the claim; admin() needs both.
+    await setDoc(doc(db, 'admins/admin-1'), { displayName: 'Soborey', username: 'soborey' });
   });
 });
 
@@ -128,7 +136,7 @@ describe('users', () => {
   test('another user cannot read it — the FCM token addresses a push to you', async () => {
     await seed((db) => setDoc(doc(db, 'users/u1'), user({ fcmToken: 'token' })));
     await assertFails(getDoc(doc(as('u2'), 'users/u1')));
-    await assertFails(getDoc(doc(staff(), 'users/u1')));
+    await assertFails(getDoc(doc(hospitalClaim(), 'users/u1')));
     await assertSucceeds(getDoc(doc(admin(), 'users/u1')));
   });
 
@@ -176,7 +184,7 @@ describe('donors', () => {
     await seed((db) => setDoc(doc(db, 'donors/u1'), donor()));
     await assertSucceeds(getDoc(doc(as('u1'), 'donors/u1')));
     await assertFails(getDoc(doc(as('u2'), 'donors/u1')));
-    await assertFails(getDoc(doc(staff(), 'donors/u1')));
+    await assertFails(getDoc(doc(hospitalClaim(), 'donors/u1')));
     await assertFails(getDoc(doc(anon(), 'donors/u1')));
     await assertSucceeds(getDoc(doc(admin(), 'donors/u1')));
   });
@@ -282,7 +290,7 @@ describe('requester contact — RequestViews.requesterContact', () => {
 
   test('staff, strangers and the signed-out board do not', async () => {
     await seedRequestWithMatch('req-1', 'd1', { response: 'ACCEPTED' });
-    await assertFails(getDoc(doc(staff(), 'requests/r1/private/contact')));
+    await assertFails(getDoc(doc(hospitalClaim(), 'requests/r1/private/contact')));
     await assertFails(getDoc(doc(as('stranger'), 'requests/r1/private/contact')));
     await assertFails(getDoc(doc(anon(), 'requests/r1/private/contact')));
   });
@@ -308,10 +316,10 @@ describe('matches — MatchService.respond', () => {
     await assertFails(getDoc(doc(anon(), 'matches/r1_d1')));
   });
 
-  test('staff read matches at their own hospital only', async () => {
+  test('a HOSPITAL claim reads no match — v1 has no hospital staff', async () => {
     await seedRequestWithMatch('req-1', 'd1');
-    await assertSucceeds(getDoc(doc(staff(HOSPITAL), 'matches/r1_d1')));
-    await assertFails(getDoc(doc(staff(OTHER_HOSPITAL), 'matches/r1_d1')));
+    await assertFails(getDoc(doc(hospitalClaim(HOSPITAL), 'matches/r1_d1')));
+    await assertSucceeds(getDoc(doc(admin(), 'matches/r1_d1')));
     await assertFails(getDoc(doc(as('staff-no-claim', { hospitalId: HOSPITAL }), 'matches/r1_d1')));
   });
 
@@ -354,20 +362,59 @@ describe('donations', () => {
     donorUid: 'd1', hospitalId: HOSPITAL, requestId: 'r1', donatedOn: Timestamp.now(), confirmedBy: 'staff-1',
   })));
 
-  test('the donor, their hospital\'s staff and an admin read it', async () => {
+  test('the donor and an admin read it', async () => {
     await assertSucceeds(getDoc(doc(as('d1'), 'donations/x1')));
-    await assertSucceeds(getDoc(doc(staff(HOSPITAL), 'donations/x1')));
     await assertSucceeds(getDoc(doc(admin(), 'donations/x1')));
   });
 
   test('another donor and another hospital do not', async () => {
     await assertFails(getDoc(doc(as('d2'), 'donations/x1')));
-    await assertFails(getDoc(doc(staff(OTHER_HOSPITAL), 'donations/x1')));
+    await assertFails(getDoc(doc(hospitalClaim(HOSPITAL), 'donations/x1')));
   });
 
-  test('no client records a donation — not even the donor or staff', async () => {
+  test('no client records a donation — not even the donor or an admin', async () => {
     const donation = { donorUid: 'd1', hospitalId: HOSPITAL, donatedOn: Timestamp.now() };
     await assertFails(setDoc(doc(as('d1'), 'donations/x2'), donation));
-    await assertFails(setDoc(doc(staff(), 'donations/x2'), donation));
+    await assertFails(setDoc(doc(admin(), 'donations/x2'), donation));
+  });
+});
+
+describe('admins', () => {
+  test('an admin reads their own record, and nobody else reads any', async () => {
+    await assertSucceeds(getDoc(doc(admin(), 'admins/admin-1')));
+    await assertFails(getDocs(collection(admin(), 'admins')));
+    await assertFails(getDoc(doc(as('d1'), 'admins/admin-1')));
+    await assertFails(getDoc(doc(anon(), 'admins/admin-1')));
+  });
+
+  test('no client writes it — a record is how a claim becomes access', async () => {
+    await assertFails(setDoc(doc(as('d1'), 'admins/d1'), { displayName: 'Me' }));
+    await assertFails(setDoc(doc(admin(), 'admins/d1'), { displayName: 'Friend' }));
+  });
+
+  test('an ADMIN claim with no record is no access: a revoke takes effect before the token expires', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'users/d1'), { language: 'en', role: 'DONOR' });
+      await setDoc(doc(db, 'donations/x1'), {
+        donorUid: 'd1', hospitalId: HOSPITAL, requestId: 'r1', donatedOn: Timestamp.now(), confirmedBy: 'admin-1',
+      });
+    });
+    await assertSucceeds(getDoc(doc(admin(), 'users/d1')));
+    await seed((db) => deleteDoc(doc(db, 'admins/admin-1')));
+    await assertFails(getDoc(doc(admin(), 'users/d1')));
+    await assertFails(getDoc(doc(admin(), 'donations/x1')));
+  });
+
+  test('a record with no claim is no access either', async () => {
+    await seed((db) => setDoc(doc(db, 'users/d1'), { language: 'en', role: 'DONOR' }));
+    await assertFails(getDoc(doc(as('admin-1'), 'users/d1')));
+  });
+
+  test('the portal\'s query: an admin lists one request\'s donations', async () => {
+    await seed((db) => setDoc(doc(db, 'donations/x1'), {
+      donorUid: 'd1', hospitalId: HOSPITAL, requestId: 'r1', donatedOn: Timestamp.now(), confirmedBy: 'admin-1',
+    }));
+    await assertSucceeds(getDocs(query(collection(admin(), 'donations'), where('requestId', '==', 'r1'))));
+    await assertFails(getDocs(query(collection(hospitalClaim(), 'donations'), where('requestId', '==', 'r1'))));
   });
 });

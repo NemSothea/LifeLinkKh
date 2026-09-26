@@ -9,14 +9,12 @@ const nextConfig: NextConfig = {
     async redirects() {
         return [
             {
-                // The staff page used to live at /portal/admin, which named who may open
-                // it rather than what it is for — and everything else about it (its
-                // title, the link that reaches it, the `/admin/staff` endpoint behind it)
-                // said "staff". Permanent, and kept rather than dropped: the old path is
-                // in docs/demo-runbook.md, in the team's bookmarks, and in whatever was
-                // written down during M5.
-                source: '/:locale(km|en)/portal/admin',
-                destination: '/:locale/portal/staff',
+                // The staff page lived at /portal/admin, then /portal/staff. v1 has no
+                // hospital staff and no staff page (ADR 0009, phase 5), so both old paths
+                // land on the portal itself rather than a 404 — they are still in
+                // docs/demo-runbook.md and in the team's bookmarks.
+                source: '/:locale(km|en)/portal/:page(admin|staff)',
+                destination: '/:locale/portal',
                 permanent: true,
             },
         ];

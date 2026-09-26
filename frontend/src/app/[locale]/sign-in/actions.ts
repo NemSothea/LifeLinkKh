@@ -8,17 +8,17 @@ import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from '@/lib/api/session';
 /**
  * Sign in, and put the session where page script cannot reach it.
  *
- * The password is read from the form on the server and forwarded to the backend from the
+ * The password is read from the form on the server and forwarded to Firebase Auth from the
  * server. It is never a prop, never in a URL, never in a redirect, and never logged — the
  * only two places it exists are the POST body the browser sends over TLS and the one the
- * Next server makes to the API.
+ * Next server makes to Firebase Auth.
  */
 /**
  * What went wrong, at the only granularity that is safe to show.
  *
- * `invalid` deliberately covers both "no such username" and "wrong password" — the backend
- * answers those identically on purpose, and a page that separated them would enumerate the
- * staff list from the outside. `rateLimited` and `unreachable` are a different class: they
+ * `invalid` deliberately covers "no such username", "wrong password", "disabled" and "not
+ * an admin" — Firebase Auth answers the first two identically on purpose, and a page that
+ * separated them would enumerate the admin accounts from the outside. `rateLimited` and `unreachable` are a different class: they
  * say nothing about whether an account exists, and hiding them behind "wrong password" sends
  * someone to retype a password that was right all along.
  */
@@ -44,8 +44,9 @@ export async function signInAction(
 
     if (!result.ok) {
         if (result.error === 'unreachable') return 'unreachable';
-        // 429 is the per-IP limiter in AuthController, not a rejected credential.
-        if (result.error === 'HTTP 429') return 'rateLimited';
+        // Firebase Auth's lockout after repeated failures on one account — not a rejected
+        // credential, so it gets its own sentence.
+        if (result.error === 'TOO_MANY_ATTEMPTS_TRY_LATER') return 'rateLimited';
         return 'invalid';
     }
 
@@ -78,8 +79,8 @@ export async function signInAction(
  * Sign out. Unlike the mobile app there is no FCM token to clear — a browser receives no
  * push — so this is the whole of it: drop the cookie, land on the sign-in page.
  *
- * The JWT itself stays valid until it expires; ADR 0007 has no server-side revocation. That
- * is the same trade the mobile client makes, bounded by the same one hour.
+ * The ID token itself stays valid until it expires, bounded by the same one hour. Access does
+ * not: the rules check `admins/{uid}` on every read, so a revoked account is refused at once.
  */
 export async function signOutAction(formData: FormData) {
     const locale = formData.get('locale');

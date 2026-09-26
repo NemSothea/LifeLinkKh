@@ -11,10 +11,11 @@
 |---|---|---|
 | Anyone, signed out | no `request.auth` | Read the public board: `requests`, `requests/*/acceptedDonors`, `hospitals`, `districts` |
 | Mobile user | signed in, **no** `role` claim | Own `users` and `donors` doc; post and cancel own requests; answer own matches |
-| Hospital staff | claim `role == 'HOSPITAL'` + `hospitalId` | Read matches and donations at their hospital |
-| Admin | claim `role == 'ADMIN'` | Read everything |
+| Admin | claim `role == 'ADMIN'` **and** an `admins/{uid}` record | Read everything; the portal |
 
-Claims are set only by a Cloud Function (Admin SDK). Every write the rules refuse to a client —
+v1 has no hospital staff (DEC-014). The claim and the record are both written by
+`firebase/seed/admin.mjs` (Admin SDK). The rules require both: a claim outlives a revoke by up to
+an hour, the record does not. Every write the rules refuse to a client —
 match creation, counts, donations, `lastDonationDate` after a confirmed donation — is a Function's job.
 
 ## Collections
@@ -34,7 +35,7 @@ address a push to this person.
 `createdAt` · `updatedAt`
 
 Doc id is the uid — one profile per account, which was `UNIQUE (user_id)`. Owner and admin read;
-**nobody else**, not even staff. Matching reads it through the Admin SDK.
+**nobody else**, not a requester. Matching reads it through the Admin SDK.
 
 ### `requests/{requestId}` — was `blood_requests`
 `createdBy` uid · `hospitalId` · `hospital` {name, districtCode} (written by the Function) ·
@@ -65,16 +66,23 @@ Public read, Function write. Same fields as `PublicDonorResponse`: no match id, 
 `notifiedAt` · `response` `null|'ACCEPTED'|'DECLINED'` · `respondedAt`
 
 The composite id is `UNIQUE (blood_request_id, donor_profile_id)`. Created only by
-`onRequestCreated`, so only notified donors have one (ADR 0008). Read by that donor, staff of
-that hospital, and admin. The donor may set `response` **once** (`null → ACCEPTED|DECLINED`, with
+`onRequestCreated`, so only notified donors have one (ADR 0008). Read by that donor and the
+admin. The donor may set `response` **once** (`null → ACCEPTED|DECLINED`, with
 `respondedAt == request.time`) while the request is `OPEN`. A replayed answer is refused by the
 rules — the client treats `permission-denied` on an already-answered match as success.
 
 ### `donations/{donationId}` — was `donations`
 `donorUid` · `hospitalId` · `requestId`|null · `donatedOn` · `confirmedBy` · `createdAt`
 
-Read by the donor, staff of that hospital, and admin. Written only by the `confirmDonation`
+Read by the donor and the admin. Written only by the `confirmDonation`
 Function, which also sets `donors/{uid}.lastDonationDate` and may mark the request `FULFILLED`.
+
+### `admins/{uid}` — was `users.role = 'ADMIN'`, `users.username`
+`displayName` · `username` · `updatedAt`
+
+The second half of `isAdmin()`. Read only by that admin; written only by `seed/admin.mjs`.
+Deleting it ends the admin's access on the next request; disable the Auth user as well, so they
+cannot sign in again.
 
 ### `hospitals/{id}`, `districts/{code}` — reference data
 Public read, no client write. Seeded by `firebase/seed/` from the same values as V3 and V7.
@@ -83,4 +91,6 @@ Public read, no client write. Seeded by `firebase/seed/` from the same values as
 
 - `blood_compatibility` — a constant in the Functions code (still a table, ADR 0004).
 - `telegram_auth_challenges` — Telegram sign-in dropped in phase 1 (ADR 0009).
-- `username`, `password_hash`, `deactivated_at` — Firebase Auth owns credentials and disabling.
+- `password_hash`, `deactivated_at` — Firebase Auth owns credentials and disabling. The username
+  is kept on `admins/{uid}` and is the Auth email's local part (`{username}@portal.lifelink.invalid`).
+- `users.hospital_id` and the `HOSPITAL` role — v1 has no hospital staff (DEC-014).

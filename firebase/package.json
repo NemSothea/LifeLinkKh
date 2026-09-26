@@ -7,8 +7,10 @@
     "emulators": "firebase emulators:start --project demo-lifelink",
     "seed": "node seed/seed.mjs",
     "test:seed": "firebase emulators:exec --only firestore --project demo-lifelink \"node seed/seed.mjs && node seed/verify.mjs\"",
-    "emulators:app": "firebase emulators:start --only firestore --project lifelinkkh",
-    "seed:app": "node seed/seed.mjs --project lifelinkkh --emulator"
+    "emulators:app": "firebase emulators:start --only firestore,auth,functions --project lifelinkkh",
+    "seed:app": "node seed/seed.mjs --project lifelinkkh --emulator",
+    "seed:admin": "node seed/admin.mjs",
+    "seed:admin:app": "node seed/admin.mjs --project lifelinkkh --emulator"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.2",

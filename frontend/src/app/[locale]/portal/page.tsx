@@ -8,7 +8,13 @@ import { hasPortalSession, portalDisplayName, portalRole } from '@/lib/api/sessi
 import SignOutButton from '@/components/SignOutButton';
 import { listPublicRequests } from '@/lib/api/board';
 import { listFulfilledRequests, listOpenRequests, type PortalRequest } from '@/lib/api/portal';
-import { IconAlertTriangle, IconCheck, IconChevron, IconDroplet, IconInbox } from '@/components/icons';
+import {
+    IconAlertTriangle,
+    IconCheck,
+    IconChevron,
+    IconDroplet,
+    IconInbox,
+} from '@/components/icons';
 import RequestList, { type RequestViewModel } from './request-list';
 
 /**
@@ -35,8 +41,8 @@ export default async function PortalPage({
     const { locale } = await params;
     const { confirmError, confirmed } = await searchParams;
     const t = await getTranslations('portal');
-    const isStaff = await hasPortalSession();
-    const [role, displayName] = isStaff
+    const isAdmin = await hasPortalSession();
+    const [role, displayName] = isAdmin
         ? await Promise.all([portalRole(), portalDisplayName()])
         : [null, null];
 
@@ -48,7 +54,7 @@ export default async function PortalPage({
     // A signed-out visitor reads the public board instead. Same rows, same counts, minus
     // the write handle — and no "recently fulfilled" section, which is a record of staff
     // work rather than a call for help.
-    const [result, fulfilledResult] = isStaff
+    const [result, fulfilledResult] = isAdmin
         ? await Promise.all([listOpenRequests(), listFulfilledRequests()])
         : [await listPublicRequests(), { ok: false } as const];
     const fulfilled = fulfilledResult.ok ? fulfilledResult.data : [];
@@ -74,17 +80,8 @@ export default async function PortalPage({
                     <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
                 </div>
                 <div className="flex items-center gap-3">
-                    {role === 'ADMIN' ? (
-                        <Link
-                            href={`/${locale}/portal/staff`}
-                            data-testid="manage-staff-link"
-                            className="text-sm font-medium text-black/60 underline-offset-4 hover:underline dark:text-white/60"
-                        >
-                            {t('manageStaffCta')}
-                        </Link>
-                    ) : null}
                     <LanguageSwitcher />
-                    {isStaff ? (
+                    {isAdmin ? (
                         <SignOutButton locale={locale} displayName={displayName} role={role} />
                     ) : (
                         // The only thing a visitor is offered. Not a wall in front of the
@@ -104,7 +101,9 @@ export default async function PortalPage({
                         >
                             <span>
                                 <strong className="text-lg">{requests.length}</strong>{' '}
-                                <span className="text-black/60 dark:text-white/60">{t('openLabel')}</span>
+                                <span className="text-black/60 dark:text-white/60">
+                                    {t('openLabel')}
+                                </span>
                             </span>
                             {criticalCount > 0 ? (
                                 <span className="flex items-center gap-1.5 font-medium text-brand">
@@ -112,7 +111,8 @@ export default async function PortalPage({
                                         <span className="absolute inline-flex h-full w-full motion-safe:animate-ping rounded-full bg-brand opacity-75" />
                                         <span className="relative inline-flex h-2 w-2 rounded-full bg-brand" />
                                     </span>
-                                    <span className="tabular-nums">{criticalCount}</span> {t('criticalLabel')}
+                                    <span className="tabular-nums">{criticalCount}</span>{' '}
+                                    {t('criticalLabel')}
                                 </span>
                             ) : null}
                         </div>
@@ -147,7 +147,10 @@ export default async function PortalPage({
             ) : null}
 
             {!result.ok ? (
-                <EmptyState icon={<IconAlertTriangle className="h-8 w-8" />} testId="portal-unreachable">
+                <EmptyState
+                    icon={<IconAlertTriangle className="h-8 w-8" />}
+                    testId="portal-unreachable"
+                >
                     {t('unreachable')}
                 </EmptyState>
             ) : requests.length === 0 ? (
@@ -157,7 +160,7 @@ export default async function PortalPage({
             ) : (
                 <RequestList
                     requests={requestViewModels}
-                    canConfirm={isStaff}
+                    canConfirm={isAdmin}
                     locale={locale}
                     // `.raw()` on the two below, not `t()`: both carry `{placeholder}`
                     // tokens that `RequestList` fills in per row on the client, and
@@ -185,7 +188,7 @@ export default async function PortalPage({
                 />
             )}
 
-            {isStaff && result.ok ? (
+            {isAdmin && result.ok ? (
                 <FulfilledSection
                     requests={fulfilled}
                     heading={t('fulfilledHeading')}

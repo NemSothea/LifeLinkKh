@@ -5,8 +5,8 @@ import { cookies } from 'next/headers';
  *
  * Replaces `dev-auth.ts` and `PORTAL_DEV_JWT` — a token pasted into `.env` by hand, shared
  * by whoever had the file, owned by nobody, and impossible to end from inside the product.
- * Staff now sign in at `/[locale]/sign-in` with a username and password
- * (`POST /auth/portal/login`), and the session JWT the backend issues is stored here.
+ * Staff sign in at `/[locale]/sign-in` with a username and password, and the Firebase ID
+ * token Firebase Auth issues for that account (ADR 0009) is stored here.
  *
  * **httpOnly.** The token is a bearer credential: whoever holds it is that staff account
  * for an hour. Script on the page cannot read this cookie, so an injected script cannot
@@ -17,8 +17,8 @@ import { cookies } from 'next/headers';
 export const SESSION_COOKIE = 'lifelink_portal_session';
 
 /**
- * One hour, matching `JwtService`'s own expiry. Deliberately not longer: the cookie
- * outliving the token would leave staff on a page that 401s on every action instead of
+ * One hour, matching a Firebase ID token's own expiry. Deliberately not longer: the cookie
+ * outliving the token would leave staff on a page where every read is refused instead of
  * sending them to sign in.
  */
 export const SESSION_MAX_AGE_SECONDS = 3600;
@@ -32,49 +32,59 @@ export async function hasPortalSession(): Promise<boolean> {
     return (await portalToken()) !== null;
 }
 
-export async function portalAuthHeader(): Promise<HeadersInit> {
+/**
+ * The session token, for a call that needs one. The pages redirect to /sign-in first, so a
+ * missing session here is a programming error — and it must fail loudly rather than quietly
+ * make the call signed out, where the rules would answer it as a visitor.
+ */
+export async function requirePortalToken(): Promise<string> {
     const token = await portalToken();
     if (!token) {
-        // Reached only if a page called the API without checking for a session first. The
-        // pages redirect to /sign-in instead, so this is a programming error, not a state a
-        // signed-out visitor can produce.
         throw new Error('No portal session. Redirect to /sign-in before calling the API.');
     }
-    return { Authorization: `Bearer ${token}` };
+    return token;
 }
 
 /**
- * Reads the `role` claim straight out of the token, unverified — good enough to decide
- * whether to render the "Manage staff" link, never to authorize a write. The backend
- * checks the real, signed claim on every `/admin/*` call regardless of what this returns.
+ * The token's claims, read straight out of it, unverified — good enough to decide what to
+ * render or which query to ask, never to authorize anything. Firestore's rules and the
+ * Functions verify the signed token on every call regardless of what this returns.
  */
-export async function portalRole(): Promise<string | null> {
+async function claims(): Promise<{
+    sub?: string;
+    role?: string;
+    email?: string;
+} | null> {
     const token = await portalToken();
     if (!token) return null;
     try {
         const payload = token.split('.')[1];
-        const json = Buffer.from(payload, 'base64url').toString('utf-8');
-        return (JSON.parse(json) as { role?: string }).role ?? null;
+        return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'));
     } catch {
         return null;
     }
 }
 
+/** `ADMIN` — the custom claim `firebase/seed/admin.mjs` sets. v1 has no other portal role. */
+export async function portalRole(): Promise<string | null> {
+    return (await claims())?.role ?? null;
+}
+
 /**
- * The signed-in account's own id, read from the token's `sub` claim. Used to hide the buttons on
- * an admin's own staff row — never to authorize anything, which the backend does from the signed
- * claim regardless.
+ * The signed-in account's own uid, read from the token's `sub` claim. Used to hide the buttons on
+ * an admin's own staff row — never to authorize anything.
  */
 export async function portalUserId(): Promise<string | null> {
-    const token = await portalToken();
-    if (!token) return null;
-    try {
-        const payload = token.split('.')[1];
-        return (JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8')) as { sub?: string })
-            .sub ?? null;
-    } catch {
-        return null;
-    }
+    return (await claims())?.sub ?? null;
+}
+
+/**
+ * The portal username, recovered from the account's email (`portalEmail` in `portal-auth.ts`).
+ * Used only to re-check the current password when someone changes it.
+ */
+export async function portalUsername(): Promise<string | null> {
+    const email = (await claims())?.email;
+    return email ? email.slice(0, email.indexOf('@')) : null;
 }
 
 /** The signed-in staff member's display name, for the header. Never used as an identity. */

@@ -8,8 +8,14 @@ vi.mock('next/headers', () => ({
     }),
 }));
 
-const { hasPortalSession, portalAuthHeader, portalDisplayName, portalRole, SESSION_COOKIE } =
-    await import('./session');
+const {
+    hasPortalSession,
+    portalDisplayName,
+    portalRole,
+    portalUsername,
+    requirePortalToken,
+    SESSION_COOKIE,
+} = await import('./session');
 
 function fakeJwt(claims: Record<string, unknown>): string {
     const body = Buffer.from(JSON.stringify(claims)).toString('base64url');
@@ -20,16 +26,27 @@ afterEach(() => {
     for (const key of Object.keys(cookieStore)) delete cookieStore[key];
 });
 
-describe('portalAuthHeader', () => {
-    it('sends the session cookie as a bearer credential', async () => {
+describe('requirePortalToken', () => {
+    it('is the session cookie', async () => {
         cookieStore[SESSION_COOKIE] = 'session-token';
-        expect(await portalAuthHeader()).toEqual({ Authorization: 'Bearer session-token' });
+        expect(await requirePortalToken()).toBe('session-token');
     });
 
     // The pages redirect to /sign-in first, so reaching here without a session is a bug in
-    // the caller — and it must fail loudly rather than quietly send an anonymous request.
-    it('throws rather than calling the API unauthenticated', async () => {
-        await expect(portalAuthHeader()).rejects.toThrow('No portal session');
+    // the caller — and it must fail loudly rather than quietly make the call signed out.
+    it('throws rather than calling Firebase as a visitor', async () => {
+        await expect(requirePortalToken()).rejects.toThrow('No portal session');
+    });
+});
+
+describe('portalUsername', () => {
+    it('is the username behind the portal email', async () => {
+        cookieStore[SESSION_COOKIE] = fakeJwt({
+            sub: 'u1',
+            role: 'ADMIN',
+            email: 'soborey@portal.lifelink.invalid',
+        });
+        expect(await portalUsername()).toBe('soborey');
     });
 });
 

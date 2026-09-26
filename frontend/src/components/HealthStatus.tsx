@@ -4,10 +4,10 @@ type Props = { reachable: boolean; status?: string };
 
 /**
  * Presentational only, so the reachable and unreachable states are both testable
- * without a running backend.
+ * without a running Firestore.
  *
  * Deliberately quiet since the landing page stopped being the M2 health page: it still
- * proves the whole chain (browser → Next server → backend → PostgreSQL, nothing mocked),
+ * proves the whole chain (browser → Next server → Firestore, nothing mocked),
  * which is worth keeping on screen, but a bordered card gave a diagnostic the same
  * visual weight as the portal itself. A dot and a line of small text says the same
  * thing without competing.

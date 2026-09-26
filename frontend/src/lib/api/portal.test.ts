@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fakeFirebase, fakeJwt } from '@/test/fake-firebase';
 
-// The API modules read the session from an httpOnly cookie now, not from PORTAL_DEV_JWT.
-// `next/headers` only exists inside a request, so it is stubbed here — these tests are
-// about what the API module sends, not about how Next stores a cookie.
-const cookieStore = { value: 'session-token' as string | null };
+// The session lives in an httpOnly cookie. `next/headers` only exists inside a request, so it is
+// stubbed here — these tests are about what the portal asks Firebase, and as whom.
+const cookieStore = { value: null as string | null };
 vi.mock('next/headers', () => ({
     cookies: async () => ({
         get: () => (cookieStore.value === null ? undefined : { value: cookieStore.value }),
@@ -11,77 +11,152 @@ vi.mock('next/headers', () => ({
 }));
 import { confirmDonation, listFulfilledRequests, listOpenRequests } from './portal';
 
+const admin = fakeJwt({ sub: 'admin-1', role: 'ADMIN' });
+
+const request = (id: string, overrides: Record<string, unknown> = {}) => ({
+    id,
+    fields: {
+        hospitalId: 'calmette',
+        hospital: { name: 'Calmette Hospital', districtCode: '1202' },
+        patientBloodType: 'AB+',
+        unitsNeeded: 2,
+        urgency: 'CRITICAL',
+        status: 'OPEN',
+        alertedCount: 3,
+        acceptedCount: 2,
+        createdAt: '2026-09-26T03:00:00Z',
+        ...overrides,
+    },
+});
+
+const tables = {
+    requests: [request('r1'), request('r2', { hospitalId: 'khmer-soviet' })],
+    'requests/r1/acceptedDonors': [
+        {
+            id: 'd2',
+            fields: {
+                displayName: 'Sok Dara',
+                bloodType: 'O+',
+                districtCode: '1201',
+                respondedAt: '2026-09-26T03:20:00Z',
+            },
+        },
+        {
+            id: 'd1',
+            fields: {
+                displayName: 'Nem Sothea',
+                bloodType: 'A+',
+                districtCode: '1202',
+                respondedAt: '2026-09-26T03:10:00Z',
+            },
+        },
+    ],
+    donations: [
+        { id: 'r1_d2', fields: { donorUid: 'd2', hospitalId: 'calmette', requestId: 'r1' } },
+    ],
+    districts: [
+        { id: '1201', fields: { nameKm: 'ចំការមន', nameEn: 'Chamkar Mon' } },
+        { id: '1202', fields: { nameKm: 'ដូនពេញ', nameEn: 'Doun Penh' } },
+    ],
+};
+
 afterEach(() => {
     vi.unstubAllGlobals();
-    vi.unstubAllEnvs();
-    cookieStore.value = 'session-token';
+    cookieStore.value = null;
 });
 
 describe('listOpenRequests', () => {
-    it('sends the dev JWT as a bearer credential', async () => {
-        cookieStore.value = 'session-token';
-        const fetchMock = vi
-            .fn()
-            .mockResolvedValue({ ok: true, status: 200, json: async () => [] });
-        vi.stubGlobal('fetch', fetchMock);
+    it('reads as the signed-in admin, across every hospital', async () => {
+        cookieStore.value = admin;
+        const calls = fakeFirebase(tables);
+
+        const result = await listOpenRequests();
+
+        expect(result.ok && result.data.map((r) => r.id)).toEqual(['r1', 'r2']);
+        const requestsQuery = calls.find(
+            (c) => c.body?.structuredQuery?.from[0].collectionId === 'requests',
+        );
+        expect(requestsQuery?.token).toBe(admin);
+    });
+
+    it('gives each donor the match id, in answer order, and drops donors already confirmed', async () => {
+        cookieStore.value = admin;
+        fakeFirebase(tables);
+
+        const result = await listOpenRequests();
+
+        expect(result.ok && result.data[0]).toMatchObject({
+            patientBloodType: 'AB+',
+            hospital: { id: 'calmette', name: 'Calmette Hospital' },
+            acceptedCount: 2,
+            acceptedDonors: [
+                {
+                    matchId: 'r1_d1',
+                    displayName: 'Nem Sothea',
+                    bloodType: 'A+',
+                    districtName: { km: 'ដូនពេញ', en: 'Doun Penh' },
+                    respondedAt: '2026-09-26T03:10:00Z',
+                },
+            ],
+        });
+    });
+
+    it("asks for one request's donations, as the admin", async () => {
+        cookieStore.value = admin;
+        const calls = fakeFirebase(tables);
 
         await listOpenRequests();
 
-        const [url, init] = fetchMock.mock.calls[0];
-        expect(url).toContain('/portal/requests?status=OPEN');
-        expect(init.headers.Authorization).toBe('Bearer session-token');
+        const donations = calls.find(
+            (c) => c.body?.structuredQuery?.from[0].collectionId === 'donations',
+        );
+        expect(donations?.token).toBe(admin);
+        expect(JSON.stringify(donations?.body.structuredQuery.where)).toContain('"requestId"');
     });
 
-    it('refuses to call the API with no session rather than calling it unauthenticated', async () => {
-        // Pages redirect to /sign-in before reaching here, so this state is a programming
-        // error — but it must fail loudly rather than send an anonymous request that the
-        // backend would answer with a 401 the page then renders as "could not load".
-        cookieStore.value = null;
+    it('refuses to read with no session rather than reading as a visitor', async () => {
         await expect(listOpenRequests()).rejects.toThrow('No portal session');
     });
 });
 
 describe('listFulfilledRequests', () => {
-    // The contract's `status` parameter takes one value, so the portal's "recently
-    // fulfilled" section is a second call rather than a client-side filter — this is the
-    // test that the second call actually asks for the other status.
-    it('asks for FULFILLED, not OPEN', async () => {
-        cookieStore.value = 'session-token';
-        const fetchMock = vi
-            .fn()
-            .mockResolvedValue({ ok: true, status: 200, json: async () => [] });
-        vi.stubGlobal('fetch', fetchMock);
+    it('asks for FULFILLED, and reads no donors for rows that render none', async () => {
+        cookieStore.value = admin;
+        const calls = fakeFirebase({
+            ...tables,
+            requests: [request('r3', { status: 'FULFILLED' })],
+        });
 
-        await listFulfilledRequests();
+        const result = await listFulfilledRequests();
 
-        const [url] = fetchMock.mock.calls[0];
-        expect(url).toContain('/portal/requests?status=FULFILLED');
+        expect(result.ok && result.data.map((r) => r.id)).toEqual(['r3']);
+        expect(calls.some((c) => c.url.includes('acceptedDonors'))).toBe(false);
     });
 });
 
 describe('confirmDonation', () => {
-    it('posts matchId and donatedOn to the request-scoped path', async () => {
-        cookieStore.value = 'session-token';
-        const fetchMock = vi
-            .fn()
-            .mockResolvedValue({ ok: true, status: 201, json: async () => ({}) });
-        vi.stubGlobal('fetch', fetchMock);
+    it('calls the confirmDonation Function as the admin', async () => {
+        cookieStore.value = admin;
+        const calls = fakeFirebase({}, { confirmDonation: { body: { result: { id: 'r1_d1' } } } });
 
-        await confirmDonation('req-1', 'match-1', '2026-08-22');
+        await confirmDonation('r1', 'r1_d1', '2026-09-25');
 
-        const [url, init] = fetchMock.mock.calls[0];
-        expect(url).toContain('/portal/requests/req-1/confirm-donation');
-        expect(init.method).toBe('POST');
-        expect(JSON.parse(init.body)).toEqual({ matchId: 'match-1', donatedOn: '2026-08-22' });
-        expect(init.headers.Authorization).toBe('Bearer session-token');
+        expect(calls[0].body).toEqual({
+            data: { requestId: 'r1', matchId: 'r1_d1', donatedOn: '2026-09-25' },
+        });
+        expect(calls[0].token).toBe(admin);
     });
 
-    it('a 409 (already confirmed) is a handled failure, not a thrown exception', async () => {
-        cookieStore.value = 'session-token';
-        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 409 }));
+    it('an already-confirmed donation is a handled failure, not a thrown exception', async () => {
+        cookieStore.value = admin;
+        fakeFirebase(
+            {},
+            { confirmDonation: { status: 409, body: { error: { status: 'ALREADY_EXISTS' } } } },
+        );
 
-        const result = await confirmDonation('req-1', 'match-1', '2026-08-22');
-
-        expect(result).toEqual({ ok: false, error: 'HTTP 409' });
+        expect(await confirmDonation('r1', 'r1_d1', '2026-09-25')).toEqual({
+            ok: false,
+            error: 'already-exists',
+        });
     });
 });

@@ -6,18 +6,13 @@ import { hasPortalSession } from '@/lib/api/session';
 import SignInForm from './sign-in-form';
 
 /**
- * Portal staff sign-in — the screen that replaces `PORTAL_DEV_JWT`.
+ * Portal admin sign-in — the screen that replaces `PORTAL_DEV_JWT`. v1 has no hospital staff.
  *
  * Donors and requesters never see this page. They authenticate through Google or Telegram
- * in the mobile app (ADR 0002) and hold no username; a password exists only for the handful
- * of named hospital and admin accounts that have to reach this portal from a desktop
- * browser with no phone in the loop.
+ * in the mobile app (ADR 0002) and hold no username; a password exists only for the admin
+ * account that has to reach this portal from a desktop browser with no phone in the loop.
  */
-export default async function SignInPage({
-    params,
-}: {
-    params: Promise<{ locale: string }>;
-}) {
+export default async function SignInPage({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
     const t = await getTranslations('signIn');
 

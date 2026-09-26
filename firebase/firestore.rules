@@ -8,12 +8,15 @@ service cloud.firestore {
     // ── Principals ──────────────────────────────────────────────────────────────────────────────
     function signedIn() { return request.auth != null; }
     function uid() { return request.auth.uid; }
-    // Staff roles are custom claims set by a Function, never a field a client can write.
-    function isAdmin() { return signedIn() && request.auth.token.role == 'ADMIN'; }
-    function isStaffAt(hospitalId) {
+    // The portal's one role (v1 has no hospital staff): a custom claim set only by the Admin SDK,
+    // never a field a client can write — and the claim must agree with admins/{uid}, written in the
+    // same step. A claim alone would outlive a revoke by up to an hour (an ID token is not re-read
+    // until it expires); the record is read on every request, so removing it ends access at once.
+    function adminPath() { return /databases/$(database)/documents/admins/$(uid()); }
+    function isAdmin() {
       return signedIn()
-          && request.auth.token.role == 'HOSPITAL'
-          && request.auth.token.hospitalId == hospitalId;
+          && request.auth.token.role == 'ADMIN'
+          && exists(adminPath());
     }
 
     // ── Values ──────────────────────────────────────────────────────────────────────────────────
@@ -71,7 +74,7 @@ service cloud.firestore {
           && d.updatedAt == request.time;
     }
     match /donors/{donorId} {
-      // Nobody else — not staff, not a requester. Matching reads it with the Admin SDK.
+      // Nobody else — not a requester, not the admin portal. Matching reads it with the Admin SDK.
       allow read: if (signedIn() && uid() == donorId) || isAdmin();
       allow create: if signedIn() && uid() == donorId
           && validDonor(incoming()) && incoming().createdAt == request.time;
@@ -139,9 +142,7 @@ service cloud.firestore {
 
     // ── matches/{requestId_donorUid} ────────────────────────────────────────────────────────────
     match /matches/{matchId} {
-      allow read: if (signedIn() && resource.data.donorUid == uid())
-          || isStaffAt(resource.data.hospitalId)
-          || isAdmin();
+      allow read: if (signedIn() && resource.data.donorUid == uid()) || isAdmin();
       // Only onRequestCreated creates one, so only notified donors have a match (ADR 0008).
       allow create, delete: if false;
       // One answer, never overwritten (FR-REQUEST-004 deferred), and only while the request is open.
@@ -155,10 +156,16 @@ service cloud.firestore {
 
     // ── donations/{donationId} ──────────────────────────────────────────────────────────────────
     match /donations/{donationId} {
-      allow read: if (signedIn() && resource.data.donorUid == uid())
-          || isStaffAt(resource.data.hospitalId)
-          || isAdmin();
+      allow read: if (signedIn() && resource.data.donorUid == uid()) || isAdmin();
       // confirmDonation only — it also writes lastDonationDate, which must move with it.
+      allow write: if false;
+    }
+
+    // ── admins/{uid} ────────────────────────────────────────────────────────────────────────────
+    // The second half of isAdmin(). Written only by firebase/seed/admin.mjs (Admin SDK), which sets
+    // the claim in the same run. Deleting the record is how an admin's access is ended.
+    match /admins/{adminUid} {
+      allow read: if signedIn() && uid() == adminUid;
       allow write: if false;
     }
 

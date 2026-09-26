@@ -5,13 +5,14 @@ import { hasPortalSession, portalDisplayName } from '@/lib/api/session';
 import ChangePasswordForm from './change-password-form';
 
 /**
- * Any signed-in staff member changing their own password — not an admin screen. The endpoint
- * behind it takes the caller from the JWT and has no user field, so this cannot be pointed at
- * somebody else's account.
+ * The signed-in admin changing their own password — not an admin screen. The action
+ * behind it takes the account from the session's ID token and has no user field, so this cannot
+ * be pointed at somebody else's account.
  *
  * There is no "forgot password" beside it, deliberately: a reset needs a channel to prove identity
  * over, and this product has neither verified email nor verified phone (ADR 0002). A forgotten
- * password is a database change — `docs/demo-runbook.md` section 9.
+ * password is reset by an operator in the Firebase console's Authentication page (or, for the
+ * seeded admin, `npm run seed:admin -- --reset-passwords` in `firebase/`).
  */
 export default async function ChangePasswordPage({
     params,
@@ -30,7 +31,9 @@ export default async function ChangePasswordPage({
     return (
         <main className="mx-auto max-w-md p-6 sm:p-10">
             <header className="mb-6">
-                <p className="text-sm font-semibold tracking-wide text-brand uppercase">LifeLink KH</p>
+                <p className="text-sm font-semibold tracking-wide text-brand uppercase">
+                    LifeLink KH
+                </p>
                 <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
                 <p className="mt-2 text-sm text-black/60 dark:text-white/60">
                     {t('intro')}
@@ -55,7 +58,9 @@ export default async function ChangePasswordPage({
                 }}
             />
 
-            <p className="mt-6 text-xs text-black/45 dark:text-white/45">{t('noteOtherSessions')}</p>
+            <p className="mt-6 text-xs text-black/45 dark:text-white/45">
+                {t('noteOtherSessions')}
+            </p>
 
             <Link
                 href={`/${locale}/portal`}

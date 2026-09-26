@@ -1,11 +1,13 @@
-import { apiGet, apiPost, type ApiResult } from './client';
-import { portalAuthHeader } from './session';
+import { callFunction, firestoreQuery, type ApiResult } from './client';
 import type { DistrictName } from './district';
+import { listDistricts } from './hospitals';
+import { acceptedDonors, requestFields } from './request-docs';
+import { requirePortalToken } from './session';
 
 /**
- * Typed against `GET`/`POST /api/portal/requests...` in
- * `docs/fullstack/api-contract/web/openapi.yaml`. FR-PORTAL-001, trimmed by DEC-004 to
- * one page.
+ * The portal's requests, read from Firestore as the signed-in staff member (ADR 0009, phase 5).
+ * FR-PORTAL-001, trimmed by DEC-004 to one page. Same shapes `GET /portal/requests` returned, so
+ * the page did not change when the backend did.
  */
 export type AcceptedDonor = {
     matchId: string;
@@ -36,27 +38,93 @@ export type ConfirmDonationResult = {
     donorNextEligibleOn: string;
 };
 
-export async function listOpenRequests(): Promise<ApiResult<PortalRequest[]>> {
-    return apiGet<PortalRequest[]>('/portal/requests?status=OPEN', await portalAuthHeader());
-}
-
 /**
- * The same endpoint with the other status the contract allows. `status` takes one value
- * (`openapi.yaml`: `enum: [OPEN, FULFILLED, CANCELLED]`), so "open plus what we finished"
- * is two calls, not one filter.
+ * Every hospital's requests: v1's only portal role is ADMIN (ADR 0009, phase 5). The requests
+ * themselves are public (DEC-009); what needs the admin's token is `donations`.
  */
-export async function listFulfilledRequests(): Promise<ApiResult<PortalRequest[]>> {
-    return apiGet<PortalRequest[]>('/portal/requests?status=FULFILLED', await portalAuthHeader());
+async function listRequests(
+    status: 'OPEN' | 'FULFILLED',
+    withDonors: boolean,
+): Promise<ApiResult<PortalRequest[]>> {
+    const token = await requirePortalToken();
+    const [requests, districts] = await Promise.all([
+        firestoreQuery(
+            {
+                collection: 'requests',
+                where: { status },
+                orderBy: { field: 'createdAt', direction: 'DESCENDING' },
+            },
+            token,
+        ),
+        listDistricts(),
+    ]);
+    if (!requests.ok) return requests;
+    const names = districts.ok ? districts.data : new Map<string, DistrictName>();
+
+    const rows = await Promise.all(
+        requests.data.map(async (doc): Promise<ApiResult<PortalRequest>> => {
+            const request = requestFields(doc);
+            if (!withDonors) return { ok: true, data: { ...request, acceptedDonors: [] } };
+
+            const [donors, confirmed] = await Promise.all([
+                acceptedDonors(doc.id, token),
+                firestoreQuery(
+                    {
+                        collection: 'donations',
+                        where: { requestId: doc.id },
+                    },
+                    token,
+                ),
+            ]);
+            if (!donors.ok) return donors;
+            if (!confirmed.ok) return confirmed;
+            const done = new Set(confirmed.data.map((donation) => String(donation.data.donorUid)));
+
+            return {
+                ok: true,
+                data: {
+                    ...request,
+                    // `acceptedCount` is every acceptance; this list is narrower on purpose — it is
+                    // the actionable list, so a donor whose donation is already confirmed drops
+                    // off it rather than keeping a button that would only be refused.
+                    acceptedDonors: donors.data
+                        .filter((donor) => !done.has(donor.id))
+                        .map((donor) => ({
+                            // The match id is `{requestId}_{donorUid}` by construction, and the
+                            // board document's id is the donor's uid.
+                            matchId: `${doc.id}_${donor.id}`,
+                            displayName: String(donor.data.displayName ?? ''),
+                            bloodType: String(donor.data.bloodType ?? ''),
+                            districtName: names.get(String(donor.data.districtCode)) ?? null,
+                            respondedAt: String(donor.data.respondedAt ?? ''),
+                        })),
+                },
+            };
+        }),
+    );
+    const failed = rows.find((row) => !row.ok);
+    if (failed && !failed.ok) return failed;
+    return { ok: true, data: rows.flatMap((row) => (row.ok ? [row.data] : [])) };
 }
 
+export function listOpenRequests(): Promise<ApiResult<PortalRequest[]>> {
+    return listRequests('OPEN', true);
+}
+
+/** Work already done. The page renders no donors for these, so none are read. */
+export function listFulfilledRequests(): Promise<ApiResult<PortalRequest[]>> {
+    return listRequests('FULFILLED', false);
+}
+
+/** The `confirmDonation` callable — the only way a donation is recorded (the rules refuse it). */
 export async function confirmDonation(
     requestId: string,
     matchId: string,
     donatedOn: string,
 ): Promise<ApiResult<ConfirmDonationResult>> {
-    return apiPost<ConfirmDonationResult>(
-        `/portal/requests/${requestId}/confirm-donation`,
-        { matchId, donatedOn },
-        await portalAuthHeader(),
+    return callFunction<ConfirmDonationResult>(
+        'confirmDonation',
+        { requestId, matchId, donatedOn },
+        await requirePortalToken(),
     );
 }

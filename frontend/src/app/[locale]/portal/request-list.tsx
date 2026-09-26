@@ -35,7 +35,7 @@ export type RequestViewModel = (PortalRequest | PublicRequest) & { unitsLabel: s
 type DonorViewModel = RequestViewModel['acceptedDonors'][number];
 
 /**
- * Stable within one request's donor list. `matchId` when the caller is staff; otherwise the
+ * Stable within one request's donor list. `matchId` when the caller is the admin; otherwise the
  * moment they answered, which is unique per donor on a request because one donor can accept
  * a given request only once (`request_matches_unique_pair`).
  */
@@ -71,8 +71,7 @@ const PAGE_SIZE = 15;
 const URGENCY_STYLE: Record<string, string> = {
     CRITICAL:
         'bg-red-100 text-red-800 ring-1 ring-inset ring-red-300 dark:bg-red-950/60 dark:text-red-300 dark:ring-red-800',
-    URGENT:
-        'bg-amber-100 text-amber-800 ring-1 ring-inset ring-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-800',
+    URGENT: 'bg-amber-100 text-amber-800 ring-1 ring-inset ring-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-800',
     ROUTINE:
         'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-300 dark:bg-slate-800/60 dark:text-slate-300 dark:ring-slate-700',
 };
@@ -124,7 +123,7 @@ export default function RequestList({
     /**
      * False for a signed-out visitor reading the public board. The rows, the counts and the
      * donors are the same; only the write disappears. It is not the real control either —
-     * `SecurityConfig` refuses the POST without a staff session regardless of what renders.
+     * the `confirmDonation` Function refuses anyone without the admin claim and record regardless.
      */
     canConfirm: boolean;
     locale: string;
@@ -367,7 +366,6 @@ function RequestRow({
                     <IconChevron className="h-5 w-5 shrink-0 text-black/40 transition-transform duration-200 group-open:rotate-180 dark:text-white/40" />
                 </summary>
 
-
                 <div className="border-t border-black/10 bg-black/[0.015] p-5 dark:border-white/10 dark:bg-white/[0.02]">
                     {request.acceptedDonors.length === 0 ? (
                         <p
@@ -408,22 +406,22 @@ function RequestRow({
                                         </span>
                                     </div>
                                     {canConfirm && 'matchId' in donor ? (
-                                    <div className="flex flex-wrap items-end gap-2">
-                                        <ConfirmDonationForm
-                                            requestId={request.id}
-                                            matchId={donor.matchId}
-                                            donorName={donor.displayName}
-                                            locale={locale}
-                                            copy={{
-                                                donatedOnLabel: copy.donatedOnLabel,
-                                                confirmDonationCta: copy.confirmDonationCta,
-                                                dialogTitle: copy.dialogTitle,
-                                                dialogBody: copy.dialogBody,
-                                                cancelCta: copy.cancelCta,
-                                                dialogConfirmCta: copy.dialogConfirmCta,
-                                            }}
-                                        />
-                                    </div>
+                                        <div className="flex flex-wrap items-end gap-2">
+                                            <ConfirmDonationForm
+                                                requestId={request.id}
+                                                matchId={donor.matchId}
+                                                donorName={donor.displayName}
+                                                locale={locale}
+                                                copy={{
+                                                    donatedOnLabel: copy.donatedOnLabel,
+                                                    confirmDonationCta: copy.confirmDonationCta,
+                                                    dialogTitle: copy.dialogTitle,
+                                                    dialogBody: copy.dialogBody,
+                                                    cancelCta: copy.cancelCta,
+                                                    dialogConfirmCta: copy.dialogConfirmCta,
+                                                }}
+                                            />
+                                        </div>
                                     ) : null}
                                 </li>
                             ))}

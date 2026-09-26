@@ -25,10 +25,8 @@ export default async function SignOutButton({
     return (
         <form action={signOutAction} className="flex items-center gap-2">
             <input type="hidden" name="locale" value={locale} />
-            {/* Which account this is, and what it can do. Before this the role was only
-                inferable from whether the "Manage staff" link had appeared — and on a shared
-                ward machine, "am I the admin or this one hospital?" is worth answering
-                without a click. */}
+            {/* Which account this is. v1 has one portal role, so the badge only ever says
+                Admin — it stays so a shared machine answers "who is signed in" at a glance. */}
             <span className="hidden items-baseline gap-2 sm:flex">
                 {displayName ? (
                     <span className="text-sm text-black/60 dark:text-white/60">{displayName}</span>
@@ -36,13 +34,9 @@ export default async function SignOutButton({
                 {role ? (
                     <span
                         data-testid="portal-role"
-                        className={`rounded-full px-2 py-0.5 text-xs font-semibold tracking-wide uppercase ${
-                            role === 'ADMIN'
-                                ? 'bg-brand/10 text-brand'
-                                : 'bg-black/[0.05] text-black/60 dark:bg-white/10 dark:text-white/60'
-                        }`}
+                        className="rounded-full bg-brand/10 px-2 py-0.5 text-xs font-semibold tracking-wide text-brand uppercase"
                     >
-                        {role === 'ADMIN' ? roles('staffRoleAdmin') : roles('staffRoleHospital')}
+                        {roles('staffRoleAdmin')}
                     </span>
                 ) : null}
             </span>

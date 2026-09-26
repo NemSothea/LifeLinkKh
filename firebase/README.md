@@ -8,8 +8,8 @@ The Firebase backend that replaces Spring Boot + PostgreSQL — ADR 0009, branch
 | `rules-tests/` | One emulator test per rule. A rule without a test is treated as absent |
 | `firestore.indexes.json` | Composite indexes for the board, "my requests", "my matches", history |
 | `firebase.json` | Emulator ports: auth 9099, firestore 8081, functions 5001, UI 4000 |
-| `functions/` | Cloud Functions. `onRequestCreated`: rate limit, matching, match documents, donor alert. `onMatchAnswered`: accepted count, public board row, "donor accepted" push |
-| `seed/` | Districts and hospitals (V3, V7), same ids as Postgres. `reference-data.json` is the source |
+| `functions/` | Cloud Functions. `onRequestCreated`: rate limit, matching, match documents, donor alert. `onMatchAnswered`: accepted count, public board row, "donor accepted" push. The portal's one callable: `confirmDonation` (admin only) |
+| `seed/` | Districts and hospitals (V3, V7), same ids as Postgres. `reference-data.json` is the source. `admin.mjs`: the portal's admin account (V13's `soborey`) |
 
 The data model and the reason behind each rule: `docs/tech-lead/firestore-data-model.md`.
 
@@ -22,7 +22,7 @@ npm run test:seed      # seeds an emulator and checks 14 districts, 5 hospitals,
 
 cd functions && npm install
 npm test               # matching and push, pure — every clause of the old matching SQL
-npm run test:emulator  # the whole handler against the Firestore emulator, FCM faked
+npm run test:emulator  # every handler against the Firestore emulator, FCM faked
 ```
 
 On a `demo-` project the Functions write every push to `_outbox` instead of sending it: FCM has
@@ -60,11 +60,38 @@ Still on Spring Boot until phase 6:
   no Firebase identity and every Firestore call refuses them.
 - **`API_BASE_URL` is still required**, because the Telegram repository builds its Dio
   client at startup. Nothing on the golden path calls the backend.
-- **The portal** (phase 5) still reads Postgres, so it does not see requests made here.
 
 Known gap, for phase 6: a stored session is restored even when Firebase has no signed-in
 user. It cannot happen on a normal install — both are cleared together — but a restored
 session with no Firebase user would show Home and fail every read until sign-out.
+
+## The portal on Firebase (phase 5)
+
+The Next.js portal is **admin-only** in v1 (DEC-014): no hospital staff, no staff page. It reads
+Firestore and calls `confirmDonation` over REST from its own server, with the admin's ID token from
+the httpOnly session cookie, so the rules judge it as they judge the app. The admin signs in with
+Firebase Auth email + password; the username is the email's local part (`portalEmail()` in
+`functions/src/portal-accounts.js` and `frontend/src/lib/api/portal-auth.ts`).
+
+```bash
+cd firebase
+npm run emulators:app                     # Firestore + Auth + Functions, project lifelinkkh
+npm run seed:app                          # second terminal
+PORTAL_ADMIN_PASSWORD=… npm run seed:admin:app   # soborey
+
+cd ../frontend
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8081 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
+FUNCTIONS_EMULATOR_HOST=127.0.0.1:5001 npm run dev
+```
+
+The password is at least 12 characters; unset, no admin is created. A re-run keeps the password
+unless `--reset-passwords` is passed. To end an admin's access, delete `admins/{uid}` (the rules
+refuse them on the next read) and disable the user in the console. Against the real project the portal needs
+`FIREBASE_API_KEY` (a Web API key for `lifelinkkh`, from the console — not a secret) and no
+emulator variables.
+
+Until phase 6 the Docker `web` service still points at the backend and is not wired to Firebase:
+run the portal with `npm run dev` as above.
 
 Deploying the Functions needs the Blaze plan on `lifelinkkh`:
 

@@ -590,3 +590,34 @@ password is `.env` plus a restart, or a hand-set digest. Deliberate limit of the
   — the test that notices if a seeded password ever comes back.
 - `docs/scope.md`'s first debt under "Grown after M7" is closed; the second (donor names on the
   public board, DEC-009) still stands.
+
+## DEC-014 — v1 has no hospital staff: the portal is admin-only
+
+**Date:** 2026-09-26 · **Raised by:** Nem Sothea (Tech Lead / PO) · **Status:** accepted
+
+### Context
+ADR 0009 phase 5 moves the portal onto Firebase. The Spring Boot portal had two staff roles
+(`HOSPITAL`, scoped to one hospital, and `ADMIN`) and a staff-management page with promote,
+create, demote and revoke. Moving all of that onto Firebase meant four callable Functions, a
+hospital-scoped rule on `matches` and `donations`, and a page no pilot user had asked for.
+
+### Decision
+The first version has three kinds of people, not five:
+
+- **Donor** and **requester** — the mobile app, unchanged.
+- **Admin** — the only portal account. Sees every hospital's requests and confirms donations.
+
+No `HOSPITAL` role, no staff-management page, no hospital-scoped reads. An admin is a Firebase Auth
+user with the `ADMIN` claim **and** an `admins/{uid}` record, both written by
+`firebase/seed/admin.mjs` (the `soborey` account, password from `PORTAL_ADMIN_PASSWORD`). The rules
+require both, so deleting the record ends access on the next read. The old `/portal/staff` and
+`/portal/admin` paths redirect to `/portal`.
+
+### What it gives up
+- Hospital staff cannot confirm their own donations; the admin does it for every hospital.
+- Adding or removing an admin is an operator step (seed script, or the Firebase console plus the
+  `admins/{uid}` record), not a page.
+- `PORTAL_STAFF_PASSWORD` and the `calmette`, `tepi` and `july` accounts are not carried to Firebase.
+
+Hospital staff can come back as a v2 decision; the Spring Boot implementation (`AdminService`,
+V13–V15) is the reference for what that needs.

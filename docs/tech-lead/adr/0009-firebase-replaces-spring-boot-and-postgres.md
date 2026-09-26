@@ -38,6 +38,8 @@ The Tech Lead's call is to drop that server and let the clients talk to Firebase
    phone can neither read other donors' profiles nor hold the FCM server credential.
 5. **Roles are custom claims.** `role` (`HOSPITAL` | `ADMIN`) and `hospitalId` on the ID token, set
    only by a Function. A mobile user carries no claim and is a donor/requester by default.
+   *Amended by DEC-014: v1 has only `ADMIN`, set by `seed/admin.mjs` together with an
+   `admins/{uid}` record the rules also require.*
 
 ## What moves and where
 
@@ -49,7 +51,7 @@ The Tech Lead's call is to drop that server and let the clients talk to Firebase
 | `blood_compatibility` table (ADR 0004) | A constant table in the Function — still data, not branching code |
 | `AcceptanceNotifier` | `onMatchAnswered` Function |
 | `PortalService.confirmDonation` | `confirmDonation` callable Function |
-| Admin staff endpoints | `setStaffRole` / `revokeStaff` callable Functions |
+| Admin staff endpoints | **Dropped (DEC-014).** v1's only portal role is ADMIN, set by `seed/admin.mjs` with an `admins/{uid}` record |
 | Portal username + password (DEC-010, DEC-013) | Firebase Auth email + password, role from claims |
 | Telegram sign-in | **Dropped in phase 1.** Needs a custom-token Function; re-added only if asked for |
 | Rate limiters (request create, public board) | Request create: checked in `onRequestCreated`. Board: none — Firestore bills reads, it does not throttle them |
@@ -67,7 +69,8 @@ each is a test in `firebase/rules-tests/` or the Functions tests:
 - **Requester contact is revealed only to the creator and to a donor who accepted.** Firestore rules
   cannot hide a field, so the contact lives in its own document, `requests/{id}/private/contact`.
 - **A response is given once and never overwritten** (FR-REQUEST-004 is still deferred).
-- **Portal staff see their own hospital only**; the public board shows no contact and no donor id.
+- **Only the admin reads matches and donations in the portal** (DEC-014 replaced "staff see their own
+  hospital only"); the public board shows no contact and no donor id.
 
 ## Consequences
 
@@ -91,3 +94,25 @@ each is a test in `firebase/rules-tests/` or the Functions tests:
 4. Accept/decline + "donor accepted" push + public board.
 5. Portal on the Firebase Web SDK + staff claims.
 6. Remove `backend/`, Docker and the demo scripts; rewrite the runbook; merge to `main`.
+
+## Phase 5 as built (2026-09-26)
+
+Scope first: **DEC-014 cut hospital staff from v1.** The portal has one role, ADMIN, and no
+staff-management page. Donors and requesters are unchanged. Three places the build departs from
+the plan above, and why:
+
+- **The portal talks to Firebase over REST from the Next server, not the Web SDK in the browser.**
+  The session stays the httpOnly cookie it was (now holding the Firebase ID token), the pages stay
+  Server Components, and every Firestore read and Function call carries the admin's own ID token,
+  so the Security Rules judge the portal exactly as they judge the app. The Web SDK would have
+  needed the token in page script, which is what the cookie was built to prevent. There is no
+  service account on the web server.
+- **Admin access is a claim *and* an `admins/{uid}` record, and the rules check both.** A claim
+  alone lives in the ID token for up to an hour after a revoke. The record is read on every
+  request, so deleting it ends access on the next read.
+- **Usernames map to `{username}@portal.lifelink.invalid`.** Firebase Auth signs in by email, and
+  the reserved `.invalid` TLD means no mail can ever be sent to it.
+
+Lost with the backend: `AuthController`'s per-IP sign-in limiter. Firebase Auth's own lockout
+(`TOO_MANY_ATTEMPTS_TRY_LATER`) works per account instead. `PortalPasswordBootstrap` became
+`firebase/seed/admin.mjs`, which follows the same three rules for `PORTAL_ADMIN_PASSWORD`.

@@ -2,32 +2,23 @@ import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import HealthStatus from '@/components/HealthStatus';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { IconArrowRight, IconDroplet, IconInbox, IconUsers } from '@/components/icons';
+import { IconArrowRight, IconDroplet, IconInbox } from '@/components/icons';
 import { getHealth } from '@/lib/api/health';
-import { portalRole } from '@/lib/api/session';
 
 /**
  * The portal's front door. Until now this was the M2 health page — a status badge and
  * no way in, so anyone who landed on `/` had to already know `/portal` existed and type
- * it. The health check stays (it still proves browser → Next server → backend →
- * PostgreSQL end to end, unmocked), demoted to a footer line rather than being the
+ * it. The health check stays (it still proves browser → Next server → Firestore end
+ * to end, unmocked), demoted to a footer line rather than being the
  * whole page.
  *
- * A Server Component like the rest of the portal: `portalRole()` reads the session
- * cookie's own claim server-side to decide whether the staff card is worth showing. A
- * signed-out visitor simply sees neither — following the portal card takes them to
- * sign-in. Same rule as `portal/page.tsx`: a wrong guess here changes what renders, never
- * what the API allows.
+ * A Server Component like the rest of the portal. One card: the portal itself, which is the
+ * public board signed out and the admin's working page signed in.
  */
-export default async function HomePage({
-    params,
-}: {
-    params: Promise<{ locale: string }>;
-}) {
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
     const t = await getTranslations('app');
     const health = await getHealth();
-    const isAdmin = (await portalRole()) === 'ADMIN';
 
     return (
         <main className="mx-auto max-w-3xl p-6 sm:p-10">
@@ -55,15 +46,6 @@ export default async function HomePage({
                     body={t('portalCardBody')}
                     primary
                 />
-                {isAdmin ? (
-                    <EntryCard
-                        href={`/${locale}/portal/staff`}
-                        testId="home-admin-link"
-                        icon={<IconUsers className="h-6 w-6" />}
-                        title={t('adminCardTitle')}
-                        body={t('adminCardBody')}
-                    />
-                ) : null}
             </div>
 
             <footer className="pt-10">

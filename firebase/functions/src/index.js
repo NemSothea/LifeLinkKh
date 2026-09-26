@@ -5,9 +5,11 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 import { setGlobalOptions } from 'firebase-functions/v2';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import { onCall } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
 import { handleMatchAnswered } from './on-match-answered.js';
 import { handleRequestCreated } from './on-request-created.js';
+import { confirmDonation as confirmDonationHandler } from './confirm-donation.js';
 
 initializeApp();
 
@@ -47,6 +49,18 @@ export const onMatchAnswered = onDocumentUpdated('matches/{matchId}', (event) =>
     matchId: event.params.matchId,
     before: event.data?.before.data(),
     after: event.data?.after.data(),
+    log: logger,
+  }),
+);
+
+// ── Portal (phase 5) ────────────────────────────────────────────────────────────────────────────
+// Callable, so Firebase verifies the caller's ID token before the handler runs: `request.auth`
+// is the verified uid and claims, or absent. The handler checks for an admin itself.
+export const confirmDonation = onCall((request) =>
+  confirmDonationHandler({
+    db: getFirestore(),
+    caller: request.auth,
+    data: request.data,
     log: logger,
   }),
 );
