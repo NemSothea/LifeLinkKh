@@ -136,7 +136,7 @@ export default async function PortalPage({
 
             {result.ok ? (
                 <div className="mb-6 flex justify-end">
-                    <AutoRefresh />
+                    <AutoRefresh intervalMs={isAdmin ? 30_000 : 120_000} />
                 </div>
             ) : null}
 

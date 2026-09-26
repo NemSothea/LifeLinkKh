@@ -1,6 +1,6 @@
 import { firestoreQuery, type ApiResult } from './client';
 import type { DistrictName } from './district';
-import { listDistricts } from './hospitals';
+import { listDistricts } from './reference-data';
 import { acceptedDonors, requestFields } from './request-docs';
 
 /**

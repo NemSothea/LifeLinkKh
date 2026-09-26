@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeFirebase, fakeJwt } from '@/test/fake-firebase';
+import { clearReferenceDataCache } from './reference-data';
 
 // The session lives in an httpOnly cookie. `next/headers` only exists inside a request, so it is
 // stubbed here — these tests are about what the portal asks Firebase, and as whom.
@@ -68,6 +69,7 @@ const tables = {
 
 afterEach(() => {
     vi.unstubAllGlobals();
+    clearReferenceDataCache();
     cookieStore.value = null;
 });
 

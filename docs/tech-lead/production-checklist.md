@@ -16,11 +16,31 @@ Everything runs from the branch `feat/firebase-backend`. It is not merged into `
 
 ## Part A — the Firebase project (one time)
 
+> **Cost target: $0 a month.** LifeLink is a free app, and the rule is to pay nothing until it
+> has more than **500 users**; then decide again with real numbers from `npm run metrics` and the
+> billing page. Everything below is chosen to stay inside the free allowances.
+
 - [ ] **Blaze plan** on `lifelinkkh` (console → Usage and billing). Cloud Functions do not run on
-  Spark. A card is required; the pilot should stay inside the free usage.
-- [ ] **Budget alert** in Google Cloud Billing → Budgets & alerts: budget **$5/month**, alerts at
-  50%, 90% and 100%, emailed to the Tech Lead. A budget alerts; it does not stop spending. The real
-  brake is `maxInstances: 1` on the Functions (already set) and on App Hosting (`apphosting.yaml`).
+  the free Spark plan at all, and without them there is no matching, no push and no review. Blaze
+  asks for a card but **includes the same free allowance as Spark** and charges only above it. At
+  pilot size that should never happen:
+
+  | | Free each month (roughly) | LifeLink at 500 users |
+  |---|---|---|
+  | Firestore | 50,000 reads/day, 20,000 writes/day, 1 GB | thousands of reads a day |
+  | Cloud Functions | 2,000,000 calls | hundreds to a few thousand |
+  | FCM push | unlimited | — |
+  | Auth (Google, password) | 50,000 monthly users | 500 |
+
+  Check the current numbers on the Blaze pricing page before you enter the card; Google changes
+  them.
+- [ ] **Budget alert at $1** in Google Cloud Billing → Budgets & alerts: budget **$1/month**,
+  alerts at 1% (the first cent), 50% and 100%, emailed to the Tech Lead. With a $0 target, any
+  charge at all is news. A budget only alerts; it does not stop spending. The real brake is
+  `maxInstances: 1` on the Functions (already set).
+- [ ] **Artifact cleanup.** The first Functions deploy (Part B) asks whether to set a cleanup
+  policy for old build images. Say **yes** (keep 1 day). Build images left to pile up are the most
+  likely way a "free" project earns its first charge.
 - [ ] **Firestore database**: Native mode, location **`asia-southeast1` (Singapore)**, the same
   region as the Functions.
 
@@ -51,8 +71,9 @@ From `firebase/`, logged in (`npx firebase login`):
 
   `firestore` covers `firestore.rules` and `firestore.indexes.json`. The first Functions deploy
   asks to enable Cloud Build, Artifact Registry and Eventarc. Say yes. It takes several minutes.
-- [ ] Console → Functions shows **five**, all in `asia-southeast1`, runtime Node 22:
-  `onRequestCreated`, `onRequestApproved`, `onMatchAnswered`, `reviewRequest`, `confirmDonation`.
+- [ ] Console → Functions shows **six**, all in `asia-southeast1`, runtime Node 22:
+  `onRequestCreated`, `onRequestApproved`, `onMatchAnswered`, `reviewRequest`, `confirmDonation`,
+  `deleteAccount`.
 - [ ] Console → Firestore → Indexes: all five composite indexes are **Enabled**, not "Building".
   A query against a building index fails, and the app shows it as a load error.
 - [ ] Console → Firestore → Rules: the published rules are the ones from this commit (check the
@@ -88,39 +109,48 @@ most dangerous file in this project.
   database waiting to leak.
 - [ ] Store the admin password in a password manager, not in `.env` on a shared machine.
 
-## Part D — The portal on App Hosting
+## Part D — The portal on Vercel (free)
 
-The portal runs on **Firebase App Hosting**: same project, same bill, and a server near
-Cambodia. Vercel works too (Root Directory `frontend`, the same two variables, region `sin1`), but
-its free plan is for non-commercial use only.
+The portal runs on **Vercel's free Hobby plan**, which fits a free, non-profit service with no ads
+and no payments. Vercel's server only holds the Web API key, which is not a secret; there is no
+Firebase admin key on it (`frontend/src/lib/api/client.ts` explains why). Firebase App Hosting is
+the alternative (see the end of this part), but it bills through Cloud Run and Cloud Build, so it
+is kept for when the 500-user decision is made.
 
-- [ ] Console → App Hosting → **Create backend**:
-  - Connect the GitHub repository. Root directory **`frontend`**. Live branch
-    **`feat/firebase-backend`**.
-  - Region: **`asia-southeast1`** if it is offered. Otherwise pick the nearest Asian region and
-    accept a few hundred milliseconds per Firestore call. Check the list in the console; the
-    supported regions change.
-- [ ] The Web API key, as an App Hosting secret (the name `apphosting.yaml` expects):
+- [ ] vercel.com → **Add New → Project** → import the GitHub repository.
+  - **Root Directory: `frontend`**. Framework preset: Next.js (detected).
+  - **Production Branch: `feat/firebase-backend`** (Settings → Git after import). It is not merged
+    into `main`, by decision.
+- [ ] **Environment Variables** (Production), exactly these, **and no `*_EMULATOR_HOST`**:
 
-  ```bash
-  npx firebase apphosting:secrets:set firebase-web-api-key --project lifelinkkh
-  ```
+  | Name | Value |
+  |---|---|
+  | `FIREBASE_PROJECT_ID` | `lifelinkkh` |
+  | `FIREBASE_API_KEY` | Firebase → Project settings → General → Web API key |
+  | `SUPPORT_EMAIL` | the monitored address for deletion requests (DEC-016) |
 
-  Paste the key from Project settings → General → Web API key. Grant the backend access when
-  asked.
-- [ ] **Restrict that key** in Google Cloud → APIs & Services → Credentials. Set API restrictions
-  to **Identity Toolkit API** only. The portal uses it for nothing else, so a leaked key can then
-  only reach the sign-in endpoint.
-- [ ] The first rollout is triggered by a push to the live branch (or "Create rollout" in the
-  console). The build reads `frontend/apphosting.yaml`.
-- [ ] On the App Hosting URL (`https://<backend>--lifelinkkh.<region>.hosted.app`):
+- [ ] **Function region: Singapore (`sin1`)**. This is `frontend/vercel.json`, so nothing needs
+  setting by hand. The portal's server calls Firestore several times per page, and from Vercel's
+  default US region each call would cross the Pacific twice.
+- [ ] **Restrict the API key** in Google Cloud → APIs & Services → Credentials. Set API
+  restrictions to **Identity Toolkit API** only. The portal uses it for nothing else, so a leaked
+  key can then only reach the sign-in endpoint.
+- [ ] Deploy (Vercel builds on every push to the production branch). On the
+  `https://<project>.vercel.app` URL:
   - [ ] `/km` loads, and its footer health line says reachable. That is a real read of Firestore.
   - [ ] `/km/portal` signed out shows the board (empty is fine).
   - [ ] Sign in as `soborey`. The header shows Soborey · ADMIN, and the "Waiting for review"
     queue is absent when there is nothing to review.
   - [ ] A wrong password says "wrong username or password", not an error page.
-- [ ] Optional: a custom domain (App Hosting → Settings → Domains). The session cookie is set by
-  the portal's own server, so no Firebase "authorized domains" change is needed.
+  - [ ] `/km/delete-account` shows the support address, not "not set up".
+- [ ] Optional: a custom domain (Vercel → Settings → Domains). The session cookie is set by the
+  portal's own server, so no Firebase "authorized domains" change is needed.
+
+**Later — Firebase App Hosting instead of Vercel.** Same project and bill, server in the same
+region as Firestore. `frontend/apphosting.yaml` is ready: create a backend in the console (root
+`frontend`, live branch `feat/firebase-backend`, region `asia-southeast1` if offered), store the
+key with `npx firebase apphosting:secrets:set firebase-web-api-key --project lifelinkkh`, and set
+`SUPPORT_EMAIL` in that file. Revisit this at the 500-user decision, not before.
 
 ## Part E — End-to-end on the real project
 
@@ -162,10 +192,16 @@ items do not come from code.
   optional GPS, phone number on requests, FCM token), why, who sees it (the donor's contact only
   goes to a family after the donor accepts; the admin sees request contacts), and how to delete
   it. Link it in the app and on the Play listing.
-- [ ] **Account deletion**, both in the app and through a web link. Google Play requires both for
-  any app with accounts. **Not built yet.** It needs a Function that deletes `users`, `donors`, the
-  user's `matches` and `requests/*/private/contact`, and the Auth user, and decides what to keep of
-  `donations` (anonymised) so the metrics stay honest. This needs its own DEC.
+- [ ] **Account deletion (DEC-016)** — built: **Me → Delete account** in the app (the
+  `deleteAccount` callable, fresh sign-in required), and the web link
+  `https://<portal>/km/delete-account` for the Play listing. Before listing:
+  - [ ] set `SUPPORT_EMAIL` on Vercel (Part D) to an address someone reads — without it the page
+    says the address is not set up;
+  - [ ] for each email that arrives: find the uid (Authentication → search the email), make sure
+    the email really is that Google account, then
+    `npm run delete-account -- --uid <uid> --project lifelinkkh` from `firebase/` and reply;
+  - [ ] try it once on a test account on the real project, and check that the account's rows are
+    gone or anonymised.
 - [ ] **Play Console → Data safety** form, consistent with the privacy policy. Blood type counts
   as health information: declare it.
 
@@ -184,7 +220,9 @@ items do not come from code.
 **Should do early:**
 - [ ] A second admin account for the day `soborey` is unavailable. It needs an `admins/{uid}`
   record and the claim. Extend `seed/admin.mjs` rather than editing by hand.
-- [ ] Watch the budget and the Functions logs weekly for the first month.
+- [ ] Watch the billing page and the Functions logs weekly for the first month. At **500 users**,
+  make the paid-or-not decision with `npm run metrics -- --project lifelinkkh` and the month's
+  usage in hand.
 - [ ] The portal shows "Could not load" to an admin whose access was revoked. Make it send them
   to sign in instead (known gap).
 - [ ] iOS: out of scope (DEC-006). An iOS release would need an Apple Developer account and an

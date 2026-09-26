@@ -17,9 +17,14 @@ import RelativeTime from './RelativeTime';
  * backend until morning, and the first thing it does on becoming visible again is
  * refresh once, so nobody reads a stale table.
  */
-const INTERVAL_MS = 30_000;
+const DEFAULT_INTERVAL_MS = 30_000;
 
-export default function AutoRefresh() {
+/**
+ * `intervalMs` is longer for the public board than for the admin. Every refresh is a round of
+ * Firestore reads, and a board left open on many phones is the one thing that could push LifeLink
+ * past the free allowance — a visitor watching the need does not need it to the half-minute.
+ */
+export default function AutoRefresh({ intervalMs = DEFAULT_INTERVAL_MS }: { intervalMs?: number }) {
     const t = useTranslations('portal');
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
@@ -35,13 +40,13 @@ export default function AutoRefresh() {
             });
         }
 
-        let timer = window.setInterval(refresh, INTERVAL_MS);
+        let timer = window.setInterval(refresh, intervalMs);
 
         function onVisibilityChange() {
             window.clearInterval(timer);
             if (document.visibilityState === 'visible') {
                 refresh();
-                timer = window.setInterval(refresh, INTERVAL_MS);
+                timer = window.setInterval(refresh, intervalMs);
             }
         }
 
@@ -50,7 +55,7 @@ export default function AutoRefresh() {
             window.clearInterval(timer);
             document.removeEventListener('visibilitychange', onVisibilityChange);
         };
-    }, [router]);
+    }, [router, intervalMs]);
 
     return (
         <div
