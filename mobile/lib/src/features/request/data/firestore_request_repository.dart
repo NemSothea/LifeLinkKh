@@ -195,7 +195,21 @@ final class FirestoreRequestRepository implements RequestRepository {
         };
     }();
 
-    BloodRequest _requestFrom(String id, Map<String, dynamic> data, Map<String, Hospital> hospitals) {
+    /// A request as a matched donor sees it, for `FirestoreMatchRepository`: the match's
+    /// distance on it, and no contact — that comes from the match, once accepted. Null when
+    /// the request document is gone.
+    Future<BloodRequest?> requestForMatch(String requestId, {double? distanceKm}) async {
+        final data = (await _requests.doc(requestId).get()).data();
+        if (data == null) return null;
+        return _requestFrom(requestId, data, await _hospitalIndex(), distanceKm: distanceKm);
+    }
+
+    BloodRequest _requestFrom(
+        String id,
+        Map<String, dynamic> data,
+        Map<String, Hospital> hospitals, {
+        double? distanceKm,
+    }) {
         final status = RequestStatus.fromWire(data['status'] as String?);
         final bloodType = BloodType.fromWire(data['patientBloodType'] as String?);
         final urgency = Urgency.fromWire(data['urgency'] as String?);
@@ -218,6 +232,7 @@ final class FirestoreRequestRepository implements RequestRepository {
             acceptedCount: (data['acceptedCount'] as num?)?.toInt() ?? 0,
             // A just-written serverTimestamp reads back null until the server confirms it.
             createdAt: createdAt is Timestamp ? createdAt.toDate() : DateTime.now(),
+            distanceKm: distanceKm,
         );
     }
 }

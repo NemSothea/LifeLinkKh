@@ -5,9 +5,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/database/database_providers.dart';
 import '../../../core/error/result.dart';
-import '../../../core/network/api_client.dart';
+import '../../../core/firebase/firestore_providers.dart';
 import '../../request/application/request_providers.dart';
-import '../data/dio_match_repository.dart';
+import '../data/firestore_match_repository.dart';
 import '../data/match_sync_dao.dart';
 import '../data/offline_first_match_repository.dart';
 import '../domain/match.dart';
@@ -25,9 +25,10 @@ MatchSyncDao matchSyncDao(MatchSyncDaoRef ref) => MatchSyncDao(ref.watch(appData
 /// The network half, on its own. The sync engine drains through this one: going
 /// through [matchRepositoryProvider] would re-queue every write it just sent.
 @Riverpod(keepAlive: true)
-MatchRepository remoteMatchRepository(RemoteMatchRepositoryRef ref) => DioMatchRepository(
-    ref.watch(apiClientProvider),
-    ref.watch(dioRequestRepositoryProvider),
+MatchRepository remoteMatchRepository(RemoteMatchRepositoryRef ref) => FirestoreMatchRepository(
+    ref.watch(firestoreProvider),
+    ref.watch(firestoreRequestRepositoryProvider),
+    currentUid: ref.watch(currentUidProvider),
 );
 
 /// The swap. Everything above this line — service, notifier, every widget — was

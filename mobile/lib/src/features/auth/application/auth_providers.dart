@@ -6,7 +6,8 @@ import '../../../core/config/env.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/auth_token_gateway.dart';
 import '../../notify/application/push_providers.dart';
-import '../data/dio_auth_repository.dart';
+import '../../../core/firebase/firestore_providers.dart';
+import '../data/firebase_auth_repository.dart';
 import '../data/dio_telegram_auth_repository.dart';
 import '../data/firebase_facebook_credentials.dart';
 import '../data/firebase_google_credentials.dart';
@@ -35,11 +36,14 @@ GoogleCredentials googleCredentials(GoogleCredentialsRef ref) =>
 FacebookCredentials facebookCredentials(FacebookCredentialsRef ref) =>
     FirebaseFacebookCredentials();
 
-/// Built on `signInApiClient` — the Dio **without** the auth interceptor. Renewing a
-/// session over the client that repairs sessions is the recursion ADR 0007 warns about.
+/// Firebase since ADR 0009 phase 4: the Firebase ID token is the session, and the user
+/// record is `users/{uid}`. `DioAuthRepository` goes with the backend in phase 6.
 @Riverpod(keepAlive: true)
-AuthRepository authRepository(AuthRepositoryRef ref) =>
-    DioAuthRepository(ref.watch(signInApiClientProvider));
+AuthRepository authRepository(AuthRepositoryRef ref) => FirebaseAuthRepository(
+    ref.watch(firestoreProvider),
+    currentUid: ref.watch(currentUidProvider),
+    currentDisplayName: ref.watch(currentDisplayNameProvider),
+);
 
 /// Same unintercepted client as `authRepository` — neither Telegram call carries a
 /// bearer token either.

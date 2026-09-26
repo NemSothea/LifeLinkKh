@@ -24,7 +24,7 @@ final matchSyncDaoProvider = Provider<MatchSyncDao>.internal(
 // ignore: unused_element
 typedef MatchSyncDaoRef = ProviderRef<MatchSyncDao>;
 String _$remoteMatchRepositoryHash() =>
-    r'785fa8fbc97bde02caf7f45f6c487d3f570f4726';
+    r'f52ecd9446f6b676b1e3a10a35e138f7aecc7865';
 
 /// The network half, on its own. The sync engine drains through this one: going
 /// through [matchRepositoryProvider] would re-queue every write it just sent.

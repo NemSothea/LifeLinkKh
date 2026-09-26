@@ -8,7 +8,7 @@ The Firebase backend that replaces Spring Boot + PostgreSQL — ADR 0009, branch
 | `rules-tests/` | One emulator test per rule. A rule without a test is treated as absent |
 | `firestore.indexes.json` | Composite indexes for the board, "my requests", "my matches", history |
 | `firebase.json` | Emulator ports: auth 9099, firestore 8081, functions 5001, UI 4000 |
-| `functions/` | Cloud Functions. `onRequestCreated`: rate limit, matching, match documents, push |
+| `functions/` | Cloud Functions. `onRequestCreated`: rate limit, matching, match documents, donor alert. `onMatchAnswered`: accepted count, public board row, "donor accepted" push |
 | `seed/` | Districts and hospitals (V3, V7), same ids as Postgres. `reference-data.json` is the source |
 
 The data model and the reason behind each rule: `docs/tech-lead/firestore-data-model.md`.
@@ -48,17 +48,25 @@ Leave `FIRESTORE_EMULATOR` unset to use the real project. That needs Firestore c
 console, `npx firebase deploy --only firestore --project lifelinkkh` for the rules and indexes,
 and `npm run seed -- --project lifelinkkh` once.
 
-## Phase 3 is still a mixed state
+## After phase 4: what still touches the backend
 
-On Firestore now: donor profile, districts, donation history, requests (post, board, mine,
-detail, cancel), the push token, and matching + the donor alert in `onRequestCreated`.
+The whole golden path is on Firebase now: sign-in (the Firebase ID token is the session;
+`users/{uid}` is the record), donor profile, requests, matching and the donor alert, the
+donor's matches, accept/decline, and the "donor accepted" push.
 
-Still on the Spring Boot backend until phase 4: **sign-in** (the session JWT), **matches**
-(the donor's list, accept/decline) and the "donor accepted" push. So `API_BASE_URL` and
-`dev-up.sh` are still needed. On this branch a donor now gets the alert, and tapping it
-opens a match screen that reads the backend — which has no such match. Phase 4 closes that.
+Still on Spring Boot until phase 6:
 
-Deploying the Function needs the Blaze plan on `lifelinkkh`:
+- **Telegram sign-in.** It needs a custom-token Function; until then a Telegram user has
+  no Firebase identity and every Firestore call refuses them.
+- **`API_BASE_URL` is still required**, because the Telegram repository builds its Dio
+  client at startup. Nothing on the golden path calls the backend.
+- **The portal** (phase 5) still reads Postgres, so it does not see requests made here.
+
+Known gap, for phase 6: a stored session is restored even when Firebase has no signed-in
+user. It cannot happen on a normal install — both are cleared together — but a restored
+session with no Firebase user would show Home and fail every read until sign-out.
+
+Deploying the Functions needs the Blaze plan on `lifelinkkh`:
 
 ```bash
 npx firebase deploy --only firestore,functions --project lifelinkkh

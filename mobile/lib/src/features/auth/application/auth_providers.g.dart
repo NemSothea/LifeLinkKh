@@ -58,10 +58,10 @@ final facebookCredentialsProvider = Provider<FacebookCredentials>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef FacebookCredentialsRef = ProviderRef<FacebookCredentials>;
-String _$authRepositoryHash() => r'5b7dc96a12914892b3b8b136d6d8d5362d4f269c';
+String _$authRepositoryHash() => r'c4ca4464d7464de6d8ebc4bd4ebfb1df5e8e5d9f';
 
-/// Built on `signInApiClient` — the Dio **without** the auth interceptor. Renewing a
-/// session over the client that repairs sessions is the recursion ADR 0007 warns about.
+/// Firebase since ADR 0009 phase 4: the Firebase ID token is the session, and the user
+/// record is `users/{uid}`. `DioAuthRepository` goes with the backend in phase 6.
 ///
 /// Copied from [authRepository].
 @ProviderFor(authRepository)

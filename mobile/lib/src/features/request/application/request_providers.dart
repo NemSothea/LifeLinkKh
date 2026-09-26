@@ -20,13 +20,20 @@ part 'request_providers.g.dart';
 DioRequestRepository dioRequestRepository(DioRequestRepositoryRef ref) =>
     DioRequestRepository(ref.watch(apiClientProvider));
 
-/// Firestore since ADR 0009 phase 3. The Dio one above stays for `DioMatchRepository`
-/// until matches move in phase 4.
+/// Concrete, for the same reason the Dio one above was: `FirestoreMatchRepository` reuses
+/// this instance's `requestForMatch` (and its hospital cache) for the request in a match.
 @Riverpod(keepAlive: true)
-RequestRepository requestRepository(RequestRepositoryRef ref) => FirestoreRequestRepository(
-    ref.watch(firestoreProvider),
-    currentUid: ref.watch(currentUidProvider),
-);
+FirestoreRequestRepository firestoreRequestRepository(FirestoreRequestRepositoryRef ref) =>
+    FirestoreRequestRepository(
+        ref.watch(firestoreProvider),
+        currentUid: ref.watch(currentUidProvider),
+    );
+
+/// Firestore since ADR 0009 phase 3. `dioRequestRepository` above is unused since phase 4
+/// and goes with the backend in phase 6.
+@Riverpod(keepAlive: true)
+RequestRepository requestRepository(RequestRepositoryRef ref) =>
+    ref.watch(firestoreRequestRepositoryProvider);
 
 @Riverpod(keepAlive: true)
 RequestService requestService(RequestServiceRef ref) =>

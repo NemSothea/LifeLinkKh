@@ -28,10 +28,32 @@ final dioRequestRepositoryProvider = Provider<DioRequestRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DioRequestRepositoryRef = ProviderRef<DioRequestRepository>;
-String _$requestRepositoryHash() => r'7436f7815959bde1219943f04acbbd76b6f0641b';
+String _$firestoreRequestRepositoryHash() =>
+    r'a04c8ec5af30c864b058b5c2a14cb349f25f22b2';
 
-/// Firestore since ADR 0009 phase 3. The Dio one above stays for `DioMatchRepository`
-/// until matches move in phase 4.
+/// Concrete, for the same reason the Dio one above was: `FirestoreMatchRepository` reuses
+/// this instance's `requestForMatch` (and its hospital cache) for the request in a match.
+///
+/// Copied from [firestoreRequestRepository].
+@ProviderFor(firestoreRequestRepository)
+final firestoreRequestRepositoryProvider =
+    Provider<FirestoreRequestRepository>.internal(
+      firestoreRequestRepository,
+      name: r'firestoreRequestRepositoryProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$firestoreRequestRepositoryHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef FirestoreRequestRepositoryRef = ProviderRef<FirestoreRequestRepository>;
+String _$requestRepositoryHash() => r'c303af98f2bfd742054c5c1167703f8bff53044f';
+
+/// Firestore since ADR 0009 phase 3. `dioRequestRepository` above is unused since phase 4
+/// and goes with the backend in phase 6.
 ///
 /// Copied from [requestRepository].
 @ProviderFor(requestRepository)

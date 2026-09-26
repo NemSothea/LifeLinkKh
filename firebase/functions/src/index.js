@@ -4,8 +4,9 @@ import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 import { setGlobalOptions } from 'firebase-functions/v2';
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import * as logger from 'firebase-functions/logger';
+import { handleMatchAnswered } from './on-match-answered.js';
 import { handleRequestCreated } from './on-request-created.js';
 
 initializeApp();
@@ -35,6 +36,17 @@ export const onRequestCreated = onDocumentCreated('requests/{requestId}', (event
     db: getFirestore(),
     messaging: messaging(),
     requestId: event.params.requestId,
+    log: logger,
+  }),
+);
+
+export const onMatchAnswered = onDocumentUpdated('matches/{matchId}', (event) =>
+  handleMatchAnswered({
+    db: getFirestore(),
+    messaging: messaging(),
+    matchId: event.params.matchId,
+    before: event.data?.before.data(),
+    after: event.data?.after.data(),
     log: logger,
   }),
 );
