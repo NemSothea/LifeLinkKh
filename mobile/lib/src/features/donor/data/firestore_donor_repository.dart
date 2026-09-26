@@ -43,8 +43,8 @@ final class FirestoreDonorRepository implements DonorRepository {
         try {
             final snapshot = await _db.collection(donorsCollection).doc(uid).get();
             final data = snapshot.data();
-            // No document is "no profile yet", which is where every donor starts — the 404
-            // the Dio repository turned into Success(null).
+            // No document is "no profile yet", which is where every donor starts — a real
+            // answer, not a failure.
             if (data == null) return const Success(null);
             return Success(await _profileFrom(uid, data));
         } on FirebaseException catch (error) {

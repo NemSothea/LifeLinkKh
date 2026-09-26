@@ -2,10 +2,10 @@
 
 ## Quick rules (unchanged)
 - **Commit prefixes:** feat fix spec adr sec brief qa ci chore refactor docs.
-- **Backend (Java/Spring):** layered (Controller/Service/Repository), DTOs at boundaries, Flyway for all schema changes, no secrets in code.
+- **Firebase (rules + Functions):** every rule has a rules test, Functions hold what a client must not do, no secrets in code (ADR 0009).
 - **Web (Next.js/TS):** App Router, typed API client, Tailwind, i18n keys (no hardcoded strings).
 - **Mobile (Flutter):** MVVM, feature-first folders, i18n via arb, no direct DB access.
-- **API:** contract-first — update docs/fullstack/api-contract before implementing.
+- **Data:** contract-first — update `docs/tech-lead/firestore-data-model.md` and the rules before a client reads or writes a new field.
 - **Casing (R8):** lowercase-hyphen meta docs; UPPERCASE CLAUDE/README/ONBOARDING.
 
 ## Why these rules and not more
@@ -15,70 +15,53 @@ situation is to remove the decisions that would otherwise be re-made differently
 Anything that only pays off with a second reviewer, a second team or a second year of
 maintenance is deliberately absent.
 
-## Java / Spring Boot
+## Firebase — Security Rules and Cloud Functions
 
-**Structure — package by domain, not by layer.** `user/`, `donor/`, `hospital/`, `request/`,
-`match/`, `donation/`, plus `config/`, `common/`, `health/`. A feature is one folder. Never create
-`services/` or `controllers/` packages. Never create an empty class ahead of the milestone that
-needs it.
+> Replaced the Java / Spring Boot section on 2026-09-26 (ADR 0009). The rules below carry over the
+> ones that protected donors in the Spring code; the Spring-specific ones went with `backend/`.
 
-**Dependency injection — constructor only.** `private final` fields, one constructor, no
-`@Autowired` on fields, no setter injection. Field injection hides what a class needs and makes it
-untestable without a Spring context.
+**The rules are the server.** A client talks to Firestore directly, so `firebase/firestore.rules` is
+the only thing between it and the data. **A rule without a test in `firebase/rules-tests/` is
+treated as absent** — write the test first, as the principal who must be refused, not only the one
+who is allowed.
 
-**Layer contract, enforced:**
-- Controller: HTTP only — bind, validate, delegate, map to a response. Zero business logic, zero
-  repository calls.
-- Service: business logic and the transaction boundary. `@Transactional` lives here, never on a
-  controller or a repository.
-- Repository: queries only.
+**Deny by default; allow by name.** Every `match` block states who may read and write. A field a
+client may not see (the requester's contact) cannot be hidden by a rule, so it lives in its own
+document (`requests/{id}/private/contact`) with its own rule.
 
-**OOP rules that actually matter in this codebase:**
-- **An entity is NEVER serialised to a response.** Every response body is a `record` DTO built by an
-  explicit allow-list mapper. This is not style — ADR 0003 forbids `donor_profiles.latitude` and
-  `longitude` from appearing in any response, and entity serialisation is precisely how that leaks.
-- DTOs are `record`s. Immutable, no setters.
-- Entities keep raw `UUID` foreign keys at M2 rather than JPA associations, so no lazy-load can
-  traverse into forbidden columns. Revisit only if a query genuinely needs the graph.
-- Constrained values (`role`, `blood_type`, `urgency`, `status`) stay `String` in Java. The DB CHECK
-  constraints and `blood_compatibility` are the single authority; a parallel Java enum would be a
-  second source of truth for a clinical rule.
-- No inheritance except `@MappedSuperclass` for audit columns. No abstract base service, no generic
-  CRUD superclass.
-- No static mutable state anywhere.
+**Roles are claims, never fields.** A client can write its own `users/{uid}`, so a `role` field there
+proves nothing. Access is the custom claim **and** an `admins/{uid}` record no client can write; the
+rules check both, so deleting the record ends access before the token expires.
 
-**Null policy.** A method returns `Optional<T>` or a non-null value — never `null`. Parameters are
-assumed non-null unless the field is nullable in the schema (`phone`, `latitude`, `longitude`,
-`last_donation_date`, `blood_request_id`, `confirmed_by_user_id`), and every one of those is
-documented in the entity's Javadoc.
+**Functions do what a client must not** — read other donors' profiles, send FCM, write match or
+donation documents, change counts. Keep the pure logic (compatibility, cooldown, radius, ordering) in
+plain modules like `functions/src/matching.js` with unit tests, and keep the trigger handlers thin
+around them.
 
-**Errors.** One shape: `ErrorResponse(code, message, timestamp)` from `common/error/`. An error body
-never carries a stack trace, an exception class name or a SQL fragment. Server-side cause goes to the
-log, not to the caller.
+**Clinical rules stay data.** The ABO/Rh compatibility table is one constant (ADR 0004), not
+branching code, and the 56-day cooldown is one named constant. A client check is a convenience; the
+rule or Function check is the rule.
 
-**Validation.** Jakarta Bean Validation on request DTOs. Business rules — the 56-day cooldown, ABO/Rh
-compatibility, role restrictions on sign-up — are enforced **server-side in a service**, never only
-in a client. A client check is a convenience; the server check is the rule.
+**Location never leaves rounded.** ADR 0003: a donor's `lat`/`lng`/`geohash` are readable only by
+that donor and an admin, and a distance leaves the Function rounded to half a kilometre.
 
-**Time.** `TIMESTAMPTZ` / `OffsetDateTime` for instants, `LocalDate` for donation dates. Never
-`LocalDateTime` for a stored instant — Cambodia is UTC+7 and naive local time makes the cooldown
-wrong at boundaries.
+**Time.** Firestore `Timestamp` for stored instants and dates (`lastDonationDate` is a timestamp).
+Cooldown arithmetic converts to a Phnom Penh (UTC+7) calendar date first, as `matching.js` does —
+never compare a naive local time against an instant, or the cooldown goes wrong at the day
+boundary.
 
-**Logging.** SLF4J. Log the event and identifiers, never PII: no phone number, no coordinates, no
-blood type in a log line. `logger.error("...", ex)` — never `ex.printStackTrace()`.
+**Logging.** `firebase-functions/logger`. Log the event and identifiers, never PII: no phone number,
+no coordinates, no blood type, no token in a log line.
 
-**Migrations.** Flyway owns the schema; `ddl-auto: validate` and nothing else. A merged migration is
-never edited — a mistake is corrected by the next `V<n>`.
-
-**Formatting.** google-java-format **AOSP variant** — 4-space indent, 100-column lines — enforced by
-Spotless in `verify`. `./mvnw spotless:apply` fixes violations. No wildcard imports, no tabs.
-Javadoc on any class or field carrying a rule that is not obvious from the name.
+**Secrets.** No service-account key in the repo, ever; the Functions use their runtime identity.
+A key needed on a laptop for seeding the real project lives in `secrets/` (gitignored).
 
 ## TypeScript / Next.js
 
 Strict mode on. No `any` — `unknown` plus a narrowing check. Server Components by default;
-`'use client'` only where interaction requires it. One generated or hand-written typed API client
-from `docs/fullstack/api-contract/web/openapi.yaml` — components never call `fetch` directly. Every
+`'use client'` only where interaction requires it. One typed Firebase REST client (`frontend/src/lib/api/`), called from the Next server with the
+admin's ID token from the httpOnly session cookie — components never call `fetch` directly, and no
+token reaches page script. Every
 user-visible string goes through an i18n key; a literal in JSX is a defect because the app ships
 Khmer and English. Components are function components with typed props, named exports, one component
 per file, `PascalCase.tsx`.
@@ -88,7 +71,7 @@ per file, `PascalCase.tsx`.
 MVVM, feature-first folders. Widgets are `StatelessWidget` unless local state is genuinely needed.
 `const` constructors wherever possible. No business logic in a `build()` method. One state-management
 approach across the whole app — chosen once, recorded as an ADR, never mixed. All strings via `.arb`.
-No direct HTTP in a widget: repository class only. `flutter analyze` clean before commit.
+No Firestore call in a widget: repository class only. `flutter analyze` clean before commit.
 
 ## Applies to all three
 

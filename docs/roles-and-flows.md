@@ -21,8 +21,9 @@ Fullstack/Mobile build slice → QA verifies vs acceptance criteria →
 Security sign-off (R5) → DoD met → done. Forward signal = docs/po/changelog.md.
 
 ## Build + CI flow
-Tech Lead owns `docker-compose.yml` (spec: docs/fullstack/specs/foundation/infra-docker.md), CI
-(.github/workflows/), the deploy runbook, and the release. No infra role; no runbook written yet.
+Tech Lead owns the Firebase project and its deploys (ADR 0009 — `docker-compose.yml` is gone), CI
+(.github/workflows/, jobs firebase/web/mobile), the runbooks (docs/tech-lead/local-development.md,
+deploy-runbook.md) and the release. No infra role.
 
 ## Security flow (R5)
 Any change to auth / PII / secrets / external integrations → threat model

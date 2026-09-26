@@ -8,7 +8,7 @@ part 'connectivity_providers.g.dart';
 ///
 /// An interface, not the internet: a phone on hotel wifi with no uplink reports
 /// "connected" here. That case still lands on the section's own [NetworkFailure] copy
-/// after the Dio timeout, so the banner only has to be right when it *does* show.
+/// after the write times out, so the banner only has to be right when it *does* show.
 ///
 /// A plugin that is not there (every widget test) reads as online: a banner that
 /// appears in tests because a platform channel is missing would be a lie.

@@ -11,7 +11,6 @@ import 'package:lifelink_kh/src/core/settings/onboarding_controller.dart';
 import 'package:lifelink_kh/src/core/settings/onboarding_store.dart';
 import 'package:lifelink_kh/src/features/auth/application/auth_providers.dart';
 import 'package:lifelink_kh/src/features/donor/application/donor_providers.dart';
-import 'package:lifelink_kh/src/features/home/application/health_providers.dart';
 import 'package:lifelink_kh/src/features/match/application/match_providers.dart';
 import 'package:lifelink_kh/src/features/match/domain/match.dart';
 import 'package:lifelink_kh/src/features/match/domain/match_repository.dart';
@@ -101,10 +100,6 @@ void main() {
                     sessionStoreProvider.overrideWithValue(FakeSessionStore(testSession())),
                     googleCredentialsProvider.overrideWithValue(FakeGoogleCredentials()),
                     facebookCredentialsProvider.overrideWithValue(FakeFacebookCredentials()),
-                    telegramAuthRepositoryProvider.overrideWithValue(
-                        FakeTelegramAuthRepository(),
-                    ),
-                    healthRepositoryProvider.overrideWithValue(FakeHealthRepository()),
                     donorRepositoryProvider.overrideWithValue(FakeDonorRepository()),
                     matchRepositoryProvider.overrideWithValue(matches),
                     requestRepositoryProvider.overrideWithValue(requests),

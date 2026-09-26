@@ -65,7 +65,7 @@ typedef PushRegistrationServiceRef = ProviderRef<PushRegistrationService>;
 String _$pushArrivalsHash() => r'5b904e4bac48ca587b5d241af4ad61b6ed59d038';
 
 /// Pushes that arrive while the app is running. Empty by default — the same seam shape
-/// as `authTokenGatewayProvider`: `main.dart` overrides it with the Firebase streams, and
+/// as `localeStoreProvider`: `main.dart` overrides it with the Firebase streams, and
 /// every widget test gets a plain app with no platform channel behind it.
 ///
 /// Copied from [pushArrivals].

@@ -102,7 +102,6 @@ Widget _wrap({required AuthSession session, required List<Override> overrides}) 
             authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
             googleCredentialsProvider.overrideWithValue(FakeGoogleCredentials()),
             facebookCredentialsProvider.overrideWithValue(FakeFacebookCredentials()),
-            telegramAuthRepositoryProvider.overrideWithValue(FakeTelegramAuthRepository()),
             ...overrides,
         ],
         child: MaterialApp(

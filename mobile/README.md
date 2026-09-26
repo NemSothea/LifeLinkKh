@@ -1,8 +1,10 @@
 # LifeLink KH — Flutter app (ជីវិត)
 
-Blood-donor matching for Cambodia. This is the donor/patient mobile client; the
-Spring Boot API and the Next.js hospital portal live alongside it in this repo
-(see the root [`README.md`](../README.md)).
+Blood-donor matching for Cambodia. This is the donor/patient mobile client. It talks to
+Firebase directly — Auth, Firestore and Cloud Messaging, with the Cloud Functions and
+Security Rules in [`firebase/`](../firebase/) — and has no backend of its own
+([ADR 0009](../docs/tech-lead/adr/0009-firebase-replaces-spring-boot-and-postgres.md)).
+The Next.js portal lives alongside it (see the root [`README.md`](../README.md)).
 
 **Owner:** Nem Sothea — Tech Lead / Mobile.
 **Track:** B (team product). The FieldLog exercises in
@@ -21,8 +23,7 @@ Sign-In failing silently at runtime.
 
 The file is **committed on purpose** (see the note in the root `.gitignore`). It is client
 configuration, not a secret: the Android API key inside it is restricted by package name
-and SHA-1 fingerprint. The file that must never be committed is the backend's
-service-account key.
+and SHA-1 fingerprint. The file that must never be committed is a service-account key.
 
 **2. The debug SHA-1 fingerprint, registered on that Android app.** Sign-In fails with no
 useful error if it is missing — `docs/scope.md` calls it the single most common wasted
@@ -33,16 +34,21 @@ keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore \
   -storepass android -keypass android | grep SHA1
 ```
 
-Then:
+Then, against the real `lifelinkkh` Firebase project:
 
 ```bash
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/api
+flutter run
 ```
 
-`10.0.2.2` is the Android emulator's alias for the host machine, which is where
-`docker-compose` publishes the backend. There is no default: `Env.apiBaseUrl` throws
-when `API_BASE_URL` is unset, because an app that silently points at nothing looks like
-it works and fails later as an unexplained network error.
+Or against a local Firestore emulator (`firebase/README.md` starts one):
+
+```bash
+flutter run --dart-define=FIRESTORE_EMULATOR=10.0.2.2:8081
+```
+
+`10.0.2.2` is the Android emulator's alias for the host machine, where the emulator suite
+listens. Nothing else is configured at build time; `lib/src/core/config/env.dart` lists the
+two optional `--dart-define`s.
 
 Code generation — leave this running while developing:
 
@@ -112,22 +118,23 @@ supported deployment target versions is 15.0 to 27.0.x`. The `post_install` hook
         │   domain     │ ◀───── │     data     │
         └──────────────┘        └──────────────┘
        entities, abstract        concrete repositories
-       repositories              (Dio today, anything later)
+       repositories              (Firestore today, anything later)
 ```
 
 Every arrow points inward. A layer may name what it points at and nothing else, which
 gives the two properties the whole structure exists for:
 
 - **`presentation/` cannot name `data/`.** A screen imports `application/` for providers
-  and `domain/` for entity types. It never learns that Dio exists.
+  and `domain/` for entity types. It never learns that Firestore exists.
 - **The concrete implementation is named in exactly one file** —
-  `application/health_providers.dart`, the composition root. Swapping the transport, or
-  substituting a fake in a test, is a one-line change there and nowhere else.
+  `application/donation_providers.dart`, the composition root. Swapping the transport, or
+  substituting a fake in a test, is a one-line change there and nowhere else — which is
+  how ADR 0009 moved every feature off the old REST backend without touching a screen.
 
 `application/` importing `data/` is the one deliberate outward arrow. It is what buys
 the isolation above.
 
-### The home feature, as laid out on disk
+### The donation feature, as laid out on disk
 
 ```
 lib/
@@ -137,35 +144,35 @@ lib/
     app.dart                       root widget: MaterialApp.router, theme, locales
     router/app_router.dart         every route, declared. No Navigator.push anywhere
     core/
-      config/env.dart              build-time config
-      network/api_client.dart      the single Dio instance
+      config/env.dart              build-time config (optional --dart-defines)
+      firebase/firestore_providers.dart  the Firestore instance + current uid
       theme/app_theme.dart         Material 3 from one seed, light + dark
-    features/home/
+    features/donation/
       domain/
-        health_status.dart         final class, value equality, no Flutter import
-        health_repository.dart     abstract interface
+        donation.dart              final class, value equality, no Flutter import
+        donation_repository.dart   abstract interface
       data/
-        dio_health_repository.dart implements HealthRepository
+        firestore_donation_repository.dart  implements DonationRepository
       application/
-        health_service.dart        the Service — pure Dart, no Riverpod import
-        health_providers.dart      @riverpod providers  (+ .g.dart, generated)
+        donation_service.dart      the Service — pure Dart, no Riverpod import
+        donation_providers.dart    @riverpod providers  (+ .g.dart, generated)
       presentation/
-        home_screen.dart           ConsumerWidget
+        donation_history_screen.dart  ConsumerWidget
 ```
 
 ### The Service, against the six rules
 
-`HealthService` is a pass-through today because a single health check has nothing to
-orchestrate. The seam is still worth having: `AuthService` at M3 has a token exchange
-and a profile lookup to sequence, and it sits in exactly this position.
+`DonationService` is a pass-through today because reading one list has nothing to
+orchestrate. The seam is still worth having: `AuthService` has a sign-in, a session restore
+and a sign-out to sequence, and it sits in exactly this position.
 
 | Rule | How it holds here |
 |---|---|
-| S1 one per feature | `HealthService`, not an `AppService` |
+| S1 one per feature | `DonationService`, not an `AppService` |
 | S2 stateless | no instance field holds UI state |
-| S3 returns domain types | returns `HealthStatus`, never a Dio `Response` |
-| S4 depends on abstractions | constructor takes `HealthRepository`, not the Dio one |
-| S5 no Flutter import | `test/health_service_test.dart` needs no widget tree |
+| S3 returns domain types | returns `Result<List<Donation>>`, never a Firestore snapshot |
+| S4 depends on abstractions | constructor takes `DonationRepository`, not the Firestore one |
+| S5 no Flutter import | `test/donation_service_test.dart` needs no widget tree |
 | S6 orchestrates, doesn't render | builds no widgets |
 
 ## Testing
@@ -176,15 +183,15 @@ flutter analyze && flutter test
 
 Three levels, and the level is chosen by what is being proven:
 
-- `health_service_test.dart` — the Service with a plain stub. No Riverpod, no widgets.
-- `home_screen_test.dart` — the screen, with `healthRepositoryProvider` overridden at
-  the **repository** seam rather than at the provider nearest the widget. Everything
-  above the transport is therefore exercised for real.
-- `env_test.dart` — the unconfigured case, since tests run without `--dart-define`.
-- `auth_interceptor_test.dart` — the four client rules of
-  [`ADR 0007`](../docs/tech-lead/adr/0007-session-lifetime-and-expiry.md), including the
-  concurrent-401 case QA treats as non-negotiable. A scripted `HttpClientAdapter` stands in
-  for the server; no mock package and no local port.
+- `donation_service_test.dart` — the Service with a plain stub. No Riverpod, no widgets.
+- `home_screen_test.dart` — the screen, with the repository providers overridden at the
+  **repository** seam rather than at the provider nearest the widget. Everything above the
+  transport is therefore exercised for real.
+- `firestore_*_repository_test.dart` — each repository against `fake_cloud_firestore`. What
+  the Security Rules allow is tested separately, against the real emulator, in
+  `firebase/rules-tests/`.
+- `auth_service_test.dart` — sign-in, sign-out ordering, and session restore refusing a
+  stored session that no Firebase user backs.
 - `sign_in_flow_test.dart` — screen, controller, service and router redirect together, with
   fakes only at the plugin and transport seams. It runs with **no Firebase and no
   emulator**, which is the payoff for `GoogleCredentials` and `SessionStore` being abstract.
@@ -200,12 +207,8 @@ Recorded so they read as decisions rather than oversights. Full rationale in
 
 - ~~**`AsyncNotifier` and the four-state render** (Week 5)~~ — landed with M3 sign-in:
   `AuthController` is an `AsyncNotifier`, and the sign-in screen renders idle, in-flight,
-  signed-in and failed, with the retry the health check could not justify. The `home`
-  feature still uses a plain `FutureProvider`, because a health string has no empty state
-  and nothing worth retrying.
-- ~~**`Result<T>` and sealed `Failure`** (Week 6)~~ — landed in `core/error/`. The `home`
-  feature's repository still throws; converting it buys nothing until it has a failure a
-  user can act on.
+  signed-in and failed, with a retry on each.
+- ~~**`Result<T>` and sealed `Failure`** (Week 6)~~ — landed in `core/error/`.
 - **`custom_lint` + `riverpod_lint`** — recommended, not required, and unsolvable on
   this Flutter SDK.
 

@@ -8,8 +8,7 @@ part of 'donor_providers.dart';
 
 String _$donorRepositoryHash() => r'4316793fa8fcfbdef3a0b39df93304f153cf86ba';
 
-/// Firestore since ADR 0009. `DioDonorRepository` stays until phase 6 removes the backend,
-/// so `main` and this branch can be compared screen by screen.
+/// Firestore since ADR 0009.
 ///
 /// Copied from [donorRepository].
 @ProviderFor(donorRepository)

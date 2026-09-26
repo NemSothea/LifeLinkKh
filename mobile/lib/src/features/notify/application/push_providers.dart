@@ -34,7 +34,7 @@ PushRegistrationService pushRegistrationService(PushRegistrationServiceRef ref) 
     );
 
 /// Pushes that arrive while the app is running. Empty by default — the same seam shape
-/// as `authTokenGatewayProvider`: `main.dart` overrides it with the Firebase streams, and
+/// as `localeStoreProvider`: `main.dart` overrides it with the Firebase streams, and
 /// every widget test gets a plain app with no platform channel behind it.
 @Riverpod(keepAlive: true)
 Stream<PushArrival> pushArrivals(PushArrivalsRef ref) => const Stream.empty();

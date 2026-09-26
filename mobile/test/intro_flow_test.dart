@@ -5,7 +5,6 @@ import 'package:lifelink_kh/src/app.dart';
 import 'package:lifelink_kh/src/core/settings/onboarding_controller.dart';
 import 'package:lifelink_kh/src/core/settings/onboarding_store.dart';
 import 'package:lifelink_kh/src/features/auth/application/auth_providers.dart';
-import 'package:lifelink_kh/src/features/home/application/health_providers.dart';
 import 'package:lifelink_kh/src/features/onboarding/presentation/intro_screen.dart';
 
 import 'support/auth_fakes.dart';
@@ -28,10 +27,6 @@ void main() {
                     sessionStoreProvider.overrideWithValue(FakeSessionStore(null)),
                     googleCredentialsProvider.overrideWithValue(FakeGoogleCredentials()),
                     facebookCredentialsProvider.overrideWithValue(FakeFacebookCredentials()),
-                    telegramAuthRepositoryProvider.overrideWithValue(
-                        FakeTelegramAuthRepository(),
-                    ),
-                    healthRepositoryProvider.overrideWithValue(FakeHealthRepository()),
                 ],
                 child: const LifeLinkApp(),
             ),
@@ -95,10 +90,6 @@ void main() {
                     sessionStoreProvider.overrideWithValue(FakeSessionStore(testSession())),
                     googleCredentialsProvider.overrideWithValue(FakeGoogleCredentials()),
                     facebookCredentialsProvider.overrideWithValue(FakeFacebookCredentials()),
-                    telegramAuthRepositoryProvider.overrideWithValue(
-                        FakeTelegramAuthRepository(),
-                    ),
-                    healthRepositoryProvider.overrideWithValue(FakeHealthRepository()),
                 ],
                 child: const LifeLinkApp(),
             ),

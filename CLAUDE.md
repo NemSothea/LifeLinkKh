@@ -30,7 +30,8 @@ Facebook-post approach used by hospitals and the National Blood Transfusion Cent
 
 ### Why we chose it
 - Real, life-saving social impact — strong story for the project defense.
-- Exercises grade-worthy tech: authentication, push notifications, GPS, and a relational database.
+- Exercises grade-worthy tech: authentication, push notifications, GPS, and a cloud database with
+  server-side rules (Firestore + Security Rules + Cloud Functions since ADR 0009; PostgreSQL before).
 - Scope fits a team of 3 across ~13 weeks of development.
 - Clear success metrics: donors registered, requests matched, notifications delivered.
 
@@ -41,37 +42,46 @@ https://capybara.kosign.dev/en/docs/overview
 
 | Layer         | Technology |
 |---------------|------------|
-| Backend       | Spring Boot (JPA, Flyway migrations, Spring Security) |
-| Database      | PostgreSQL |
+| Backend       | **Firebase** (project `lifelinkkh`, region `asia-southeast1`) — Cloud Functions (`onRequestCreated`, `onMatchAnswered`, `confirmDonation`), Firebase Auth. Replaced Spring Boot by ADR 0009 |
+| Database      | Cloud Firestore + Security Rules (`firebase/firestore.rules`, emulator-tested). Replaced PostgreSQL by ADR 0009 |
 | Mobile app    | **Flutter** — donor/patient app, builds native Android → Play Store. iOS build target added (DEC-006): device/simulator build only, no App Store submission, no Apple Developer account. |
-| Web portal    | Next.js (App Router, TypeScript, Tailwind CSS) — hospital/admin portal |
-| Local dev     | Docker / docker-compose (postgres + backend + web) |
+| Web portal    | Next.js (App Router, TypeScript, Tailwind CSS) — public board + admin portal (admin-only in v1, DEC-014); talks to Firebase over REST from the Next server |
+| Local dev     | Firebase Emulator Suite (`cd firebase && npm run emulators:app` — Firestore, Auth, Functions; needs Java 21). No Docker |
 | CI            | GitHub Actions — owned by Tech Lead; there is no infra role |
 | Push          | Firebase Cloud Messaging (FCM) — `firebase_messaging` (Flutter) |
 | Location      | `geolocator` (Flutter). **No map widget** — coordinates satisfy the GPS requirement; rendering a map is a week for no marks (DEC-004) |
 | i18n          | Khmer + English (both clients) |
 
 ### Why this stack
-- Matches the requested stack: PostgreSQL backend, Next.js web frontend, Docker.
+- The app already depended on Firebase for identity (Auth) and delivery (FCM); ADR 0009 moved the
+  third piece — storing and matching — there too, and dropped a server the team had to run itself
+  (Docker, Flyway, its own JWT, a mounted service-account key, a tunnel before any phone could
+  reach it). The original request (PostgreSQL + Next.js + Docker) was met through M2–M7; the
+  change is a known course risk the ADR defense has to explain.
 - **Flutter** builds a native Android app directly, satisfying the course Play Store
   requirement cleanly (no Capacitor / hybrid wrapper).
-- Two clients share one Spring Boot + PostgreSQL API: Flutter for donors/patients on
-  mobile, Next.js for hospitals/admin on the web.
+- Two clients share one Firebase project: Flutter for donors/requesters on mobile, Next.js for
+  the public board and the admin on the web. The Security Rules judge both the same way.
 
 ## 3. Architecture
 
 ```
-                 Spring Boot API  ──>  PostgreSQL
-                     ▲        ▲
-        REST / HTTP  │        │  REST / HTTP
-                     │        │
-        Flutter app ─┘        └─ Next.js web portal
-     (donors/patients)          (hospitals/admin)
-      → Play Store
+            Firebase (lifelinkkh, asia-southeast1)
+     ┌──────────────────────────────────────────────┐
+     │  Firestore + Security Rules   Firebase Auth   │
+     │        │ triggers                             │
+     │  Cloud Functions ──────────────> FCM push     │
+     └──────────────────────────────────────────────┘
+          ▲  Firebase SDK            ▲  REST (admin ID token, from the Next server)
+          │                          │
+     Flutter app               Next.js web portal
+  (donors/requesters)        (public board + admin)
+     → Play Store
 ```
 
-Backend + web + database run locally via `docker-compose` (services: `postgres`,
-`backend`, `web`). The Flutter app runs on device/emulator against the same API.
+Locally the whole Firebase side runs on the Emulator Suite (`firebase/README.md`); the portal
+runs with `npm run dev` pointed at it, and the Flutter app with
+`--dart-define=FIRESTORE_EMULATOR=…`. Setup: `docs/tech-lead/local-development.md`.
 
 ## 4. Milestones (course requirement: M1 → M7, from Week 3, M7 by Week 15)
 
@@ -126,14 +136,24 @@ Backend + web + database run locally via `docker-compose` (services: `postgres`,
 > distinct from `docs/demo-runbook.md` (the Tech Lead's own command-by-command runbook for standing
 > the stack up before a demo). No milestone-boundary sign-off; it is a living doc, updated whenever
 > the golden path changes.
+>
+> **Amended 2026-09-26 by ADR 0009 / DEC-014 — Firebase replaces Spring Boot + PostgreSQL; the
+> portal is admin-only.** Not a milestone and not a new FR. The rows above keep the wording they
+> were graded against (M2's Spring Boot/Flyway/`docker-compose` deliverable was met and signed off
+> on 2026-08-17). From phase 6 there is no `backend/`, no `docker-compose*.yml` and no Postgres:
+> Firestore, Firebase Auth and three Cloud Functions do that work, and the demo DEC-012 describes
+> runs on the Firebase emulators (or the real `lifelinkkh` project for real pushes) instead of
+> `docker compose`. DEC-014 cut hospital-staff accounts from v1 — roles are DONOR and REQUESTER in
+> the app and ADMIN on the portal — and Telegram sign-in was dropped with the move. The five PRD
+> metrics now come from `cd firebase && npm run metrics` instead of SQL `COUNT` queries.
 
 ## 5. Team — responsibilities (Group 2)
 
 | Member | Role | Owns |
 |--------|------|------|
-| **Nem Sothea** | Tech Lead / Flutter + PO (Senior) | Architecture, Flutter mobile app, FCM push, GPS/maps, Android build & Play Store release. Reviews all PRs. Co-PO with Sourn SAVOURN. Also holds Security overlay and CI (`.github/workflows/`). |
-| **Moeun Nithvaraman** | Backend / Database (Senior) | Spring Boot API, PostgreSQL schema, Flyway migrations, auth, blood-type/distance matching logic. |
-| **Suon Pisey** | Frontend (Senior) | Next.js web portal (hospital/admin), API client, forms, Khmer/English i18n. |
+| **Nem Sothea** | Tech Lead / Flutter + PO (Senior) | Architecture, Flutter mobile app, FCM push, GPS/maps, Android build & Play Store release, Firebase project and deploys. Reviews all PRs. Co-PO with Sourn SAVOURN. Also holds Security overlay and CI (`.github/workflows/`). |
+| **Moeun Nithvaraman** | Backend / Database (Senior) | Firestore data model and Security Rules (+ their emulator tests), Cloud Functions, seed data, auth, blood-type/distance matching logic. |
+| **Suon Pisey** | Frontend (Senior) | Next.js web portal (public board + admin), Firebase REST client, forms, Khmer/English i18n. |
 | **Sourn SAVOURN** | PO (Senior) | `docs/po/` — PRD, briefs, prototypes, FRs, changelog. Co-PO with Nem Sothea. |
 | **Oun Sreynich** | QA (Senior) | Test plan, e2e/integration tests, milestone acceptance, bug tracking. |
 

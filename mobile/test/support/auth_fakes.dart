@@ -9,11 +9,7 @@ import 'package:lifelink_kh/src/features/auth/domain/auth_user.dart';
 import 'package:lifelink_kh/src/features/auth/domain/facebook_credentials.dart';
 import 'package:lifelink_kh/src/features/auth/domain/google_credentials.dart';
 import 'package:lifelink_kh/src/features/auth/domain/session_store.dart';
-import 'package:lifelink_kh/src/features/auth/domain/telegram_auth_repository.dart';
-import 'package:lifelink_kh/src/features/auth/domain/telegram_start_session.dart';
 import 'package:lifelink_kh/src/features/auth/domain/user_role.dart';
-import 'package:lifelink_kh/src/features/home/domain/health_repository.dart';
-import 'package:lifelink_kh/src/features/home/domain/health_status.dart';
 import 'package:lifelink_kh/src/features/notify/domain/fcm_token_repository.dart';
 import 'package:lifelink_kh/src/features/donor/domain/blood_type.dart';
 import 'package:lifelink_kh/src/features/donor/domain/district.dart';
@@ -29,10 +25,14 @@ import 'package:lifelink_kh/src/features/notify/domain/push_token_source.dart';
 ///
 /// Shared rather than per-file because the sign-in screen test and the router test need the
 /// same set, and two copies would drift.
+/// The Firebase uid [testSession] belongs to, and the one [FakeGoogleCredentials] reports
+/// as signed in — session restore only keeps a session the Firebase user matches.
+const String testUid = '11111111-1111-1111-1111-111111111111';
+
 AuthSession testSession({String token = 'jwt-1', bool isNewAccount = false}) => AuthSession(
     token: token,
     user: AuthUser(
-        id: '11111111-1111-1111-1111-111111111111',
+        id: testUid,
         role: UserRole.donor,
         displayName: 'Sothea',
         isNewAccount: isNewAccount,
@@ -75,17 +75,23 @@ final class FakeSessionStore implements SessionStore {
 final class FakeGoogleCredentials implements GoogleCredentials {
     /// `null` models a dismissed account chooser.
     String? interactiveToken = 'firebase-id-token';
-    String? silentToken = 'firebase-id-token';
+
+    /// The Firebase user on this device. `null` models Firebase signed out underneath a
+    /// stored session.
+    String? uid = testUid;
     bool signedOut = false;
 
     @override
     Future<String?> signIn() async => interactiveToken;
 
     @override
-    Future<String?> idToken({bool forceRefresh = false}) async => silentToken;
+    Future<String?> currentUid() async => uid;
 
     @override
-    Future<void> signOut() async => signedOut = true;
+    Future<void> signOut() async {
+        signedOut = true;
+        uid = null;
+    }
 }
 
 final class FakeFacebookCredentials implements FacebookCredentials {
@@ -94,37 +100,6 @@ final class FakeFacebookCredentials implements FacebookCredentials {
 
     @override
     Future<String?> signIn() async => interactiveToken;
-}
-
-final class FakeTelegramAuthRepository implements TelegramAuthRepository {
-    Failure? startFailure;
-    Failure? verifyFailure;
-    String deepLink = 'https://t.me/LifeLinkKHbot?start=session-token-1';
-    String sessionToken = 'session-token-1';
-
-    /// The code `verify` accepts. Anything else fails as `TELEGRAM_CODE_INVALID`
-    /// (`UnauthorizedFailure`), same as the real backend.
-    String validCode = '123456';
-
-    @override
-    Future<Result<TelegramStartSession>> start({required UserRole role}) async {
-        final failure = startFailure;
-        if (failure != null) return Failed(failure);
-        return Success(TelegramStartSession(sessionToken: sessionToken, deepLink: deepLink));
-    }
-
-    @override
-    Future<Result<AuthSession>> verify({
-        required String sessionToken,
-        required String code,
-    }) async {
-        final failure = verifyFailure;
-        if (failure != null) return Failed(failure);
-        if (code != validCode) {
-            return const Failed(UnauthorizedFailure());
-        }
-        return Success(testSession());
-    }
 }
 
 final class FakeFcmTokenRepository implements FcmTokenRepository {
@@ -163,13 +138,6 @@ final class FakePushTokenSource implements PushTokenSource {
 
     @override
     Stream<String> tokenRefreshes() => refreshes.stream;
-}
-
-/// The home screen is behind the redirect, so every router test renders it and therefore
-/// needs the health call answered.
-final class FakeHealthRepository implements HealthRepository {
-    @override
-    Future<HealthStatus> fetchStatus() async => const HealthStatus('UP');
 }
 
 /// A donor profile with a live cooldown, so eligibility rendering has both numbers to show.

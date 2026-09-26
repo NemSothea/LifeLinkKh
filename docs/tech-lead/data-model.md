@@ -1,5 +1,9 @@
 # Data Model — ERD (M1 deliverable)
 
+> **Superseded by ADR 0009 (2026-09)** — this is the PostgreSQL model, kept as the record of M1–M7.
+> The current model is [`firestore-data-model.md`](firestore-data-model.md); `backend/` and its
+> migrations were removed in phase 6.
+
 The **column-level schema is not defined here.** It lives in
 [`../fullstack/specs/foundation/backend-spring.md`](../fullstack/specs/foundation/backend-spring.md)
 under "Initial schema — `V1__init.sql`", which Fullstack owns, plus every `V<n>` migration after it.

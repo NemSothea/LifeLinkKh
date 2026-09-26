@@ -8,18 +8,15 @@ import 'package:lifelink_kh/src/features/auth/domain/auth_user.dart';
 import 'package:lifelink_kh/src/features/auth/domain/facebook_credentials.dart';
 import 'package:lifelink_kh/src/features/auth/domain/google_credentials.dart';
 import 'package:lifelink_kh/src/features/auth/domain/session_store.dart';
-import 'package:lifelink_kh/src/features/auth/domain/telegram_auth_repository.dart';
-import 'package:lifelink_kh/src/features/auth/domain/telegram_start_session.dart';
 import 'package:lifelink_kh/src/features/auth/domain/user_role.dart';
 
 /// No Firebase, no emulator, no network — which is the point of the abstractions these
-/// fakes implement. The Firebase project does not exist yet (`docs/scope.md`).
+/// fakes implement.
 void main() {
     late _FakeAuthRepository repository;
     late _InMemorySessionStore store;
     late _FakeGoogleCredentials credentials;
     late _FakeFacebookCredentials facebookCredentials;
-    late _FakeTelegramAuthRepository telegramRepository;
     late List<String> events;
 
     AuthService serviceUnder() => AuthService(
@@ -27,9 +24,7 @@ void main() {
         sessionStore: store,
         credentials: credentials,
         facebookCredentials: facebookCredentials,
-        telegramRepository: telegramRepository,
         clearPushRegistration: () async => events.add('fcm-cleared'),
-        onSessionAbandoned: () async => events.add('abandoned'),
     );
 
     setUp(() {
@@ -37,7 +32,6 @@ void main() {
         store = _InMemorySessionStore();
         credentials = _FakeGoogleCredentials();
         facebookCredentials = _FakeFacebookCredentials();
-        telegramRepository = _FakeTelegramAuthRepository();
         events = [];
     });
 
@@ -131,80 +125,7 @@ void main() {
 
             await serviceUnder().signInWithFacebook();
 
-            expect(credentials.forceRefreshRequested, isFalse);
-        });
-    });
-
-    group('Telegram sign-in (FR-AUTH-004)', () {
-        test('startTelegramSignIn passes the role through and stores nothing yet', () async {
-            final result = await serviceUnder().startTelegramSignIn(role: UserRole.donor);
-
-            expect(result, isA<Success<TelegramStartSession>>());
-            expect(telegramRepository.lastStartRole, UserRole.donor);
-            expect(store.writes, 0);
-        });
-
-        test('a start failure (e.g. rate limited) surfaces as-is', () async {
-            telegramRepository.startFailure = const RateLimitedFailure();
-
-            final result = await serviceUnder().startTelegramSignIn();
-
-            expect(
-                (result as Failed<TelegramStartSession>).failure,
-                isA<RateLimitedFailure>(),
-            );
-        });
-
-        test('verifyTelegramCode stores the session on a correct code', () async {
-            final result = await serviceUnder().verifyTelegramCode(
-                sessionToken: 'session-token-1',
-                code: '123456',
-            );
-
-            expect(result, isA<Success<AuthSession?>>());
-            expect((await store.read())?.token, 'jwt-1');
-            expect(telegramRepository.lastVerifyCode, '123456');
-        });
-
-        test('a wrong code is a Failed, not Success(null) — unlike a cancelled dialog',
-            () async {
-            telegramRepository.verifyFailure = const UnauthorizedFailure();
-
-            final result = await serviceUnder().verifyTelegramCode(
-                sessionToken: 'session-token-1',
-                code: '000000',
-            );
-
-            expect((result as Failed<AuthSession?>).failure, isA<UnauthorizedFailure>());
-            expect(await store.read(), isNull);
-        });
-    });
-
-    group('renewToken (ADR 0007)', () {
-        test('forces a fresh Google ID token rather than reusing the cached one', () async {
-            await store.write(_session('jwt-old'));
-            credentials.silentToken = 'refreshed-google-token';
-
-            final token = await serviceUnder().renewToken();
-
-            expect(token, 'jwt-1');
-            expect(credentials.forceRefreshRequested, isTrue);
-            expect((await store.read())?.token, 'jwt-1');
-        });
-
-        test('returns null when Google access is gone, leaving the caller to give up', () async {
-            await store.write(_session('jwt-old'));
-            credentials.silentToken = null;
-
-            expect(await serviceUnder().renewToken(), isNull);
-        });
-
-        test('returns null when the exchange itself is refused', () async {
-            await store.write(_session('jwt-old'));
-            credentials.silentToken = 'refreshed-google-token';
-            repository.failure = const UnauthorizedFailure();
-
-            expect(await serviceUnder().renewToken(), isNull);
+            expect(credentials.signInCalls, 0);
         });
     });
 
@@ -214,8 +135,8 @@ void main() {
 
             await serviceUnder().signOut();
 
-            // The DELETE is authenticated by the JWT being discarded. Reverse the order and
-            // a signed-out phone keeps receiving urgent-request alerts (ADR 0007 §5).
+            // Clearing `fcmToken` needs the Firebase user the rules check. Reverse the order
+            // and a signed-out phone keeps receiving urgent-request alerts (ADR 0007 §5).
             expect(events, ['fcm-cleared']);
             expect(await store.read(), isNull);
             expect(credentials.signedOut, isTrue);
@@ -228,7 +149,6 @@ void main() {
                 sessionStore: store,
                 credentials: credentials,
                 facebookCredentials: facebookCredentials,
-                telegramRepository: telegramRepository,
                 clearPushRegistration: () async => throw Exception('offline'),
             );
 
@@ -237,38 +157,56 @@ void main() {
             expect(await store.read(), isNull);
             expect(credentials.signedOut, isTrue);
         });
+    });
 
-        test('abandonSession clears both sessions and reports it once', () async {
+    group('restoreSession (ADR 0009)', () {
+        test('returns the stored session when the Firebase user is the one it was written for',
+            () async {
+            expect(await serviceUnder().restoreSession(), isNull);
             await store.write(_session('jwt-1'));
 
-            await serviceUnder().abandonSession();
+            expect((await serviceUnder().restoreSession())?.token, 'jwt-1');
+            expect(credentials.signedOut, isFalse);
+        });
 
+        test('clears a stored session that no Firebase user backs', () async {
+            // The gap `firebase/README.md` recorded: Home would open and every read fail.
+            await store.write(_session('jwt-1'));
+            credentials.uid = null;
+
+            expect(await serviceUnder().restoreSession(), isNull);
+            expect(await store.read(), isNull);
+        });
+
+        test('clears a session written for a different user, and signs that one out too',
+            () async {
+            // Also the shape of a session left by the pre-Firebase build, whose id was the
+            // backend's UUID rather than a Firebase uid.
+            await store.write(_session('jwt-1'));
+            credentials.uid = 'someone-else';
+
+            expect(await serviceUnder().restoreSession(), isNull);
             expect(await store.read(), isNull);
             expect(credentials.signedOut, isTrue);
-            expect(events, ['abandoned']);
+        });
+
+        test('treats a Firebase SDK that cannot answer as no user, not a crash on launch',
+            () async {
+            await store.write(_session('jwt-1'));
+            credentials.throwOnCurrentUid = true;
+
+            expect(await serviceUnder().restoreSession(), isNull);
+            expect(await store.read(), isNull);
         });
     });
-
-    test('restoreSession returns what was stored', () async {
-        expect(await serviceUnder().restoreSession(), isNull);
-        await store.write(_session('jwt-1'));
-        expect((await serviceUnder().restoreSession())?.token, 'jwt-1');
-    });
-
-    test('currentToken reads through to the store on every call', () async {
-        final service = serviceUnder();
-        expect(await service.currentToken(), isNull);
-        await store.write(_session('jwt-1'));
-        // Not cached: the interceptor asks before every request, and a renewal that
-        // happened on another request must be visible immediately.
-        expect(await service.currentToken(), 'jwt-1');
-    });
 }
+
+const String _uid = '11111111-1111-1111-1111-111111111111';
 
 AuthSession _session(String token) => AuthSession(
     token: token,
     user: const AuthUser(
-        id: '11111111-1111-1111-1111-111111111111',
+        id: _uid,
         role: UserRole.donor,
         displayName: 'Sothea',
         isNewAccount: false,
@@ -312,21 +250,25 @@ final class _InMemorySessionStore implements SessionStore {
 
 final class _FakeGoogleCredentials implements GoogleCredentials {
     String? interactiveToken;
-    String? silentToken;
+
+    /// The signed-in Firebase user — [_session]'s id unless a test says otherwise.
+    String? uid = _uid;
     bool throwOnSignIn = false;
-    bool forceRefreshRequested = false;
+    bool throwOnCurrentUid = false;
+    int signInCalls = 0;
     bool signedOut = false;
 
     @override
     Future<String?> signIn() async {
+        signInCalls++;
         if (throwOnSignIn) throw Exception('platform channel died');
         return interactiveToken;
     }
 
     @override
-    Future<String?> idToken({bool forceRefresh = false}) async {
-        forceRefreshRequested = forceRefresh;
-        return silentToken;
+    Future<String?> currentUid() async {
+        if (throwOnCurrentUid) throw Exception('platform channel died');
+        return uid;
     }
 
     @override
@@ -341,33 +283,5 @@ final class _FakeFacebookCredentials implements FacebookCredentials {
     Future<String?> signIn() async {
         if (throwOnSignIn) throw Exception('platform channel died');
         return interactiveToken;
-    }
-}
-
-final class _FakeTelegramAuthRepository implements TelegramAuthRepository {
-    Failure? startFailure;
-    Failure? verifyFailure;
-    UserRole? lastStartRole;
-    String? lastVerifyCode;
-
-    @override
-    Future<Result<TelegramStartSession>> start({required UserRole role}) async {
-        lastStartRole = role;
-        final failure = startFailure;
-        if (failure != null) return Failed(failure);
-        return const Success(
-            TelegramStartSession(sessionToken: 'session-token-1', deepLink: 'https://t.me/bot'),
-        );
-    }
-
-    @override
-    Future<Result<AuthSession>> verify({
-        required String sessionToken,
-        required String code,
-    }) async {
-        lastVerifyCode = code;
-        final failure = verifyFailure;
-        if (failure != null) return Failed(failure);
-        return Success(_session('jwt-1'));
     }
 }

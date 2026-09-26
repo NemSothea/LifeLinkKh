@@ -5,6 +5,8 @@ status: draft
 milestone: M2
 ---
 
+> **Superseded by ADR 0009 (2026-09)** — kept as the record of the M2 foundation; the backend and Docker were removed in phase 6.
+
 # Foundation Spec — Spring Boot API + PostgreSQL
 
 Scope of this spec: the project shape and initial schema the backend is created with at M2.

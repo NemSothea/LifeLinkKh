@@ -7,7 +7,7 @@ import '../domain/donor_repository.dart';
 
 /// The DONOR feature's Service (S1–S6). No Flutter import, no Riverpod import.
 ///
-/// Unlike `HealthService` this one has something to orchestrate: it refuses an incomplete
+/// It has something to orchestrate beyond pass-through: it refuses an incomplete
 /// draft before spending a round trip, and it turns a saved profile back into a draft so the
 /// edit screen has something to open with.
 final class DonorService {

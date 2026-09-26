@@ -5,9 +5,7 @@ import '../../../core/error/failure.dart';
 
 /// Turns a [Failure] into localised copy. One `switch` over the sealed type, so adding a
 /// variant is a compile error here rather than a silent fallthrough to "something went
-/// wrong". Shared by `SignInScreen` and `TelegramSignInSheet` — both surface the same
-/// [Failure] space (FR-AUTH-004: Telegram's `verify` can 401/422 the same way the
-/// Google/Facebook exchange can).
+/// wrong".
 class AuthFailureMessage extends StatelessWidget {
     const AuthFailureMessage({super.key, required this.error});
 
@@ -26,9 +24,7 @@ class AuthFailureMessage extends StatelessWidget {
             RateLimitedFailure() => (Icons.timer_outlined, l10n.signInFailedRateLimited),
             ServerFailure() => (Icons.cloud_off, l10n.signInFailedServer),
             // A rejected role and a not-found are both bugs from this screen's point of
-            // view: it always asks for DONOR, which is self-service. Telegram's
-            // TOO_MANY_ATTEMPTS also lands here as ValidationFailure — generic copy, not
-            // a wrong one, and precise enough for a course-scope build.
+            // view: it always asks for DONOR, which is self-service.
             ValidationFailure() || NotFoundFailure() || UnknownFailure() => (
                 Icons.error_outline,
                 l10n.signInFailedUnknown,

@@ -109,7 +109,7 @@ Both are Tech Lead's.
 
 The critical path is now the **local demo**, not the store release ([DEC-012](decisions.md)):
 [`po/demo-script.md`](po/demo-script.md) §7 for what to do the day before, and
-[`demo-runbook.md`](demo-runbook.md) §§1-3 for the commands.
+[`demo-runbook.md`](demo-runbook.md) §§0-4 for the commands.
 
 ## Grown after M7 — 2026-09-06
 

@@ -5,16 +5,13 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/widgets/brand_badge.dart';
 import '../application/auth_providers.dart';
 import 'auth_failure_message.dart';
-import 'telegram_sign_in_sheet.dart';
 
 /// The only unauthenticated screen in the app.
 ///
-/// Three buttons — Google, Facebook, Telegram (FR-AUTH-004) — but still no password
-/// field and nothing to forget at 03:00. Google and Facebook are both federated and
-/// trade a provider credential for a Firebase session; Telegram is not (ADR 0002 chose
-/// Google specifically to avoid an OTP round-trip, then FR-AUTH-004 reintroduced one for
-/// this one path). `TelegramSignInSheet` is where that OTP entry lives, not here — this
-/// screen only opens it.
+/// Two buttons — Google, and Facebook (FR-AUTH-004) — and no password field, nothing to
+/// forget at 03:00. Both are federated: each trades a provider credential for a Firebase
+/// session, which is the whole of signing in since ADR 0009. Telegram's OTP path went with
+/// the backend it needed.
 ///
 /// Four-state rendering (Week 5): idle, in flight, signed in, and failed — where *failed*
 /// switches on the sealed `Failure` rather than on a message string, so the compiler
@@ -235,26 +232,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                                             ? l10n.retry
                                                             : l10n.signInWithFacebook),
                                                 ),
-                                            ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        SizedBox(
-                                            width: double.infinity,
-                                            child: OutlinedButton.icon(
-                                                key: const Key('sign-in-telegram'),
-                                                // Not tied to `inFlight`: the Telegram flow has
-                                                // its own sheet and its own loading state, and
-                                                // closing this button off while an unrelated
-                                                // Google/Facebook attempt is in flight would
-                                                // strand a donor who changed their mind about
-                                                // which provider to use.
-                                                onPressed: () => showModalBottomSheet<void>(
-                                                    context: context,
-                                                    isScrollControlled: true,
-                                                    builder: (_) => const TelegramSignInSheet(),
-                                                ),
-                                                icon: const Icon(Icons.send_outlined),
-                                                label: Text(l10n.signInWithTelegram),
                                             ),
                                         ),
                                     ],

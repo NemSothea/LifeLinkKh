@@ -9,17 +9,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'src/app.dart';
 import 'src/core/config/env.dart';
-import 'src/core/network/auth_token_gateway.dart';
 import 'src/core/settings/locale_controller.dart';
 import 'src/core/settings/onboarding_controller.dart';
 import 'src/core/settings/preferences_locale_store.dart';
 import 'src/core/settings/preferences_onboarding_store.dart';
-import 'src/features/auth/application/auth_providers.dart';
 import 'src/features/notify/application/push_providers.dart';
 import 'src/features/notify/application/push_session_sync.dart';
 import 'src/features/notify/data/firebase_push_arrivals.dart';
 
-/// Composition root, and the only place that knows both `core/` and the auth feature.
+/// Composition root: the one place that swaps the test-friendly defaults for the real
+/// platform stores and streams.
 ///
 /// No `firebase_options.dart`: Android reads `android/app/google-services.json` through
 /// the `google-services` Gradle plugin, and iOS (DEC-006, build-only) reads
@@ -56,14 +55,8 @@ Future<void> main() async {
 
     final container = ProviderContainer(
         overrides: [
-            // The seam declared in `core/network/`. Its default is null — an
-            // unauthenticated Dio — and this is the one line that turns it on, so a
-            // widget test gets a plain client without stubbing Firebase.
-            authTokenGatewayProvider.overrideWith(
-                (ref) => ref.watch(authServiceProvider),
-            ),
-            // Same shape: the default store forgets the language at exit, and this
-            // is the one line that makes the choice survive a restart.
+            // The default store forgets the language at exit, and this is the one
+            // line that makes the choice survive a restart.
             localeStoreProvider.overrideWithValue(
                 PreferencesLocaleStore(preferences),
             ),

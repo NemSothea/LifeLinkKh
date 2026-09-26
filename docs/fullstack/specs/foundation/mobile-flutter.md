@@ -92,6 +92,10 @@ choice to one file.
 
 ## Configuration
 
+> **Obsolete since ADR 0009 (2026-09):** the app talks to Firebase directly and takes no
+> `API_BASE_URL`. The optional `--dart-define=FIRESTORE_EMULATOR=host:port` points it at a local
+> Firestore emulator (`firebase/README.md`). Kept below as the M2 record.
+
 The API base URL is passed at build time, never committed:
 
 ```

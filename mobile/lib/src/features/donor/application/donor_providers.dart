@@ -12,8 +12,7 @@ import 'donor_service.dart';
 
 part 'donor_providers.g.dart';
 
-/// Firestore since ADR 0009. `DioDonorRepository` stays until phase 6 removes the backend,
-/// so `main` and this branch can be compared screen by screen.
+/// Firestore since ADR 0009.
 @Riverpod(keepAlive: true)
 DonorRepository donorRepository(DonorRepositoryRef ref) => FirestoreDonorRepository(
     ref.watch(firestoreProvider),

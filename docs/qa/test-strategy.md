@@ -8,47 +8,52 @@ which in a build where one person writes the requirement, the code and the appro
 possible link. Everything here is chosen against that constraint: **tests are the only reviewer this
 project has.**
 
+> **Rewritten 2026-09-26 for ADR 0009.** The Spring Boot backend and its JUnit / `@WebMvcTest` /
+> Testcontainers layers are gone with `backend/`. What they proved is now proved by **Security Rules
+> tests** and **Cloud Functions tests** against the Firebase Emulator Suite. The M2 evidence at the
+> end of this file is kept as the historical record it is.
+
 ## What we do not do, and why
 
 A 13-week course project cannot afford full-pyramid coverage on three clients. Explicitly out:
 
 | Not doing | Why |
 |---|---|
-| Backend controller tests for every endpoint | The slice test duplicates what an integration test already proves. One integration test per FR flow is stronger and cheaper. |
-| Mocked-repository service tests as a default | Mocking JPA proves the mock works. Real-database tests catch the constraint violations that actually break this app. |
-| Visual regression / screenshot tests | No design system, no budget, earns no marks. |
-| Load or performance testing | Pilot size is 1,000 donors (`../po/prd.md` §5). A slow query at that size is not a defect worth a harness. |
-| Cross-browser matrix | One portal page, one evaluator, Chrome. |
-| iOS testing | Out of scope — Android only (`../../CLAUDE.md`). |
+| Mocking Firestore in rules or Functions tests | A mocked database proves the mock works. The emulator runs the real rules engine and the real triggers, which is where this app actually breaks |
+| Testing the rules through the app | The app hides what it does not offer; the rules are the control. Rules tests call Firestore directly as each principal, including ones the UI would never produce |
+| Visual regression / screenshot tests that gate CI | No design system, no budget. Layout goldens exist in `mobile/` but never gate CI |
+| Load or performance testing | Pilot size is 1,000 donors (`../po/prd.md` §5). A slow query at that size is not a defect worth a harness |
+| Cross-browser matrix | One portal page, one evaluator, Chrome |
+| iOS push testing | The iOS target is build-only (DEC-006) and has no APNs; push is verified on Android |
 
 ## Layers, per client
 
-### Backend — `backend/`
+### Firebase — `firebase/`
 
-| Layer | Tool | Covers | Runs where |
+| Layer | Tool | Covers | Command |
 |---|---|---|---|
-| Unit | JUnit 5 + AssertJ | Pure logic with no Spring context: 56-day eligibility arithmetic, distance calculation, ABO/Rh expectations | every build |
-| Web slice | `@WebMvcTest` | Request/response shape, status codes, that a DTO does **not** leak a forbidden field | every build |
-| Integration | `@SpringBootTest` + Testcontainers PostgreSQL | Flyway applies cleanly, entities match the schema under `ddl-auto: validate`, CHECK constraints reject bad data, the matching query returns the right donors | **blocked — see below** |
+| Security Rules | `@firebase/rules-unit-testing` + Vitest, Firestore emulator (`demo-lifelink`) | **One test per rule.** Each principal — signed out, donor, requester, another donor, an ADMIN claim without its `admins/{uid}` record — reading and writing each collection. A rule without a test is treated as absent (ADR 0009) | `cd firebase && npm run test:rules` |
+| Functions, unit | Vitest, no emulator | Pure logic: the ABO/Rh table and its direction, the 56-day cooldown boundary, the 10 km radius, no-GPS-sorts-last, the 25-donor cap, push payloads. Every clause of the old matching SQL | `cd firebase/functions && npm test` |
+| Functions, emulator | Vitest against the Firestore emulator, FCM faked | Every handler end to end: `onRequestCreated` (rate limit, match documents, alert), `onMatchAnswered` (accepted count, board row, acceptance push), `confirmDonation` (admin only, cooldown written) | `cd firebase/functions && npm run test:emulator` |
+| Seed data | Node script against the emulator | 14 districts, 5 hospitals, no orphans | `cd firebase && npm run test:seed` |
 
-> **Blocker: Docker is not installed on this machine.** Testcontainers needs a container runtime, so
-> the integration layer cannot run yet. Until Docker exists, the schema is unverified by anything
-> except a successful boot. Do not substitute H2 — H2 has no `gen_random_uuid()`, different `CHECK`
-> semantics and no `TIMESTAMPTZ`, so a green H2 test would be a false pass on exactly the things this
-> layer exists to catch.
+On a `demo-` project the Functions write every push to `_outbox` instead of sending it — FCM has no
+emulator, and this is how a test reads exactly what a donor would have received.
 
-The 27 `blood_compatibility` rows get a dedicated integration test: assert all 27 pairs are present
-and that **no 28th row exists**. Per ADR 0004 this is a patient-safety rule, not a feature — a wrong
-row means giving incompatible blood. It is the single highest-value test in the project.
+The emulator needs **Java 21**. Without it these layers do not run at all; a missing JDK is an
+environment failure to report, never a pass.
+
+The ABO/Rh compatibility table gets a dedicated unit test: every recipient's donor list pinned
+exactly, and the direction (an O− patient is offered O− donors only). Per ADR 0004 this is a
+patient-safety rule, not a feature — a wrong entry means giving incompatible blood. It is the single
+highest-value test in the project.
 
 ### Web portal — `frontend/`
 
 | Layer | Tool | Covers |
 |---|---|---|
-| Unit / component | Vitest + React Testing Library | The request table renders rows, empty state, and error state |
-| e2e | Playwright (Chromium only) | One flow: open the portal, see open requests, see one rendered from seeded data |
-
-`FR-PORTAL-001` is one page. Two layers is the correct amount of test for one page.
+| Unit / component | Vitest + React Testing Library | The request table renders rows, empty state and error state; the Firebase REST client and session handling |
+| e2e | Playwright (Chromium only) — planned, not built | One flow: open the portal, see open requests, see one rendered from seeded data |
 
 ### Mobile — `mobile/`
 
@@ -61,53 +66,55 @@ row means giving incompatible blood. It is the single highest-value test in the 
 Push notification delivery and GPS acquisition are **verified manually** on a device and recorded in
 this file's sign-off table. Neither is reliably automatable inside a course timeline, and both are
 graded features, so the evidence must exist as a written manual result rather than a green tick.
+Push needs the real project with Functions deployed; the local emulator stack sends none.
+
+All of it runs in one pass with `bash scripts/verify-all.sh`, the same steps as CI's `firebase`,
+`web` and `mobile` jobs.
 
 ## Coverage floor
 
-One number, enforced on one package: **70 % line coverage on backend service and domain-logic
-classes** (`kh.lifelink.api.*` excluding `config`, entities, repositories and DTOs).
-
-Reasoning: a repo-wide percentage on generated getters and Spring config rewards writing tests for
-code that cannot break. Excluded code is covered indirectly by integration tests or is declarative.
-No floor is set for `frontend/` or `mobile/` — the named tests above are the bar there, because a
-percentage on two screens measures nothing.
+No percentage. The bar is the named tests: **every rule in `firestore.rules` has a rules test, and
+every filter in `selectCandidates` has a unit test.** The old 70 % JaCoCo floor on backend service
+classes went with the backend; a line percentage over a rules file measures nothing, because a rule
+can be "covered" by an allowed read while its denial path is never exercised.
 
 ## Naming
 
-- Backend: `MethodOrBehaviour_condition_expectedResult` — e.g.
-  `eligibility_lastDonation55DaysAgo_isNotEligible`. A failing name must state the defect without
-  opening the file.
+- Rules and Functions: `test('<who> <can/cannot> <what> — <why>')` — e.g.
+  `a client cannot give itself a staff role — roles are claims, not fields`. A failing name must
+  state the defect without opening the file.
 - Web: `describe('<component>')` + `it('renders empty state when no requests')`.
 - Flutter: `testWidgets('donor register rejects an empty blood type', ...)`.
 - Every test that exists to satisfy an acceptance criterion cites its FR ID in a comment.
 
 ## Which FR needs which layer
 
-| FR | Unit | Slice / widget | Integration / e2e | Manual |
+| FR | Unit | Rules / widget | Emulator / e2e | Manual |
 |---|---|---|---|---|
-| `FR-AUTH-003` Google Sign-In | token-claim validation | reject request-supplied uid | full sign-in against a real DB | first-run on device |
-| `FR-DONOR-001` Donor profile | — | form validation | create + read profile | — |
-| `FR-DONOR-002` 56-day eligibility | **yes — boundary cases 55/56/57 days, and never-donated** | eligibility banner | reads `donations`, not the cached column | — |
-| `FR-REQUEST-001` Create request | units/urgency validation | form | persists with `status = OPEN` | — |
-| `FR-MATCH-001` Matching | distance maths | — | **27-row compatibility assertion + full matching query** | — |
-| `FR-NOTIFY-001` Push alert | payload builder | — | `notified_at` is set on success | **device receipt** |
-| `FR-REQUEST-002` Accept / decline | — | button states | `UNIQUE(request, donor)` holds; response + timestamp persist | — |
-| `FR-DONATION-001` History | date ordering | list + empty state | newest-first from a real DB | — |
+| `FR-AUTH-003` Google Sign-In | — | you create and read only your own `users/{uid}`; no client-set role | — | first-run on device |
+| `FR-DONOR-001` Donor profile | — | own profile only; bad values refused; form validation | — | GPS acquisition |
+| `FR-DONOR-002` 56-day eligibility | **yes — boundary cases 55/56/57 days, and never-donated** | eligibility banner | `confirmDonation` writes the cooldown | — |
+| `FR-REQUEST-001` Create request | — | starts `OPEN` with zero counts; contact normalized to +855; form | rate limit closes the sixth request | — |
+| `FR-MATCH-001` Matching | **compatibility table + direction, radius, no-GPS-last, own-request excluded, cap 25** | only the Function creates a match | `onRequestCreated` writes the right matches | — |
+| `FR-NOTIFY-001` Push alert | payload builder | — | the alert lands in `_outbox` | **device receipt** |
+| `FR-REQUEST-002` Accept / decline | — | answered once, never overwritten; nothing but the answer changes | `onMatchAnswered` counts and pushes | — |
+| `FR-DONATION-001` History | date ordering | donor and admin read; no client writes | — | — |
 
 ## Non-negotiable security tests
 
 These exist because their failure is a privacy breach, not a bug. Traced from
 [`../security/security-checklist.md`](../security/security-checklist.md) and
-[`TC-AUTH-001`](test-cases/TC-AUTH-001-google-sign-in-security.md).
+[`TC-AUTH-001`](test-cases/TC-AUTH-001-google-sign-in-security.md). Each is a rules test.
 
-1. **No donor endpoint response body contains `latitude`, `longitude`, or an unrounded distance**
-   (ADR 0003). Asserted on the raw JSON, not on a DTO object — serialising an entity is exactly the
-   mistake being guarded against.
-2. **Self-service sign-up cannot produce `HOSPITAL` or `ADMIN`** — the request must be rejected, not
-   silently downgraded (`TM-AUTH-001` E1).
-3. **A `firebase_uid` supplied in a request body is ignored**; identity comes only from the verified
-   token (`TM-AUTH-001` S1).
-4. **Donor contact details are absent from a match response until that donor has accepted.**
+1. **Nobody but the donor and an admin reads a donor profile** — so no other client ever sees a
+   donor's coordinates (ADR 0003). Distances leave the Function rounded to half a kilometre.
+2. **A client cannot give itself a role.** Roles are custom claims, and ADMIN also needs an
+   `admins/{uid}` record that no client can write; a claim without the record is no access
+   (`TM-AUTH-001` E1).
+3. **Identity comes only from the verified token.** A document written for another uid is refused
+   (`TM-AUTH-001` S1).
+4. **The requester's contact is unreadable until that donor has accepted** — it lives in
+   `requests/{id}/private/contact`, readable by the creator and accepting donors only.
 
 ## Bug flow
 
@@ -121,6 +128,9 @@ Per milestone, QA records: date, the FRs covered, the command run, its output, m
 push and GPS, and pass or fail. **A milestone with no recorded evidence is not signed off** — and
 since QA sign-off is the only gate outside one person (`../scope.md`), an unrecorded pass is
 indistinguishable from a skipped one.
+
+> The rows below predate ADR 0009. They are evidence of what was true on their dates — the M2
+> commands (`docker compose`, `./mvnw verify`) no longer exist in this repository.
 
 | Milestone | Date | Evidence | Verdict |
 |---|---|---|---|

@@ -2,16 +2,16 @@
 
 | Name | Primary role | Also | Owns (R2) |
 |------|--------------|------|-----------|
-| Nem Sothea | Tech Lead / Mobile | PO (co), Security | docs/tech-lead/, mobile/, architecture + ADRs, `docker-compose.yml`, CI (.github/workflows/), deploy runbook, Play Store release |
-| Moeun Nithvaraman | Fullstack (Backend/DB) | — | backend/, docs/fullstack/ (specs, API contract), PostgreSQL + Flyway |
-| Suon Pisey | Fullstack (Frontend) | — | frontend/ (Next.js web portal), API client, i18n |
+| Nem Sothea | Tech Lead / Mobile | PO (co), Security | docs/tech-lead/, mobile/, architecture + ADRs, the Firebase project + deploys, `scripts/`, CI (.github/workflows/), deploy runbook, Play Store release |
+| Moeun Nithvaraman | Fullstack (Backend/DB) | — | firebase/ (Firestore rules + tests, Cloud Functions, seeds), docs/fullstack/ (specs) |
+| Suon Pisey | Fullstack (Frontend) | — | frontend/ (Next.js web portal), Firebase REST client, i18n |
 | Sourn SAVOURN | PO | — | docs/po/ (PRD, briefs, prototypes, FRs), changelog |
 | Oun Sreynich | QA | — | docs/qa/, test cases, bug registry, DoD sign-off |
 
 ## Role index (R2)
 - **PO** — product defs (docs/po/). Sourn primary; Tech Lead co-holds and drives in tooling.
-- **Fullstack** — backend/ + frontend/ + docs/fullstack/. Moeun (backend), Pisey (web).
-- **Tech Lead** — docs/tech-lead/ (architecture, ADRs) + `docker-compose.yml` + CI + deploy runbook + release. Sothea.
+- **Fullstack** — firebase/ + frontend/ + docs/fullstack/. Moeun (Firebase: rules, Functions), Pisey (web). `backend/` was removed by ADR 0009.
+- **Tech Lead** — docs/tech-lead/ (architecture, ADRs) + the Firebase project and deploys + CI + deploy runbook + release. Sothea.
 - **Security** — overlay on Tech Lead (docs/security/). Sothea.
 - **Mobile** — mobile/ + docs/mobile/. Sothea (Flutter).
 - **QA** — docs/qa/. Sreynich.

@@ -28,17 +28,18 @@ That one paragraph is the entire pitch. Everything after this is proving it.
 
 ## 2. Who's in the room (name the cast before the click-through starts)
 
-Four roles, two apps:
+Three roles, two apps:
 
 - **Donor** and **Requester** — same mobile app, same sign-in, different tab set after. A donor
   whose relative needs blood is the app's own expected requester, so nothing forces a person to
   pick one identity forever.
-- **Hospital staff** and **Admin** — the web portal. Never self-signed-up; an admin grants access
-  after someone has already signed in once as an ordinary user (`FR-PORTAL-003` — mention this if
-  asked "how do hospitals get accounts," don't volunteer it unprompted, it's a side quest).
+- **Admin** — the web portal, one account (`soborey`). Never self-signed-up. v1 has no
+  hospital-staff accounts (`DEC-014`): the admin confirms donations for every hospital. If asked
+  "how do hospitals get accounts," say that is a deliberate v2 decision — don't volunteer it
+  unprompted, it's a side quest.
 
 Two devices (or two emulators) side by side is the whole demo. One phone plays donor, one plays
-requester, the laptop's browser plays the hospital portal.
+requester, the laptop's browser plays the portal.
 
 Both clients open in Khmer and both can switch to English in-app — the portal from the top-right
 switcher, the phone from the **Me** tab, one item above sign-out. Say it only if someone in the
@@ -47,7 +48,7 @@ decoding glyphs is not a demo.
 
 ## 3. The walkthrough — narrate each step as you (or your partner) click it
 
-Match this to `../demo-runbook.md` §3's golden path. The commands are there; here's what to *say*
+Match this to `../demo-runbook.md` §4's golden path. The commands are there; here's what to *say*
 at each one.
 
 **Step 0 — the app introduces itself (fresh install only).**
@@ -68,7 +69,7 @@ fills up.
 > the app's own push notifications instead."
 
 Use the pinned values, do not improvise them: **O−**, **Doun Penh**, last-donation date left
-blank. `../demo-runbook.md` §3 has the table and the reason for each one — every field on this
+blank. `../demo-runbook.md` §4 has the table and the reason for each one — every field on this
 screen is a filter that can quietly remove this donor from the match you are about to demo.
 
 If asked why district and not exact GPS coordinates: *"Exact coordinates would publish someone's
@@ -81,8 +82,10 @@ reasoning.)
 > units needed. Pinned: **Calmette**, patient type **AB+**, **CRITICAL**. One screen, not a wizard — someone doing this is frightened, not calm, so the form
 > defaults to something valid even if they touch nothing."
 
-**Step 3 — the match happens, the push fires.**
-> "Watch Account A's phone now — no manual refresh, no polling. The server just matched
+**Step 3 — the match happens, the push fires.** (Only on the real Firebase project. On the local
+emulator stack no push is delivered — the request simply appears in Account A's list; say "on a
+live deployment this is a notification" and move on, `../demo-runbook.md` §0.)
+> "Watch Account A's phone now — no manual refresh, no polling. A cloud function just matched
 > compatible blood type plus eligible plus nearby, and Firebase pushed it straight to the device.
 > This is the moment the Facebook-post version of this process can't do: instant, targeted, not
 > dependent on who happens to be scrolling."
@@ -91,7 +94,7 @@ reasoning.)
 > "One tap. Now watch Account B — the family's phone. 'A donor accepted your request.' Push runs
 > in both directions: the donor was told someone needs blood, the family is told someone answered.
 > Notice what the family does *not* see — the donor's name. They see that one donor is coming; the
-> hospital sees who, because the hospital is who confirms the donation."
+> portal sees who, because the portal is where the donation is confirmed."
 
 Added 2026-09-25 (`FR-NOTIFY-003`). Account B must be on a device that receives FCM — a phone or
 an Android emulator. On the iOS Simulator this beat silently does nothing.
@@ -105,12 +108,15 @@ This is worth the extra thirty seconds. Matched alerts are empty most days by de
 only matched when someone nearby needs their type — and a demo that lands on an empty inbox looks
 like a broken product instead of a calm one.
 
-**Step 5 — switch to the browser, hospital confirms the donation.**
-> "This is the portal — the one piece of this product that isn't a phone screen, because a
-> hospital desk isn't reaching for a phone mid-shift. Staff sign in with a username and password;
-> nobody self-registers here, an admin grants the access. They see the accepted donor, and once
-> the donation actually happens, they click confirm. That single click is what starts the donor's
-> 56-day cooldown — the system doesn't trust a self-report, it trusts the hospital."
+**Step 5 — switch to the browser, the admin confirms the donation.**
+> "This is the portal — the one piece of this product that isn't a phone screen, because a desk
+> isn't reaching for a phone mid-shift. The admin signs in with a username and password; nobody
+> self-registers here. They see the accepted donor, and once the donation actually happens, they
+> click confirm. That single click is what starts the donor's 56-day
+> cooldown — the system doesn't trust a self-report, it trusts a confirmation."
+
+Sign in as `soborey`. If asked why hospitals don't confirm their own donations: v1 is deliberately
+admin-only (`DEC-014`) — one account to secure during a pilot, hospital staff roles are a v2 call.
 
 **Step 6 — back on the donor's phone, show the history.**
 > "Donation history updates, eligibility flips to a countdown. That's the loop closing — register,
@@ -151,10 +157,11 @@ ask about most:
 Run them, do not quote them from memory:
 
 ```bash
-docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink < scripts/metrics.sql
+cd firebase && npm run metrics                            # the emulator
+cd firebase && npm run metrics -- --project lifelinkkh    # the real project
 ```
 
-All five PRD targets, computed off the database in front of the room. The sentence that has to
+All five PRD targets, computed off Firestore in front of the room. The sentence that has to
 go with it:
 
 > "The query is real. The pilot data is not — every row in here is an account this team made.
@@ -173,63 +180,53 @@ precise costs a sentence; being caught overstating costs the room.
 
 ## 8. The day before
 
-The backend runs on **one local machine** — `docker compose` for backend, database and portal. The
-phones are either plugged into that laptop or, since 2026-09-25, untethered on **your own iPhone
-hotspot** (`../demo-runbook.md` §10). No store install, no tunnel, and never the room's Wi-Fi
-([DEC-012](../decisions.md) and its amendment). Google Sign-In and push do need the internet — the
-hotspot's mobile data — so sign both phones in before the room fills. Everything that can fail is
-on a device or a network you control.
+The demo runs from **one local machine** ([DEC-012](../decisions.md)): either the Firebase
+emulators on the laptop, or the real Firebase project with the laptop running the portal — see
+`../demo-runbook.md` §0 for which. The phones are plugged into that laptop or, on the real
+project, untethered on **your own phone's hotspot**, never the room's Wi-Fi. No store install, no
+tunnel. Google Sign-In needs the internet either way, so sign both phones in before the room
+fills. Everything that can fail is on a device or a network you control.
 
 Eight things, in the order they bite:
 
-1. **Check the portal passwords are set in `.env`.** Nothing is seeded any more — the four
-   accounts carry unopenable digests until `PORTAL_ADMIN_PASSWORD` and `PORTAL_STAFF_PASSWORD`
-   are set and the backend restarts (`../demo-runbook.md` §9). A stack without them reaches the
-   public board fine and refuses every sign-in, which is a bad thing to discover at step 5. If
-   you are projecting, use a value you are willing to have watched being typed — and change it
-   afterwards, which is one line in `.env` and a restart.
+1. **Decide: emulator or real project.** Only the real project delivers pushes. If the alert
+   arriving on a phone is the moment you want the room to see, the Functions must be deployed to
+   `lifelinkkh` (Blaze plan) days ahead, not the morning of.
 2. **Record the fallback.** A screen recording of the golden path, narrated or silent. No network,
    no HDMI for a phone, a borrowed laptop — any of those ends a live demo, and a recording turns
    that from a failure into a shrug. Make it after any golden-path change, not the morning of.
-3. **Rehearse from cold.** Docker down, `.env` fresh, both emulators closed. Run
-   `../demo-runbook.md` sections 1-3 start to finish and time it. Over six minutes means cutting
-   a step, not talking faster. Measured on 2026-09-23 with the images already built: backend
-   healthy at 40 s, portal at 43 s, seeded and verified at 55 s — so the budget is nearly all
-   narration, provided nothing has to compile. A rehearsal that reaches step 6 puts that donor
-   into a 56-day cooldown; reset and re-seed afterwards or the next run matches nobody.
-4. **Two devices and a browser, laid out before you speak.** One donor, one requester, portal on
+3. **Rehearse from cold.** Emulators stopped, both device emulators closed. Run
+   `../demo-runbook.md` sections 1, 3 and 4 start to finish and time it. Over six minutes means
+   cutting a step, not talking faster. A rehearsal that reaches step 6 puts that donor into a
+   56-day cooldown; re-seed afterwards or the next run matches nobody.
+4. **Check the admin can sign in.** The portal has one account, `soborey`, created by
+   `npm run seed:admin` with the password in `PORTAL_ADMIN_PASSWORD` (`../demo-runbook.md` §9). On
+   the emulator it is forgotten every time the emulators stop, so re-seed it after every start. If
+   you are projecting, use a password you are willing to have watched being typed, and rotate it
+   afterwards.
+5. **Two devices and a browser, laid out before you speak.** One donor, one requester, portal on
    the laptop. Decide which screen is projected when — switching devices mid-sentence is where
    demos lose the room.
-5. **Check push actually fires on these two devices.** FCM registration is per-install; a device
-   that was reflashed or reinstalled since the last rehearsal has a different token. This is the
-   single step whose failure is most visible, because the whole pitch is "the alert arrives."
-   One token is stored per account, so the device that last opened the app gets the push. Since
-   2026-09-25 opening the app re-registers — so **open the app on each demo device last**, after
-   any other device has used the same account.
-6. **Fresh install on the donor device** if you want Step 0 to appear at all.
-7. **Reset and re-seed the database.** A laptop rehearsed on for a month shows it: stale
-   "urgent" requests dated weeks ago, and the metrics in section 6 computed over dozens of
-   abandoned rehearsal rows. `scripts/reset-demo-data.sql` then `scripts/seed-demo-request.sql`
-   (`../demo-runbook.md` §8.1). Reference data survives; rehearsals do not.
-8. **Run the pre-flight after Account A registers, before Account B posts:**
-   `docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink < scripts/preflight-match.sql`.
-   One row per donor, each with `MATCH — the alert fires` or the exact reason it will not. A
-   request that matches nobody is silent, not an error — nothing on screen explains it, because
-   `FR-MATCH-002` is deferred. The two that bite in rehearsal: one account playing both roles
-   (a donor never matches their own request), and having already confirmed a donation with that
-   donor, which starts the 56-day cooldown and removes them from every match.
+6. **Check push actually fires on these two devices** (real project). FCM registration is
+   per-install; a reinstalled device has a different token. One token is stored per account, so
+   the device that last opened the app gets the push — **open the app on each demo device last**.
+7. **Fresh install on the donor device** if you want Step 0 to appear at all.
+8. **Check the match before Account B posts** — `../demo-runbook.md` §4 "Prove the match": the
+   donor's profile compatible, available and out of cooldown, and a non-null FCM token. A request
+   that matches nobody is silent, not an error — nothing on screen explains it, because
+   `FR-MATCH-002` is deferred. The two that bite in rehearsal: one account playing both roles (a
+   donor never matches their own request), and a donation already confirmed for that donor, which
+   starts the 56-day cooldown.
 
 ---
 
 ## Related
 
-- [`../demo-runbook.md`](../demo-runbook.md) — the commands: bringing the stack up, the seeded
-  portal accounts, seeding demo data, and section 8's per-surface test pass
+- [`../demo-runbook.md`](../demo-runbook.md) — the commands: the emulator stack or the real
+  project, the admin account, seeding demo data, and section 8's per-surface test pass
 - [`../scope.md`](../scope.md) — the eight built FRs, the eight deferred, and why
 - [`presentations/run-of-show.md`](presentations/run-of-show.md) — the clock: 30 minutes of
   slides with the 5-minute demo inside them, and what to cut if the slot is tighter
 - [`prd.md`](prd.md) — the full product spec, for anything this script's narration compresses away
-- [`../../scripts/metrics.sql`](../../scripts/metrics.sql) — the five PRD success metrics, computed
-  off the live database in one run
-- [`../../scripts/preflight-match.sql`](../../scripts/preflight-match.sql) — whether the request you
-  are about to post will actually reach a donor, run before the room sees it
+- [`../../firebase/scripts/metrics.mjs`](../../firebase/scripts/metrics.mjs) — the five PRD success
+  metrics, computed off Firestore in one run (`npm run metrics`)

@@ -6,11 +6,10 @@ import '../domain/facebook_credentials.dart';
 /// The real [FacebookCredentials]: Facebook login dialog → Firebase session → Firebase
 /// ID token.
 ///
-/// Same shape as `FirebaseGoogleCredentials`, and the same sharp edge: **the token sent
-/// to our backend is the Firebase one**, minted by `User.getIdToken()`. The Facebook
-/// access token is only the credential used to open the Firebase session — the backend's
-/// `GoogleTokenVerifier` verifies a Firebase-issued token regardless of which federated
-/// provider created it (FR-AUTH-004 scope: no separate backend verifier for Facebook).
+/// Same shape as `FirebaseGoogleCredentials`, and the same sharp edge: **the token
+/// returned is the Firebase one**, minted by `User.getIdToken()`. The Facebook access
+/// token is only the credential used to open the Firebase session, and from there on a
+/// Facebook user is a Firebase user like any other (FR-AUTH-004 scope).
 final class FirebaseFacebookCredentials implements FacebookCredentials {
     FirebaseFacebookCredentials({FirebaseAuth? auth, fb.FacebookAuth? facebookAuth})
         : _auth = auth ?? FirebaseAuth.instance,

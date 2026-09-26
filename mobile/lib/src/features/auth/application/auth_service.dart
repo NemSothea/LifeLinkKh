@@ -3,58 +3,40 @@
 // compile here.
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
-import '../../../core/network/auth_token_gateway.dart';
 import '../domain/auth_repository.dart';
 import '../domain/auth_session.dart';
 import '../domain/facebook_credentials.dart';
 import '../domain/google_credentials.dart';
 import '../domain/session_store.dart';
-import '../domain/telegram_auth_repository.dart';
-import '../domain/telegram_start_session.dart';
 import '../domain/user_role.dart';
 
-/// The feature's Service (Week 3, S1–S6) and the HTTP layer's [AuthTokenGateway].
-///
-/// It is one class for both because they are one job: everything that knows how a
-/// session is created also knows how it is repaired. Splitting them would put the
-/// renewal sequence in a second place that has to stay in step with this one.
+/// The feature's Service (Week 3, S1–S6): everything that knows how a session is created,
+/// restored and ended.
 ///
 /// No Flutter import and no Riverpod import (S5) — the providers in this directory are
-/// the only Riverpod-aware code. That is what makes the concurrency rule below testable
-/// with `flutter test` and no emulator.
-final class AuthService implements AuthTokenGateway {
+/// the only Riverpod-aware code. That is what makes the restore and sign-out ordering
+/// below testable with `flutter test` and no emulator.
+final class AuthService {
     AuthService({
         required AuthRepository repository,
         required SessionStore sessionStore,
         required GoogleCredentials credentials,
         required FacebookCredentials facebookCredentials,
-        required TelegramAuthRepository telegramRepository,
         Future<void> Function()? clearPushRegistration,
-        Future<void> Function()? onSessionAbandoned,
     })  : _repository = repository,
           _sessionStore = sessionStore,
           _credentials = credentials,
           _facebookCredentials = facebookCredentials,
-          _telegramRepository = telegramRepository,
-          _clearPushRegistration = clearPushRegistration,
-          _onSessionAbandoned = onSessionAbandoned;
+          _clearPushRegistration = clearPushRegistration;
 
     final AuthRepository _repository;
     final SessionStore _sessionStore;
     final GoogleCredentials _credentials;
     final FacebookCredentials _facebookCredentials;
-    final TelegramAuthRepository _telegramRepository;
 
-    /// `DELETE /auth/fcm-token`, injected as a callback rather than as a repository.
-    ///
-    /// The FCM repository runs over the intercepted Dio, and that interceptor holds this
-    /// object — taking the repository in the constructor would be a construction cycle.
-    /// A callback resolved at call time is not.
+    /// Clears `users/{uid}.fcmToken`, injected as a callback rather than as a repository
+    /// so this feature does not import the notify feature's domain.
     final Future<void> Function()? _clearPushRegistration;
-
-    /// Fired when a session is beyond repair, so the app can route to sign-in. The
-    /// service does not navigate; it reports.
-    final Future<void> Function()? _onSessionAbandoned;
 
     /// Interactive sign-in, for the sign-in screen.
     ///
@@ -74,10 +56,9 @@ final class AuthService implements AuthTokenGateway {
             failureMessage: 'Facebook sign-in failed',
         );
 
-    /// Shared by [signIn] and [signInWithFacebook]: both exchange a Firebase ID token
-    /// for our session JWT through the same `POST /auth/google` call — the backend
-    /// verifies a Firebase-issued token regardless of which federated provider minted
-    /// it (FR-AUTH-004 scope).
+    /// Shared by [signIn] and [signInWithFacebook]: both end in a Firebase session, and
+    /// the repository turns that into the `users/{uid}` record the same way whichever
+    /// federated provider opened it (FR-AUTH-004 scope).
     Future<Result<AuthSession?>> _signInWith(
         Future<String?> Function() obtainIdToken, {
         required UserRole role,
@@ -109,99 +90,59 @@ final class AuthService implements AuthTokenGateway {
         };
     }
 
-    /// Starts a Telegram sign-in (FR-AUTH-004): mints a challenge and the deep link the
-    /// UI opens next. Not part of `_signInWith` — there is no ID token yet, only an
-    /// invitation to go get the code from the bot.
-    Future<Result<TelegramStartSession>> startTelegramSignIn({UserRole role = UserRole.donor}) {
-        assert(
-            UserRole.selfService.contains(role),
-            'only DONOR and REQUESTER may be requested at sign-up; the server answers '
-            '422 ROLE_NOT_SELF_SERVICE for anything else (TM-AUTH-002 E1)',
-        );
-        return _telegramRepository.start(role: role);
-    }
-
-    /// Completes a Telegram sign-in with the code the bot sent. Unlike [signIn] and
-    /// [signInWithFacebook] there is no ID token exchange — `verify` mints the session
-    /// JWT directly — but the result still lands through [_store] so a Telegram session
-    /// persists and routes exactly like every other provider's.
+    /// The stored session, if this install has one **and** Firebase agrees. Called at
+    /// startup.
     ///
-    /// `Failed`, never `Success(null)`: unlike an account chooser or a login dialog, a
-    /// blank or wrong code the donor submits is a real failure to show, not a cancel.
-    Future<Result<AuthSession?>> verifyTelegramCode({
-        required String sessionToken,
-        required String code,
-    }) async {
-        final result = await _telegramRepository.verify(sessionToken: sessionToken, code: code);
-        return switch (result) {
-            Success(value: final session) => await _store(session),
-            Failed(failure: final failure) => Failed(failure),
-        };
-    }
+    /// Since ADR 0009 the stored session is only a cache of who signed in; every read and
+    /// write is authorised by the Firebase user instead. A session restored without one —
+    /// Firebase signed out underneath us, the app data half-cleared, or a session written
+    /// by the pre-Firebase build under a backend user id — would show Home and then fail
+    /// every Firestore read until the donor found sign-out. So a stored session counts
+    /// only when the Firebase uid exists and is the one it was written for; anything else
+    /// is cleared and the router lands on sign-in.
+    Future<AuthSession?> restoreSession() async {
+        final session = await _sessionStore.read();
+        if (session == null) return null;
 
-    /// The stored session, if this install has one. Called at startup.
-    ///
-    /// A `null` here is not "signed out for good": ADR 0007 has the app silently
-    /// re-authenticate through the Firebase SDK's own stored credential, so the donor who
-    /// opens a 03:00 push alert does not meet a login screen.
-    Future<AuthSession?> restoreSession() => _sessionStore.read();
+        final String? uid;
+        try {
+            uid = await _credentials.currentUid();
+        } on Object catch (_) {
+            // The SDK could not answer. Treated as no Firebase user: signing in again is
+            // recoverable, a Home that cannot read anything is not.
+            await _sessionStore.clear();
+            return null;
+        }
+        if (uid == session.user.id) return session;
+
+        await _sessionStore.clear();
+        if (uid != null) {
+            // A *different* Firebase user. Signed out too, so the sign-in screen starts
+            // from the account chooser rather than beside someone else's credential.
+            try {
+                await _credentials.signOut();
+            } on Object catch (_) {
+                // The stored session is already gone; sign-in still works from here.
+            }
+        }
+        return null;
+    }
 
     /// Signs out of everything, in the order that matters.
     ///
-    /// Push registration is cleared **first**, while the JWT that authorises the call
-    /// still exists. Disposing of the token first would leave the device registered for
-    /// urgent-request alerts with no way left to unregister it.
+    /// Push registration is cleared **first**, while the Firebase user whose rules allow
+    /// the write is still signed in. Signing out first would leave the device registered
+    /// for urgent-request alerts with no way left to unregister it.
     Future<void> signOut() async {
         try {
             await _clearPushRegistration?.call();
         } on Object catch (_) {
             // Deliberately swallowed. A user who asked to sign out is signed out even if
-            // the network is down; the stale token's cost is bounded by the same one-hour
-            // window as the JWT.
+            // the network is down; a stale token costs at most an alert this phone
+            // should no longer get.
         }
         await _sessionStore.clear();
         await _credentials.signOut();
-    }
-
-    @override
-    Future<String?> currentToken() async => (await _sessionStore.read())?.token;
-
-    @override
-    Future<String?> renewToken() async {
-        // Only Google/Facebook sessions can renew silently — both rest on a Firebase
-        // session `_credentials.idToken` can refresh. A Telegram session has none: this
-        // returns null for it below, same as revoked Google access, and ADR 0007 sends
-        // the donor to sign in again rather than re-running the bot round-trip silently.
-        //
-        // forceRefresh: the cached Google ID token is presumed stale — a 401 is what got
-        // us here.
-        final String? idToken;
-        try {
-            idToken = await _credentials.idToken(forceRefresh: true);
-        } on Object catch (_) {
-            return null;
-        }
-        // No Firebase user, or Google access revoked. Terminal.
-        if (idToken == null) return null;
-
-        // The role is ignored for a returning user, which every renewal is by definition.
-        final result = await _repository.exchangeGoogleToken(
-            idToken: idToken,
-            role: UserRole.donor,
-        );
-        return switch (result) {
-            Success(value: final session) => (await _store(session)).valueOrNull?.token,
-            Failed() => null,
-        };
-    }
-
-    @override
-    Future<void> abandonSession() async {
-        await _sessionStore.clear();
-        // Firebase is signed out too, so the sign-in screen offers the account chooser
-        // rather than silently retrying a credential that has already been refused.
-        await _credentials.signOut();
-        await _onSessionAbandoned?.call();
     }
 
     Future<Result<AuthSession?>> _store(AuthSession session) async {

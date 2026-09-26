@@ -4,7 +4,7 @@
 /// `switch` over a `Failure` is exhaustive and the compiler — not a code review —
 /// catches the UI that forgot a variant.
 ///
-/// Mapping happens in `data/`. Nothing above the data layer sees a `DioException`,
+/// Mapping happens in `data/`. Nothing above the data layer sees a `FirebaseException`,
 /// and nothing below `presentation/` decides what a failure looks like on screen.
 sealed class Failure {
     const Failure({required this.message});

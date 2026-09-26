@@ -18,14 +18,14 @@ import '../domain/respond_result.dart';
 
 /// The donor's `matches` on Firestore (ADR 0009) — what `GET /matches/me` and
 /// `POST /matches/{id}/respond` were. Still the *remote* half: `OfflineFirstMatchRepository`
-/// wraps it exactly as it wrapped the Dio one.
+/// wraps it, and the sync engine drains through it.
 ///
 /// Two Firestore behaviours shape [respond]:
 ///
 /// * **An offline write never fails, it waits.** The SDK queues it and the Future completes
 ///   when the server confirms. So [respond] gives it [_writeWait], then answers
 ///   [NetworkFailure] — which is what makes the offline-first wrapper queue the answer and
-///   show it as pending, the same as a Dio timeout did.
+///   show it as pending.
 /// * **A replay is refused, not ignored.** The rules allow one answer per match; the SDK's
 ///   own queue and the wrapper's replay can both deliver it. So `permission-denied` is
 ///   checked against what is stored: the same answer already there is success — the

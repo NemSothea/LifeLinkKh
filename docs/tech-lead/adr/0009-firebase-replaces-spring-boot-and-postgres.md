@@ -116,3 +116,19 @@ the plan above, and why:
 Lost with the backend: `AuthController`'s per-IP sign-in limiter. Firebase Auth's own lockout
 (`TOO_MANY_ATTEMPTS_TRY_LATER`) works per account instead. `PortalPasswordBootstrap` became
 `firebase/seed/admin.mjs`, which follows the same three rules for `PORTAL_ADMIN_PASSWORD`.
+
+## Phase 6 as built (2026-09-26)
+
+- **Removed:** `backend/`, every `docker-compose*.yml`, `frontend/Dockerfile`, and the scripts that
+  only served them (`dev-up.sh`, `demo-creds.sh`, `mint-portal-jwt.*`, the four `.sql` scripts,
+  `build-demo-apk.sh`). CI's `backend` job is now a `firebase` job: rules tests, Functions unit
+  tests, Functions against the emulator.
+- **Replaced:** `scripts/metrics.sql` → `firebase/scripts/metrics.mjs` (`npm run metrics`), the same
+  five PRD metrics and the same exclusions. The SQL demo seeds → `firebase/seed/demo.mjs`
+  (`npm run seed:demo`), whose request goes through the real `onRequestCreated`.
+- **Mobile:** Telegram sign-in, the whole Dio/HTTP stack, `API_BASE_URL` and the backend health
+  check are gone; `dio` and `url_launcher` left `pubspec.yaml`. The stored-session gap is closed:
+  a session is restored only when Firebase's own restored user has the same uid, otherwise it is
+  cleared and the app lands on sign-in.
+- **Not done: the merge to `main`.** The Tech Lead decided on 2026-09-26 to keep this work on
+  `feat/firebase-backend`; `main` stays the Spring Boot product M2–M7 were graded against.

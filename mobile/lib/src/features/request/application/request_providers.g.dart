@@ -6,33 +6,12 @@ part of 'request_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$dioRequestRepositoryHash() =>
-    r'88f2c9633116cd219ace47a08fa110957af8ee9e';
-
-/// Concrete, not the `RequestRepository` interface: `DioMatchRepository` reuses
-/// this exact instance's `detailFromJson` to parse the request embedded in a
-/// match, which is not part of the domain-facing interface below.
-///
-/// Copied from [dioRequestRepository].
-@ProviderFor(dioRequestRepository)
-final dioRequestRepositoryProvider = Provider<DioRequestRepository>.internal(
-  dioRequestRepository,
-  name: r'dioRequestRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$dioRequestRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef DioRequestRepositoryRef = ProviderRef<DioRequestRepository>;
 String _$firestoreRequestRepositoryHash() =>
     r'a04c8ec5af30c864b058b5c2a14cb349f25f22b2';
 
-/// Concrete, for the same reason the Dio one above was: `FirestoreMatchRepository` reuses
-/// this instance's `requestForMatch` (and its hospital cache) for the request in a match.
+/// Concrete, not the `RequestRepository` interface: `FirestoreMatchRepository` reuses this
+/// instance's `requestForMatch` (and its hospital cache) for the request in a match, which
+/// is not part of the domain-facing interface below.
 ///
 /// Copied from [firestoreRequestRepository].
 @ProviderFor(firestoreRequestRepository)
@@ -52,8 +31,7 @@ final firestoreRequestRepositoryProvider =
 typedef FirestoreRequestRepositoryRef = ProviderRef<FirestoreRequestRepository>;
 String _$requestRepositoryHash() => r'c303af98f2bfd742054c5c1167703f8bff53044f';
 
-/// Firestore since ADR 0009 phase 3. `dioRequestRepository` above is unused since phase 4
-/// and goes with the backend in phase 6.
+/// Firestore since ADR 0009 phase 3.
 ///
 /// Copied from [requestRepository].
 @ProviderFor(requestRepository)

@@ -1,13 +1,13 @@
 ---
 name: run-demo
-description: Stand up the LifeLink KH demo on this machine — Docker stack (postgres + backend + web portal), fresh demo data, the portal in a browser, and the Flutter app on emulator / USB phone / iOS simulator. Use when the user says "run the demo", "start docker", "open the portal", "run mobile", "prep for defense", or "reset demo data".
+description: Stand up the LifeLink KH demo on this machine — Firebase emulators (Firestore + Auth + Functions), fresh seed and demo data, the admin portal in a browser, and the Flutter app on emulator / USB phone / iOS simulator pointed at the local Firestore emulator. Use when the user says "run the demo", "start the emulators", "open the portal", "run mobile", "prep for defense", or "reset demo data".
 argument-hint: "[all | stack | reset | portal | mobile [emulator|usb|ios] | check | stop]"
 ---
 
 # Run the LifeLink demo
 
-Source of truth is `docs/demo-runbook.md`. This skill runs it; it does not replace it. When the
-two disagree, the runbook wins — fix this file.
+Source of truth is `docs/demo-runbook.md` (and `firebase/README.md` for the Firebase side). This
+skill runs it; it does not replace it. When they disagree, the runbook wins — fix this file.
 
 Parse `$ARGUMENTS`. No argument means `all`. Do only the steps the argument names.
 
@@ -19,89 +19,101 @@ Parse `$ARGUMENTS`. No argument means `all`. Do only the steps the argument name
 | `portal` | 3 |
 | `mobile [target]` | 4 (target default `emulator`) |
 | `check` | 5 |
-| `stop` | `docker compose stop` — never `down -v` (that deletes the database volume) |
+| `stop` | Stop the background emulator and `npm run dev` processes. Say that the emulators keep nothing — the next start needs step 2 again |
 
-## 1. Stack — Docker
+This skill runs the **emulator stack**, which delivers **no pushes** (FCM has no emulator; runbook
+§0). If the user wants the alert to arrive on a phone, that is the real project (runbook §2) —
+say so and stop rather than improvising a deploy.
 
-```bash
-bash scripts/dev-up.sh          # add --lan only for the wireless hotspot demo (runbook §10)
-```
-
-- Always `dev-up.sh`, never a bare `docker compose up --build backend`: the bare command drops the
-  Firebase overlay and every phone sign-in then answers `503 AUTH_PROVIDER_UNCONFIGURED` (runbook §6).
-- Docker Desktop not running → tell the user to open it; do not try to start it.
-- Then verify the Firebase key really mounted:
-  ```bash
-  curl -s -X POST http://127.0.0.1:8080/api/auth/google -H 'Content-Type: application/json' -d '{"idToken":"nonsense"}'
-  ```
-  `INVALID_ID_TOKEN` = good. `AUTH_PROVIDER_UNCONFIGURED` = key missing, stop and report.
-
-## 2. Demo data — reset + seed
-
-**Irreversible** on the local database: requests, matches, donations and donor accounts go;
-districts, hospitals and staff accounts stay. Confirm with the user before running it unless
-they asked for `reset` or `all` explicitly in this turn.
+## 1. Stack — Firebase emulators
 
 ```bash
-docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink < scripts/reset-demo-data.sql
-docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink < scripts/seed-demo-request.sql
+cd firebase && npm run emulators:app     # Firestore :8081 · Auth :9099 · Functions :5001 · UI :4000
 ```
 
-Why every time: a rehearsal that reached "confirm donation" leaves that donor in a 56-day
-cooldown, and the next run matches nobody (runbook §3, trap 2).
+- Run with `run_in_background: true`; it stays attached. Wait for `All emulators ready`
+  (poll `curl -fsS http://127.0.0.1:8081/` and `http://127.0.0.1:4000/`).
+- Needs **Java 21**. A version error → report it; do not install a JDK.
+- `node_modules` missing in `firebase/` or `firebase/functions/` → `npm install` in each first.
+- Always `emulators:app` (project `lifelinkkh`, with Functions), never `npm run emulators` — that is
+  the tests' `demo-lifelink` sandbox, which the app cannot see.
+
+## 2. Data — seed
+
+The emulators start empty. After every start:
+
+```bash
+cd firebase
+npm run seed:app                                           # districts + hospitals
+PORTAL_ADMIN_PASSWORD="$PORTAL_ADMIN_PASSWORD" npm run seed:admin:app   # soborey
+npm run seed:demo                                          # 2 O− donors, requester, CRITICAL AB+ at Calmette, 1 acceptance
+```
+
+- `PORTAL_ADMIN_PASSWORD` comes from the user's `.env` (`set -a; . ./.env; set +a` from the repo
+  root). Unset → the seed creates no admin; tell the user. Under 12 characters → `REFUSED`.
+- `seed:demo` deletes requests, matches and donations first. It is emulator-only, so no
+  confirmation is needed on the emulator stack; it must print `… 1 accepted — ready to confirm in
+  the portal`. `onRequestCreated never ran` → the emulators lack Functions; go back to step 1.
+- Why every rehearsal: a confirmed donation puts that donor into a 56-day cooldown, and the next
+  run matches nobody (runbook §4, trap 2).
 
 ## 3. Web portal
 
 ```bash
-open http://localhost:3000/en/portal     # public board, signed out — show this first
-bash scripts/demo-creds.sh staff         # copies calmette's password to the clipboard
-open http://localhost:3000/en/sign-in
+cd frontend
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8081 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
+FUNCTIONS_EMULATOR_HOST=127.0.0.1:5001 npm run dev
 ```
 
-- Demo as `calmette` (the golden-path request is at Calmette). `soborey` = ADMIN.
-- **Never print a password in the chat.** Use `demo-creds.sh staff|admin` (clipboard) only.
+- Background it. All three variables or none.
+- `open http://localhost:3000/en/portal` — the public board, signed out; show this first.
+- `open http://localhost:3000/en/sign-in` — the only account is `soborey` (ADMIN, DEC-014).
+  No hospital-staff accounts exist.
+- **Never print the password in the chat.** It is the user's `PORTAL_ADMIN_PASSWORD`.
 - Khmer: swap `/en/` for `/km/`.
 
 ## 4. Mobile
 
 ```bash
-bash scripts/demo-mobile.sh emulator     # donor — Android AVD, boots it and refreshes FCM
-bash scripts/demo-mobile.sh usb          # physical Android on a cable (adb reverse)
-bash scripts/demo-mobile.sh ios          # simulator — no push, never the donor
+bash scripts/demo-mobile.sh emulator --firestore-emulator   # donor — Android AVD, boots it, cycles airplane mode
+bash scripts/demo-mobile.sh usb --firestore-emulator        # physical Android on a cable (adb reverse tcp:8081)
+bash scripts/demo-mobile.sh ios --firestore-emulator        # simulator — no push, never the donor
 ```
 
 Run it with `run_in_background: true` — `flutter run` stays attached. Tell the user it is
 building (first build is minutes) and that `r` / `q` work if they run it in their own terminal.
+Sign-in is real Google Sign-In even on the emulator stack, so the device needs internet.
 
 Rules the golden path depends on:
 - **Two Google accounts, one role each.** A donor never matches their own request.
 - **Donor on Android** (emulator with Play image, or USB phone). iOS Simulator has no APNs.
-- Requester needs a push-capable device too if the "donor accepted" alert is shown (FR-NOTIFY-003).
 - Pinned values: donor district **Doun Penh**, last donation **blank**; request at **Calmette**,
-  patient **AB+**, urgency **CRITICAL** (runbook §3 table). Do not improvise the patient type.
+  patient **AB+**, urgency **CRITICAL** (runbook §4 table). Do not improvise the patient type.
 
 ## 5. Pre-flight check
 
 ```bash
-curl -s http://127.0.0.1:8080/api/health                        # {"status":"UP"}
-curl -s -o /dev/null -w '%{http_code}\n' http://localhost:3000/en/portal   # 200
-docker exec -i lifelinkkh-postgres-1 psql -U lifelink -d lifelink < scripts/preflight-match.sql
+curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:4000/          # Emulator UI 200
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:3000/en/portal    # 200
 ```
 
-Run the pre-flight **after the donor registers on the phone, before the request is posted**.
-`MATCH — the alert fires` = ready. Seeded donors always read `matched, but SILENT` (no device) —
-expected, not a fault. No MATCH row for the real donor → name the reason from the row.
+Then, in the Emulator UI (http://localhost:4000 → Firestore), after the donor registers on the
+phone and before the request is posted (runbook §4 "Prove the match"):
+`donors/{uid}` compatible type, `isAvailable: true`, `lastDonationDate` null or 56+ days ago;
+`users/{uid}.fcmToken` not null. After posting, `matches/{requestId}_{uid}` must exist. The
+`seed:demo` donors always have a null token — expected, not a fault.
 
 ## Report
 
 End with one block, nothing more:
 
 ```
-stack    ✅ | ❌  (health, firebase key)
-data     ✅ reset+seeded | ⏭ skipped
-portal   ✅ 200 | ❌
-mobile   ✅ running on <device> | ⏳ building | ⏭
-preflight MATCH | SILENT | no row — <reason>
+emulators ✅ | ❌  (firestore, auth, functions)
+data      ✅ seeded (+admin, +demo) | ⏭ skipped
+portal    ✅ 200 | ❌
+mobile    ✅ running on <device> | ⏳ building | ⏭
+preflight match ready | no token | no match — <reason>
+pushes    none on the emulator stack
 ```
 
 Quote only the shortest decisive failing line. Never paste full logs. Do not fix code during a

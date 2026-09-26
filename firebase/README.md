@@ -35,12 +35,11 @@ id — not `demo-lifelink`, which is the tests' own sandbox.
 
 ```bash
 cd firebase
-npm run emulators:app                     # Firestore emulator as project lifelinkkh, port 8081
+npm run emulators:app                     # Firestore 8081, Auth 9099, Functions 5001 — project lifelinkkh
 npm run seed:app                          # second terminal: districts + hospitals into it
 
 cd ../mobile
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/api \
-            --dart-define=FIRESTORE_EMULATOR=10.0.2.2:8081      # Android emulator
+flutter run --dart-define=FIRESTORE_EMULATOR=10.0.2.2:8081      # Android emulator
 # USB phone: adb reverse tcp:8081 tcp:8081, then FIRESTORE_EMULATOR=127.0.0.1:8081
 ```
 
@@ -48,22 +47,27 @@ Leave `FIRESTORE_EMULATOR` unset to use the real project. That needs Firestore c
 console, `npx firebase deploy --only firestore --project lifelinkkh` for the rules and indexes,
 and `npm run seed -- --project lifelinkkh` once.
 
-## After phase 4: what still touches the backend
+## Nothing touches a backend (phase 6)
 
-The whole golden path is on Firebase now: sign-in (the Firebase ID token is the session;
-`users/{uid}` is the record), donor profile, requests, matching and the donor alert, the
-donor's matches, accept/decline, and the "donor accepted" push.
+There is no Spring Boot and no Postgres any more. The app and the portal talk to Firebase only:
+sign-in (the Firebase ID token is the session; `users/{uid}` is the record), donor profile,
+requests, matching and the donor alert, the donor's matches, accept/decline, the "donor
+accepted" push, and the portal's confirm-donation. Telegram sign-in was dropped (it needed a
+custom-token Function), and the app no longer takes `API_BASE_URL`.
 
-Still on Spring Boot until phase 6:
+## Demo data and metrics
 
-- **Telegram sign-in.** It needs a custom-token Function; until then a Telegram user has
-  no Firebase identity and every Firestore call refuses them.
-- **`API_BASE_URL` is still required**, because the Telegram repository builds its Dio
-  client at startup. Nothing on the golden path calls the backend.
+```bash
+npm run seed:demo      # emulator only: two O- donors, a requester, one CRITICAL request at Calmette,
+                       # matched by the real onRequestCreated and accepted by one donor.
+                       # Clears requests, matches and donations first.
+npm run metrics        # the five PRD success metrics from the emulator's data
+npm run metrics -- --project lifelinkkh   # …from the real project (GOOGLE_APPLICATION_CREDENTIALS)
+```
 
-Known gap, for phase 6: a stored session is restored even when Firebase has no signed-in
-user. It cannot happen on a normal install — both are cleared together — but a restored
-session with no Firebase user would show Home and fail every read until sign-out.
+`seed:demo` needs the Functions emulator running (`npm run emulators:app`): the matching is the
+real Function, not a copy. FCM has no emulator, so on `lifelinkkh` the Functions emulator's push
+attempt fails and is logged; the match documents and counts are still written.
 
 ## The portal on Firebase (phase 5)
 
@@ -89,9 +93,6 @@ unless `--reset-passwords` is passed. To end an admin's access, delete `admins/{
 refuse them on the next read) and disable the user in the console. Against the real project the portal needs
 `FIREBASE_API_KEY` (a Web API key for `lifelinkkh`, from the console — not a secret) and no
 emulator variables.
-
-Until phase 6 the Docker `web` service still points at the backend and is not wired to Firebase:
-run the portal with `npm run dev` as above.
 
 Deploying the Functions needs the Blaze plan on `lifelinkkh`:
 

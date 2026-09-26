@@ -29,7 +29,6 @@ void main() {
                 ),
                 googleCredentialsProvider.overrideWithValue(FakeGoogleCredentials()),
                 facebookCredentialsProvider.overrideWithValue(FakeFacebookCredentials()),
-                telegramAuthRepositoryProvider.overrideWithValue(FakeTelegramAuthRepository()),
                 fcmTokenRepositoryProvider.overrideWithValue(fcm),
                 pushTokenSourceProvider.overrideWithValue(pushTokens),
             ],

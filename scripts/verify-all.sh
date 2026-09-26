@@ -4,8 +4,8 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-# The backend targets Java 21. A machine with a newer default JDK must still build
-# on 21, so JAVA_HOME is pinned here when a 21 install can be located.
+# The Firebase emulators need Java 21+. Pinned here when a 21 install can be located, so a
+# machine whose default JDK is something else still runs them the same way CI does.
 if [ -z "${JAVA_HOME:-}" ]; then
     for candidate in \
         /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home \
@@ -32,13 +32,12 @@ run_step() {
 }
 
 # backend — format check, tests, coverage gate. Integration tests SKIP without Docker.
-if [ -f backend/pom.xml ]; then
-    run_step "backend" bash -c 'cd backend && ./mvnw -B verify'
-else
-    echo "⏭  backend — not scaffolded"
-fi
+# Firebase (ADR 0009): the Security Rules and the Functions, each against the emulator. The
+# emulator is a Java program, which is why JAVA_HOME is still pinned above.
+run_step "firestore rules" bash -c 'cd firebase && npm run test:rules'
+run_step "functions unit" bash -c 'cd firebase/functions && npm test'
+run_step "functions emulator" bash -c 'cd firebase/functions && npm run test:emulator'
 
-# web
 if [ -f frontend/package.json ]; then
     run_step "web lint" bash -c 'cd frontend && npm run lint'
     run_step "web types" bash -c 'cd frontend && npx tsc --noEmit'

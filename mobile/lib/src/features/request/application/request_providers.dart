@@ -1,9 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/error/result.dart';
-import '../../../core/network/api_client.dart';
 import '../../../core/firebase/firestore_providers.dart';
-import '../data/dio_request_repository.dart';
 import '../data/firestore_request_repository.dart';
 import '../domain/blood_request.dart';
 import '../domain/blood_request_draft.dart';
@@ -13,15 +11,9 @@ import 'request_service.dart';
 
 part 'request_providers.g.dart';
 
-/// Concrete, not the `RequestRepository` interface: `DioMatchRepository` reuses
-/// this exact instance's `detailFromJson` to parse the request embedded in a
-/// match, which is not part of the domain-facing interface below.
-@Riverpod(keepAlive: true)
-DioRequestRepository dioRequestRepository(DioRequestRepositoryRef ref) =>
-    DioRequestRepository(ref.watch(apiClientProvider));
-
-/// Concrete, for the same reason the Dio one above was: `FirestoreMatchRepository` reuses
-/// this instance's `requestForMatch` (and its hospital cache) for the request in a match.
+/// Concrete, not the `RequestRepository` interface: `FirestoreMatchRepository` reuses this
+/// instance's `requestForMatch` (and its hospital cache) for the request in a match, which
+/// is not part of the domain-facing interface below.
 @Riverpod(keepAlive: true)
 FirestoreRequestRepository firestoreRequestRepository(FirestoreRequestRepositoryRef ref) =>
     FirestoreRequestRepository(
@@ -29,8 +21,7 @@ FirestoreRequestRepository firestoreRequestRepository(FirestoreRequestRepository
         currentUid: ref.watch(currentUidProvider),
     );
 
-/// Firestore since ADR 0009 phase 3. `dioRequestRepository` above is unused since phase 4
-/// and goes with the backend in phase 6.
+/// Firestore since ADR 0009 phase 3.
 @Riverpod(keepAlive: true)
 RequestRepository requestRepository(RequestRepositoryRef ref) =>
     ref.watch(firestoreRequestRepositoryProvider);

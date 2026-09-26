@@ -9,7 +9,6 @@ import 'package:lifelink_kh/src/features/auth/application/auth_providers.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_session.dart';
 import 'package:lifelink_kh/src/features/auth/domain/google_credentials.dart';
 import 'package:lifelink_kh/src/features/auth/domain/session_store.dart';
-import 'package:lifelink_kh/src/features/home/application/health_providers.dart';
 import 'package:lifelink_kh/src/features/notify/application/push_providers.dart';
 
 import 'support/auth_fakes.dart';
@@ -43,7 +42,7 @@ final class _GatedGoogleCredentials implements GoogleCredentials {
     Future<String?> signIn() => _gate.future;
 
     @override
-    Future<String?> idToken({bool forceRefresh = false}) async => null;
+    Future<String?> currentUid() async => null;
 
     @override
     Future<void> signOut() async {}
@@ -56,7 +55,6 @@ void main() {
     late FakeSessionStore sessionStore;
     late FakeGoogleCredentials credentials;
     late FakeFacebookCredentials facebookCredentials;
-    late FakeTelegramAuthRepository telegramRepository;
     late FakeFcmTokenRepository fcm;
     late FakePushTokenSource pushTokens;
 
@@ -65,7 +63,6 @@ void main() {
         sessionStore = FakeSessionStore();
         credentials = FakeGoogleCredentials();
         facebookCredentials = FakeFacebookCredentials();
-        telegramRepository = FakeTelegramAuthRepository();
         fcm = FakeFcmTokenRepository();
         pushTokens = FakePushTokenSource();
     });
@@ -80,10 +77,8 @@ void main() {
                     sessionStoreProvider.overrideWithValue(sessionStore),
                     googleCredentialsProvider.overrideWithValue(credentials),
                     facebookCredentialsProvider.overrideWithValue(facebookCredentials),
-                    telegramAuthRepositoryProvider.overrideWithValue(telegramRepository),
                     fcmTokenRepositoryProvider.overrideWithValue(fcm),
                     pushTokenSourceProvider.overrideWithValue(pushTokens),
-                    healthRepositoryProvider.overrideWithValue(FakeHealthRepository()),
                 ],
                 child: const LifeLinkApp(),
             ),
@@ -121,10 +116,8 @@ void main() {
                     sessionStoreProvider.overrideWithValue(_GatedSessionStore(restoreGate)),
                     googleCredentialsProvider.overrideWithValue(credentials),
                     facebookCredentialsProvider.overrideWithValue(facebookCredentials),
-                    telegramAuthRepositoryProvider.overrideWithValue(telegramRepository),
                     fcmTokenRepositoryProvider.overrideWithValue(fcm),
                     pushTokenSourceProvider.overrideWithValue(pushTokens),
-                    healthRepositoryProvider.overrideWithValue(FakeHealthRepository()),
                 ],
                 child: const LifeLinkApp(),
             ),
@@ -153,10 +146,8 @@ void main() {
                         _GatedGoogleCredentials(signInGate),
                     ),
                     facebookCredentialsProvider.overrideWithValue(facebookCredentials),
-                    telegramAuthRepositoryProvider.overrideWithValue(telegramRepository),
                     fcmTokenRepositoryProvider.overrideWithValue(fcm),
                     pushTokenSourceProvider.overrideWithValue(pushTokens),
-                    healthRepositoryProvider.overrideWithValue(FakeHealthRepository()),
                 ],
                 child: const LifeLinkApp(),
             ),
@@ -191,6 +182,20 @@ void main() {
         expect(find.byKey(const Key('sign-in-google')), findsNothing);
         await goToMeTab(tester);
         expect(find.byKey(const Key('sign-out')), findsOneWidget);
+    });
+
+    testWidgets('a stored session with no Firebase user lands on sign-in, not home',
+        (tester) async {
+        // The ADR 0009 gap: every read is authorised by the Firebase user, so a session
+        // restored without one would open a Home that fails every read.
+        sessionStore = FakeSessionStore(testSession());
+        credentials.uid = null;
+
+        await pumpApp(tester);
+
+        expect(find.byKey(const Key('sign-in-google')), findsOneWidget);
+        expect(find.byKey(const Key('sign-out')), findsNothing);
+        expect(sessionStore.stored, isNull);
     });
 
     testWidgets('signing in stores the session, registers for push, and routes home',
@@ -238,46 +243,6 @@ void main() {
             reason: 'a cancel is a choice, not a failure',
         );
         expect(repository.exchangeCount, 0);
-    });
-
-    testWidgets(
-        'signing in via Telegram opens the sheet, verifies the code, and routes home',
-        (tester) async {
-        await pumpApp(tester);
-
-        await tester.tap(find.byKey(const Key('sign-in-telegram')));
-        await tester.pumpAndSettle();
-        expect(find.byKey(const Key('telegram-code-entry')), findsOneWidget);
-
-        await tester.enterText(
-            find.byKey(const Key('telegram-code-field')),
-            telegramRepository.validCode,
-        );
-        await tester.tap(find.byKey(const Key('telegram-submit')));
-        await tester.pumpAndSettle();
-
-        // The sheet closes itself on a real session, not on the tap.
-        expect(find.byKey(const Key('telegram-code-entry')), findsNothing);
-        await goToMeTab(tester);
-        expect(find.byKey(const Key('sign-out')), findsOneWidget);
-        expect(sessionStore.stored?.token, 'jwt-1');
-        expect(fcm.registered, ['fcm-token-1']);
-    });
-
-    testWidgets('a wrong Telegram code shows an error and keeps the sheet open',
-        (tester) async {
-        await pumpApp(tester);
-
-        await tester.tap(find.byKey(const Key('sign-in-telegram')));
-        await tester.pumpAndSettle();
-
-        await tester.enterText(find.byKey(const Key('telegram-code-field')), '000000');
-        await tester.tap(find.byKey(const Key('telegram-submit')));
-        await tester.pumpAndSettle();
-
-        expect(find.byKey(const Key('sign-in-error')), findsOneWidget);
-        expect(find.byKey(const Key('telegram-code-entry')), findsOneWidget);
-        expect(sessionStore.stored, isNull);
     });
 
     testWidgets('a dismissed account chooser leaves the user on sign-in with no error',

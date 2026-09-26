@@ -13,7 +13,7 @@ flutter
 ## Acting user roles (R2) — Nem Sothea (solo driver this session)
 - primary: Tech Lead
 - also: Fullstack, Mobile, PO, QA
-- note: no DevOps or PM role. Tech Lead owns docker-compose.yml + CI + deploy + release; infra/ removed.
+- note: no DevOps or PM role. Tech Lead owns the Firebase project + CI + deploy + release; infra/ and docker-compose.yml removed (ADR 0009).
 - note: DoD tracking stays with QA — only gate outside Tech Lead.
 - Security: overlay held by Tech Lead
 

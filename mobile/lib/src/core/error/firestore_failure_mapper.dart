@@ -2,9 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'failure.dart';
 
-/// Translates Firestore errors into domain [Failure]s — the ADR 0009 counterpart of
-/// `failureFromDio`, and for the same reason it lives in `core/`: every Firestore
-/// repository would otherwise write this switch again.
+/// Translates Firestore errors into domain [Failure]s (ADR 0009). It lives in `core/`
+/// because every Firestore repository would otherwise write this switch again.
 ///
 /// `permission-denied` is the Security Rules saying no. It maps to [ForbiddenFailure],
 /// not [ValidationFailure], even when the rule that refused was a value check: a rule

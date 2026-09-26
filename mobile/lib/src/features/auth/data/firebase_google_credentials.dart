@@ -8,9 +8,8 @@ import '../domain/google_credentials.dart';
 ///
 /// Three sharp edges, all of them silent failures if got wrong:
 ///
-/// 1. **The token sent to our backend is the Firebase one**, minted by
-///    `User.getIdToken()`. The Google ID token is only the credential used to open the
-///    Firebase session; our verifier would reject it on the issuer check.
+/// 1. **The token returned is the Firebase one**, minted by `User.getIdToken()`. The
+///    Google ID token is only the credential used to open the Firebase session.
 /// 2. **A cancelled account chooser is a `GoogleSignInException` in google_sign_in 7**,
 ///    not a `null` return. Letting it propagate would render "sign-in failed" every time
 ///    a user changes their mind.
@@ -73,21 +72,16 @@ final class FirebaseGoogleCredentials implements GoogleCredentials {
         final credentials = await _auth.signInWithCredential(
             GoogleAuthProvider.credential(idToken: googleIdToken),
         );
-        // Our session JWT is minted from this, and from nothing the client sends.
         return credentials.user?.getIdToken();
     }
 
     @override
-    Future<String?> idToken({bool forceRefresh = false}) async {
-        final user = _auth.currentUser;
-        if (user == null) return null;
-        try {
-            return await user.getIdToken(forceRefresh);
-        } on FirebaseAuthException catch (_) {
-            // `user-token-expired`, `user-disabled`, `user-not-found` — the credential is
-            // gone. Terminal by ADR 0007, so null rather than a throw.
-            return null;
-        }
+    Future<String?> currentUid() async {
+        // The first auth-state event, not `currentUser`: the stream answers once the SDK
+        // has finished restoring its persisted user, so a cold start cannot read the
+        // not-yet-restored null and throw away a good session.
+        final user = await _auth.authStateChanges().first;
+        return user?.uid;
     }
 
     @override

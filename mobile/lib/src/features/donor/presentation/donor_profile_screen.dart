@@ -165,8 +165,8 @@ class DonorProfileScreen extends ConsumerWidget {
                             textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
-                        // The retry the health screen could not justify: this one refetches
-                        // something the donor cares about.
+                        // A retry earns its place here: it refetches something the donor
+                        // cares about.
                         FilledButton(
                             key: const Key('donor-profile-retry'),
                             onPressed: () => ref.invalidate(donorProfileControllerProvider),

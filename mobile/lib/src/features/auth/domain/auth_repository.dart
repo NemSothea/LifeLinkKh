@@ -4,11 +4,8 @@ import 'user_role.dart';
 
 /// The token exchange, as the rest of the app sees it (Week 3 rule S4).
 ///
-/// One method, on purpose. `POST /auth/google` is the only endpoint in the app that
-/// takes no bearer token, so it is the only one that can be called over a Dio without
-/// the auth interceptor — and it must be, or renewing a session would require the
-/// session it is renewing. FCM token registration is an authenticated call and lives in
-/// the NOTIFY feature for that reason.
+/// One method, on purpose: turning a fresh Firebase session into the app's own user
+/// record. FCM token registration is a separate concern and lives in the NOTIFY feature.
 abstract interface class AuthRepository {
     /// `POST /auth/google` — trades a Google ID token for our session JWT, creating the
     /// account on first sign-in.

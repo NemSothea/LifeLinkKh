@@ -79,18 +79,6 @@
     "@homeNearbyRequestsHeading": {
         "description": "Section heading above the donor Home tab's nearby-matches list"
     },
-    "apiStatusUp": "API is up",
-    "@apiStatusUp": {
-        "description": "Shown when the health ping succeeds"
-    },
-    "apiStatusUnreachable": "Cannot reach the API",
-    "@apiStatusUnreachable": {
-        "description": "Shown when the health ping fails for any reason"
-    },
-    "apiStatusChecking": "Checking API…",
-    "@apiStatusChecking": {
-        "description": "Shown while the health ping is in flight"
-    },
     "signInTitle": "Sign in to LifeLink",
     "@signInTitle": {
         "description": "Sign-in screen heading"
@@ -105,35 +93,11 @@
     },
     "signInMoreOptions": "More ways to sign in",
     "@signInMoreOptions": {
-        "description": "Divider label between Google (ADR 0002's primary method) and the Facebook/Telegram alternatives added later by FR-AUTH-004"
+        "description": "Divider label between Google (ADR 0002's primary method) and the Facebook alternative added later by FR-AUTH-004"
     },
     "signInWithFacebook": "Continue with Facebook",
     "@signInWithFacebook": {
         "description": "Label of the Facebook sign-in button (FR-AUTH-004)"
-    },
-    "signInWithTelegram": "Continue with Telegram",
-    "@signInWithTelegram": {
-        "description": "Label of the Telegram sign-in button, opens the code-entry sheet (FR-AUTH-004)"
-    },
-    "telegramSheetTitle": "Sign in with Telegram",
-    "@telegramSheetTitle": {
-        "description": "Heading of the Telegram sign-in bottom sheet"
-    },
-    "telegramInstructions": "Open Telegram and send the message to our bot. It will reply with a 6-digit code — enter it below.",
-    "@telegramInstructions": {
-        "description": "Explains the deep-link-then-code flow before the donor taps Open Telegram"
-    },
-    "telegramOpenApp": "Open Telegram",
-    "@telegramOpenApp": {
-        "description": "Button that opens the t.me deep link"
-    },
-    "telegramCodeLabel": "6-digit code",
-    "@telegramCodeLabel": {
-        "description": "Label of the code text field"
-    },
-    "telegramSubmit": "Verify",
-    "@telegramSubmit": {
-        "description": "Submits the typed code to POST /auth/telegram/verify"
     },
     "signInSigningIn": "Signing in…",
     "@signInSigningIn": {
