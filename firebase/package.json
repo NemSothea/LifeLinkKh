@@ -12,7 +12,8 @@
     "seed:admin": "node seed/admin.mjs",
     "seed:admin:app": "node seed/admin.mjs --project lifelinkkh --emulator",
     "seed:demo": "node seed/demo.mjs",
-    "metrics": "node scripts/metrics.mjs"
+    "metrics": "node scripts/metrics.mjs",
+    "delete-account": "node functions/scripts/delete-account.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.2",

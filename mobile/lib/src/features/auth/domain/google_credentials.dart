@@ -1,3 +1,5 @@
+import 'reauthentication.dart';
+
 /// The Firebase/Google half of sign-in, behind an interface.
 ///
 /// **What the token here is.** [signIn] returns a **Firebase** ID token, not the Google
@@ -25,4 +27,17 @@ abstract interface class GoogleCredentials {
     /// Clears the Firebase/Google session on this device. The stored session is
     /// disposed of separately, via the `SessionStore`.
     Future<void> signOut();
+
+    /// Which provider the signed-in Firebase user signed in with, or `null` when there is
+    /// no such user or it came from neither (an emulator test account). Here rather than
+    /// on a separate interface for the same reason [currentUid] is: it is a question about
+    /// the Firebase user, and this is the class that owns it.
+    Future<SignInProvider?> currentProvider();
+
+    /// Opens the Google account chooser again and re-authenticates the **current**
+    /// Firebase user with it (DEC-016), so the next ID token carries a fresh `auth_time`.
+    ///
+    /// Throws only on a real platform failure; a dismissed chooser and a different
+    /// account are answers, not errors.
+    Future<Reauthentication> reauthenticate();
 }

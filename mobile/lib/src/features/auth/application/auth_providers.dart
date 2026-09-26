@@ -95,4 +95,12 @@ class AuthController extends _$AuthController {
         await ref.read(authServiceProvider).signOut();
         state = const AsyncData<AuthSession?>(null);
     }
+
+    /// The account was deleted (DEC-016) and `AccountDeletionService` has already cleared
+    /// the stored session and signed out of Firebase. This only tells the router, which
+    /// redirects to sign-in on `AsyncData(null)`.
+    ///
+    /// Not [signOut]: that clears the push token first, a write to `users/{uid}` — a
+    /// document the deletion has just removed.
+    void accountDeleted() => state = const AsyncData<AuthSession?>(null);
 }

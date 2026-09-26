@@ -18,3 +18,8 @@ env:
   - variable: FIREBASE_API_KEY
     secret: firebase-web-api-key
     availability: [RUNTIME]
+  # DEC-016: the address /{locale}/delete-account gives someone who can no longer use the app.
+  # Required before a Play listing — the page says "not set up" without it. Uncomment and set:
+  # - variable: SUPPORT_EMAIL
+  #   value: <a monitored address>
+  #   availability: [RUNTIME]

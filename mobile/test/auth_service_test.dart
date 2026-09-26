@@ -7,6 +7,7 @@ import 'package:lifelink_kh/src/features/auth/domain/auth_session.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_user.dart';
 import 'package:lifelink_kh/src/features/auth/domain/facebook_credentials.dart';
 import 'package:lifelink_kh/src/features/auth/domain/google_credentials.dart';
+import 'package:lifelink_kh/src/features/auth/domain/reauthentication.dart';
 import 'package:lifelink_kh/src/features/auth/domain/session_store.dart';
 import 'package:lifelink_kh/src/features/auth/domain/user_role.dart';
 
@@ -273,6 +274,14 @@ final class _FakeGoogleCredentials implements GoogleCredentials {
 
     @override
     Future<void> signOut() async => signedOut = true;
+
+    // Sign-out-and-restore tests never re-authenticate; the account deletion tests
+    // (account_deletion_service_test.dart) have their own fakes.
+    @override
+    Future<SignInProvider?> currentProvider() async => SignInProvider.google;
+
+    @override
+    Future<Reauthentication> reauthenticate() async => Reauthentication.confirmed;
 }
 
 final class _FakeFacebookCredentials implements FacebookCredentials {
@@ -284,4 +293,7 @@ final class _FakeFacebookCredentials implements FacebookCredentials {
         if (throwOnSignIn) throw Exception('platform channel died');
         return interactiveToken;
     }
+
+    @override
+    Future<Reauthentication> reauthenticate() async => Reauthentication.confirmed;
 }

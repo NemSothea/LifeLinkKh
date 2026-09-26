@@ -143,6 +143,11 @@ final class FirestoreMatchRepository implements MatchRepository {
     }
 
     Future<Match?> _matchFrom(String id, Map<String, dynamic> data, BloodType myBloodType) async {
+        final wireResponse = data['response'] as String?;
+        // DEC-016: withdrawn when its donor deleted their account. Not an unanswered alert
+        // — listing it as one would invite an answer to a match that is no longer anyone's.
+        // Checked before the request read, which it would only waste.
+        if (wireResponse == MatchResponseType.withdrawnWireValue) return null;
         final requestId = data['requestId'] as String?;
         if (requestId == null) throw const FormatException('match has no request');
         final request = await _requests.requestForMatch(
@@ -151,7 +156,7 @@ final class FirestoreMatchRepository implements MatchRepository {
         );
         // A request deleted by hand in the console: skip the row rather than fail the list.
         if (request == null) return null;
-        final response = MatchResponseType.fromWire(data['response'] as String?);
+        final response = MatchResponseType.fromWire(wireResponse);
         final notifiedAt = data['notifiedAt'];
         // RequestViews' rule: the contact only for a donor who accepted.
         final contact = response == MatchResponseType.accepted ? await _contact(requestId) : null;

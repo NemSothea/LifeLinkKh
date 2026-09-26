@@ -1,7 +1,9 @@
+import 'reauthentication.dart';
+
 /// The Facebook half of sign-in, behind an interface — mirrors [GoogleCredentials]'s
 /// shape and reason for existing (testable before a real Facebook app exists).
 ///
-/// The current uid and sign-out are **not** here. Once a Facebook login has opened a
+/// The current uid, the current provider and sign-out are **not** here. Once a Facebook login has opened a
 /// Firebase session, `FirebaseAuth.currentUser` behaves identically regardless of which
 /// federated provider created it — `GoogleCredentials.currentUid`/`signOut` already
 /// operate on the Firebase user, not on Google specifically, so `AuthService` keeps using
@@ -13,4 +15,9 @@ abstract interface class FacebookCredentials {
     ///
     /// Throws only on a real platform failure.
     Future<String?> signIn();
+
+    /// Opens the Facebook login dialog again and re-authenticates the **current**
+    /// Firebase user with it (DEC-016). Same contract as
+    /// `GoogleCredentials.reauthenticate`.
+    Future<Reauthentication> reauthenticate();
 }

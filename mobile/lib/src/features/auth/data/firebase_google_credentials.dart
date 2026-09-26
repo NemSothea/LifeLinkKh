@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../domain/google_credentials.dart';
+import '../domain/reauthentication.dart';
 
 /// The real [GoogleCredentials]: Google account chooser → Firebase session → Firebase
 /// ID token.
@@ -76,6 +77,40 @@ final class FirebaseGoogleCredentials implements GoogleCredentials {
     }
 
     @override
+    Future<SignInProvider?> currentProvider() async {
+        final user = await _auth.authStateChanges().first;
+        final providers = user?.providerData.map((info) => info.providerId).toSet() ?? const {};
+        if (providers.contains(GoogleAuthProvider.PROVIDER_ID)) return SignInProvider.google;
+        if (providers.contains(FacebookAuthProvider.PROVIDER_ID)) return SignInProvider.facebook;
+        return null;
+    }
+
+    @override
+    Future<Reauthentication> reauthenticate() async {
+        final user = await _auth.authStateChanges().first;
+        if (user == null) throw StateError('No Firebase user to re-authenticate.');
+        await _ensureInitialized();
+
+        final GoogleSignInAccount account;
+        try {
+            account = await _google.authenticate();
+        } on GoogleSignInException catch (error) {
+            if (error.code == GoogleSignInExceptionCode.canceled) {
+                return Reauthentication.cancelled;
+            }
+            rethrow;
+        }
+        final googleIdToken = account.authentication.idToken;
+        if (googleIdToken == null) {
+            throw StateError('Google returned no ID token on re-authentication.');
+        }
+        return reauthenticateFirebaseUser(
+            user,
+            GoogleAuthProvider.credential(idToken: googleIdToken),
+        );
+    }
+
+    @override
     Future<String?> currentUid() async {
         // The first auth-state event, not `currentUser`: the stream answers once the SDK
         // has finished restoring its persisted user, so a cold start cannot read the
@@ -92,4 +127,23 @@ final class FirebaseGoogleCredentials implements GoogleCredentials {
         await _google.signOut();
         await _auth.signOut();
     }
+}
+
+/// Re-authenticates [user] with [credential] and forces a fresh ID token, for both
+/// providers.
+///
+/// `reauthenticateWithCredential`, never `signInWithCredential`: the latter switches to
+/// whatever account the chooser returned, and a deletion that follows would erase *that*
+/// account. The forced `getIdToken(true)` is belt and braces — the callable attaches the
+/// cached token, and this makes sure the cached one is the token with the new `auth_time`.
+Future<Reauthentication> reauthenticateFirebaseUser(User user, AuthCredential credential) async {
+    try {
+        await user.reauthenticateWithCredential(credential);
+    } on FirebaseAuthException catch (error) {
+        if (error.code == 'user-mismatch') return Reauthentication.differentAccount;
+        if (error.code == 'network-request-failed') return Reauthentication.networkUnavailable;
+        rethrow;
+    }
+    await user.getIdToken(true);
+    return Reauthentication.confirmed;
 }

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "vitest run test/unit",
-    "test:emulator": "cd .. && firebase emulators:exec --only firestore --project demo-lifelink \"cd functions && vitest run test/emulator\""
+    "test:emulator": "cd .. && firebase emulators:exec --only firestore,auth --project demo-lifelink \"cd functions && vitest run test/emulator\""
   },
   "dependencies": {
     "firebase-admin": "^14.5.0",

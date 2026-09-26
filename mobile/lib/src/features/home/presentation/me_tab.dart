@@ -4,13 +4,15 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/settings/locale_controller.dart';
+import '../../account/presentation/delete_account_screen.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../donation/presentation/donation_guide_screen.dart';
 import '../../donor/presentation/donor_profile_screen.dart';
 import '../../request/presentation/request_form_screen.dart';
 
 /// The third tab of every shell — `GLOBAL-home-dashboard` prototype: "profile edit,
-/// language toggle, and sign-out. Not a settings labyrinth — three items."
+/// language toggle, and sign-out. Not a settings labyrinth — three items." Plus, since
+/// DEC-016, "Delete account" below sign-out, which Google Play requires in-app.
 ///
 /// The language toggle is the mobile half of `FR-GLOBAL-001`, which shipped on the web
 /// portal first (`LanguageSwitcher`). It is the last item before sign-out on purpose:
@@ -106,6 +108,25 @@ class MeTab extends ConsumerWidget {
                                 title: Text(l10n.signOut),
                                 onTap: () =>
                                     ref.read(authControllerProvider.notifier).signOut(),
+                            ),
+                        ),
+                        // DEC-016. Last, apart, and in the error colour: the one action on
+                        // this tab that cannot be taken back must not sit where a thumb
+                        // reaching for sign-out lands. It only opens the confirmation screen.
+                        const SizedBox(height: 32),
+                        Card(
+                            margin: EdgeInsets.zero,
+                            child: ListTile(
+                                key: const Key('me-delete-account'),
+                                leading: Icon(
+                                    Icons.delete_forever_outlined,
+                                    color: theme.colorScheme.error,
+                                ),
+                                title: Text(
+                                    l10n.accountDeleteCta,
+                                    style: TextStyle(color: theme.colorScheme.error),
+                                ),
+                                onTap: () => context.push(DeleteAccountScreen.path),
                             ),
                         ),
                     ],

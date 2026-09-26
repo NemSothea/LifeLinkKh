@@ -103,5 +103,21 @@
     "admin": {
         "staffRoleAdmin": "Admin",
         "passwordHint": "at least 8 characters"
+    },
+    "deleteAccount": {
+        "title": "Delete your LifeLink account",
+        "inAppHeading": "In the app",
+        "inAppStep1": "Open LifeLink and go to the Me tab.",
+        "inAppStep2": "Tap Delete account and read what will be deleted.",
+        "inAppStep3": "Confirm, then sign in with Google once more. Your account is deleted straight away.",
+        "noAppHeading": "If you can no longer use the app",
+        "noAppBody": "Write to us from the email address of your Google account and ask for your LifeLink account to be deleted. We check that the request is really yours, delete the account, and reply to confirm — usually within 7 days.",
+        "mailSubject": "Delete my LifeLink account",
+        "noEmailConfigured": "The contact address for deletion requests has not been set up yet. Please use the steps in the app.",
+        "whatHeading": "What happens",
+        "whatDeleted": "Deleted: your name, blood type, district, location, push token, and the phone numbers on requests you posted. Your name is removed from the public board.",
+        "whatClosed": "Closed: requests you posted that are still waiting or open. If you had accepted an open request, that acceptance is withdrawn.",
+        "whatKept": "Kept without your name: the fact that a request was made, answered or a donation was confirmed — so hospitals' statistics stay correct. Nothing kept can be traced back to you.",
+        "backCta": "Back to LifeLink"
     }
 }

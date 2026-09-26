@@ -2,9 +2,10 @@
 /// required: a plain `flutter run` talks to the real `lifelinkkh` Firebase project, whose
 /// config the platform files (`google-services.json`, `GoogleService-Info.plist`) carry.
 ///
-/// Both values are optional overrides, passed with `--dart-define`:
+/// Every value is an optional override, passed with `--dart-define`:
 /// ```
-/// flutter run --dart-define=FIRESTORE_EMULATOR=10.0.2.2:8081
+/// flutter run --dart-define=FIRESTORE_EMULATOR=10.0.2.2:8081 \
+///             --dart-define=FUNCTIONS_EMULATOR=10.0.2.2:5001
 /// ```
 /// `10.0.2.2` is the Android emulator's alias for the host machine, where the Firebase
 /// emulator suite listens (ADR 0009, `firebase/README.md`).
@@ -27,8 +28,18 @@ class Env {
     /// Unset is the real `lifelinkkh` project. ADR 0009 — `firebase/README.md` starts one.
     static const String _firestoreEmulator = String.fromEnvironment('FIRESTORE_EMULATOR');
 
-    static ({String host, int port})? get firestoreEmulator {
-        final parts = _firestoreEmulator.split(':');
+    static ({String host, int port})? get firestoreEmulator => _hostPort(_firestoreEmulator);
+
+    /// `host:port` of a Functions emulator, e.g. `10.0.2.2:5001` — for DEC-016's
+    /// `deleteAccount` callable. Separate from [firestoreEmulator] because the two
+    /// emulators listen on different ports, and a demo may well run only one of them.
+    /// Unset is the deployed `asia-southeast1` Functions.
+    static const String _functionsEmulator = String.fromEnvironment('FUNCTIONS_EMULATOR');
+
+    static ({String host, int port})? get functionsEmulator => _hostPort(_functionsEmulator);
+
+    static ({String host, int port})? _hostPort(String value) {
+        final parts = value.split(':');
         if (parts.length != 2) return null;
         final port = int.tryParse(parts[1]);
         return port == null ? null : (host: parts[0], port: port);

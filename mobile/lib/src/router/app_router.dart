@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../core/settings/onboarding_controller.dart';
+import '../features/account/presentation/delete_account_screen.dart';
 import '../features/auth/application/auth_providers.dart';
 import '../features/auth/presentation/sign_in_screen.dart';
 import '../features/donation/presentation/donation_guide_screen.dart';
@@ -106,6 +107,13 @@ GoRouter appRouter(AppRouterRef ref) {
                 builder: (context, state) => MatchDetailScreen(
                     matchId: state.pathParameters['matchId']!,
                 ),
+            ),
+            // DEC-016. Behind the redirect like the rest: only a signed-in user has an
+            // account to delete, and a successful deletion is exactly the sign-out that
+            // sends this screen back to sign-in.
+            GoRoute(
+                path: DeleteAccountScreen.path,
+                builder: (context, state) => const DeleteAccountScreen(),
             ),
         ],
     );

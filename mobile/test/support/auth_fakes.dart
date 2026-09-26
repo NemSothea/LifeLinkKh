@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:lifelink_kh/src/core/error/failure.dart';
 import 'package:lifelink_kh/src/core/error/result.dart';
 import 'package:lifelink_kh/src/core/location/location_service.dart';
+import 'package:lifelink_kh/src/features/account/domain/account_deletion.dart';
+import 'package:lifelink_kh/src/features/account/domain/account_repository.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_repository.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_session.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_user.dart';
 import 'package:lifelink_kh/src/features/auth/domain/facebook_credentials.dart';
 import 'package:lifelink_kh/src/features/auth/domain/google_credentials.dart';
+import 'package:lifelink_kh/src/features/auth/domain/reauthentication.dart';
 import 'package:lifelink_kh/src/features/auth/domain/session_store.dart';
 import 'package:lifelink_kh/src/features/auth/domain/user_role.dart';
 import 'package:lifelink_kh/src/features/notify/domain/fcm_token_repository.dart';
@@ -92,14 +95,64 @@ final class FakeGoogleCredentials implements GoogleCredentials {
         signedOut = true;
         uid = null;
     }
+
+    /// Which provider the Firebase user came from — decides which fake is asked to
+    /// re-authenticate before an account deletion.
+    SignInProvider? provider = SignInProvider.google;
+
+    /// Answers for successive [reauthenticate] calls, in order; once exhausted, every
+    /// further call is [Reauthentication.confirmed]. A queue rather than one value because
+    /// the deletion retry re-authenticates twice and a test may want the two to differ.
+    final List<Reauthentication> reauthOutcomes = [];
+    bool throwOnReauth = false;
+    int reauthCount = 0;
+
+    @override
+    Future<SignInProvider?> currentProvider() async => provider;
+
+    @override
+    Future<Reauthentication> reauthenticate() async {
+        reauthCount++;
+        if (throwOnReauth) throw Exception('platform channel died');
+        return reauthOutcomes.isEmpty ? Reauthentication.confirmed : reauthOutcomes.removeAt(0);
+    }
 }
 
 final class FakeFacebookCredentials implements FacebookCredentials {
     /// `null` models a dismissed Facebook login dialog.
     String? interactiveToken = 'firebase-id-token';
 
+    /// Same queue as `FakeGoogleCredentials.reauthOutcomes`.
+    final List<Reauthentication> reauthOutcomes = [];
+    int reauthCount = 0;
+
     @override
     Future<String?> signIn() async => interactiveToken;
+
+    @override
+    Future<Reauthentication> reauthenticate() async {
+        reauthCount++;
+        return reauthOutcomes.isEmpty ? Reauthentication.confirmed : reauthOutcomes.removeAt(0);
+    }
+}
+
+/// The `deleteAccount` callable, scripted. [results] answer successive calls in order;
+/// once exhausted, every call succeeds.
+final class FakeAccountRepository implements AccountRepository {
+    final List<Result<AccountDeletion>> results = [];
+    int calls = 0;
+
+    static const AccountDeletion deletion = AccountDeletion(
+        requestsClosed: 1,
+        acceptancesWithdrawn: 2,
+        recordsAnonymised: 5,
+    );
+
+    @override
+    Future<Result<AccountDeletion>> deleteAccount() async {
+        calls++;
+        return results.isEmpty ? const Success(deletion) : results.removeAt(0);
+    }
 }
 
 final class FakeFcmTokenRepository implements FcmTokenRepository {

@@ -781,5 +781,77 @@
     "sectionFailedNetwork": "No internet connection. Check your network and try again.",
     "@sectionFailedNetwork": {
         "description": "Replaces a section's own 'could not load' message when the cause was NetworkFailure"
+    },
+    "accountDeleteCta": "Delete account",
+    "@accountDeleteCta": {
+        "description": "Destructive action at the bottom of the Me tab, below sign-out (DEC-016)"
+    },
+    "accountDeleteTitle": "Delete your account?",
+    "@accountDeleteTitle": {
+        "description": "Title of the account deletion confirmation screen"
+    },
+    "accountDeleteIntro": "If you delete your account:",
+    "@accountDeleteIntro": {
+        "description": "Lead-in above the list of what deletion does"
+    },
+    "accountDeleteWhatDeleted": "Your profile, blood type, location and phone numbers are deleted.",
+    "@accountDeleteWhatDeleted": {
+        "description": "Deletion consequence: personal data removed"
+    },
+    "accountDeleteWhatClosed": "Your open or pending requests are closed.",
+    "@accountDeleteWhatClosed": {
+        "description": "Deletion consequence: the user's own requests become CANCELLED"
+    },
+    "accountDeleteWhatWithdrawn": "If you accepted a request that is still open, that acceptance is withdrawn.",
+    "@accountDeleteWhatWithdrawn": {
+        "description": "Deletion consequence: acceptances on OPEN requests become WITHDRAWN"
+    },
+    "accountDeleteWhatKept": "Donation counts stay in LifeLink's statistics, with no name attached.",
+    "@accountDeleteWhatKept": {
+        "description": "Deletion consequence: anonymised records are kept for the metrics"
+    },
+    "accountDeleteIrreversible": "This cannot be undone.",
+    "@accountDeleteIrreversible": {
+        "description": "Final warning on the account deletion screen"
+    },
+    "accountDeleteReauthHint": "To confirm it is you, you will be asked to sign in again.",
+    "@accountDeleteReauthHint": {
+        "description": "Explains the re-authentication dialog that opens after confirming"
+    },
+    "accountDeleteConfirmCta": "Delete my account",
+    "@accountDeleteConfirmCta": {
+        "description": "The explicit second confirmation button that starts deletion"
+    },
+    "accountDeleteKeepCta": "Keep my account",
+    "@accountDeleteKeepCta": {
+        "description": "Leaves the deletion screen without deleting anything"
+    },
+    "accountDeleting": "Deleting your account…",
+    "@accountDeleting": {
+        "description": "Shown on the confirm button while deletion runs"
+    },
+    "accountDeleted": "Your account was deleted.",
+    "@accountDeleted": {
+        "description": "Snackbar on the sign-in screen after a successful deletion"
+    },
+    "accountDeleteFailedNetwork": "Couldn't delete — check your connection and try again.",
+    "@accountDeleteFailedNetwork": {
+        "description": "Deletion error for NetworkFailure; nothing was changed"
+    },
+    "accountDeleteFailedDifferentAccount": "That is a different account. Choose the account you use for LifeLink.",
+    "@accountDeleteFailedDifferentAccount": {
+        "description": "Deletion error when re-authentication picked another Google/Facebook account"
+    },
+    "accountDeleteFailedRecentSignIn": "We couldn't confirm it was you. Please try again.",
+    "@accountDeleteFailedRecentSignIn": {
+        "description": "Deletion error when the server still says the sign-in is too old after one retry"
+    },
+    "accountDeleteFailedAdmin": "An admin account can't be deleted from the app.",
+    "@accountDeleteFailedAdmin": {
+        "description": "Deletion error for ADMIN_ACCOUNT"
+    },
+    "accountDeleteFailed": "Couldn't delete your account. Please try again.",
+    "@accountDeleteFailed": {
+        "description": "Generic deletion error"
     }
 }

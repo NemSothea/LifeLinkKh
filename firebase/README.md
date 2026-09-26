@@ -8,7 +8,7 @@ The Firebase backend that replaces Spring Boot + PostgreSQL — ADR 0009, branch
 | `rules-tests/` | One emulator test per rule. A rule without a test is treated as absent |
 | `firestore.indexes.json` | Composite indexes for the board, "my requests", "my matches", history |
 | `firebase.json` | Emulator ports: auth 9099, firestore 8081, functions 5001, UI 4000 |
-| `functions/` | Cloud Functions. `onRequestCreated`: rate limit and hospital name while `PENDING`. `onRequestApproved`: matching, match documents, donor alert, requester told. `onMatchAnswered`: accepted count, public board row, "donor accepted" push. Callables for the portal admin: `reviewRequest` (approve/reject, DEC-015), `confirmDonation` |
+| `functions/` | Cloud Functions. `onRequestCreated`: rate limit and hospital name while `PENDING`. `onRequestApproved`: matching, match documents, donor alert, requester told. `onMatchAnswered`: accepted count, public board row, "donor accepted" push. Callables for the portal admin: `reviewRequest` (approve/reject, DEC-015), `confirmDonation`. For the app: `deleteAccount` (DEC-016) |
 | `seed/` | Districts and hospitals (V3, V7), same ids as Postgres. `reference-data.json` is the source. `admin.mjs`: the portal's admin account (V13's `soborey`) |
 
 The data model and the reason behind each rule: `docs/tech-lead/firestore-data-model.md`.
@@ -54,6 +54,19 @@ sign-in (the Firebase ID token is the session; `users/{uid}` is the record), don
 requests, matching and the donor alert, the donor's matches, accept/decline, the "donor
 accepted" push, and the portal's confirm-donation. Telegram sign-in was dropped (it needed a
 custom-token Function), and the app no longer takes `API_BASE_URL`.
+
+## Deleting an account (DEC-016)
+
+The app's **Me → Delete account** calls `deleteAccount` with a fresh sign-in. For someone who
+wrote in through the portal's `/{locale}/delete-account` page instead:
+
+```bash
+npm run delete-account -- --uid <uid>                        # emulator
+npm run delete-account -- --uid <uid> --project lifelinkkh   # REAL — GOOGLE_APPLICATION_CREDENTIALS
+```
+
+Irreversible. Personal data is deleted; requests, matches and donations are kept with the uid
+cleared, so the metrics stay honest. It refuses an admin account.
 
 ## Demo data and metrics
 

@@ -2,6 +2,8 @@ import 'package:flutter_facebook_auth/flutter_facebook_auth.dart' as fb;
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../domain/facebook_credentials.dart';
+import '../domain/reauthentication.dart';
+import 'firebase_google_credentials.dart' show reauthenticateFirebaseUser;
 
 /// The real [FacebookCredentials]: Facebook login dialog → Firebase session → Firebase
 /// ID token.
@@ -40,6 +42,36 @@ final class FirebaseFacebookCredentials implements FacebookCredentials {
                 final userCredential = await _auth.signInWithCredential(credential);
                 // Our session JWT is minted from this, and from nothing the client sends.
                 return userCredential.user?.getIdToken();
+        }
+    }
+
+    @override
+    Future<Reauthentication> reauthenticate() async {
+        final user = await _auth.authStateChanges().first;
+        if (user == null) throw StateError('No Firebase user to re-authenticate.');
+
+        // Facebook may answer from its own cached login without showing a dialog; that
+        // is still a Facebook-issued token for this person, and Firebase's
+        // re-authentication is what stamps the new auth_time.
+        final fb.LoginResult result = await _facebook.login(
+            permissions: const ['public_profile', 'email'],
+        );
+        switch (result.status) {
+            case fb.LoginStatus.cancelled:
+                return Reauthentication.cancelled;
+            case fb.LoginStatus.failed:
+                throw StateError('Facebook login failed: ${result.message}');
+            case fb.LoginStatus.operationInProgress:
+                throw StateError('Facebook login already in progress');
+            case fb.LoginStatus.success:
+                final token = result.accessToken;
+                if (token == null) {
+                    throw StateError('Facebook login succeeded with no access token.');
+                }
+                return reauthenticateFirebaseUser(
+                    user,
+                    FacebookAuthProvider.credential(token.tokenString),
+                );
         }
     }
 }

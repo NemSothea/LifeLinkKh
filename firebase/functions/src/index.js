@@ -1,6 +1,7 @@
 // Cloud Functions for LifeLink KH (ADR 0009). Each trigger is a thin wrapper: the logic lives
 // in its own module so tests can call it without deploying anything.
 import { initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 import { setGlobalOptions } from 'firebase-functions/v2';
@@ -10,6 +11,7 @@ import * as logger from 'firebase-functions/logger';
 import { handleMatchAnswered } from './on-match-answered.js';
 import { handleRequestApproved, handleRequestCreated } from './on-request-created.js';
 import { reviewRequest as reviewRequestHandler } from './review-request.js';
+import { deleteAccount as deleteAccountHandler } from './delete-account.js';
 import { confirmDonation as confirmDonationHandler } from './confirm-donation.js';
 
 initializeApp();
@@ -86,6 +88,17 @@ export const reviewRequest = onCall((request) =>
     messaging: messaging(),
     caller: request.auth,
     data: request.data,
+    log: logger,
+  }),
+);
+
+// DEC-016: the app's "Delete account". The caller's own account only; the handler checks the
+// sign-in is recent and refuses an admin.
+export const deleteAccount = onCall((request) =>
+  deleteAccountHandler({
+    db: getFirestore(),
+    auth: getAuth(),
+    caller: request.auth,
     log: logger,
   }),
 );

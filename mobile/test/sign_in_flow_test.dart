@@ -8,6 +8,7 @@ import 'package:lifelink_kh/src/core/error/failure.dart';
 import 'package:lifelink_kh/src/features/auth/application/auth_providers.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_session.dart';
 import 'package:lifelink_kh/src/features/auth/domain/google_credentials.dart';
+import 'package:lifelink_kh/src/features/auth/domain/reauthentication.dart';
 import 'package:lifelink_kh/src/features/auth/domain/session_store.dart';
 import 'package:lifelink_kh/src/features/notify/application/push_providers.dart';
 
@@ -46,6 +47,12 @@ final class _GatedGoogleCredentials implements GoogleCredentials {
 
     @override
     Future<void> signOut() async {}
+
+    @override
+    Future<SignInProvider?> currentProvider() async => null;
+
+    @override
+    Future<Reauthentication> reauthenticate() async => Reauthentication.confirmed;
 }
 
 /// Drives the whole M3 sign-in path — screen, controller, service, router redirect — with

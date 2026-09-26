@@ -66,6 +66,16 @@ void main() {
             expect(match.request.requesterContact?.phone, '+85512345678');
         });
 
+        test('a WITHDRAWN match (DEC-016) is skipped, not parsed as unanswered', () async {
+            await db.doc('requests/r2').set((await db.doc('requests/r1').get()).data()!);
+            await db.doc('matches/r2_sothea').set({
+                'requestId': 'r2', 'donorUid': 'sothea', 'notifiedAt': null, 'response': 'WITHDRAWN',
+            });
+            final result = await repository.fetchMine();
+            expect((result as Success<List<Match>>).value.map((m) => m.matchId), ['r1_sothea']);
+            expect(MatchResponseType.fromWire('WITHDRAWN'), isNull);
+        });
+
         test('someone else\'s matches are not mine', () async {
             await db.doc('matches/r1_other').set({'requestId': 'r1', 'donorUid': 'other', 'response': null});
             expect((await repository.fetchMine() as Success<List<Match>>).value.map((m) => m.matchId), ['r1_sothea']);

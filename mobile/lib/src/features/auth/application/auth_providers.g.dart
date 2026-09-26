@@ -98,7 +98,7 @@ final authServiceProvider = Provider<AuthService>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AuthServiceRef = ProviderRef<AuthService>;
-String _$authControllerHash() => r'2c28081ccdb61878c116f549aebf72ace840011d';
+String _$authControllerHash() => r'267478c2663e10435810e7cad1ce240f601bad64';
 
 /// The session, as the UI sees it. `AsyncNotifier` per Week 5 — loading, data, and error
 /// are states of one object rather than three booleans.

@@ -43,6 +43,10 @@ dependencies:
   # ADR 0009: Firestore is the database. Donor profile, districts and donation history
   # read and write it directly; firebase/firestore.rules decides what each user may touch.
   cloud_firestore: ^6.10.0
+  # DEC-016: the `deleteAccount` callable. Deleting an account touches other people's
+  # documents (closing requests, withdrawing acceptances), which the Security Rules rightly
+  # refuse to a client — so it is a Function, and this is the only one the app calls.
+  cloud_functions: ^6.5.0
   flutter_secure_storage: ^10.0.0
   google_fonts: ^8.2.1
   # M6 (root CLAUDE.md §4): FR-DONOR-001's "use my current location" button. Coordinates only —

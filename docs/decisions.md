@@ -656,3 +656,54 @@ at creation, so a flood of requests is closed before it reaches the admin's queu
   public launch, decide the review hours and publish them in the app, and consider a hospital
   partner as a second reviewer (a v2 role; DEC-014 kept v1 admin-only).
 - A request left `PENDING` never expires on its own. `FR-REQUEST-005` (expiry) is still deferred.
+
+## DEC-016 — Account deletion: personal data goes, anonymous counts stay
+
+**Date:** 2026-09-26 · **Raised by:** Nem Sothea (Tech Lead / Security) · **Status:** accepted
+
+### Context
+Google Play requires an app with accounts to let users delete their account in the app and to
+publish a web link for requesting deletion. It is also the right thing to do: LifeLink holds a
+person's name, blood type, district, optional GPS position, phone number (on requests) and push
+token, and blood type is health information. Until now nothing removed any of it.
+
+Deleting everything a person touched would also delete other people's records (a family's
+request, a hospital's donation count) and silently change the PRD metrics the defense quotes. So
+the question is what is personal, and what is only a count.
+
+### Decision
+A signed-in user deletes their own account from the app (**Me → Delete account**). The
+`deleteAccount` callable does it in one pass, and an operator can run the same code for a request
+that came through the web link (`npm run delete-account -- --uid <uid> --project lifelinkkh`).
+
+**Deleted:**
+- `users/{uid}` (name, language, push token) and `donors/{uid}` (name, blood type, district, GPS,
+  last donation date);
+- every `requests/*/private/contact` on their own requests (the requester's name and phone);
+- every `requests/*/acceptedDonors/{uid}` (their name on the public board);
+- the Firebase Auth user — last, so a failure part-way can be retried by the same person.
+
+**Closed:** their own `PENDING` and `OPEN` requests become `CANCELLED` with
+`cancelReason: 'ACCOUNT_DELETED'`. Nobody is left waiting on a family who is gone.
+
+**Withdrawn:** an acceptance on a request that is still `OPEN` is taken back. The match becomes
+`WITHDRAWN`, `acceptedCount` goes down by one, and the family no longer counts on a donor who will
+not come.
+
+**Kept, anonymised:** requests keep their blood type, units, urgency, hospital and timestamps with
+`createdBy` cleared; matches and donations keep their times and outcome with `donorUid` /
+`requesterUid` cleared. These hold no personal data once the user and donor documents are gone,
+and they are what the five PRD metrics count. A match's document id still contains the old uid, a
+random identifier that now points at nothing.
+
+**Refused:** an admin account cannot delete itself from the app. Admins are portal-only and are
+removed by an operator (DEC-014).
+
+**Recent sign-in required.** The callable refuses a token older than five minutes. The app signs
+the user in with Google again right before it calls, so a phone left unlocked on a table cannot be
+used to erase someone's account.
+
+### The web link
+`/{locale}/delete-account` on the portal explains the in-app steps and, for someone who has lost
+the phone, the address to write to. An operator then runs the script. Play accepts a request form
+or address, not an automatic web deletion, and the portal has no Google sign-in to build one on.

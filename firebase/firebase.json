@@ -10,7 +10,8 @@
       "ignore": [
         "node_modules",
         "test",
-        "vitest.config.js"
+        "vitest.config.js",
+        "scripts"
       ]
     }
   ],
