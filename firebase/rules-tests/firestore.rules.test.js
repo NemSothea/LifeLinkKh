@@ -454,3 +454,18 @@ describe('admins', () => {
     await assertFails(getDocs(query(collection(hospitalClaim(), 'donations'), where('requestId', '==', 'r1'))));
   });
 });
+
+describe('config/app — the release channel for the sideloaded APK', () => {
+  test('anyone reads it, signed in or not — the update check runs before sign-in', async () => {
+    await seed((db) => setDoc(doc(db, 'config/app'), { minVersionCode: 1, latestVersionCode: 2 }));
+    await assertSucceeds(getDoc(doc(anon(), 'config/app')));
+    await assertSucceeds(getDoc(doc(as('d1'), 'config/app')));
+  });
+
+  test('nobody writes it — not a user, not the admin; a forged minVersionCode would lock everyone out', async () => {
+    await assertFails(setDoc(doc(as('d1'), 'config/app'), { minVersionCode: 999 }));
+    await assertFails(setDoc(doc(admin(), 'config/app'), { minVersionCode: 999 }));
+    await assertFails(setDoc(doc(anon(), 'config/other'), { x: 1 }));
+  });
+});
+

@@ -7,8 +7,9 @@ ones above it are done. Tick the boxes in a copy, not here.
 - **Part A–E: technical**, about a day of work, mostly waiting on consoles.
 - **Part F: launch readiness.** Not technical, and several items are **blockers for a public
   launch** that no code change removes.
-- **The Play Store release** is its own runbook: [`deploy-runbook.md`](deploy-runbook.md). It
-  needs Part A–C done first.
+- **The app is a sideloaded APK**, not on the Play Store, until 500 users:
+  [`deploy-runbook.md`](deploy-runbook.md) **Path A**. It needs Part A–C done first. Path B (Play)
+  is kept for later.
 
 Everything runs from the branch `feat/firebase-backend`. It is not merged into `main`, by decision.
 
@@ -128,6 +129,8 @@ is kept for when the 500-user decision is made.
   | `FIREBASE_PROJECT_ID` | `lifelinkkh` |
   | `FIREBASE_API_KEY` | Firebase → Project settings → General → Web API key |
   | `SUPPORT_EMAIL` | the monitored address for deletion requests (DEC-016) |
+  | `APK_DOWNLOAD_URL` | LifeLink's page on `https://kosignstore.wecambodia.com/` (unset: GitHub Releases) |
+  | `APK_CERT_SHA256` | optional: the signing certificate SHA-256 `build-release-apk.sh` prints, shown on `/download` |
 
 - [ ] **Function region: Singapore (`sin1`)**. This is `frontend/vercel.json`, so nothing needs
   setting by hand. The portal's server calls Firestore several times per page, and from Vercel's
@@ -143,6 +146,7 @@ is kept for when the 500-user decision is made.
     queue is absent when there is nothing to review.
   - [ ] A wrong password says "wrong username or password", not an error page.
   - [ ] `/km/delete-account` shows the support address, not "not set up".
+  - [ ] `/km/download` offers the APK, and names the version once `npm run release` has run.
 - [ ] Optional: a custom domain (Vercel → Settings → Domains). The session cookie is set by the
   portal's own server, so no Firebase "authorized domains" change is needed.
 
@@ -154,8 +158,8 @@ key with `npx firebase apphosting:secrets:set firebase-web-api-key --project lif
 
 ## Part E — End-to-end on the real project
 
-Two real Android phones, both installed from the **same** build. A Play internal-testing install
-must use Play's signing key. See the note below.
+Two real Android phones, both with the **release APK** from `bash scripts/build-release-apk.sh`,
+installed from the `/km/download` page the way a user would.
 
 - [ ] **Account A** (donor): Google sign-in, register O−, district Doun Penh, no last donation,
   push allowed. Firestore → `users/{uid}` has an `fcmToken`.
@@ -176,18 +180,18 @@ must use Play's signing key. See the note below.
 - [ ] Clean up: cancel or leave the test requests. Don't delete documents by hand in the console,
   because the metrics count them.
 
-> **Google sign-in on a Play install.** Play re-signs the app with its own key, so a
-> Play-installed build has a **different SHA-1** from the one you built. Copy the **App signing
-> key** SHA-1 (and SHA-256) from Play Console → Setup → App integrity into Firebase → Project
-> settings → Android app, then download `google-services.json` again. Without this, Google sign-in
-> fails on every Play install with a generic error, while your own debug build works fine.
+> **Google sign-in on the release APK.** The release APK is signed with the upload keystore, not
+> the debug key, so its **SHA-1 and SHA-256 must be in Firebase** (Project settings → Android app),
+> then `google-services.json` downloaded again — deploy-runbook Step 4. Without it, Google sign-in
+> fails with a generic error on every installed phone, while `flutter run` on your laptop works
+> fine. (If LifeLink later moves to the Play Store, Play's own app-signing SHA-1 must be added too.)
 
 ## Part F — Launch readiness (before anyone outside the team uses it)
 
 Everything in Part A–E makes the app *work* for real. This part makes it *fit* for real, and these
 items do not come from code.
 
-**Blockers for a public Play Store listing:**
+**Before inviting users (sideloaded APK, until 500 users):**
 - [ ] **Privacy policy** — written: `https://<portal>/km/privacy` (English at `/en/privacy`), text
   in `frontend/src/messages/{en,km}.json` under `privacy`, each claim checked against the rules and
   Functions. Before listing:
@@ -195,13 +199,11 @@ items do not come from code.
   - [ ] someone who knows Cambodian law reads it, if the partner hospital or NBTC can arrange it —
     it was written against the code, not by a lawyer;
   - [ ] confirm the **18+** age line is what you want (it is a product decision the policy states);
-  - [ ] put the URL in Play Console (App content → Privacy policy);
-  - [ ] link it **inside the app** (Me tab) — Play expects the policy reachable in-app for apps
-    handling health data. Not built yet: the app has no link-opening package since `url_launcher`
-    left with Telegram.
+  - [ ] publish its URL with `npm run release -- … --privacy-url https://<portal>/km/privacy`; the
+    app's Me tab links to whatever `config/app` says, and hides the link until it is set.
 - [ ] **Account deletion (DEC-016)** — built: **Me → Delete account** in the app (the
   `deleteAccount` callable, fresh sign-in required), and the web link
-  `https://<portal>/km/delete-account` for the Play listing. Before listing:
+  `https://<portal>/km/delete-account`. Before inviting users:
   - [ ] set `SUPPORT_EMAIL` on Vercel (Part D) to an address someone reads — without it the page
     says the address is not set up;
   - [ ] for each email that arrives: find the uid (Authentication → search the email), make sure
@@ -209,8 +211,8 @@ items do not come from code.
     `npm run delete-account -- --uid <uid> --project lifelinkkh` from `firebase/` and reply;
   - [ ] try it once on a test account on the real project, and check that the account's rows are
     gone or anonymised.
-- [ ] **Play Console → Data safety** form, consistent with the privacy policy's "What we collect"
-  list: name, email, approximate and precise location (optional), health info (blood type, donation
+- [ ] *(Later, only when moving to the Play Store)* **Play Console → Data safety** form, consistent
+  with the privacy policy's "What we collect" list: name, email, approximate and precise location (optional), health info (blood type, donation
   date), phone number (on requests), app interactions; encrypted in transit; users can request
   deletion; no data shared for advertising.
 
@@ -241,7 +243,7 @@ items do not come from code.
 
 ## Related
 
-- [`deploy-runbook.md`](deploy-runbook.md) — signed AAB and Play Store internal testing.
+- [`deploy-runbook.md`](deploy-runbook.md) — Path A: the sideloaded APK (now). Path B: Play Store (later).
 - [`local-development.md`](local-development.md) — the emulator stack.
 - [`firebase/README.md`](../../firebase/README.md) — every Firebase command.
 - ADR 0009, DEC-012 (demo first), DEC-014 (admin-only portal), DEC-015 (review before alert).

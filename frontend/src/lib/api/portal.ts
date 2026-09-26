@@ -79,6 +79,14 @@ async function listRequests(
             if (!donors.ok) return donors;
             if (!confirmed.ok) return confirmed;
             const done = new Set(confirmed.data.map((donation) => String(donation.data.donorUid)));
+            const actionable = donors.data.filter((donor) => !done.has(donor.id));
+            // The board row carries a shortened name ("Nem S.") because anyone can read it. The
+            // admin confirming a donation at the hospital needs the full one, which only the
+            // admin may read, from the donor's profile. A missing profile (the donor deleted
+            // their account a moment ago) falls back to the board's name.
+            const profiles = await Promise.all(
+                actionable.map((donor) => firestoreGet(`donors/${donor.id}`, token)),
+            );
 
             return {
                 ok: true,
@@ -87,17 +95,22 @@ async function listRequests(
                     // `acceptedCount` is every acceptance; this list is narrower on purpose — it is
                     // the actionable list, so a donor whose donation is already confirmed drops
                     // off it rather than keeping a button that would only be refused.
-                    acceptedDonors: donors.data
-                        .filter((donor) => !done.has(donor.id))
-                        .map((donor) => ({
+                    acceptedDonors: actionable.map((donor, i) => {
+                        const profile = profiles[i];
+                        const fullName =
+                            profile.ok && typeof profile.data?.data.fullName === 'string'
+                                ? profile.data.data.fullName
+                                : null;
+                        return {
                             // The match id is `{requestId}_{donorUid}` by construction, and the
                             // board document's id is the donor's uid.
                             matchId: `${doc.id}_${donor.id}`,
-                            displayName: String(donor.data.displayName ?? ''),
+                            displayName: fullName ?? String(donor.data.displayName ?? ''),
                             bloodType: String(donor.data.bloodType ?? ''),
                             districtName: names.get(String(donor.data.districtCode)) ?? null,
                             respondedAt: String(donor.data.respondedAt ?? ''),
-                        })),
+                        };
+                    }),
                 },
             };
         }),

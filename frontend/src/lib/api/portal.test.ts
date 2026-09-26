@@ -51,7 +51,8 @@ const tables = {
         {
             id: 'd1',
             fields: {
-                displayName: 'Nem Sothea',
+                // Shortened on the public board; the admin gets the profile's full name.
+                displayName: 'Nem S.',
                 bloodType: 'A+',
                 districtCode: '1202',
                 respondedAt: '2026-09-26T03:10:00Z',
@@ -61,6 +62,7 @@ const tables = {
     donations: [
         { id: 'r1_d2', fields: { donorUid: 'd2', hospitalId: 'calmette', requestId: 'r1' } },
     ],
+    donors: [{ id: 'd1', fields: { fullName: 'Nem Sothea', bloodType: 'A+' } }],
     districts: [
         { id: '1201', fields: { nameKm: 'ចំការមន', nameEn: 'Chamkar Mon' } },
         { id: '1202', fields: { nameKm: 'ដូនពេញ', nameEn: 'Doun Penh' } },
@@ -120,6 +122,15 @@ describe('listOpenRequests', () => {
         );
         expect(donations?.token).toBe(admin);
         expect(JSON.stringify(donations?.body.structuredQuery.where)).toContain('"requestId"');
+    });
+
+    it("falls back to the board's shortened name when the profile is gone", async () => {
+        cookieStore.value = admin;
+        fakeFirebase({ ...tables, donors: [] });
+
+        const result = await listOpenRequests();
+
+        expect(result.ok && result.data[0].acceptedDonors[0].displayName).toBe('Nem S.');
     });
 
     it('refuses to read with no session rather than reading as a visitor', async () => {

@@ -16,6 +16,56 @@ Closes the gap named in `docs/risks.md` ("no deploy runbook exists") and `docs/s
 
 ---
 
+## Path A — sideloaded APK (now, until 500 users)
+
+LifeLink is **not on the Play Store until it has 500 users**, so that users pay nothing and the
+team pays nothing. Android users open the portal's `/km/download` page and install a signed APK by
+hand. The file itself lives on the **K.O.S.I.G.N store** (`https://kosignstore.wecambodia.com/`)
+— `APK_DOWNLOAD_URL` on Vercel points the page's button at LifeLink's page there — or, if that
+variable is unset, on GitHub Releases. Everything below "Path B" is kept for
+the day that decision changes.
+
+1. **Keystore, once, forever** — Step 1 below, with one difference that matters: **there is no
+   Play App Signing to fall back on.** The keystore *is* the app's identity. Lose it, or its
+   password, and no update can ever be installed over the existing app: every user has to uninstall
+   and reinstall, and loses their sign-in. Keep **two** copies (the password manager and an offline
+   drive), and the password in the password manager.
+2. **`key.properties`** — Step 2 below.
+3. **Register the key with Firebase** — Step 4 below, using the keystore's SHA-1 *and* SHA-256.
+   Without it Google sign-in fails in the release APK with a generic error.
+4. **The real project is live** — Step 5 below (production checklist Parts A–C, and the portal on
+   Vercel with its `/download` page).
+5. **Bump the version** in `mobile/pubspec.yaml` for every release: `version: 1.0.1+2`. The `+N`
+   (versionCode) must go up every time, or Android refuses to install the update over the old one.
+6. **Build:** `bash scripts/build-release-apk.sh`. It refuses to build without `key.properties`,
+   refuses to finish if the APK came out debug-signed, and writes `dist/lifelink-kh.apk` with its
+   file and certificate SHA-256.
+7. **Try it on a real phone** — install over an older build if you have one, sign in, open the
+   Me tab.
+8. **Publish:** upload `dist/lifelink-kh.apk` to the K.O.S.I.G.N store as the new LifeLink
+   version. The first time, set `APK_DOWNLOAD_URL` on Vercel to LifeLink's page on the store and
+   redeploy the portal. *Fallback, no store:* `gh release create v<name> dist/lifelink-kh.apk
+   --title "LifeLink <name>"` — keep the asset name `lifelink-kh.apk`, since the page's default
+   link is `…/releases/latest/download/lifelink-kh.apk` (the repository is public, so it works
+   without a GitHub login).
+9. **Tell installed apps:** `cd firebase && npm run release -- --version-code <N> --version-name
+   <name> --download-url https://<portal>/km/download --privacy-url https://<portal>/km/privacy
+   --project lifelinkkh`. Only after step 8: from this moment every installed app offers the
+   update. Add `--min <N>` only when older builds must stop working (a broken release, a rules
+   change they cannot follow); they then show "Update required" and nothing else.
+
+Costs nothing: the company store and GitHub Releases are free to LifeLink, and `config/app` is
+one Firestore read per app start.
+
+**iPhone:** not in Path A yet. An IPA signed with the company's Apple *Enterprise* certificate may
+only go to K.O.S.I.G.N employees — putting it where the public installs it, even on the company
+store, breaks Apple's Enterprise licence and risks the certificate every company app depends on.
+Internal-only iOS builds are a separate step, decided with the account's owner.
+
+---
+
+## Path B — Play Store internal testing (later)
+
 ## Prerequisites
 
 - **Google Play Console account, $25 one-time.** `docs/scope.md` flagged this as external lead

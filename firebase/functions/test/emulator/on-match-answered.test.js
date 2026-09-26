@@ -46,7 +46,7 @@ describe('onMatchAnswered', () => {
 
     expect((await db.doc('requests/r1').get()).get('acceptedCount')).toBe(1);
     expect((await db.doc('requests/r1/acceptedDonors/sothea').get()).data()).toEqual({
-      displayName: 'Nem Sothea', bloodType: 'A+', districtCode: '1201', respondedAt: RESPONDED,
+      displayName: 'Nem S.', bloodType: 'A+', districtCode: '1201', respondedAt: RESPONDED,
     });
     expect(sent).toHaveLength(1);
     expect(sent[0]).toMatchObject({

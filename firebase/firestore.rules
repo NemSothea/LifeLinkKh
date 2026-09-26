@@ -175,6 +175,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── config/app ──────────────────────────────────────────────────────────────────────────────
+    // What the app needs before anyone signs in: the newest build, the oldest one still allowed,
+    // and where to download it (the APK is sideloaded, so the app cannot rely on a store to
+    // update itself). Written only by scripts/release.mjs with the Admin SDK.
+    match /config/app {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // ── Reference data ──────────────────────────────────────────────────────────────────────────
     match /hospitals/{hospitalId} {
       allow read: if true;

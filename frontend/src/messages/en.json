@@ -6,7 +6,9 @@
         "portalCardBody": "Every open blood request, the donors who accepted it, and the one write this portal has — confirming a donation.",
         "healthHeading": "API status",
         "healthUp": "API is up",
-        "healthUnreachable": "Cannot reach the API"
+        "healthUnreachable": "Cannot reach the API",
+        "downloadCardTitle": "Get the app",
+        "downloadCardBody": "Free for Android. Register as a donor, or ask for blood for your family."
     },
     "signIn": {
         "title": "Admin sign-in",
@@ -156,7 +158,7 @@
             {
                 "heading": "Who can see what",
                 "items": [
-                    "Anyone, without signing in, can see the public board: open requests (blood type, units, urgency, hospital, time) and, for each request, the name, blood type and district of donors who accepted it. Requests waiting for review or rejected are not shown.",
+                    "Anyone, without signing in, can see the public board: open requests (blood type, units, urgency, hospital, time) and, for each request, a shortened name (for example \"Nem S.\"), blood type and district of donors who accepted it. Requests waiting for review or rejected are not shown.",
                     "A donor who accepts a request can see the requester's contact name and phone number, so they can arrange the donation. Apart from the requester and our admin, nobody else can.",
                     "Your donor profile (blood type, location, last donation) is visible only to you and our admin. Other users, including the families asking for blood, cannot see it. Matching reads it on our server.",
                     "Our admin can see everything above, to review requests, confirm donations and answer deletion requests.",
@@ -206,6 +208,25 @@
         "contactHeading": "Contact",
         "contactBody": "Questions, a copy of your data, or a deletion request:",
         "deleteLink": "How to delete your account",
+        "backCta": "Back to LifeLink"
+    },
+    "download": {
+        "title": "Get the LifeLink app",
+        "intro": "LifeLink is free. It is not on the Play Store yet, so you download it from here and install it yourself. It takes about a minute.",
+        "downloadCta": "Download for Android (APK)",
+        "versionLabel": "Version {version} · Android only",
+        "androidOnly": "Android only",
+        "stepsHeading": "How to install",
+        "step1": "Tap Download above and download the LifeLink APK file.",
+        "step2": "Open the downloaded file. If Android says installing from this source is not allowed, tap Settings and turn on \"Allow from this source\" for your browser, then go back.",
+        "step3": "Tap Install.",
+        "step4": "Open LifeLink and sign in with Google.",
+        "warningHeading": "\"This app may be unsafe\" — why you see it",
+        "warningBody": "Android and Google Play Protect warn about every app that does not come from the Play Store. The warning does not mean something was found in LifeLink. Download it only from this page, and choose \"Install anyway\" if Play Protect asks.",
+        "certLabel": "Signing certificate SHA-256:",
+        "updatesHeading": "Updates",
+        "updatesBody": "The app tells you when a new version is available. Come back to this page, download it again and install it over the old one — you stay signed in and keep your history.",
+        "iphone": "iPhone: not available yet.",
         "backCta": "Back to LifeLink"
     }
 }

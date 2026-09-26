@@ -5,6 +5,19 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { buildMessage, sendAll } from './push.js';
 
 /**
+ * The name the public board shows: the first word and the initials of the rest — "Nem Sothea"
+ * becomes "Nem S.". The board is readable by anyone signed out, and a full name next to a blood
+ * type and a district identifies a person; the family and the admin do not need it from here (the
+ * admin reads the full name from donors/{uid}, which only the admin can). Works on Khmer script
+ * too: words are split on whitespace, and an initial is the first character of a word.
+ */
+export function publicName(fullName) {
+  const words = String(fullName ?? '').trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return '';
+  return [words[0], ...words.slice(1).map((w) => `${Array.from(w)[0]}.`)].join(' ');
+}
+
+/**
  * @param {object} deps
  * @param {import('firebase-admin/firestore').Firestore} deps.db
  * @param {{sendEach: Function}} deps.messaging
@@ -33,9 +46,9 @@ export async function handleMatchAnswered({ db, messaging, matchId, before, afte
     ]);
     if (board.exists || !requestSnap.exists) return null;
     const donor = donorSnap.data() ?? {};
-    // PublicDonorResponse's fields exactly: no match id, no uid in the body.
+    // PublicDonorResponse's fields: no match id, no uid in the body, and a shortened name.
     tx.set(boardRef, {
-      displayName: donor.fullName ?? '',
+      displayName: publicName(donor.fullName),
       bloodType: donor.bloodType ?? null,
       districtCode: donor.districtCode ?? null,
       respondedAt: after.respondedAt ?? FieldValue.serverTimestamp(),

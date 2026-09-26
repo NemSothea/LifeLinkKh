@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'src/app.dart';
 import 'src/core/config/env.dart';
+import 'src/core/firebase/firestore_providers.dart';
 import 'src/core/settings/locale_controller.dart';
 import 'src/core/settings/onboarding_controller.dart';
 import 'src/core/settings/preferences_locale_store.dart';
@@ -18,6 +19,9 @@ import 'src/features/account/application/account_providers.dart';
 import 'src/features/notify/application/push_providers.dart';
 import 'src/features/notify/application/push_session_sync.dart';
 import 'src/features/notify/data/firebase_push_arrivals.dart';
+import 'src/features/update/application/app_update_providers.dart';
+import 'src/features/update/data/firestore_app_config_repository.dart';
+import 'src/features/update/data/preferences_update_dismissal_store.dart';
 
 /// Composition root: the one place that swaps the test-friendly defaults for the real
 /// platform stores and streams.
@@ -78,6 +82,15 @@ Future<void> main() async {
             // Pushes that land while the app runs. Default empty, so widget tests
             // never reach a Firebase platform channel.
             pushArrivalsProvider.overrideWith((ref) => firebasePushArrivals()),
+            // `config/app`, for the update check and the privacy link. Default knows
+            // nothing, so no widget test that boots the app makes this read.
+            appConfigRepositoryProvider.overrideWith(
+                (ref) => FirestoreAppConfigRepository(ref.watch(firestoreProvider)),
+            ),
+            // "Later" on a new-version notice, kept across restarts.
+            updateDismissalStoreProvider.overrideWithValue(
+                PreferencesUpdateDismissalStore(preferences),
+            ),
         ],
     );
 

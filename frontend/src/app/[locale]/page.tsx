@@ -47,6 +47,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     body={t('portalCardBody')}
                     primary
                 />
+                <EntryCard
+                    href={`/${locale}/download`}
+                    testId="home-download-link"
+                    icon={<IconDroplet className="h-6 w-6" />}
+                    title={t('downloadCardTitle')}
+                    body={t('downloadCardBody')}
+                />
             </div>
 
             <footer className="flex flex-col gap-3 pt-10">

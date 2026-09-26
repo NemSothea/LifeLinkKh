@@ -196,5 +196,14 @@
     "accountDeleteFailedDifferentAccount": "នោះជាគណនីផ្សេង។ សូមជ្រើសរើសគណនីដែលអ្នកប្រើសម្រាប់ LifeLink។",
     "accountDeleteFailedRecentSignIn": "មិនអាចបញ្ជាក់ថាជាអ្នកបានទេ។ សូមព្យាយាមម្តងទៀត។",
     "accountDeleteFailedAdmin": "គណនីអ្នកគ្រប់គ្រងមិនអាចលុបពីកម្មវិធីបានទេ។",
-    "accountDeleteFailed": "មិនអាចលុបគណនីរបស់អ្នកបានទេ។ សូមព្យាយាមម្តងទៀត។"
+    "accountDeleteFailed": "មិនអាចលុបគណនីរបស់អ្នកបានទេ។ សូមព្យាយាមម្តងទៀត។",
+    "updateAvailable": "មានកំណែថ្មីរបស់ LifeLink ហើយ។",
+    "updateAvailableVersion": "មាន LifeLink កំណែ {version} ហើយ។",
+    "updateDownload": "ទាញយក",
+    "updateLater": "ពេលក្រោយ",
+    "updateRequiredTitle": "ត្រូវធ្វើបច្ចុប្បន្នភាព",
+    "updateRequiredBody": "កំណែ LifeLink នេះលែងដំណើរការហើយ។ សូមដំឡើងកំណែថ្មី ដើម្បីបន្តទទួលការស្នើសុំឈាម។",
+    "updateNewVersion": "កំណែថ្មី៖ {version}",
+    "updateOpenFailed": "មិនអាចបើកកម្មវិធីរុករកបានទេ។ សូមបើកតំណនេះដើម្បីទាញយក៖",
+    "privacyPolicy": "គោលការណ៍ឯកជនភាព"
 }

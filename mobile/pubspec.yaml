@@ -72,6 +72,12 @@ dependencies:
   # until the session restore resolves — so a cold start is one branded screen, not
   # white → badge → destination.
   flutter_native_splash: ^2.4.8
+  # Sideloaded APKs never update themselves (no Play Store until 500 users), so the app
+  # compares its own build number against `config/app` and says when a newer one exists.
+  package_info_plus: ^10.2.1
+  # Opens the download page and the privacy policy in the phone's browser — always
+  # externally, so a sideload download goes through the browser's own installer flow.
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

@@ -853,5 +853,51 @@
     "accountDeleteFailed": "Couldn't delete your account. Please try again.",
     "@accountDeleteFailed": {
         "description": "Generic deletion error"
+    },
+    "updateAvailable": "A new version of LifeLink is available.",
+    "@updateAvailable": {
+        "description": "Dismissable strip when a newer build exists and its name is unknown"
+    },
+    "updateAvailableVersion": "LifeLink {version} is available.",
+    "@updateAvailableVersion": {
+        "description": "Dismissable strip when a newer build exists",
+        "placeholders": {
+            "version": {
+                "type": "String"
+            }
+        }
+    },
+    "updateDownload": "Download",
+    "@updateDownload": {
+        "description": "Opens the download page in the browser"
+    },
+    "updateLater": "Later",
+    "@updateLater": {
+        "description": "Hides the new-version strip until the next release"
+    },
+    "updateRequiredTitle": "Update required",
+    "@updateRequiredTitle": {
+        "description": "Blocking screen title when this build is below minVersionCode"
+    },
+    "updateRequiredBody": "This version of LifeLink no longer works. Install the new version to keep receiving blood requests.",
+    "@updateRequiredBody": {
+        "description": "Blocking screen body"
+    },
+    "updateNewVersion": "New version: {version}",
+    "@updateNewVersion": {
+        "description": "Version name on the blocking screen",
+        "placeholders": {
+            "version": {
+                "type": "String"
+            }
+        }
+    },
+    "updateOpenFailed": "Couldn't open the browser. Open this link to download:",
+    "@updateOpenFailed": {
+        "description": "Shown above the download link when no browser opened it"
+    },
+    "privacyPolicy": "Privacy policy",
+    "@privacyPolicy": {
+        "description": "Me tab row opening the privacy policy page in the browser"
     }
 }

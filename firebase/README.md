@@ -68,6 +68,19 @@ npm run delete-account -- --uid <uid> --project lifelinkkh   # REAL — GOOGLE_A
 Irreversible. Personal data is deleted; requests, matches and donations are kept with the uid
 cleared, so the metrics stay honest. It refuses an admin account.
 
+## Publishing an APK version (sideloaded, no Play Store)
+
+```bash
+npm run release -- --version-code 2 --version-name 1.0.1 \
+    --download-url https://<portal>/km/download --privacy-url https://<portal>/km/privacy \
+    --project lifelinkkh
+```
+
+Writes `config/app`, which the app reads once at start: older than `latestVersionCode` → "a new
+version is available"; older than `minVersionCode` (only moved with `--min`) → "update required".
+Run it after the APK is on GitHub Releases. The whole path: `docs/tech-lead/deploy-runbook.md`
+Path A, and `bash scripts/build-release-apk.sh` from the repo root.
+
 ## Demo data and metrics
 
 ```bash

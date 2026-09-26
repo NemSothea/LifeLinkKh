@@ -17,6 +17,7 @@ import 'features/notify/domain/push_arrival.dart';
 import 'features/request/application/request_providers.dart';
 import 'features/match/presentation/match_detail_screen.dart';
 import 'features/request/presentation/request_detail_screen.dart';
+import 'features/update/presentation/update_gate.dart';
 import 'router/app_router.dart';
 import '../l10n/app_localizations.dart';
 
@@ -108,8 +109,11 @@ class LifeLinkApp extends ConsumerWidget {
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
             routerConfig: ref.watch(appRouterProvider),
-            builder: (context, child) =>
-                OfflineBanner(child: child ?? const SizedBox.shrink()),
+            // The update notice outermost, so it owns the status-bar inset when both
+            // strips show and the offline one sits under it.
+            builder: (context, child) => UpdateGate(
+                child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+            ),
             localizationsDelegates: const [
                 AppLocalizations.delegate,
                 GlobalMaterialLocalizations.delegate,

@@ -79,3 +79,6 @@ mobile/lib/l10n/app_localizations*.dart
 # regenerable local output (`/graphify` rebuilds it) and churns on every run.
 graphify-out/*
 !graphify-out/GRAPH_REPORT.md
+
+# scripts/build-release-apk.sh output — the APK is published to GitHub Releases, never committed.
+/dist/
