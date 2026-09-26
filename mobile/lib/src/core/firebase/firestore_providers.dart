@@ -19,3 +19,9 @@ FirebaseFirestore firestore(FirestoreRef ref) => FirebaseFirestore.instance;
 @Riverpod(keepAlive: true)
 String? Function() currentUid(CurrentUidRef ref) =>
     () => FirebaseAuth.instance.currentUser?.uid;
+
+/// The signed-in user's display name, read at call time — for the first `users/{uid}`
+/// document, which is created on the first push registration.
+@Riverpod(keepAlive: true)
+String? Function() currentDisplayName(CurrentDisplayNameRef ref) =>
+    () => FirebaseAuth.instance.currentUser?.displayName;

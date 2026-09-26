@@ -23,7 +23,7 @@ match creation, counts, donations, `lastDonationDate` after a confirmed donation
 `displayName` string · `language` `'km'|'en'` · `role` `'DONOR'|'REQUESTER'` · `fcmToken` string|null ·
 `createdAt` · `updatedAt`
 
-Owner and admin read. Owner writes. Staff roles are **not** here — they are claims, so a client
+Created by the app's first push registration, not at sign-in. Owner and admin read. Owner writes. Staff roles are **not** here — they are claims, so a client
 cannot promote itself by writing a field. `fcmToken` is private for the same reason it was: it can
 address a push to this person.
 
@@ -40,7 +40,9 @@ Doc id is the uid — one profile per account, which was `UNIQUE (user_id)`. Own
 `createdBy` uid · `hospitalId` · `hospital` {name, districtCode} (written by the Function) ·
 `patientBloodType` · `unitsNeeded` 1–20 · `urgency` `'CRITICAL'|'URGENT'|'ROUTINE'` ·
 `status` `'OPEN'|'FULFILLED'|'CANCELLED'|'EXPIRED'` · `alertedCount` · `acceptedCount` ·
-`createdAt` · `updatedAt`
+`createdAt` · `updatedAt` · and three the `onRequestCreated` Function adds: `matchedAt` (its
+at-most-once claim — a redelivered event that finds it set does nothing), `hospital`, and
+`cancelReason: 'RATE_LIMITED'` on the sixth request from one creator inside ten minutes.
 
 **Public read** — this document is the public board (DEC-009), so nothing on it is private.
 Create: signed in, `createdBy` is you, `status OPEN`, counts `0`. Update: the creator may move

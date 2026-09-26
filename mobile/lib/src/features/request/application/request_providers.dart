@@ -2,7 +2,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/error/result.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/firebase/firestore_providers.dart';
 import '../data/dio_request_repository.dart';
+import '../data/firestore_request_repository.dart';
 import '../domain/blood_request.dart';
 import '../domain/blood_request_draft.dart';
 import '../domain/hospital.dart';
@@ -18,9 +20,13 @@ part 'request_providers.g.dart';
 DioRequestRepository dioRequestRepository(DioRequestRepositoryRef ref) =>
     DioRequestRepository(ref.watch(apiClientProvider));
 
+/// Firestore since ADR 0009 phase 3. The Dio one above stays for `DioMatchRepository`
+/// until matches move in phase 4.
 @Riverpod(keepAlive: true)
-RequestRepository requestRepository(RequestRepositoryRef ref) =>
-    ref.watch(dioRequestRepositoryProvider);
+RequestRepository requestRepository(RequestRepositoryRef ref) => FirestoreRequestRepository(
+    ref.watch(firestoreProvider),
+    currentUid: ref.watch(currentUidProvider),
+);
 
 @Riverpod(keepAlive: true)
 RequestService requestService(RequestServiceRef ref) =>

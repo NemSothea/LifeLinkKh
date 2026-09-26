@@ -28,9 +28,12 @@ final dioRequestRepositoryProvider = Provider<DioRequestRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DioRequestRepositoryRef = ProviderRef<DioRequestRepository>;
-String _$requestRepositoryHash() => r'3549c6753377d1d9bb17d33b415161bfa4a0915e';
+String _$requestRepositoryHash() => r'7436f7815959bde1219943f04acbbd76b6f0641b';
 
-/// See also [requestRepository].
+/// Firestore since ADR 0009 phase 3. The Dio one above stays for `DioMatchRepository`
+/// until matches move in phase 4.
+///
+/// Copied from [requestRepository].
 @ProviderFor(requestRepository)
 final requestRepositoryProvider = Provider<RequestRepository>.internal(
   requestRepository,

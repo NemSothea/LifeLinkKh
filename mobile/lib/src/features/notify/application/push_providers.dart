@@ -1,8 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../core/network/api_client.dart';
+import '../../../core/firebase/firestore_providers.dart';
 import '../../../core/settings/locale_controller.dart';
-import '../data/dio_fcm_token_repository.dart';
+import '../data/firestore_fcm_token_repository.dart';
 import '../data/firebase_push_token_source.dart';
 import '../domain/fcm_token_repository.dart';
 import '../domain/push_arrival.dart';
@@ -11,11 +11,13 @@ import 'push_registration_service.dart';
 
 part 'push_providers.g.dart';
 
-/// Runs over the **intercepted** Dio: both `/auth/fcm-token` calls are authenticated, and
-/// a 401 on either is repairable.
+/// `users/{uid}.fcmToken` since ADR 0009 phase 3 — where `onRequestCreated` looks.
 @Riverpod(keepAlive: true)
-FcmTokenRepository fcmTokenRepository(FcmTokenRepositoryRef ref) =>
-    DioFcmTokenRepository(ref.watch(apiClientProvider));
+FcmTokenRepository fcmTokenRepository(FcmTokenRepositoryRef ref) => FirestoreFcmTokenRepository(
+    ref.watch(firestoreProvider),
+    currentUid: ref.watch(currentUidProvider),
+    currentDisplayName: ref.watch(currentDisplayNameProvider),
+);
 
 @Riverpod(keepAlive: true)
 PushTokenSource pushTokenSource(PushTokenSourceRef ref) => FirebasePushTokenSource();

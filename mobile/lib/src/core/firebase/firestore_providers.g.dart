@@ -51,5 +51,26 @@ final currentUidProvider = Provider<String? Function()>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CurrentUidRef = ProviderRef<String? Function()>;
+String _$currentDisplayNameHash() =>
+    r'7102835cf9f00cabfe1db6461c234b11e9ab8de7';
+
+/// The signed-in user's display name, read at call time — for the first `users/{uid}`
+/// document, which is created on the first push registration.
+///
+/// Copied from [currentDisplayName].
+@ProviderFor(currentDisplayName)
+final currentDisplayNameProvider = Provider<String? Function()>.internal(
+  currentDisplayName,
+  name: r'currentDisplayNameProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$currentDisplayNameHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef CurrentDisplayNameRef = ProviderRef<String? Function()>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

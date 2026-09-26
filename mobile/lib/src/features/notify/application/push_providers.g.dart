@@ -7,10 +7,9 @@ part of 'push_providers.dart';
 // **************************************************************************
 
 String _$fcmTokenRepositoryHash() =>
-    r'2db0776b6faf9f677033a3dce5395c4b175808ef';
+    r'0c7854dc03f8b5721a9badbc0a6ba12d9ef6ed3b';
 
-/// Runs over the **intercepted** Dio: both `/auth/fcm-token` calls are authenticated, and
-/// a 401 on either is repairable.
+/// `users/{uid}.fcmToken` since ADR 0009 phase 3 — where `onRequestCreated` looks.
 ///
 /// Copied from [fcmTokenRepository].
 @ProviderFor(fcmTokenRepository)
