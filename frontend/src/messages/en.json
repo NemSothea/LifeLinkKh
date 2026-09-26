@@ -118,6 +118,94 @@
         "whatDeleted": "Deleted: your name, blood type, district, location, push token, and the phone numbers on requests you posted. Your name is removed from the public board.",
         "whatClosed": "Closed: requests you posted that are still waiting or open. If you had accepted an open request, that acceptance is withdrawn.",
         "whatKept": "Kept without your name: the fact that a request was made, answered or a donation was confirmed — so hospitals' statistics stay correct. Nothing kept can be traced back to you.",
+        "backCta": "Back to LifeLink",
+        "privacyLink": "Read the privacy policy"
+    },
+    "privacy": {
+        "title": "Privacy policy",
+        "effective": "Effective 26 September 2026",
+        "intro": "LifeLink KH connects people in Phnom Penh who urgently need blood with nearby voluntary donors. It is free, it shows no ads, and it never sells or rents your information. This page says exactly what LifeLink collects, who can see it, and how to delete it.",
+        "sections": [
+            {
+                "heading": "Who we are",
+                "paragraphs": [
+                    "LifeLink KH is run by a small volunteer team in Cambodia. \"We\" below means that team. The app and this website use Google Firebase to store data, and Vercel to run the website."
+                ]
+            },
+            {
+                "heading": "What we collect",
+                "items": [
+                    "Your account: the name and email address of the Google or Facebook account you sign in with, and your preferred language.",
+                    "If you register as a donor: your full name, blood type, district, the date you last gave blood (if you enter it), whether you are available to donate, and — only if you allow it — your phone's location when you set up your donor profile.",
+                    "If you post a request for blood: the patient's blood type, how many units, how urgent, the hospital, and the contact name and phone number you enter for donors to call.",
+                    "When you answer a request: whether you accepted or declined, when, and your distance from the hospital.",
+                    "When a donation is confirmed by our admin: the date, the hospital and the request it answered.",
+                    "A notification token, so your phone can receive alerts. We do not collect your contacts, photos, messages or your location in the background, and there is no advertising or analytics tracking."
+                ]
+            },
+            {
+                "heading": "How we use it",
+                "items": [
+                    "To find donors whose blood type is compatible, who are eligible (56 days since their last donation) and who are near the hospital, and to send them an alert.",
+                    "To tell the person who asked for blood that their request was approved, rejected, or accepted by a donor.",
+                    "To show you when you can donate again.",
+                    "So our admin can check that a request is genuine before any donor is alerted, and record donations the hospital confirms.",
+                    "To count, without names, how many donors registered, how quickly requests were answered and how many donations happened."
+                ]
+            },
+            {
+                "heading": "Who can see what",
+                "items": [
+                    "Anyone, without signing in, can see the public board: open requests (blood type, units, urgency, hospital, time) and, for each request, the name, blood type and district of donors who accepted it. Requests waiting for review or rejected are not shown.",
+                    "A donor who accepts a request can see the requester's contact name and phone number, so they can arrange the donation. Apart from the requester and our admin, nobody else can.",
+                    "Your donor profile (blood type, location, last donation) is visible only to you and our admin. Other users, including the families asking for blood, cannot see it. Matching reads it on our server.",
+                    "Our admin can see everything above, to review requests, confirm donations and answer deletion requests.",
+                    "Google (Firebase, sign-in, notifications), Facebook (if you sign in with it) and Vercel (the website) process data to provide their services to us. Their own privacy policies apply to what they do with it."
+                ]
+            },
+            {
+                "heading": "Where it is stored",
+                "paragraphs": [
+                    "Our database and server functions run in Google Cloud in Singapore. Sign-in is handled by Google and, if you use it, Facebook, which may process data in other countries. Data is encrypted on its way between your phone, the website and our servers."
+                ]
+            },
+            {
+                "heading": "How long we keep it, and deleting it",
+                "paragraphs": [
+                    "We keep your information while you have an account. You can delete your account at any time in the app: Me → Delete account. If you cannot use the app, see the deletion page linked below.",
+                    "Deleting your account removes your profile, blood type, location, notification token and the phone numbers on requests you posted, and your name from the public board. Your open requests are closed, and an acceptance on an open request is withdrawn. We keep records that a request was made, answered or a donation confirmed, with your name and account removed, so that statistics stay correct; these cannot be traced back to you. Deleted data can remain in our backups for up to 7 days before it is gone."
+                ]
+            },
+            {
+                "heading": "Your choices",
+                "items": [
+                    "Location is optional. You can register as a donor without it; you are then matched by district.",
+                    "You can turn notifications off in your phone's settings, and mark yourself unavailable in the app at any time.",
+                    "You can correct your profile in the app, and ask us for a copy of your information using the contact below."
+                ]
+            },
+            {
+                "heading": "Safety",
+                "paragraphs": [
+                    "LifeLink never asks donors or families for money. Donate only at a hospital or blood center. LifeLink's 56-day reminder is not medical advice; the hospital decides whether you can donate."
+                ]
+            },
+            {
+                "heading": "Age",
+                "paragraphs": [
+                    "LifeLink is for people aged 18 and over. We do not knowingly collect information from children. If you believe a child has created an account, contact us and we will delete it."
+                ]
+            },
+            {
+                "heading": "Changes to this policy",
+                "paragraphs": [
+                    "If we change what we collect or who can see it, we will update this page and its date. For a significant change, we will also tell you in the app."
+                ]
+            }
+        ],
+        "contactHeading": "Contact",
+        "contactBody": "Questions, a copy of your data, or a deletion request:",
+        "deleteLink": "How to delete your account",
         "backCta": "Back to LifeLink"
     }
 }

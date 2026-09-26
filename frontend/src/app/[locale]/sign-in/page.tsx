@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import LegalLinks from '@/components/LegalLinks';
 import { IconDroplet } from '@/components/icons';
 import { hasPortalSession } from '@/lib/api/session';
 import SignInForm from './sign-in-form';
@@ -60,6 +61,9 @@ export default async function SignInPage({ params }: { params: Promise<{ locale:
             />
 
             <p className="mt-8 text-xs text-black/45 dark:text-white/45">{t('noSelfSignup')}</p>
+            <div className="mt-4">
+                <LegalLinks locale={locale} />
+            </div>
         </main>
     );
 }

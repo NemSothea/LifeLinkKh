@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import HealthStatus from '@/components/HealthStatus';
+import LegalLinks from '@/components/LegalLinks';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { IconArrowRight, IconDroplet, IconInbox } from '@/components/icons';
 import { getHealth } from '@/lib/api/health';
@@ -48,11 +49,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 />
             </div>
 
-            <footer className="pt-10">
+            <footer className="flex flex-col gap-3 pt-10">
                 <HealthStatus
                     reachable={health.ok}
                     status={health.ok ? health.data.status : undefined}
                 />
+                <LegalLinks locale={locale} />
             </footer>
         </main>
     );

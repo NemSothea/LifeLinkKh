@@ -188,10 +188,17 @@ Everything in Part A–E makes the app *work* for real. This part makes it *fit*
 items do not come from code.
 
 **Blockers for a public Play Store listing:**
-- [ ] **Privacy policy** at a public URL. Say what is collected (name, blood type, district,
-  optional GPS, phone number on requests, FCM token), why, who sees it (the donor's contact only
-  goes to a family after the donor accepts; the admin sees request contacts), and how to delete
-  it. Link it in the app and on the Play listing.
+- [ ] **Privacy policy** — written: `https://<portal>/km/privacy` (English at `/en/privacy`), text
+  in `frontend/src/messages/{en,km}.json` under `privacy`, each claim checked against the rules and
+  Functions. Before listing:
+  - [ ] a native Khmer speaker reads the Khmer version;
+  - [ ] someone who knows Cambodian law reads it, if the partner hospital or NBTC can arrange it —
+    it was written against the code, not by a lawyer;
+  - [ ] confirm the **18+** age line is what you want (it is a product decision the policy states);
+  - [ ] put the URL in Play Console (App content → Privacy policy);
+  - [ ] link it **inside the app** (Me tab) — Play expects the policy reachable in-app for apps
+    handling health data. Not built yet: the app has no link-opening package since `url_launcher`
+    left with Telegram.
 - [ ] **Account deletion (DEC-016)** — built: **Me → Delete account** in the app (the
   `deleteAccount` callable, fresh sign-in required), and the web link
   `https://<portal>/km/delete-account` for the Play listing. Before listing:
@@ -202,8 +209,10 @@ items do not come from code.
     `npm run delete-account -- --uid <uid> --project lifelinkkh` from `firebase/` and reply;
   - [ ] try it once on a test account on the real project, and check that the account's rows are
     gone or anonymised.
-- [ ] **Play Console → Data safety** form, consistent with the privacy policy. Blood type counts
-  as health information: declare it.
+- [ ] **Play Console → Data safety** form, consistent with the privacy policy's "What we collect"
+  list: name, email, approximate and precise location (optional), health info (blood type, donation
+  date), phone number (on requests), app interactions; encrypted in transit; users can request
+  deletion; no data shared for advertising.
 
 **Blockers for real use, whatever the store says:**
 - [ ] **Review hours (DEC-015).** A request nobody reviews alerts nobody. Decide who is on duty

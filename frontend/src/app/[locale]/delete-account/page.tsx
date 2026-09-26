@@ -83,6 +83,15 @@ export default async function DeleteAccountPage({
                 </ul>
             </section>
 
+            <p className="mb-6 text-sm">
+                <Link
+                    href={`/${locale}/privacy`}
+                    className="font-medium text-brand underline-offset-4 hover:underline"
+                >
+                    {t('privacyLink')}
+                </Link>
+            </p>
+
             <Link
                 href={`/${locale}`}
                 className="text-sm font-medium text-black/60 underline-offset-4 hover:underline dark:text-white/60"
