@@ -107,13 +107,11 @@ failure mode as an unregistered debug SHA-1, just gated to the build type tester
 
 Since ADR 0009 there is no backend to reach and no `API_BASE_URL`: a release build talks to the
 real `lifelinkkh` project, whose config `google-services.json` carries. DEC-007's tunnel to a
-laptop backend is obsolete. What a tester's install needs instead:
-
-1. Blaze plan on `lifelinkkh`, with a budget alert.
-2. Firestore in `asia-southeast1`; rules, indexes and Functions deployed:
-   `npx firebase deploy --only firestore,functions --project lifelinkkh` (from `firebase/`).
-3. Reference data seeded once: `npm run seed -- --project lifelinkkh` (needs
-   `GOOGLE_APPLICATION_CREDENTIALS`, `firebase/README.md`).
+laptop backend is obsolete. What a tester's install needs instead is the real project set up —
+[`production-checklist.md`](production-checklist.md) Parts A–C (Blaze plan and budget alert,
+Firestore in `asia-southeast1`, rules/indexes/Functions deployed, reference data and the admin
+seeded). Its Part E also covers the **Play app-signing SHA-1**, without which Google sign-in fails
+on every Play install.
 
 Never build a release with `--dart-define=FIRESTORE_EMULATOR=…` — that address is frozen into the
 binary and points every tester at a machine they cannot reach.

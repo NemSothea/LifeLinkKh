@@ -1,0 +1,20 @@
+# Firebase App Hosting — the portal's production runtime (docs/tech-lead/production-checklist.md).
+# Region is chosen when the backend is created, not here. Everything the portal reads at runtime
+# is below; no emulator variable may ever appear in this file — one left set points production at
+# a machine that does not exist.
+runConfig:
+  # A class pilot, not a fleet: at most one instance, none kept warm (the first request after an
+  # idle spell is a cold start of a few seconds, which the board tolerates).
+  minInstances: 0
+  maxInstances: 1
+
+env:
+  - variable: FIREBASE_PROJECT_ID
+    value: lifelinkkh
+    availability: [RUNTIME]
+  # The Web API key (console → Project settings). Not a secret, but kept out of the repository so
+  # rotating it is a console action, not a commit:
+  #   npx firebase apphosting:secrets:set firebase-web-api-key --project lifelinkkh
+  - variable: FIREBASE_API_KEY
+    secret: firebase-web-api-key
+    availability: [RUNTIME]
