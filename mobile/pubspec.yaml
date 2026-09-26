@@ -44,6 +44,9 @@ dependencies:
   # to the Telegram app.
   url_launcher: ^6.3.1
   firebase_messaging: ^16.5.0
+  # ADR 0009: Firestore is the database. Donor profile, districts and donation history
+  # read and write it directly; firebase/firestore.rules decides what each user may touch.
+  cloud_firestore: ^6.10.0
   flutter_secure_storage: ^10.0.0
   google_fonts: ^8.2.1
   # M6 (root CLAUDE.md §4): FR-DONOR-001's "use my current location" button. Coordinates only —
@@ -86,6 +89,9 @@ dev_dependencies:
   #   dart run flutter_launcher_icons
   flutter_launcher_icons: ^0.14.4
   drift_dev: ^2.22.0
+  # In-memory Firestore for the repository tests. It does not evaluate Security Rules —
+  # those are tested against the real emulator in firebase/rules-tests/.
+  fake_cloud_firestore: ^4.3.0
 
   # custom_lint + riverpod_lint are deliberately absent. The course lists them as
   # recommended rather than required (Week 4), and they cannot be solved on this

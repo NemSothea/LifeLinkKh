@@ -2,8 +2,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
-import '../../../core/network/api_client.dart';
-import '../data/dio_donor_repository.dart';
+import '../../../core/firebase/firestore_providers.dart';
+import '../data/firestore_donor_repository.dart';
 import '../domain/district.dart';
 import '../domain/donor_profile.dart';
 import '../domain/donor_profile_draft.dart';
@@ -12,9 +12,13 @@ import 'donor_service.dart';
 
 part 'donor_providers.g.dart';
 
+/// Firestore since ADR 0009. `DioDonorRepository` stays until phase 6 removes the backend,
+/// so `main` and this branch can be compared screen by screen.
 @Riverpod(keepAlive: true)
-DonorRepository donorRepository(DonorRepositoryRef ref) =>
-    DioDonorRepository(ref.watch(apiClientProvider));
+DonorRepository donorRepository(DonorRepositoryRef ref) => FirestoreDonorRepository(
+    ref.watch(firestoreProvider),
+    currentUid: ref.watch(currentUidProvider),
+);
 
 @Riverpod(keepAlive: true)
 DonorService donorService(DonorServiceRef ref) =>

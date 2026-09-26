@@ -1,17 +1,20 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/error/result.dart';
-import '../../../core/network/api_client.dart';
-import '../data/dio_donation_repository.dart';
+import '../../../core/firebase/firestore_providers.dart';
+import '../data/firestore_donation_repository.dart';
 import '../domain/donation.dart';
 import '../domain/donation_repository.dart';
 import 'donation_service.dart';
 
 part 'donation_providers.g.dart';
 
+/// Firestore since ADR 0009, same as `donorRepository`.
 @Riverpod(keepAlive: true)
-DonationRepository donationRepository(DonationRepositoryRef ref) =>
-    DioDonationRepository(ref.watch(apiClientProvider));
+DonationRepository donationRepository(DonationRepositoryRef ref) => FirestoreDonationRepository(
+    ref.watch(firestoreProvider),
+    currentUid: ref.watch(currentUidProvider),
+);
 
 @Riverpod(keepAlive: true)
 DonationService donationService(DonationServiceRef ref) =>

@@ -6,9 +6,12 @@ part of 'donor_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$donorRepositoryHash() => r'6d38fb2c1901fdd6e0eac7b84571c7cf3ea1bfc5';
+String _$donorRepositoryHash() => r'4316793fa8fcfbdef3a0b39df93304f153cf86ba';
 
-/// See also [donorRepository].
+/// Firestore since ADR 0009. `DioDonorRepository` stays until phase 6 removes the backend,
+/// so `main` and this branch can be compared screen by screen.
+///
+/// Copied from [donorRepository].
 @ProviderFor(donorRepository)
 final donorRepositoryProvider = Provider<DonorRepository>.internal(
   donorRepository,

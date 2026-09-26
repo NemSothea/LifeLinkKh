@@ -39,4 +39,15 @@ class Env {
     /// secret either way — it is restricted by package name and SHA-1 fingerprint.
     static String? get googleServerClientId =>
         _googleServerClientId.isEmpty ? null : _googleServerClientId;
+
+    /// `host:port` of a Firestore emulator, e.g. `10.0.2.2:8081` from the Android emulator.
+    /// Unset is the real `lifelinkkh` project. ADR 0009 — `firebase/README.md` starts one.
+    static const String _firestoreEmulator = String.fromEnvironment('FIRESTORE_EMULATOR');
+
+    static ({String host, int port})? get firestoreEmulator {
+        final parts = _firestoreEmulator.split(':');
+        if (parts.length != 2) return null;
+        final port = int.tryParse(parts[1]);
+        return port == null ? null : (host: parts[0], port: port);
+    }
 }

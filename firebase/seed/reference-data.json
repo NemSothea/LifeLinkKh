@@ -1,0 +1,121 @@
+{
+  "districts": [
+    {
+      "code": "1201",
+      "nameKm": "ចំការមន",
+      "nameEn": "Chamkar Mon"
+    },
+    {
+      "code": "1202",
+      "nameKm": "ដូនពេញ",
+      "nameEn": "Doun Penh"
+    },
+    {
+      "code": "1203",
+      "nameKm": "ប្រាំពីរមករា",
+      "nameEn": "Prampi Makara"
+    },
+    {
+      "code": "1204",
+      "nameKm": "ទួលគោក",
+      "nameEn": "Tuol Kouk"
+    },
+    {
+      "code": "1205",
+      "nameKm": "ដង្កោ",
+      "nameEn": "Dangkao"
+    },
+    {
+      "code": "1206",
+      "nameKm": "មានជ័យ",
+      "nameEn": "Mean Chey"
+    },
+    {
+      "code": "1207",
+      "nameKm": "រុស្សីកែវ",
+      "nameEn": "Russey Keo"
+    },
+    {
+      "code": "1208",
+      "nameKm": "សែនសុខ",
+      "nameEn": "Sen Sok"
+    },
+    {
+      "code": "1209",
+      "nameKm": "ពោធិ៍សែនជ័យ",
+      "nameEn": "Pou Senchey"
+    },
+    {
+      "code": "1210",
+      "nameKm": "ជ្រោយចង្វារ",
+      "nameEn": "Chroy Changvar"
+    },
+    {
+      "code": "1211",
+      "nameKm": "ព្រែកព្នៅ",
+      "nameEn": "Prek Pnov"
+    },
+    {
+      "code": "1212",
+      "nameKm": "ច្បារអំពៅ",
+      "nameEn": "Chbar Ampov"
+    },
+    {
+      "code": "1213",
+      "nameKm": "បឹងកេងកង",
+      "nameEn": "Boeng Keng Kang"
+    },
+    {
+      "code": "1214",
+      "nameKm": "កំបូល",
+      "nameEn": "Kamboul"
+    }
+  ],
+  "hospitals": [
+    {
+      "id": "8c251b94-1968-481a-9b77-112b87790b00",
+      "name": "Calmette Hospital",
+      "address": "Preah Monivong Boulevard (93), Sangkat Srah Chak, Khan Doun Penh",
+      "contactPhone": null,
+      "lat": 11.581329,
+      "lng": 104.91569,
+      "districtCode": "1202"
+    },
+    {
+      "id": "49f3c5c0-3e53-4c06-aa17-5d21a6b32d81",
+      "name": "Khmer-Soviet Friendship Hospital",
+      "address": "Yothapol Khemarak Phoumin Boulevard (271), Sangkat Tumnob Tuek",
+      "contactPhone": null,
+      "lat": 11.545289,
+      "lng": 104.903984,
+      "districtCode": "1213"
+    },
+    {
+      "id": "8481fa05-c745-4556-bf6d-cef865e9f9a4",
+      "name": "National Blood Transfusion Center",
+      "address": "Street 271, Sangkat Boeng Tumpun Ti Muoy",
+      "contactPhone": null,
+      "lat": 11.544034,
+      "lng": 104.904658,
+      "districtCode": "1206"
+    },
+    {
+      "id": "c7ddaa1b-e440-47d4-85af-9563bcf16d95",
+      "name": "National Pediatric Hospital",
+      "address": "100, Confederation de la Russie Boulevard, Sangkat Tuek L'ak Ti Muoy",
+      "contactPhone": null,
+      "lat": 11.568123,
+      "lng": 104.896826,
+      "districtCode": "1204"
+    },
+    {
+      "id": "c861db1e-6afa-4bf7-96d6-8f9a824e1ff6",
+      "name": "Preah Kossamak Hospital",
+      "address": "Sangkat Tuek L'ak Ti Bei, Khan Tuol Kouk",
+      "contactPhone": null,
+      "lat": 11.56401,
+      "lng": 104.890378,
+      "districtCode": "1204"
+    }
+  ]
+}

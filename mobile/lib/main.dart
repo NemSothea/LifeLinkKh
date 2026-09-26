@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'src/app.dart';
+import 'src/core/config/env.dart';
 import 'src/core/network/auth_token_gateway.dart';
 import 'src/core/settings/locale_controller.dart';
 import 'src/core/settings/onboarding_controller.dart';
@@ -39,6 +41,13 @@ Future<void> main() async {
     // Awaited before `runApp`: `FirebaseAuth.instance` is touched by the first provider
     // read, and reaching it before this completes throws.
     await Firebase.initializeApp();
+
+    // ADR 0009: point Firestore at a local emulator when FIRESTORE_EMULATOR is set. Before
+    // any read — the SDK refuses to switch once the first query has gone to the real project.
+    final emulator = Env.firestoreEmulator;
+    if (emulator != null) {
+        FirebaseFirestore.instance.useFirestoreEmulator(emulator.host, emulator.port);
+    }
 
     // Awaited too, and for a related reason: `LocaleStore.read()` is synchronous so the
     // first frame already paints in the chosen language. That only works if the backing

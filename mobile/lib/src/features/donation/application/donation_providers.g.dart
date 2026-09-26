@@ -7,9 +7,11 @@ part of 'donation_providers.dart';
 // **************************************************************************
 
 String _$donationRepositoryHash() =>
-    r'5b8dbf89ce5d4b9d61d15be07d8743690ca8b980';
+    r'7e2ddac6eada0c1c4bd7613caa9caf7ecb26db07';
 
-/// See also [donationRepository].
+/// Firestore since ADR 0009, same as `donorRepository`.
+///
+/// Copied from [donationRepository].
 @ProviderFor(donationRepository)
 final donationRepositoryProvider = Provider<DonationRepository>.internal(
   donationRepository,

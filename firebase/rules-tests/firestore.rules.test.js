@@ -150,10 +150,10 @@ describe('donors', () => {
 
   test('with GPS all three coordinate fields are set', async () => {
     await assertSucceeds(setDoc(doc(as('u1'), 'donors/u1'),
-      donor({ lat: 11.5806, lng: 104.9165, geohash: 'w3gv' })));
+      donor({ lat: 11.5806, lng: 104.9165, geohash: 'w649gkjvgs' })));
     await assertFails(setDoc(doc(as('u1'), 'donors/u1'),
       donor({ lat: 11.5806, lng: 104.9165, geohash: null })));
-    await assertFails(setDoc(doc(as('u1'), 'donors/u1'), donor({ lat: 95, lng: 104.9, geohash: 'w3gv' })));
+    await assertFails(setDoc(doc(as('u1'), 'donors/u1'), donor({ lat: 95, lng: 104.9, geohash: 'w649gkjvgs' })));
   });
 
   test('a profile for someone else is refused', async () => {
