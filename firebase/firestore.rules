@@ -1,0 +1,175 @@
+rules_version = '2';
+
+// ADR 0009 — these rules are the only thing between a client and the data. Every rule here has a
+// test in rules-tests/; docs/tech-lead/firestore-data-model.md says why each one exists.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Principals ──────────────────────────────────────────────────────────────────────────────
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    // Staff roles are custom claims set by a Function, never a field a client can write.
+    function isAdmin() { return signedIn() && request.auth.token.role == 'ADMIN'; }
+    function isStaffAt(hospitalId) {
+      return signedIn()
+          && request.auth.token.role == 'HOSPITAL'
+          && request.auth.token.hospitalId == hospitalId;
+    }
+
+    // ── Values ──────────────────────────────────────────────────────────────────────────────────
+    function bloodTypes() { return ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']; }
+    function isName(s, max) { return s is string && s.trim().size() > 0 && s.size() <= max; }
+    // Already normalized to +855 by the client — the same prefixes CambodianPhone accepted.
+    function isCambodianMobile(p) {
+      return p is string && (
+          p.matches('^\\+855(10|11|12|14|15|16|17|60|61|66|67|68|69|70|77|78|81|85|86|87|89|90|92|93|95|98|99)[0-9]{6}$')
+       || p.matches('^\\+855(18|31|71|76|88|96|97)[0-9]{7}$'));
+    }
+    function incoming() { return request.resource.data; }
+    function changed() { return incoming().diff(resource.data).affectedKeys(); }
+
+    // ── users/{uid} ─────────────────────────────────────────────────────────────────────────────
+    function validUser(d) {
+      return d.keys().hasOnly(['displayName', 'language', 'role', 'fcmToken', 'createdAt', 'updatedAt'])
+          && d.keys().hasAll(['language', 'role', 'createdAt', 'updatedAt'])
+          && (!('displayName' in d) || d.displayName == null || isName(d.displayName, 120))
+          && d.language in ['km', 'en']
+          && d.role in ['DONOR', 'REQUESTER']
+          && (!('fcmToken' in d) || d.fcmToken == null || (d.fcmToken is string && d.fcmToken.size() <= 4096))
+          && d.updatedAt == request.time;
+    }
+    match /users/{userId} {
+      allow read: if (signedIn() && uid() == userId) || isAdmin();
+      allow create: if signedIn() && uid() == userId
+          && validUser(incoming()) && incoming().createdAt == request.time;
+      allow update: if signedIn() && uid() == userId
+          && validUser(incoming()) && incoming().createdAt == resource.data.createdAt;
+      allow delete: if false;
+    }
+
+    // ── donors/{uid} ────────────────────────────────────────────────────────────────────────────
+    function validCoordinates(d) {
+      // ADR 0003: declining GPS is allowed, so all three are null — or all three are set.
+      return (d.lat == null && d.lng == null && d.geohash == null)
+          || (d.lat is number && d.lat >= -90 && d.lat <= 90
+              && d.lng is number && d.lng >= -180 && d.lng <= 180
+              && d.geohash is string && d.geohash.size() > 0 && d.geohash.size() <= 12);
+    }
+    function validDonor(d) {
+      return d.keys().hasOnly(['fullName', 'bloodType', 'districtCode', 'lastDonationDate',
+                               'isAvailable', 'lat', 'lng', 'geohash', 'createdAt', 'updatedAt'])
+          && d.keys().hasAll(['fullName', 'bloodType', 'districtCode', 'lastDonationDate',
+                              'isAvailable', 'lat', 'lng', 'geohash', 'createdAt', 'updatedAt'])
+          && isName(d.fullName, 120)
+          && d.bloodType in bloodTypes()
+          && d.districtCode is string
+          && exists(/databases/$(database)/documents/districts/$(d.districtCode))
+          && (d.lastDonationDate == null
+              || (d.lastDonationDate is timestamp && d.lastDonationDate <= request.time))
+          && d.isAvailable is bool
+          && validCoordinates(d)
+          && d.updatedAt == request.time;
+    }
+    match /donors/{donorId} {
+      // Nobody else — not staff, not a requester. Matching reads it with the Admin SDK.
+      allow read: if (signedIn() && uid() == donorId) || isAdmin();
+      allow create: if signedIn() && uid() == donorId
+          && validDonor(incoming()) && incoming().createdAt == request.time;
+      allow update: if signedIn() && uid() == donorId
+          && validDonor(incoming()) && incoming().createdAt == resource.data.createdAt;
+      allow delete: if false;
+    }
+
+    // ── requests/{requestId} ────────────────────────────────────────────────────────────────────
+    function validNewRequest(d) {
+      return d.keys().hasOnly(['createdBy', 'hospitalId', 'patientBloodType', 'unitsNeeded', 'urgency',
+                               'status', 'alertedCount', 'acceptedCount', 'createdAt', 'updatedAt'])
+          && d.keys().hasAll(['createdBy', 'hospitalId', 'patientBloodType', 'unitsNeeded', 'urgency',
+                              'status', 'alertedCount', 'acceptedCount', 'createdAt', 'updatedAt'])
+          && d.createdBy == uid()
+          && d.hospitalId is string
+          && exists(/databases/$(database)/documents/hospitals/$(d.hospitalId))
+          && d.patientBloodType in bloodTypes()
+          && d.unitsNeeded is int && d.unitsNeeded >= 1 && d.unitsNeeded <= 20
+          && d.urgency in ['CRITICAL', 'URGENT', 'ROUTINE']
+          && d.status == 'OPEN'
+          && d.alertedCount == 0 && d.acceptedCount == 0
+          && d.createdAt == request.time && d.updatedAt == request.time;
+    }
+    function isCreatorOf(requestId) {
+      return signedIn()
+          && get(/databases/$(database)/documents/requests/$(requestId)).data.createdBy == uid();
+    }
+    function hasAccepted(requestId) {
+      let matchPath = /databases/$(database)/documents/matches/$(requestId + '_' + uid());
+      return signedIn() && exists(matchPath) && get(matchPath).data.response == 'ACCEPTED';
+    }
+
+    match /requests/{requestId} {
+      // The public board (DEC-009). Nothing private lives on this document.
+      allow read: if true;
+      allow create: if signedIn() && validNewRequest(incoming());
+      // The creator may cancel an open request, and change nothing else.
+      allow update: if signedIn() && resource.data.createdBy == uid()
+          && resource.data.status == 'OPEN'
+          && incoming().status == 'CANCELLED'
+          && incoming().updatedAt == request.time
+          && changed().hasOnly(['status', 'updatedAt']);
+      allow delete: if false;
+
+      // RequestViews' requesterContact: the creator, and a donor who accepted — nobody else.
+      match /private/contact {
+        allow read: if isCreatorOf(requestId) || hasAccepted(requestId) || isAdmin();
+        // Written in the same batch as the request, so the parent is read with getAfter().
+        allow create: if signedIn()
+            && getAfter(/databases/$(database)/documents/requests/$(requestId)).data.createdBy == uid()
+            && incoming().keys().hasOnly(['contactName', 'contactPhone'])
+            && incoming().keys().hasAll(['contactName', 'contactPhone'])
+            && isName(incoming().contactName, 120)
+            && isCambodianMobile(incoming().contactPhone);
+        allow update, delete: if false;
+      }
+
+      // The board's accepted-donor list. Written by onMatchAnswered only.
+      match /acceptedDonors/{donorUid} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
+    // ── matches/{requestId_donorUid} ────────────────────────────────────────────────────────────
+    match /matches/{matchId} {
+      allow read: if (signedIn() && resource.data.donorUid == uid())
+          || isStaffAt(resource.data.hospitalId)
+          || isAdmin();
+      // Only onRequestCreated creates one, so only notified donors have a match (ADR 0008).
+      allow create, delete: if false;
+      // One answer, never overwritten (FR-REQUEST-004 deferred), and only while the request is open.
+      allow update: if signedIn() && resource.data.donorUid == uid()
+          && resource.data.response == null
+          && incoming().response in ['ACCEPTED', 'DECLINED']
+          && incoming().respondedAt == request.time
+          && changed().hasOnly(['response', 'respondedAt'])
+          && get(/databases/$(database)/documents/requests/$(resource.data.requestId)).data.status == 'OPEN';
+    }
+
+    // ── donations/{donationId} ──────────────────────────────────────────────────────────────────
+    match /donations/{donationId} {
+      allow read: if (signedIn() && resource.data.donorUid == uid())
+          || isStaffAt(resource.data.hospitalId)
+          || isAdmin();
+      // confirmDonation only — it also writes lastDonationDate, which must move with it.
+      allow write: if false;
+    }
+
+    // ── Reference data ──────────────────────────────────────────────────────────────────────────
+    match /hospitals/{hospitalId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /districts/{code} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

@@ -15,6 +15,7 @@ next: 009
 > | [ADR 0002](tech-lead/adr/0002-auth-google-sign-in.md) | Auth via Google Sign-In, not phone OTP | 2026-08-07 |
 > | [ADR 0003](tech-lead/adr/0003-donor-location-precision.md) | Donor location: district + coarse coordinates no API returns | 2026-08-07 |
 > | [ADR 0004](tech-lead/adr/0004-abo-rh-compatibility-lookup-table.md) | ABO/Rh compatibility as a seeded lookup table | 2026-08-07 |
+> | [ADR 0009](tech-lead/adr/0009-firebase-replaces-spring-boot-and-postgres.md) | Firebase replaces Spring Boot + PostgreSQL (branch `feat/firebase-backend`) | 2026-09-26 |
 
 | ID | Decision | Date |
 |----|----------|------|
