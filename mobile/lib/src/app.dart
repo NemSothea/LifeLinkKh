@@ -56,28 +56,27 @@ class LifeLinkApp extends ConsumerWidget {
         // nobody knows to do. Android also shows no system notification for a foreground
         // app, so an acceptance gets its own in-app notice — the family must not miss it
         // because they happened to be looking at the screen. A donor alert gets one too,
-        // but only in the foreground: tapped from the tray, the donor has already seen it.
+        // but only in the foreground: tapped from the tray, the donor has already seen
+        // it, and what they want is the screen it is about — opened directly, no notice.
         ref.listen<AsyncValue<PushArrival>>(pushArrivalsProvider, (_, next) {
             final arrival = next.valueOrNull;
             if (arrival == null) return;
-            if (ref.read(authControllerProvider).valueOrNull == null) return;
-            ref
-                ..invalidate(myMatchesControllerProvider)
-                ..invalidate(myRequestsControllerProvider)
-                ..invalidate(requestDetailProvider);
-            // All three go to the requester and open the same screen; only the notice's
-            // wording differs. An approval or rejection is news the family has been
-            // waiting on since they pressed Send (DEC-015).
-            final requesterNotice = switch (arrival.type) {
-                PushArrival.donorAccepted => (AppLocalizations l10n) => l10n.donorAcceptedNotice,
-                PushArrival.requestApproved => (AppLocalizations l10n) => l10n.requestApprovedNotice,
-                PushArrival.requestRejected => (AppLocalizations l10n) => l10n.requestRejectedNotice,
-                _ => null,
-            };
-            if (requesterNotice != null) _showRequesterNotice(ref, arrival, requesterNotice);
-            if (arrival.type == PushArrival.requestAlert && arrival.foreground) {
-                _showRequestAlertNotice(ref, arrival);
+            if (ref.read(authControllerProvider).valueOrNull == null) {
+                // A cold start from a tray tap: the message arrives while the keystore is
+                // still being read. Keep the tap and act on it when the session is back —
+                // dropped here, the alert would open the Home tab and nothing else.
+                if (!arrival.foreground) _pendingTap = arrival;
+                return;
             }
+            _handleArrival(ref, arrival);
+        });
+
+        // The tap held above, released once the session is restored.
+        ref.listen<AsyncValue<Object?>>(authControllerProvider, (_, next) {
+            final tap = _pendingTap;
+            if (tap == null || next.valueOrNull == null) return;
+            _pendingTap = null;
+            _handleArrival(ref, tap);
         });
 
         // Back online after a spell without a network. Every list that failed while
@@ -137,6 +136,67 @@ class LifeLinkApp extends ConsumerWidget {
         );
     }
 
+    /// A tray tap that landed before the session was restored (a cold start). One slot:
+    /// a second tap before the first is handled simply replaces it.
+    static PushArrival? _pendingTap;
+
+    static void _handleArrival(WidgetRef ref, PushArrival arrival) {
+        ref
+            ..invalidate(myMatchesControllerProvider)
+            ..invalidate(myRequestsControllerProvider)
+            ..invalidate(requestDetailProvider);
+
+        // Tapped from the tray (or the tap that launched the app): open the screen the
+        // push is about. The person has already read the notification — a second copy of
+        // it as a snackbar with a "View" button is one tap too many at 03:00.
+        if (!arrival.foreground) {
+            unawaited(_openForTap(ref, arrival));
+            return;
+        }
+
+        // All three go to the requester and open the same screen; only the notice's
+        // wording differs. An approval or rejection is news the family has been
+        // waiting on since they pressed Send (DEC-015).
+        final requesterNotice = switch (arrival.type) {
+            PushArrival.donorAccepted => (AppLocalizations l10n) => l10n.donorAcceptedNotice,
+            PushArrival.requestApproved => (AppLocalizations l10n) => l10n.requestApprovedNotice,
+            PushArrival.requestRejected => (AppLocalizations l10n) => l10n.requestRejectedNotice,
+            _ => null,
+        };
+        if (requesterNotice != null) _showRequesterNotice(ref, arrival, requesterNotice);
+        if (arrival.type == PushArrival.requestAlert) _showRequestAlertNotice(ref, arrival);
+    }
+
+    /// Where a tray tap goes: a donor alert to the match it names, the requester's three
+    /// to their request. A type this app does not know, or a payload without a request,
+    /// goes nowhere — the refetch above has already done what it can.
+    static Future<void> _openForTap(WidgetRef ref, PushArrival arrival) async {
+        final requestId = arrival.requestId;
+        if (requestId == null) return;
+        switch (arrival.type) {
+            case PushArrival.requestAlert:
+                final matchId = await _matchIdFor(ref, requestId);
+                if (matchId == null) return;
+                _openUnlessShowing(ref, MatchDetailScreen.routeFor(matchId));
+            case PushArrival.donorAccepted:
+            case PushArrival.requestApproved:
+            case PushArrival.requestRejected:
+                _openUnlessShowing(ref, RequestDetailScreen.routeFor(requestId));
+        }
+    }
+
+    /// The payload names the request, the screen wants the match: look it up in the
+    /// inbox the caller has just refetched. Null when the fetch fails or the alert is
+    /// for a match this donor no longer has (withdrawn, or the request closed).
+    static Future<String?> _matchIdFor(WidgetRef ref, String requestId) async {
+        try {
+            final matches = await ref.read(myMatchesControllerProvider.future);
+            return matches.where((m) => m.request.id == requestId).firstOrNull?.matchId;
+        } catch (_) {
+            return null;
+        }
+    }
+
     static void _showRequesterNotice(
         WidgetRef ref,
         PushArrival arrival,
@@ -170,20 +230,14 @@ class LifeLinkApp extends ConsumerWidget {
         messenger.showSnackBar(
             SnackBar(
                 content: Text(l10n.requestAlertNotice),
-                // The payload names the request, the screen wants the match: look it up in
-                // the inbox the listener above has just refetched.
                 action: requestId == null
                     ? null
                     : SnackBarAction(
                         label: l10n.requestAlertNoticeAction,
                         onPressed: () async {
-                            final matches =
-                                await ref.read(myMatchesControllerProvider.future);
-                            final match = matches
-                                .where((m) => m.request.id == requestId)
-                                .firstOrNull;
-                            if (match == null) return;
-                            _openUnlessShowing(ref, MatchDetailScreen.routeFor(match.matchId));
+                            final matchId = await _matchIdFor(ref, requestId);
+                            if (matchId == null) return;
+                            _openUnlessShowing(ref, MatchDetailScreen.routeFor(matchId));
                         },
                     ),
             ),

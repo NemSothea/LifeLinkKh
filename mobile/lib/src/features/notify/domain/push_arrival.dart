@@ -1,5 +1,5 @@
 /// A push message that reached this app while it was running — in the foreground, or
-/// tapped from the tray while it sat in the background.
+/// tapped from the tray while it sat in the background — or the tap that launched it.
 ///
 /// Deliberately no `==`: two acceptances in a row carry the same [type], and a value
 /// type would let Riverpod swallow the second as "unchanged".
@@ -16,8 +16,9 @@ final class PushArrival {
     final String? requestId;
 
     /// True when the push landed while the app was on screen (`onMessage`), false when
-    /// it was tapped from the tray (`onMessageOpenedApp`). Only a foreground arrival has
-    /// had no system notification — Android draws none for the app in front.
+    /// it was tapped from the tray (`onMessageOpenedApp`, or `getInitialMessage` for a
+    /// cold start). Only a foreground arrival has had no system notification — Android
+    /// draws none for the app in front. A tap is a request to *open* something.
     final bool foreground;
 
     static const requestAlert = 'REQUEST_ALERT';

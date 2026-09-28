@@ -10,11 +10,15 @@ import 'package:lifelink_kh/src/core/settings/locale_store.dart';
 import 'package:lifelink_kh/src/core/settings/onboarding_controller.dart';
 import 'package:lifelink_kh/src/core/settings/onboarding_store.dart';
 import 'package:lifelink_kh/src/features/auth/application/auth_providers.dart';
+import 'package:lifelink_kh/src/features/auth/domain/auth_session.dart';
+import 'package:lifelink_kh/src/features/auth/domain/session_store.dart';
 import 'package:lifelink_kh/src/features/donor/application/donor_providers.dart';
+import 'package:lifelink_kh/src/features/donor/domain/blood_type.dart';
 import 'package:lifelink_kh/src/features/match/application/match_providers.dart';
 import 'package:lifelink_kh/src/features/match/domain/match.dart';
 import 'package:lifelink_kh/src/features/match/domain/match_repository.dart';
 import 'package:lifelink_kh/src/features/match/domain/match_response_type.dart';
+import 'package:lifelink_kh/src/features/match/presentation/match_detail_screen.dart';
 import 'package:lifelink_kh/src/features/match/domain/respond_result.dart';
 import 'package:lifelink_kh/src/features/notify/application/push_providers.dart';
 import 'package:lifelink_kh/src/features/notify/domain/push_arrival.dart';
@@ -22,6 +26,8 @@ import 'package:lifelink_kh/src/features/request/application/request_providers.d
 import 'package:lifelink_kh/src/features/request/domain/blood_request.dart';
 import 'package:lifelink_kh/src/features/request/domain/blood_request_draft.dart';
 import 'package:lifelink_kh/src/features/request/domain/hospital.dart';
+import 'package:lifelink_kh/src/features/request/domain/request_status.dart';
+import 'package:lifelink_kh/src/features/request/domain/urgency.dart';
 import 'package:lifelink_kh/src/features/request/domain/request_repository.dart';
 import 'package:lifelink_kh/src/features/request/presentation/request_detail_screen.dart';
 import 'package:lifelink_kh/src/router/app_router.dart';
@@ -34,10 +40,13 @@ import 'support/auth_fakes.dart';
 final class _CountingMatchRepository implements MatchRepository {
     int fetches = 0;
 
+    /// What the inbox holds — the tray-tap tests need a match for the alert to open.
+    List<Match> inbox = const [];
+
     @override
     Future<Result<List<Match>>> fetchMine() async {
         fetches++;
-        return const Success([]);
+        return Success(inbox);
     }
 
     @override
@@ -75,6 +84,40 @@ final class _CountingRequestRepository implements RequestRepository {
     Future<Result<BloodRequest>> cancel(String requestId) => throw UnimplementedError();
 }
 
+/// A keystore still being read when the app starts: `read()` hangs until the test
+/// releases it, the way a cold start's push tap beats the session restore.
+final class _SlowSessionStore implements SessionStore {
+    final Completer<AuthSession?> _read = Completer();
+
+    void restore(AuthSession session) => _read.complete(session);
+
+    @override
+    Future<AuthSession?> read() => _read.future;
+
+    @override
+    Future<void> write(AuthSession session) async {}
+
+    @override
+    Future<void> clear() async {}
+}
+
+Match _match(String requestId) => Match(
+    matchId: 'm-$requestId',
+    request: BloodRequest(
+        id: requestId,
+        status: RequestStatus.open,
+        patientBloodType: BloodType.oPositive,
+        unitsNeeded: 2,
+        urgency: Urgency.critical,
+        hospitalName: 'Calmette',
+        alertedCount: 1,
+        acceptedCount: 0,
+        createdAt: DateTime.now(),
+    ),
+    myBloodType: BloodType.oNegative,
+    notifiedAt: DateTime.now(),
+);
+
 void main() {
     late StreamController<PushArrival> pushes;
     late _CountingMatchRepository matches;
@@ -88,7 +131,7 @@ void main() {
 
     tearDown(() => pushes.close());
 
-    Future<void> pumpApp(WidgetTester tester) async {
+    Future<void> pumpApp(WidgetTester tester, {SessionStore? sessionStore}) async {
         await tester.pumpWidget(
             ProviderScope(
                 overrides: [
@@ -97,7 +140,9 @@ void main() {
                     ),
                     onboardingStoreProvider.overrideWithValue(InMemoryOnboardingStore()),
                     authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
-                    sessionStoreProvider.overrideWithValue(FakeSessionStore(testSession())),
+                    sessionStoreProvider.overrideWithValue(
+                        sessionStore ?? FakeSessionStore(testSession()),
+                    ),
                     googleCredentialsProvider.overrideWithValue(FakeGoogleCredentials()),
                     facebookCredentialsProvider.overrideWithValue(FakeFacebookCredentials()),
                     donorRepositoryProvider.overrideWithValue(FakeDonorRepository()),
@@ -116,7 +161,9 @@ void main() {
         await pumpApp(tester);
         final requestsBefore = requests.fetches;
 
-        pushes.add(PushArrival(PushArrival.donorAccepted, requestId: 'req-1'));
+        pushes.add(
+            PushArrival(PushArrival.donorAccepted, requestId: 'req-1', foreground: true),
+        );
         await tester.pump();
         await tester.pump();
 
@@ -135,7 +182,7 @@ void main() {
             await pumpApp(tester);
             final requestsBefore = requests.fetches;
 
-            pushes.add(PushArrival(type, requestId: 'req-1'));
+            pushes.add(PushArrival(type, requestId: 'req-1', foreground: true));
             await tester.pump();
             await tester.pump();
 
@@ -229,7 +276,9 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 500));
 
-        pushes.add(PushArrival(PushArrival.donorAccepted, requestId: 'req-1'));
+        pushes.add(
+            PushArrival(PushArrival.donorAccepted, requestId: 'req-1', foreground: true),
+        );
         await tester.pump();
         await tester.pump(const Duration(seconds: 1));
         await tester.tap(find.text('View'));
@@ -240,5 +289,84 @@ void main() {
             find.byType(RequestDetailScreen, skipOffstage: false),
             findsOneWidget,
         );
+    });
+
+    // The moment the whole product is for: a donor woken by the alert taps it, and the
+    // request is on screen. Not the Home tab with the alert somewhere in a list.
+    testWidgets('a donor alert tapped from the tray opens the match', (tester) async {
+        matches.inbox = [_match('req-2')];
+        await pumpApp(tester);
+
+        pushes.add(PushArrival(PushArrival.requestAlert, requestId: 'req-2'));
+        await tester.pump();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.byType(MatchDetailScreen), findsOneWidget);
+        expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('a donor alert for a match the inbox no longer holds opens nothing',
+        (tester) async {
+        await pumpApp(tester);
+
+        pushes.add(PushArrival(PushArrival.requestAlert, requestId: 'req-gone'));
+        await tester.pump();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.byType(MatchDetailScreen), findsNothing);
+    });
+
+    testWidgets('an acceptance tapped from the tray opens the request directly',
+        (tester) async {
+        await pumpApp(tester);
+
+        pushes.add(PushArrival(PushArrival.donorAccepted, requestId: 'req-1'));
+        await tester.pump();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.byType(RequestDetailScreen), findsOneWidget);
+        expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('a tap that launched the app cold waits for the session, then opens',
+        (tester) async {
+        matches.inbox = [_match('req-2')];
+        final store = _SlowSessionStore();
+        await tester.pumpWidget(
+            ProviderScope(
+                overrides: [
+                    localeStoreProvider.overrideWithValue(
+                        InMemoryLocaleStore(const Locale('en')),
+                    ),
+                    onboardingStoreProvider.overrideWithValue(InMemoryOnboardingStore()),
+                    authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+                    sessionStoreProvider.overrideWithValue(store),
+                    googleCredentialsProvider.overrideWithValue(FakeGoogleCredentials()),
+                    facebookCredentialsProvider.overrideWithValue(FakeFacebookCredentials()),
+                    donorRepositoryProvider.overrideWithValue(FakeDonorRepository()),
+                    matchRepositoryProvider.overrideWithValue(matches),
+                    requestRepositoryProvider.overrideWithValue(requests),
+                    pushArrivalsProvider.overrideWith((ref) => pushes.stream),
+                ],
+                child: const LifeLinkApp(),
+            ),
+        );
+        await tester.pump();
+
+        // The tap lands while the keystore is still being read.
+        pushes.add(PushArrival(PushArrival.requestAlert, requestId: 'req-2'));
+        await tester.pump();
+        await tester.pump();
+        expect(find.byType(MatchDetailScreen), findsNothing);
+
+        store.restore(testSession());
+        await tester.pump();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.byType(MatchDetailScreen), findsOneWidget);
     });
 }
