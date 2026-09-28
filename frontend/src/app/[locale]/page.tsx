@@ -1,19 +1,32 @@
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import LegalLinks from '@/components/LegalLinks';
-import { Download } from 'lucide-react';
-import { IconArrowRight, IconInbox } from '@/components/icons';
+import { CodeXml, Download, Mail } from 'lucide-react';
+import { IconArrowRight, IconInbox, IconShield, IconUsers } from '@/components/icons';
 import PageHeader from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
 import type { CSSProperties } from 'react';
+
+const SOURCE_URL = 'https://github.com/NemSothea/LifeLinkKh';
+
+type Step = { title: string; body: string };
 
 /**
  * The portal's front door. Most visitors are donors or families who came for the app, so
  * "Get the app" is the first, filled card; the request board is the second. The API health
  * line moved to the admin's portal page — a donor has no use for it.
+ *
+ * Below the cards, the page answers what a wary visitor asks before installing an app from
+ * outside the Play Store: what happens to a request, what LifeLink will never ask for, who is
+ * behind it, and how to reach them.
  */
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
     const t = await getTranslations('app');
+    const th = await getTranslations('home');
+    const steps = th.raw('steps') as Step[];
+    const safety = th.raw('safety') as string[];
+    const supportEmail = process.env.SUPPORT_EMAIL?.trim() || null;
 
     return (
         <main className="mx-auto max-w-3xl p-6 sm:p-10">
@@ -43,6 +56,74 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     index={1}
                 />
             </div>
+
+            <section className="mt-12" data-testid="home-how">
+                <h2 className="mb-4 text-xl font-semibold">{th('howHeading')}</h2>
+                <ol className="flex flex-col gap-4">
+                    {steps.map((step, i) => (
+                        <li key={step.title} className="flex gap-4">
+                            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-brand tabular-nums">
+                                {i + 1}
+                            </span>
+                            <div className="min-w-0 pt-0.5">
+                                <h3 className="font-semibold">{step.title}</h3>
+                                <p className="mt-1 text-sm text-muted-foreground">{step.body}</p>
+                            </div>
+                        </li>
+                    ))}
+                </ol>
+            </section>
+
+            <section
+                className="mt-10 rounded-2xl border border-emerald-300 bg-emerald-50 p-5 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200"
+                data-testid="home-safety"
+            >
+                <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
+                    <IconShield className="h-5 w-5 shrink-0" />
+                    {th('safetyHeading')}
+                </h2>
+                <ul className="list-disc space-y-1.5 pl-5 text-sm">
+                    {safety.map((item) => (
+                        <li key={item}>{item}</li>
+                    ))}
+                </ul>
+            </section>
+
+            <section
+                className="mt-10 rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm"
+                data-testid="home-about"
+            >
+                <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
+                    <IconUsers className="h-5 w-5 shrink-0 text-brand" />
+                    {th('aboutHeading')}
+                </h2>
+                <p className="text-sm text-foreground/85">{th('aboutBody')}</p>
+                <p className="mt-3 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">{th('teamLabel')}:</span>{' '}
+                    {th('team')}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                    <Button asChild variant="outline" className="rounded-full">
+                        <a href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
+                            <CodeXml aria-hidden="true" />
+                            {th('sourceLink')}
+                        </a>
+                    </Button>
+                </div>
+            </section>
+
+            {supportEmail ? (
+                <section className="mt-10" data-testid="home-contact">
+                    <h2 className="mb-2 text-lg font-semibold">{th('contactHeading')}</h2>
+                    <p className="mb-3 text-sm text-muted-foreground">{th('contactBody')}</p>
+                    <Button asChild variant="outline" className="rounded-full">
+                        <a href={`mailto:${supportEmail}`}>
+                            <Mail aria-hidden="true" />
+                            {supportEmail}
+                        </a>
+                    </Button>
+                </section>
+            ) : null}
 
             <footer className="pt-10">
                 <LegalLinks locale={locale} />

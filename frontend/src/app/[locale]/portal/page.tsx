@@ -6,7 +6,7 @@ import HealthStatus from '@/components/HealthStatus';
 import { getHealth } from '@/lib/api/health';
 import EmptyState from '@/components/EmptyState';
 import { hasPortalSession, portalDisplayName, portalRole } from '@/lib/api/session';
-import SignOutButton from '@/components/SignOutButton';
+import AccountMenu from '@/components/AccountMenu';
 import { listPublicRequests } from '@/lib/api/board';
 import {
     listFulfilledRequests,
@@ -94,35 +94,36 @@ export default async function PortalPage({
                         ? adminNotifications(locale, pending, result.data as PortalRequest[])
                         : undefined
                 }
+                account={
+                    isAdmin ? (
+                        <AccountMenu locale={locale} displayName={displayName} role={role} />
+                    ) : undefined
+                }
             >
                 <div className="flex flex-wrap items-center justify-between gap-3">
+                    {isAdmin ? <PortalTabs locale={locale} active="requests" /> : null}
                     {result.ok ? (
                         <div
                             data-testid="portal-summary"
-                            className="flex min-h-11 items-center gap-4 rounded-full border border-border bg-secondary/60 px-5 text-sm tabular-nums"
+                            className="flex items-center gap-2 text-sm tabular-nums"
                         >
-                            <span>
-                                <strong className="text-lg">{requests.length}</strong>{' '}
-                                <span className="text-black/70 dark:text-white/70">
-                                    {t('openLabel')}
-                                </span>
+                            <span className="flex min-h-9 items-center gap-1.5 rounded-full bg-secondary px-3.5">
+                                <strong className="text-base">{requests.length}</strong>
+                                <span className="text-muted-foreground">{t('openLabel')}</span>
                             </span>
                             {criticalCount > 0 ? (
-                                <span className="flex items-center gap-1.5 font-medium text-brand">
+                                <span className="flex min-h-9 items-center gap-1.5 rounded-full bg-brand/10 px-3.5 font-medium text-brand">
                                     <span className="relative flex h-2 w-2">
                                         <span className="absolute inline-flex h-full w-full motion-safe:animate-ping rounded-full bg-brand opacity-75" />
                                         <span className="relative inline-flex h-2 w-2 rounded-full bg-brand" />
                                     </span>
-                                    <span className="tabular-nums">{criticalCount}</span>{' '}
+                                    <strong className="text-base">{criticalCount}</strong>
                                     {t('criticalLabel')}
                                 </span>
                             ) : null}
                         </div>
                     ) : null}
-                    {isAdmin ? <PortalTabs locale={locale} active="requests" /> : null}
-                    {isAdmin ? (
-                        <SignOutButton locale={locale} displayName={displayName} role={role} />
-                    ) : (
+                    {isAdmin ? null : (
                         // The only thing a visitor is offered. Not a wall in front of the
                         // board — a door beside it, for the people who have a key.
                         <PillLink

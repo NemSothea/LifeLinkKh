@@ -16,6 +16,7 @@ export default function PageHeader({
     subtitle,
     children,
     notifications,
+    account,
     className = 'mb-8',
 }: {
     locale: string;
@@ -25,6 +26,8 @@ export default function PageHeader({
     children?: ReactNode;
     /** The admin's bell. Absent for visitors. */
     notifications?: AdminNotification[];
+    /** The signed-in admin's account menu. Absent for visitors. */
+    account?: ReactNode;
     className?: string;
 }) {
     return (
@@ -46,6 +49,7 @@ export default function PageHeader({
                 <div className="flex items-center gap-2">
                     {notifications ? <NotificationBell items={notifications} /> : null}
                     <SiteControls />
+                    {account}
                 </div>
             </div>
             <div>

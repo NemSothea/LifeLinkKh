@@ -8,12 +8,14 @@
         "title": "LifeLink KH",
         "tagline": "Connecting blood donors with the people who need them",
         "portalCardTitle": "Open requests",
-        "portalCardBody": "Every open blood request, the donors who accepted it, and the one write this portal has — confirming a donation.",
+        "portalCardBody": "See which blood types are needed right now, at which hospital, and how many donors have already said yes.",
         "healthHeading": "API status",
         "healthUp": "API is up",
         "healthUnreachable": "Cannot reach the API",
         "downloadCardTitle": "Get the app",
-        "downloadCardBody": "Free for Android. Register as a donor, or ask for blood for your family."
+        "downloadCardBody": "Free for Android. Register as a donor, or ask for blood for your family.",
+        "copyright": "© {year} LifeLink KH. All rights reserved.",
+        "metaDescription": "LifeLink KH is a free app that connects voluntary blood donors in Phnom Penh with families who urgently need blood."
     },
     "signIn": {
         "title": "Admin sign-in",
@@ -34,7 +36,8 @@
         "failedRateLimited": "Too many attempts. Wait a minute and try again.",
         "or": "or",
         "googleFailed": "This Google account is not a LifeLink admin.",
-        "failedUnreachable": "Cannot reach the server. Check your connection and try again."
+        "failedUnreachable": "Cannot reach the server. Check your connection and try again.",
+        "accountMenu": "Account"
     },
     "password": {
         "title": "Change password",
@@ -313,5 +316,36 @@
         "pendingTitle": "New request to review",
         "acceptedTitle": "Donor accepted — confirm the donation",
         "newBadge": "New"
+    },
+    "home": {
+        "howHeading": "How it works",
+        "steps": [
+            {
+                "title": "A family asks for blood",
+                "body": "They post the blood type, how many units and the hospital in the app. Our admin checks that the request is real before any donor is alerted."
+            },
+            {
+                "title": "Matching donors get an alert",
+                "body": "Donors with a compatible blood type, near the hospital, and at least 56 days since their last donation get a notification on their phone."
+            },
+            {
+                "title": "A donor gives blood at the hospital",
+                "body": "A donor who accepts sees the family's phone number and donates at the hospital or blood center. The app reminds them when they can donate again."
+            }
+        ],
+        "safetyHeading": "Stay safe",
+        "safety": [
+            "LifeLink is free. It never asks donors or families for money — if anyone asks you to pay, do not.",
+            "Give blood only at a hospital or blood center.",
+            "Download the app only from this website.",
+            "The app's reminders are not medical advice. The hospital decides whether you can donate."
+        ],
+        "aboutHeading": "Who made LifeLink",
+        "aboutBody": "LifeLink KH is a student project by Group 2 of the Cross-Platform Mobile App Development course in Cambodia. It is free and non-commercial: no ads, and your information is never sold. It is not run by a hospital or by the National Blood Transfusion Center.",
+        "teamLabel": "Team",
+        "team": "Nem Sothea, Moeun Nithvaraman, Suon Pisey, Sourn SAVOURN, Oun Sreynich",
+        "sourceLink": "Source code on GitHub",
+        "contactHeading": "Questions or help",
+        "contactBody": "Email us — we answer in Khmer or English."
     }
 }

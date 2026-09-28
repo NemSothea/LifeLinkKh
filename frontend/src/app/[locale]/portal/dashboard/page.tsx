@@ -5,7 +5,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import Notice from '@/components/Notice';
 import PageHeader from '@/components/PageHeader';
 import PortalTabs from '@/components/PortalTabs';
-import SignOutButton from '@/components/SignOutButton';
+import AccountMenu from '@/components/AccountMenu';
 import BarChart, { type Series } from '@/components/charts/BarChart';
 import ChartCard from '@/components/charts/ChartCard';
 import PieChart from '@/components/charts/PieChart';
@@ -222,10 +222,10 @@ export default async function DashboardPage({
                 title={t('title')}
                 subtitle={`${t('intro')} ${periodLabel}`}
                 notifications={notifications}
+                account={<AccountMenu locale={locale} displayName={displayName} role="ADMIN" />}
             >
-                <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex">
                     <PortalTabs locale={locale} active="dashboard" />
-                    <SignOutButton locale={locale} displayName={displayName} role="ADMIN" />
                 </div>
             </PageHeader>
 
