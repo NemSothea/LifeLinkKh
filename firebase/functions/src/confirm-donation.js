@@ -58,6 +58,13 @@ export async function confirmDonation({ db, caller, data, now = new Date(), log 
     if (!request.exists) {
       throw new HttpsError('not-found', 'No such request.', { code: 'REQUEST_NOT_FOUND' });
     }
+    // Only an OPEN request takes a donation. A CANCELLED or REJECTED one has no need to fill,
+    // and confirming against it would still start the donor's 56-day cooldown and count a
+    // donation in the metrics that no hospital asked for. FULFILLED is refused too: every
+    // unit it needed is already on record.
+    if (request.get('status') !== 'OPEN') {
+      throw new HttpsError('failed-precondition', 'The request is not open.', { code: 'REQUEST_NOT_OPEN', status: request.get('status') });
+    }
     if (!match.exists || match.get('requestId') !== requestId || match.get('response') !== 'ACCEPTED') {
       throw new HttpsError('failed-precondition', 'No accepted match with that id on this request.', { code: 'MATCH_NOT_ACCEPTED' });
     }
@@ -96,7 +103,7 @@ export async function confirmDonation({ db, caller, data, now = new Date(), log 
       tx.update(donorRef, { lastDonationDate: donatedAt, updatedAt: FieldValue.serverTimestamp() });
     }
     let status = request.get('status');
-    if (confirmed.size + 1 >= request.get('unitsNeeded') && status === 'OPEN') {
+    if (confirmed.size + 1 >= request.get('unitsNeeded')) {
       status = 'FULFILLED';
       tx.update(requestRef, { status, updatedAt: FieldValue.serverTimestamp() });
     }

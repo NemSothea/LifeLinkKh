@@ -73,6 +73,17 @@ describe('confirmDonation', () => {
     expect((await db.doc('donors/d1').get()).get('lastDonationDate')).toEqual(dateToTimestamp('2026-09-25'));
   });
 
+  // A request the family withdrew, or the admin rejected, has no need left to fill — and a
+  // confirmation against it would still start the donor's cooldown and count in the metrics.
+  for (const status of ['CANCELLED', 'REJECTED', 'FULFILLED', 'PENDING']) {
+    test(`a ${status} request takes no donation`, async () => {
+      await db.doc('requests/r1').update({ status });
+      await refused(confirm(), 'failed-precondition', 'REQUEST_NOT_OPEN');
+      expect((await db.collection('donations').get()).size).toBe(0);
+      expect((await db.doc('donors/d1').get()).get('lastDonationDate')).toBeNull();
+    });
+  }
+
   test('two clicks racing write one donation', async () => {
     const results = await Promise.allSettled([confirm(), confirm()]);
     expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
