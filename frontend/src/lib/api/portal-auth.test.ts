@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeJwt } from '@/test/fake-firebase';
-import { changePassword, portalEmail, portalLogin } from './portal-auth';
+import { changePassword, portalEmail, portalGoogleLogin, portalLogin } from './portal-auth';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -94,5 +94,44 @@ describe('changePassword', () => {
             error: 'INVALID_LOGIN_CREDENTIALS',
         });
         expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('portalGoogleLogin', () => {
+    it('trades the Google ID token with signInWithIdp and keeps an admin token', async () => {
+        const token = fakeJwt({ sub: 'g1', role: 'ADMIN', name: 'Nem Sothea' });
+        const fetchMock = vi.fn().mockResolvedValue(ok({ idToken: token, localId: 'g1' }));
+        vi.stubGlobal('fetch', fetchMock);
+
+        expect(await portalGoogleLogin('google-id-token')).toEqual({
+            ok: true,
+            data: { token, user: { id: 'g1', role: 'ADMIN', displayName: 'Nem Sothea' } },
+        });
+        const [url, init] = fetchMock.mock.calls[0];
+        expect(url).toContain('accounts:signInWithIdp');
+        expect(JSON.parse(init.body)).toMatchObject({
+            postBody: 'id_token=google-id-token&providerId=google.com',
+            returnSecureToken: true,
+        });
+    });
+
+    // Any Google account can complete the exchange; a donor's is not a portal session.
+    it('a Google account without the ADMIN claim is not a session', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockResolvedValue(ok({ idToken: fakeJwt({ sub: 'g2' }), localId: 'g2' })),
+        );
+        expect(await portalGoogleLogin('google-id-token')).toEqual({
+            ok: false,
+            error: 'NOT_ADMIN',
+        });
+    });
+
+    it('a reply with no Firebase token is not a session', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(ok({ needConfirmation: true })));
+        expect(await portalGoogleLogin('google-id-token')).toEqual({
+            ok: false,
+            error: 'NOT_ADMIN',
+        });
     });
 });

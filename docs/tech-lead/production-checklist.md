@@ -130,6 +130,7 @@ is kept for when the 500-user decision is made.
   | `FIREBASE_PROJECT_ID` | `lifelinkkh` |
   | `FIREBASE_API_KEY` | Firebase → Project settings → General → Web API key |
   | `SUPPORT_EMAIL` | the monitored address for deletion requests (DEC-016) |
+  | `GOOGLE_CLIENT_ID` | optional, for admin Google sign-in (DEC-017): Authentication → Sign-in method → Google → Web SDK configuration → **Web client ID**. Add the portal's URL under that OAuth client's **Authorized JavaScript origins** in Google Cloud → Credentials |
   | `APK_DOWNLOAD_URL` | LifeLink's page on `https://kosignstore.wecambodia.com/` (unset: GitHub Releases) |
   | `APK_CERT_SHA256` | optional: the signing certificate SHA-256 `build-release-apk.sh` prints, shown on `/download` |
 

@@ -47,22 +47,48 @@ export async function portalLogin(
         returnSecureToken: true,
     });
     if (!result.ok) return result;
+    return adminSession(result.data);
+}
 
-    // A valid password on an account with no staff claim — a revoked account that was not
-    // disabled, say — is not a portal session. Same answer as a wrong password.
-    const claims = tokenClaims(result.data.idToken);
+/**
+ * Google sign-in for an admin. The browser gets a Google ID token from Google Identity Services;
+ * this trades it for a Firebase ID token with `signInWithIdp`, on the server, like the password.
+ *
+ * Any Google account can complete the exchange — Google sign-in is the app's sign-up too, so a
+ * first-time account becomes a Firebase user with no claims. Only an account `seed:admin` gave
+ * the ADMIN claim (`PORTAL_ADMIN_GOOGLE_EMAIL`) becomes a portal session.
+ */
+export async function portalGoogleLogin(googleIdToken: string): Promise<ApiResult<PortalSession>> {
+    const result = await identityToolkit<SignInResponse>('signInWithIdp', {
+        postBody: `id_token=${encodeURIComponent(googleIdToken)}&providerId=google.com`,
+        // Required by the endpoint, unused for an ID-token exchange; localhost is an
+        // authorized domain on every Firebase project.
+        requestUri: 'http://localhost',
+        returnSecureToken: true,
+        returnIdpCredential: true,
+    });
+    if (!result.ok) return result;
+    return adminSession(result.data);
+}
+
+/**
+ * A token Google just issued, kept only when it carries the ADMIN claim. A valid credential on
+ * an account with no staff claim — a revoked account that was not disabled, say, or a donor's
+ * Google account — is not a portal session. Same answer as a wrong password.
+ */
+function adminSession(data: SignInResponse): ApiResult<PortalSession> {
+    const claims = tokenClaims(data.idToken);
     const role = typeof claims.role === 'string' ? claims.role : null;
     if (role !== 'ADMIN') return { ok: false, error: 'NOT_ADMIN' };
     // The token's `name` claim: the sign-in response carries `displayName` in production but
     // not from the Auth emulator, and the token is the one place both agree on.
-    const displayName =
-        result.data.displayName ?? (typeof claims.name === 'string' ? claims.name : null);
+    const displayName = data.displayName ?? (typeof claims.name === 'string' ? claims.name : null);
 
     return {
         ok: true,
         data: {
-            token: result.data.idToken,
-            user: { id: result.data.localId, role, displayName },
+            token: data.idToken,
+            user: { id: data.localId, role, displayName },
         },
     };
 }

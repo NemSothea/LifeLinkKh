@@ -12,6 +12,7 @@ const {
     hasPortalSession,
     portalDisplayName,
     portalRole,
+    portalHasPassword,
     portalUsername,
     requirePortalToken,
     SESSION_COOKIE,
@@ -47,6 +48,30 @@ describe('portalUsername', () => {
             email: 'soborey@portal.lifelink.invalid',
         });
         expect(await portalUsername()).toBe('soborey');
+    });
+
+    it('is null for a Google admin, whose email is their own address', async () => {
+        cookieStore[SESSION_COOKIE] = fakeJwt({
+            sub: 'u2',
+            role: 'ADMIN',
+            email: 'someone@gmail.com',
+        });
+        expect(await portalUsername()).toBeNull();
+    });
+});
+
+describe('portalHasPassword', () => {
+    it('is true for a password session and false for a Google one', async () => {
+        cookieStore[SESSION_COOKIE] = fakeJwt({
+            sub: 'u1',
+            firebase: { sign_in_provider: 'password' },
+        });
+        expect(await portalHasPassword()).toBe(true);
+        cookieStore[SESSION_COOKIE] = fakeJwt({
+            sub: 'u2',
+            firebase: { sign_in_provider: 'google.com' },
+        });
+        expect(await portalHasPassword()).toBe(false);
     });
 });
 

@@ -24,9 +24,11 @@
         "hidePassword": "Hide password",
         "rememberUsername": "Remember my username",
         "rememberHint": "Your password is not stored here — let your browser save it when it offers.",
-        "usernamePlaceholder": "e.g. soborey",
+        "usernamePlaceholder": "e.g. nemsothea",
         "passwordPlaceholder": "Your portal password",
         "failedRateLimited": "Too many attempts. Wait a minute and try again.",
+        "or": "or",
+        "googleFailed": "This Google account is not a LifeLink admin.",
         "failedUnreachable": "Cannot reach the server. Check your connection and try again."
     },
     "password": {

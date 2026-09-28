@@ -4,6 +4,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 import LegalLinks from '@/components/LegalLinks';
 import { IconDroplet } from '@/components/icons';
 import { hasPortalSession } from '@/lib/api/session';
+import GoogleSignIn from './google-sign-in';
 import SignInForm from './sign-in-form';
 
 /**
@@ -59,6 +60,24 @@ export default async function SignInPage({ params }: { params: Promise<{ locale:
                     passwordPlaceholder: t('passwordPlaceholder'),
                 }}
             />
+
+            {/* Shown only once the OAuth client is configured, so a deploy without it keeps
+                the password form alone rather than a button that cannot work. */}
+            {process.env.GOOGLE_CLIENT_ID ? (
+                <div className="mt-6">
+                    <GoogleSignIn
+                        clientId={process.env.GOOGLE_CLIENT_ID}
+                        locale={locale}
+                        copy={{
+                            or: t('or'),
+                            failed: t('googleFailed'),
+                            failedRateLimited: t('failedRateLimited'),
+                            failedUnreachable: t('failedUnreachable'),
+                            submitting: t('submitting'),
+                        }}
+                    />
+                </div>
+            ) : null}
 
             <p className="mt-8 text-xs text-black/45 dark:text-white/45">{t('noSelfSignup')}</p>
             <div className="mt-4">

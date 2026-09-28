@@ -12,6 +12,8 @@
 //   PORTAL_ADMIN_PASSWORD=… npm run seed:admin -- --project lifelinkkh   # REAL project
 //   PORTAL_ADMIN_USERNAME=nemsothea PORTAL_ADMIN_NAME='Nem Sothea' PORTAL_ADMIN_PASSWORD=… \
 //     npm run seed:admin -- --project lifelinkkh                        # another admin
+//   PORTAL_ADMIN_GOOGLE_EMAIL=someone@gmail.com npm run seed:admin -- --project lifelinkkh
+//                                                                      # a Google admin, no password
 //
 // To end an admin's access: delete admins/{uid} (the rules refuse them on the next read) and
 // disable the user in the Firebase console. The password is never logged.
@@ -32,6 +34,38 @@ if (!real) {
 if (real && (process.env.FIRESTORE_EMULATOR_HOST || process.env.FIREBASE_AUTH_EMULATOR_HOST)) {
   console.error(`An emulator host is set, so "${projectId}" would silently mean the emulator. Unset it.`);
   process.exit(1);
+}
+
+// PORTAL_ADMIN_GOOGLE_EMAIL: make an existing Google account an admin, for "Sign in with Google"
+// on the portal. No password is involved. The account must have signed in with Google once
+// already (the portal or the app), which is what creates its Firebase user; this refuses an
+// address that has no Google sign-in on it, so a typo cannot hand the claim to someone else's
+// password account.
+const googleEmail = process.env.PORTAL_ADMIN_GOOGLE_EMAIL?.trim().toLowerCase();
+if (googleEmail) {
+  initializeApp(real ? { projectId, credential: applicationDefault() } : { projectId });
+  const auth = getAuth();
+  const user = await auth.getUserByEmail(googleEmail).catch((e) => {
+    if (e.code === 'auth/user-not-found') return null;
+    throw e;
+  });
+  if (!user) {
+    console.error(`${googleEmail} has no Firebase user yet. Sign in with Google once (the portal says "not an admin"), then run this again.`);
+    process.exit(1);
+  }
+  if (!user.providerData.some((p) => p.providerId === 'google.com')) {
+    console.error(`${googleEmail} exists but has never signed in with Google. REFUSED.`);
+    process.exit(1);
+  }
+  const displayName = process.env.PORTAL_ADMIN_NAME ?? user.displayName ?? googleEmail;
+  await auth.setCustomUserClaims(user.uid, { ...user.customClaims, role: 'ADMIN' });
+  await getFirestore().doc(`admins/${user.uid}`).set({
+    displayName,
+    username: googleEmail,
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+  console.log(`${real ? 'REAL PROJECT' : 'emulator'} ${projectId}: Google admin ${googleEmail} in place (sign out and in again to pick up the claim)`);
+  process.exit(0);
 }
 
 // PORTAL_ADMIN_USERNAME / PORTAL_ADMIN_NAME pick another admin; soborey stays the default.

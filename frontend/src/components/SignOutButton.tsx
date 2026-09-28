@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { signOutAction } from '@/app/[locale]/sign-in/actions';
+import { portalHasPassword } from '@/lib/api/session';
 
 /**
  * Who is signed in, and the way out. A portal with a login and no visible sign-out is a
@@ -21,6 +22,7 @@ export default async function SignOutButton({
     const t = await getTranslations('signIn');
     const roles = await getTranslations('admin');
     const password = await getTranslations('password');
+    const hasPassword = await portalHasPassword();
 
     return (
         <form action={signOutAction} className="flex items-center gap-2">
@@ -40,13 +42,15 @@ export default async function SignOutButton({
                     </span>
                 ) : null}
             </span>
-            <Link
-                href={`/${locale}/portal/password`}
-                data-testid="change-password-link"
-                className="text-sm font-medium text-black/60 underline-offset-4 hover:underline dark:text-white/60"
-            >
-                {password('title')}
-            </Link>
+            {hasPassword ? (
+                <Link
+                    href={`/${locale}/portal/password`}
+                    data-testid="change-password-link"
+                    className="text-sm font-medium text-black/60 underline-offset-4 hover:underline dark:text-white/60"
+                >
+                    {password('title')}
+                </Link>
+            ) : null}
             <button
                 type="submit"
                 data-testid="sign-out"

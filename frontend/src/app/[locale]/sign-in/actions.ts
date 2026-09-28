@@ -2,7 +2,9 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { portalLogin } from '@/lib/api/portal-auth';
+import { portalGoogleLogin, portalLogin, type PortalSession } from '@/lib/api/portal-auth';
+import type { ApiResult } from '@/lib/api/client';
+import { routing, type Locale } from '@/i18n/routing';
 import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from '@/lib/api/session';
 
 /**
@@ -40,8 +42,28 @@ export async function signInAction(
         return 'invalid';
     }
 
-    const result = await portalLogin(username.trim(), password);
+    return startSession(await portalLogin(username.trim(), password), locale);
+}
 
+/**
+ * Sign in with Google (admins only). The browser hands over the ID token Google Identity
+ * Services just issued; the exchange for a Firebase session happens here, so the Firebase token
+ * never exists in page script — the same as the password path.
+ */
+export async function googleSignInAction(
+    credential: unknown,
+    locale: unknown,
+): Promise<SignInError | null> {
+    if (typeof credential !== 'string' || credential === '' || typeof locale !== 'string') {
+        return 'invalid';
+    }
+    return startSession(await portalGoogleLogin(credential), locale);
+}
+
+async function startSession(
+    result: ApiResult<PortalSession>,
+    locale: string,
+): Promise<SignInError | null> {
     if (!result.ok) {
         if (result.error === 'unreachable') return 'unreachable';
         // Firebase Auth's lockout after repeated failures on one account — not a rejected
@@ -72,7 +94,9 @@ export async function signInAction(
         maxAge: SESSION_MAX_AGE_SECONDS,
     });
 
-    redirect(`/${locale}/portal`);
+    // Only a known locale goes into the redirect: the value comes from the request, and
+    // `/${'/evil.example'}/portal` would be a protocol-relative redirect off this site.
+    redirect(`/${knownLocale(locale)}/portal`);
 }
 
 /**
@@ -87,5 +111,9 @@ export async function signOutAction(formData: FormData) {
     const store = await cookies();
     store.delete(SESSION_COOKIE);
     store.delete(`${SESSION_COOKIE}_name`);
-    redirect(`/${typeof locale === 'string' ? locale : 'km'}/sign-in`);
+    redirect(`/${knownLocale(locale)}/sign-in`);
+}
+
+function knownLocale(locale: unknown): Locale {
+    return routing.locales.includes(locale as Locale) ? (locale as Locale) : routing.defaultLocale;
 }

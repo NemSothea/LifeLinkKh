@@ -24,9 +24,11 @@
         "hidePassword": "លាក់ពាក្យសម្ងាត់",
         "rememberUsername": "ចងចាំឈ្មោះអ្នកប្រើរបស់ខ្ញុំ",
         "rememberHint": "ពាក្យសម្ងាត់មិនត្រូវបានរក្សាទុកនៅទីនេះទេ — សូមឱ្យកម្មវិធីរុករករបស់អ្នករក្សាទុកវានៅពេលវាស្នើ។",
-        "usernamePlaceholder": "ឧ. soborey",
+        "usernamePlaceholder": "ឧ. nemsothea",
         "passwordPlaceholder": "ពាក្យសម្ងាត់វិបផតថលរបស់អ្នក",
         "failedRateLimited": "ព្យាយាមច្រើនដងពេក។ សូមរង់ចាំមួយនាទី រួចព្យាយាមម្តងទៀត។",
+        "or": "ឬ",
+        "googleFailed": "គណនី Google នេះមិនមែនជាអ្នកគ្រប់គ្រង LifeLink ទេ។",
         "failedUnreachable": "មិនអាចភ្ជាប់ទៅម៉ាស៊ីនមេបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្តងទៀត។"
     },
     "password": {

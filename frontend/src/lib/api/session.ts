@@ -54,6 +54,7 @@ async function claims(): Promise<{
     sub?: string;
     role?: string;
     email?: string;
+    firebase?: { sign_in_provider?: string };
 } | null> {
     const token = await portalToken();
     if (!token) return null;
@@ -84,7 +85,19 @@ export async function portalUserId(): Promise<string | null> {
  */
 export async function portalUsername(): Promise<string | null> {
     const email = (await claims())?.email;
-    return email ? email.slice(0, email.indexOf('@')) : null;
+    // A Google admin's email is their own address, not a portal username.
+    if (!email?.endsWith(PORTAL_EMAIL_DOMAIN)) return null;
+    return email.slice(0, -PORTAL_EMAIL_DOMAIN.length);
+}
+
+const PORTAL_EMAIL_DOMAIN = '@portal.lifelink.invalid';
+
+/**
+ * True when this session came from a portal password (`signInWithPassword`), false for Google
+ * sign-in. A Google admin has no portal password to change.
+ */
+export async function portalHasPassword(): Promise<boolean> {
+    return (await claims())?.firebase?.sign_in_provider === 'password';
 }
 
 /** The signed-in staff member's display name, for the header. Never used as an identity. */

@@ -707,3 +707,35 @@ used to erase someone's account.
 `/{locale}/delete-account` on the portal explains the in-app steps and, for someone who has lost
 the phone, the address to write to. An operator then runs the script. Play accepts a request form
 or address, not an automatic web deletion, and the portal has no Google sign-in to build one on.
+
+## DEC-017 — Admins may sign in to the portal with Google
+
+**Date:** 2026-09-28 · **Raised by:** Nem Sothea (Tech Lead / Security) · **Status:** accepted
+
+### Context
+DEC-014 made the portal admin-only, with a username and password per admin. A password the team
+has to create, store and hand over is the weakest part of that: on the first production deploy
+one was exposed in a chat and the account had to be disabled. Every admin already has a Google
+account, and Google sign-in is already enabled on `lifelinkkh` for the app.
+
+### Decision
+The sign-in page offers **Sign in with Google** next to the password form, for admins only.
+DEC-014 still holds: donors and requesters use the app, and the portal has no sign-up.
+
+- Google Identity Services gives the browser a Google ID token. A Server Action trades it for a
+  Firebase ID token with `signInWithIdp` and sets the same httpOnly session cookie as the
+  password path. The Firebase token never reaches page script.
+- Entry is decided by the ADMIN claim, exactly as for a password. Any Google account can finish
+  the exchange (it is the app's sign-up too), so a non-admin gets a Firebase user with no claim
+  and the page says "not a LifeLink admin".
+- An admin's Google account is granted with
+  `PORTAL_ADMIN_GOOGLE_EMAIL=… npm run seed:admin -- --project lifelinkkh`, after it has signed
+  in with Google once. The script refuses an address with no Google sign-in on it.
+- The button appears only when `GOOGLE_CLIENT_ID` is set, so a deploy without it keeps the
+  password form alone. Google admins see no "Change password" link.
+- The password form stays: it is the way in when Google is unavailable, and on the emulators.
+
+### Consequences
+A Google account that is also a donor in the app gets admin rights in the app's rules too, because
+the claim sits on the one Firebase user. Use a Google account for admin work that is not also
+used to donate. An admin's access still ends by deleting `admins/{uid}` and disabling the user.
