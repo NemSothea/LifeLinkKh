@@ -31,7 +31,7 @@ Facebook-post approach used by hospitals and the National Blood Transfusion Cent
 ### Why we chose it
 - Real, life-saving social impact — strong story for the project defense.
 - Exercises grade-worthy tech: authentication, push notifications, GPS, and a cloud database with
-  server-side rules (Firestore + Security Rules + Cloud Functions since ADR 0009; PostgreSQL before).
+  server-side rules (Firestore + Security Rules + the portal's functions since ADR 0009/0010; PostgreSQL before).
 - Scope fits a team of 3 across ~13 weeks of development.
 - Clear success metrics: donors registered, requests matched, notifications delivered.
 
@@ -42,11 +42,11 @@ https://capybara.kosign.dev/en/docs/overview
 
 | Layer         | Technology |
 |---------------|------------|
-| Backend       | **Firebase** (project `lifelinkkh`, region `asia-southeast1`) — Cloud Functions (`onRequestCreated`, `onMatchAnswered`, `confirmDonation`), Firebase Auth. Replaced Spring Boot by ADR 0009 |
+| Backend       | **Firebase** (project `lifelinkkh`, region `asia-southeast1`, **Spark plan**) — Firestore + Firebase Auth + FCM. The server logic (matching, pushes, approve/confirm, the app's create-request / respond / delete-account) runs as **the portal's functions** on the Next server, `frontend/src/server/` — ADR 0010 replaced the six Cloud Functions of ADR 0009 so no card is on the project |
 | Database      | Cloud Firestore + Security Rules (`firebase/firestore.rules`, emulator-tested). Replaced PostgreSQL by ADR 0009 |
 | Mobile app    | **Flutter** — donor/patient app, builds native Android → Play Store. iOS build target added (DEC-006): device/simulator build only, no App Store submission, no Apple Developer account. |
-| Web portal    | Next.js (App Router, TypeScript, Tailwind CSS) — public board + admin portal (admin-only in v1, DEC-014); talks to Firebase over REST from the Next server |
-| Local dev     | Firebase Emulator Suite (`cd firebase && npm run emulators:app` — Firestore, Auth, Functions; needs Java 21). No Docker |
+| Web portal    | Next.js (App Router, TypeScript, Tailwind CSS) on Vercel Hobby (`sin1`) — public board + admin portal (admin-only in v1, DEC-014); reads Firebase over REST from the Next server, and serves the functions at `/api/functions/{name}` with the Admin SDK (ADR 0010) |
+| Local dev     | Firebase Emulator Suite (`cd firebase && npm run emulators:app` — Firestore, Auth; needs Java 21) + the portal (`npm run dev`), which the app also needs for its writes. No Docker |
 | CI            | GitHub Actions — owned by Tech Lead; there is no infra role |
 | Push          | Firebase Cloud Messaging (FCM) — `firebase_messaging` (Flutter) |
 | Location      | `geolocator` (Flutter). **No map widget** — coordinates satisfy the GPS requirement; rendering a map is a week for no marks (DEC-004) |
@@ -69,19 +69,22 @@ https://capybara.kosign.dev/en/docs/overview
             Firebase (lifelinkkh, asia-southeast1)
      ┌──────────────────────────────────────────────┐
      │  Firestore + Security Rules   Firebase Auth   │
-     │        │ triggers                             │
-     │  Cloud Functions ──────────────> FCM push     │
+     │  FCM                                          │
      └──────────────────────────────────────────────┘
-          ▲  Firebase SDK            ▲  REST (admin ID token, from the Next server)
-          │                          │
-     Flutter app               Next.js web portal
-  (donors/requesters)        (public board + admin)
-     → Play Store
+          ▲  Firebase SDK (reads)     ▲  REST (admin ID token) + Admin SDK (the functions)
+          │                           │
+     Flutter app ──── POST /api/functions/{name} ────> Next.js web portal, Vercel sin1
+  (donors/requesters)   createRequest · respondToMatch    (public board + admin +
+     → sideloaded APK   deleteAccount                      reviewRequest · confirmDonation)
 ```
+
+Since ADR 0010 there are no Cloud Functions: the portal's server is the one place that writes
+what a client must not, and the rules refuse those writes to every client.
 
 Locally the whole Firebase side runs on the Emulator Suite (`firebase/README.md`); the portal
 runs with `npm run dev` pointed at it, and the Flutter app with
-`--dart-define=FIRESTORE_EMULATOR=…`. Setup: `docs/tech-lead/local-development.md`.
+`--dart-define=FIRESTORE_EMULATOR=… --dart-define=PORTAL_URL=…` (the portal must be up: the app
+posts, answers and deletes through it). Setup: `docs/tech-lead/local-development.md`.
 
 ## 4. Milestones (course requirement: M1 → M7, from Week 3, M7 by Week 15)
 
@@ -136,6 +139,12 @@ runs with `npm run dev` pointed at it, and the Flutter app with
 > distinct from `docs/demo-runbook.md` (the Tech Lead's own command-by-command runbook for standing
 > the stack up before a demo). No milestone-boundary sign-off; it is a living doc, updated whenever
 > the golden path changes.
+>
+> **Amended 2026-09-29 by ADR 0010 / DEC-018 — the six Cloud Functions moved into the portal's
+> server on Vercel; `lifelinkkh` is on the free Spark plan with no card.** Not a milestone. The app
+> calls `POST /api/functions/{name}` on the portal for its three writes; matching runs when the
+> admin clicks Approve. `firebase/functions/` is gone; the handlers and their tests are
+> `frontend/src/server/` and `frontend/test/server/`.
 >
 > **Amended 2026-09-26 by ADR 0009 / DEC-014 — Firebase replaces Spring Boot + PostgreSQL; the
 > portal is admin-only.** Not a milestone and not a new FR. The rows above keep the wording they

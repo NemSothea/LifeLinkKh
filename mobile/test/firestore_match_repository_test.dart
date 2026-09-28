@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,23 +11,36 @@ import 'package:lifelink_kh/src/features/match/domain/match.dart';
 import 'package:lifelink_kh/src/features/match/domain/match_response_type.dart';
 import 'package:lifelink_kh/src/features/match/domain/respond_result.dart';
 import 'package:lifelink_kh/src/features/request/data/firestore_request_repository.dart';
-import 'package:mock_exceptions/mock_exceptions.dart';
+import 'package:lifelink_kh/src/core/api/portal_api.dart';
+
+import 'support/portal_api_fakes.dart';
 
 /// The donor's `matches` (ADR 0009) — the Firestore counterpart of
-/// `dio_match_repository_test.dart`. The rules that refuse a second answer are tested for
-/// real in `firebase/rules-tests/`; here a refusal is thrown by hand to test what the
-/// repository makes of it.
+/// `dio_match_repository_test.dart`. The answer goes through the portal's `respondToMatch`
+/// (ADR 0010), whose refusals are tested for real in `frontend/test/server/`; here the portal
+/// is a fake that writes what the real one would, or refuses the way it would, to test what
+/// the repository makes of it.
 void main() {
     late FakeFirebaseFirestore db;
     String? uid;
+    late FakePortalApi portal;
     late FirestoreMatchRepository repository;
 
     setUp(() async {
         db = FakeFirebaseFirestore();
         uid = 'sothea';
+        portal = FakePortalApi((name, data) async {
+            final fields = data! as Map;
+            await db.doc('matches/${fields['matchId']}').update({
+                'response': fields['response'],
+                'respondedAt': Timestamp.fromDate(DateTime(2026, 9, 26, 10, 5)),
+            });
+            return {'matchId': fields['matchId'], 'response': fields['response'], 'replay': false};
+        });
         repository = FirestoreMatchRepository(
             db,
-            FirestoreRequestRepository(db, currentUid: () => uid),
+            FirestoreRequestRepository(db, api: portal, currentUid: () => uid),
+            api: portal,
             currentUid: () => uid,
             writeWait: const Duration(milliseconds: 300),
         );
@@ -95,9 +110,12 @@ void main() {
     });
 
     group('respond', () {
-        test('accepting writes the answer and returns the family\'s contact', () async {
+        test('accepting sends the answer to the portal and returns the family\'s contact', () async {
             final result = (await repository.respond('r1_sothea', MatchResponseType.accepted) as Success<RespondResult>).value;
+            expect(portal.calls.single.name, 'respondToMatch');
+            expect(portal.calls.single.data, {'matchId': 'r1_sothea', 'response': 'ACCEPTED'});
             expect(result.response, MatchResponseType.accepted);
+            expect(result.respondedAt, DateTime(2026, 9, 26, 10, 5));
             expect(result.requesterContact?.displayName, 'Chea Srey');
             expect((await db.doc('matches/r1_sothea').get()).get('response'), 'ACCEPTED');
         });
@@ -109,33 +127,43 @@ void main() {
 
         test('a replay of the answer already stored is success — the idempotency key\'s job', () async {
             await db.doc('matches/r1_sothea').update({'response': 'ACCEPTED'});
-            whenCalling(Invocation.method(#update, null))
-                .on(db.doc('matches/r1_sothea'))
-                .thenThrow(FirebaseException(plugin: 'cloud_firestore', code: 'permission-denied'));
+            portal.handler = (_, data) async =>
+                {'matchId': (data! as Map)['matchId'], 'response': 'ACCEPTED', 'replay': true};
             expect(await repository.respond('r1_sothea', MatchResponseType.accepted), isA<Success<RespondResult>>());
         });
 
         test('a different answer after one is stored is ALREADY_RESPONDED', () async {
-            await db.doc('matches/r1_sothea').update({'response': 'DECLINED'});
-            whenCalling(Invocation.method(#update, null))
-                .on(db.doc('matches/r1_sothea'))
-                .thenThrow(FirebaseException(plugin: 'cloud_firestore', code: 'permission-denied'));
+            portal.handler = (_, _) async => throw const PortalCallException(
+                code: 'failed-precondition', details: {'code': 'ALREADY_RESPONDED'},
+            );
             final failure = (await repository.respond('r1_sothea', MatchResponseType.accepted) as Failed<RespondResult>).failure;
             expect(failure, isA<ConflictFailure>().having((f) => f.code, 'code', 'ALREADY_RESPONDED'));
         });
 
         test('refused while still unanswered means the request closed', () async {
-            whenCalling(Invocation.method(#update, null))
-                .on(db.doc('matches/r1_sothea'))
-                .thenThrow(FirebaseException(plugin: 'cloud_firestore', code: 'permission-denied'));
+            portal.handler = (_, _) async => throw const PortalCallException(
+                code: 'failed-precondition', details: {'code': 'REQUEST_NOT_OPEN'},
+            );
             final failure = (await repository.respond('r1_sothea', MatchResponseType.accepted) as Failed<RespondResult>).failure;
             expect(failure, isA<ConflictFailure>().having((f) => f.code, 'code', 'REQUEST_NOT_OPEN'));
         });
 
+        test('a match that is not mine, or gone, is NotFoundFailure', () async {
+            portal.handler = (_, _) async => throw const PortalCallException(
+                code: 'not-found', details: {'code': 'MATCH_NOT_FOUND'},
+            );
+            final failure = (await repository.respond('r1_sothea', MatchResponseType.accepted) as Failed<RespondResult>).failure;
+            expect(failure, isA<NotFoundFailure>());
+        });
+
         test('offline is NetworkFailure, so the offline-first wrapper queues it', () async {
-            whenCalling(Invocation.method(#update, null))
-                .on(db.doc('matches/r1_sothea'))
-                .thenThrow(FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'));
+            portal.handler = (_, _) async => throw const PortalCallException(code: 'unavailable');
+            final failure = (await repository.respond('r1_sothea', MatchResponseType.accepted) as Failed<RespondResult>).failure;
+            expect(failure, isA<NetworkFailure>());
+        });
+
+        test('a portal that never answers is NetworkFailure too, after the wait', () async {
+            portal.handler = (_, _) => Completer<Object?>().future;
             final failure = (await repository.respond('r1_sothea', MatchResponseType.accepted) as Failed<RespondResult>).failure;
             expect(failure, isA<NetworkFailure>());
         });
@@ -144,6 +172,7 @@ void main() {
             uid = null;
             final failure = (await repository.respond('r1_sothea', MatchResponseType.accepted) as Failed<RespondResult>).failure;
             expect(failure, isA<UnauthorizedFailure>());
+            expect(portal.calls, isEmpty);
         });
     });
 }

@@ -21,34 +21,30 @@ Everything runs from the branch `feat/firebase-backend`. It is not merged into `
 > has more than **500 users**; then decide again with real numbers from `npm run metrics` and the
 > billing page. Everything below is chosen to stay inside the free allowances.
 
-- [ ] **Blaze plan** on `lifelinkkh` (console → Usage and billing). Cloud Functions do not run on
-  the free Spark plan at all, and without them there is no matching, no push and no review. Blaze
-  asks for a card but **includes the same free allowance as Spark** and charges only above it. At
-  pilot size that should never happen:
+- [ ] **Spark plan** on `lifelinkkh` — the free one, **no card** ([ADR 0010](adr/0010-portal-functions-replace-cloud-functions.md)).
+  The server logic runs in the portal on Vercel, so nothing here needs Blaze. If the project is
+  still on Blaze from before: console → Usage and billing → **Modify plan → Spark**, then remove
+  the billing account from the project in Google Cloud Billing. Nothing in this project bills on
+  Spark:
 
-  | | Free each month (roughly) | LifeLink at 500 users |
+  | | Free (roughly) | LifeLink at 500 users |
   |---|---|---|
   | Firestore | 50,000 reads/day, 20,000 writes/day, 1 GB | thousands of reads a day |
-  | Cloud Functions | 2,000,000 calls | hundreds to a few thousand |
   | FCM push | unlimited | — |
   | Auth (Google, password) | 50,000 monthly users | 500 |
+  | Vercel Hobby (the portal + functions) | 100 GB-hours of functions, 100 GB bandwidth a month | a fraction |
 
-  Check the current numbers on the Blaze pricing page before you enter the card; Google changes
-  them.
-- [ ] **Budget alert at $1** in Google Cloud Billing → Budgets & alerts: budget **$1/month**,
-  alerts at 1% (the first cent), 50% and 100%, emailed to the Tech Lead. With a $0 target, any
-  charge at all is news. A budget only alerts; it does not stop spending. The real brake is
-  `maxInstances: 1` on the Functions (already set).
-- [ ] **Artifact cleanup.** The first Functions deploy (Part B) asks whether to set a cleanup
-  policy for old build images. Say **yes** (keep 1 day). Build images left to pile up are the most
-  likely way a "free" project earns its first charge.
+  Above the Firestore free quota on Spark, reads simply **stop for the day** rather than bill —
+  the portal shows its "could not load" notice and the app its offline card. At 500 users that is
+  the moment to decide again, with real numbers.
 - [ ] **Firestore database**: Native mode, location **`asia-southeast1` (Singapore)**, the same
-  region as the Functions.
+  region as the portal (`sin1`).
 
   > **The location cannot be changed later.** A wrong choice means a new project. Check it twice.
-- [ ] **Point-in-time recovery** on the database (Firestore → Disaster recovery), 7 days. Also add
-  a **daily backup schedule** with 7-day retention. Both cost cents at pilot size. Without them, a
-  bad rules deploy or a buggy Function that overwrites data cannot be undone.
+- [ ] **Backups.** Point-in-time recovery and scheduled backups are Blaze features; on Spark, export
+  by hand before anything risky: `npm run metrics` shows the counts, and the console's Firestore →
+  Import/Export needs Blaze too — so the honest answer at pilot size is *don't deploy rules on the
+  day of a demo*, and keep the emulator seed scripts as the way back to a known state.
 - [ ] **Authentication → Sign-in method:**
   - **Google** enabled. This is the app's sign-in.
   - **Email/Password** enabled. This is the portal admin's sign-in. Leave "Email link" off.
@@ -57,7 +53,7 @@ Everything runs from the branch `feat/firebase-backend`. It is not merged into `
   `mobile/android/app/` (already true for development). The release SHA-1s come in
   [`deploy-runbook.md`](deploy-runbook.md) Step 4 and Part E below.
 
-## Part B — Rules, indexes and Functions
+## Part B — Rules and indexes
 
 From `firebase/`, logged in (`npx firebase login`):
 
@@ -67,22 +63,25 @@ From `firebase/`, logged in (`npx firebase login`):
 
   ```bash
   cd firebase
-  npx firebase deploy --only firestore,functions --project lifelinkkh
+  npx firebase deploy --only firestore --project lifelinkkh
   ```
 
-  `firestore` covers `firestore.rules` and `firestore.indexes.json`. The first Functions deploy
-  asks to enable Cloud Build, Artifact Registry and Eventarc. Say yes. It takes several minutes.
-- [ ] Console → Functions shows **six**, all in `asia-southeast1`, runtime Node 22:
-  `onRequestCreated`, `onRequestApproved`, `onMatchAnswered`, `reviewRequest`, `confirmDonation`,
-  `deleteAccount`.
+  `firestore` covers `firestore.rules` and `firestore.indexes.json`. There are no Functions to
+  deploy (ADR 0010); the server logic ships with the portal in Part D.
+- [ ] **If six Cloud Functions are still deployed from before ADR 0010**, delete them so nothing
+  stale reacts to writes: `npx firebase functions:delete onRequestCreated onRequestApproved
+  onMatchAnswered reviewRequest confirmDonation deleteAccount --project lifelinkkh --force`.
+  Do this **after** Part D is live, never before: the app's writes go through the portal from the
+  first ADR 0010 APK, and the old triggers would double-handle them until then.
 - [ ] Console → Firestore → Indexes: all five composite indexes are **Enabled**, not "Building".
   A query against a building index fails, and the app shows it as a load error.
 - [ ] Console → Firestore → Rules: the published rules are the ones from this commit (check the
-  timestamp).
+  timestamp). The ADR 0010 rules refuse client writes to `requests`, `private/contact` and
+  `matches` — an APK from before it can no longer post or answer, which is what `--min` on
+  `npm run release` is for.
 
 **Rollback.** Rules: the console keeps the rules history, so republish the previous version.
-Functions: `git checkout <previous commit> -- firebase/functions` and deploy again. There is no
-one-click Functions rollback.
+The functions: redeploy the previous commit of the portal on Vercel (Deployments → Promote).
 
 ## Part C — Seed data and the admin account
 
@@ -114,10 +113,12 @@ most dangerous file in this project.
 ## Part D — The portal on Vercel (free)
 
 The portal runs on **Vercel's free Hobby plan**, which fits a free, non-profit service with no ads
-and no payments. Vercel's server only holds the Web API key, which is not a secret; there is no
-Firebase admin key on it (`frontend/src/lib/api/client.ts` explains why). Firebase App Hosting is
-the alternative (see the end of this part), but it bills through Cloud Run and Cloud Build, so it
-is kept for when the 500-user decision is made.
+and no payments. Since ADR 0010 the portal is also the server the app writes through
+(`/api/functions/{name}`), so Vercel holds **one** credential: the service-account JSON, as an
+environment variable, read in `frontend/src/server/firebase-admin.ts` and nowhere else. Every
+page still reads Firestore as the signed-in admin with no credential. Firebase App Hosting is the
+alternative (see the end of this part), but it bills through Cloud Run and Cloud Build, so it is
+kept for when the 500-user decision is made.
 
 - [ ] vercel.com → **Add New → Project** → import the GitHub repository.
   - **Root Directory: `frontend`**. Framework preset: Next.js (detected).
@@ -129,6 +130,7 @@ is kept for when the 500-user decision is made.
   |---|---|
   | `FIREBASE_PROJECT_ID` | `lifelinkkh` |
   | `FIREBASE_API_KEY` | Firebase → Project settings → General → Web API key |
+  | `FIREBASE_SERVICE_ACCOUNT` | **The one secret.** Project settings → Service accounts → Generate new private key; paste the whole JSON as the value (Vercel keeps multi-line values). Never `NEXT_PUBLIC_`, never in the repo. Without it the portal's functions cannot write or push, and every Approve fails |
   | `SUPPORT_EMAIL` | the monitored address for deletion requests (DEC-016) |
   | `GOOGLE_CLIENT_ID` | optional, for admin Google sign-in (DEC-017): Authentication → Sign-in method → Google → Web SDK configuration → **Web client ID**. Add the portal's URL under that OAuth client's **Authorized JavaScript origins** in Google Cloud → Credentials |
   | `PORTAL_PASSWORD_SIGN_IN` | leave **unset**: the portal offers both Google and username+password (DEC-017). `off` would make it Google-only |
@@ -144,6 +146,9 @@ is kept for when the 500-user decision is made.
 - [ ] Deploy (Vercel builds on every push to the production branch). On the
   `https://<project>.vercel.app` URL:
   - [ ] `/km` loads, and its footer health line says reachable. That is a real read of Firestore.
+  - [ ] Vercel → the deployment's **Functions** tab lists `/api/functions/[name]` in `sin1`, Node.
+    Then from the app (Part E) a posted request lands as `PENDING` — the first proof the service
+    account works.
   - [ ] `/km/portal` signed out shows the board (empty is fine).
   - [ ] Sign in with Google as the admin account (`nemsothea13@gmail.com`). The header shows Nem Sothea · ADMIN, and the "Waiting for review"
     queue is absent when there is nothing to review.
@@ -178,8 +183,8 @@ installed from the `/km/download` page the way a user would.
 - [ ] Post a second request from B and **Reject** it with a reason. B sees the reason in the app.
   The request never appears on the public board.
 - [ ] `npm run metrics -- --project lifelinkkh` shows 1 donor, 2 requests and 1 donation.
-- [ ] Console → Functions → Logs: no errors, apart from the FCM "token not registered" warnings
-  the code expects.
+- [ ] Vercel → Logs for `/api/functions/[name]` and the Server Actions: no errors, apart from the
+  FCM "token not registered" warnings the code expects.
 - [ ] Clean up: cancel or leave the test requests. Don't delete documents by hand in the console,
   because the metrics count them.
 
@@ -197,15 +202,15 @@ items do not come from code.
 **Before inviting users (sideloaded APK, until 500 users):**
 - [ ] **Privacy policy** — written: `https://<portal>/km/privacy` (English at `/en/privacy`), text
   in `frontend/src/messages/{en,km}.json` under `privacy`, each claim checked against the rules and
-  Functions. Before listing:
+  the portal's functions. Before listing:
   - [ ] a native Khmer speaker reads the Khmer version;
   - [ ] someone who knows Cambodian law reads it, if the partner hospital or NBTC can arrange it —
     it was written against the code, not by a lawyer;
   - [ ] confirm the **18+** age line is what you want (it is a product decision the policy states);
   - [ ] publish its URL with `npm run release -- … --privacy-url https://<portal>/km/privacy`; the
     app's Me tab links to whatever `config/app` says, and hides the link until it is set.
-- [ ] **Account deletion (DEC-016)** — built: **Me → Delete account** in the app (the
-  `deleteAccount` callable, fresh sign-in required), and the web link
+- [ ] **Account deletion (DEC-016)** — built: **Me → Delete account** in the app (the portal's
+  `deleteAccount` function, fresh sign-in required), and the web link
   `https://<portal>/km/delete-account`. Before inviting users:
   - [ ] set `SUPPORT_EMAIL` on Vercel (Part D) to an address someone reads — without it the page
     says the address is not set up;

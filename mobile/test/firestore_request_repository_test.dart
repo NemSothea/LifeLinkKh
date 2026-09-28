@@ -10,19 +10,46 @@ import 'package:lifelink_kh/src/features/request/domain/blood_request_draft.dart
 import 'package:lifelink_kh/src/features/request/domain/hospital.dart';
 import 'package:lifelink_kh/src/features/request/domain/request_status.dart';
 import 'package:lifelink_kh/src/features/request/domain/urgency.dart';
+import 'package:lifelink_kh/src/core/api/portal_api.dart';
+
+import 'support/portal_api_fakes.dart';
 
 /// The document contract of `requests` (ADR 0009) — the Firestore counterpart of
 /// `dio_request_repository_test.dart`. What the rules allow is `firebase/rules-tests/`;
-/// what `onRequestCreated` does with it is `firebase/functions/test/`.
+/// what the portal's `createRequest` writes is `frontend/test/server/` (ADR 0010). Here the
+/// portal is a fake that writes what the real one would, so the read-back is exercised.
 void main() {
     late FakeFirebaseFirestore db;
     String? uid;
+    late FakePortalApi portal;
     late FirestoreRequestRepository repository;
 
     setUp(() async {
         db = FakeFirebaseFirestore();
         uid = 'requester';
-        repository = FirestoreRequestRepository(db, currentUid: () => uid);
+        portal = FakePortalApi((name, data) async {
+            final fields = data! as Map;
+            final ref = db.collection('requests').doc();
+            await ref.set({
+                'createdBy': uid,
+                'hospitalId': fields['hospitalId'],
+                'hospital': {'name': 'Calmette Hospital', 'districtCode': '1202'},
+                'patientBloodType': fields['patientBloodType'],
+                'unitsNeeded': fields['unitsNeeded'],
+                'urgency': fields['urgency'],
+                'status': 'PENDING',
+                'alertedCount': 0,
+                'acceptedCount': 0,
+                'createdAt': FieldValue.serverTimestamp(),
+                'updatedAt': FieldValue.serverTimestamp(),
+            });
+            await ref.collection('private').doc('contact').set({
+                'contactName': fields['contactName'],
+                'contactPhone': fields['contactPhone'],
+            });
+            return {'requestId': ref.id, 'status': 'PENDING'};
+        });
+        repository = FirestoreRequestRepository(db, api: portal, currentUid: () => uid);
         await db.doc('districts/1202').set({'nameKm': 'ចំការមន', 'nameEn': 'Chamkar Mon'});
         await db.doc('hospitals/calmette').set({'name': 'Calmette Hospital', 'districtCode': '1202'});
         await db.doc('hospitals/kossamak').set({'name': 'Preah Kossamak Hospital', 'districtCode': '1202'});
@@ -64,9 +91,14 @@ void main() {
     });
 
     group('create', () {
-        test('writes the request and its contact as the rules expect', () async {
+        test('sends the draft to the portal\'s createRequest, normalised, and reads the result back', () async {
             final created = (await repository.create(draft) as Success<BloodRequest>).value;
 
+            expect(portal.calls.single.name, 'createRequest');
+            expect(portal.calls.single.data, {
+                'hospitalId': 'calmette', 'patientBloodType': 'AB+', 'unitsNeeded': 2, 'urgency': 'CRITICAL',
+                'contactName': 'Chea Srey', 'contactPhone': '+85512345678',
+            });
             final stored = (await db.doc('requests/${created.id}').get()).data()!;
             expect(stored, containsPair('createdBy', 'requester'));
             // DEC-015: never OPEN on create — the rules refuse it, an admin opens it.
@@ -96,10 +128,28 @@ void main() {
             expect(created.rejectReason, isNull);
         });
 
-        test('an incomplete draft never reaches Firestore', () async {
+        test('an incomplete draft never reaches the portal', () async {
             final result = await repository.create(draft.copyWith(contactPhone: '123'));
             expect((result as Failed<BloodRequest>).failure, isA<ValidationFailure>());
-            expect((await db.collection('requests').get()).docs, isEmpty);
+            expect(portal.calls, isEmpty);
+        });
+
+        test('the portal\'s refusals become the failures the form knows', () async {
+            portal.handler = (_, _) async => throw const PortalCallException(
+                code: 'resource-exhausted', details: {'code': 'RATE_LIMITED'},
+            );
+            expect(((await repository.create(draft)) as Failed<BloodRequest>).failure, isA<RateLimitedFailure>());
+
+            portal.handler = (_, _) async => throw const PortalCallException(
+                code: 'invalid-argument', details: {'code': 'INVALID_REQUEST'},
+            );
+            expect(
+                ((await repository.create(draft)) as Failed<BloodRequest>).failure,
+                isA<ValidationFailure>().having((f) => f.code, 'code', 'INVALID_REQUEST'),
+            );
+
+            portal.handler = (_, _) async => throw const PortalCallException(code: 'unavailable');
+            expect(((await repository.create(draft)) as Failed<BloodRequest>).failure, isA<NetworkFailure>());
         });
 
         test('signed out is UnauthorizedFailure', () async {

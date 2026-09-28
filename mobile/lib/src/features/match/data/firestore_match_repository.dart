@@ -5,8 +5,10 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../core/api/portal_api.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/firestore_failure_mapper.dart';
+import '../../../core/error/portal_failure_mapper.dart';
 import '../../../core/error/result.dart';
 import '../../donor/domain/blood_type.dart';
 import '../../request/data/firestore_request_repository.dart';
@@ -20,27 +22,29 @@ import '../domain/respond_result.dart';
 /// `POST /matches/{id}/respond` were. Still the *remote* half: `OfflineFirstMatchRepository`
 /// wraps it, and the sync engine drains through it.
 ///
-/// Two Firestore behaviours shape [respond]:
+/// The answer goes to the portal's `respondToMatch` (ADR 0010), which writes it and does what
+/// the trigger did; the rules refuse the write from here. Two things shape [respond]:
 ///
-/// * **An offline write never fails, it waits.** The SDK queues it and the Future completes
-///   when the server confirms. So [respond] gives it [_writeWait], then answers
-///   [NetworkFailure] — which is what makes the offline-first wrapper queue the answer and
-///   show it as pending.
-/// * **A replay is refused, not ignored.** The rules allow one answer per match; the SDK's
-///   own queue and the wrapper's replay can both deliver it. So `permission-denied` is
-///   checked against what is stored: the same answer already there is success — the
-///   `Idempotency-Key` behaviour, without a key.
+/// * **A call that gets no answer is not a refusal.** [respond] gives the portal
+///   [_writeWait], then answers [NetworkFailure] — which is what makes the offline-first
+///   wrapper queue the answer and show it as pending.
+/// * **A replay is success, not a refusal.** The portal allows one answer per match, and the
+///   wrapper's replay can deliver it twice; the same answer already there comes back as
+///   `replay: true` — the `Idempotency-Key` behaviour, without a key.
 final class FirestoreMatchRepository implements MatchRepository {
     FirestoreMatchRepository(
         this._db,
         this._requests, {
+        required PortalApi api,
         required String? Function() currentUid,
         Duration writeWait = const Duration(seconds: 10),
-    })  : _currentUid = currentUid,
+    })  : _api = api,
+          _currentUid = currentUid,
           _writeWait = writeWait;
 
     final FirebaseFirestore _db;
     final FirestoreRequestRepository _requests;
+    final PortalApi _api;
     final String? Function() _currentUid;
     final Duration _writeWait;
 
@@ -87,38 +91,15 @@ final class FirestoreMatchRepository implements MatchRepository {
         if (uid == null) return const Failed(UnauthorizedFailure());
         final ref = _db.collection('matches').doc(matchId);
         try {
-            await ref
-                .update({'response': response.wireValue, 'respondedAt': FieldValue.serverTimestamp()})
+            await _api
+                .call('respondToMatch', {'matchId': matchId, 'response': response.wireValue})
                 .timeout(_writeWait);
         } on TimeoutException {
             return const Failed(NetworkFailure());
-        } on FirebaseException catch (error) {
-            if (error.code != 'permission-denied') return Failed(failureFromFirebase(error));
-            return _explainRefusal(ref, response);
+        } on PortalCallException catch (error) {
+            return Failed(failureFromPortalCall(error));
         }
         return _result(ref, response);
-    }
-
-    /// Why the rules said no, read back from the match itself.
-    Future<Result<RespondResult>> _explainRefusal(
-        DocumentReference<Map<String, dynamic>> ref,
-        MatchResponseType response,
-    ) async {
-        try {
-            final stored = (await ref.get()).data();
-            if (stored == null) return const Failed(NotFoundFailure());
-            final storedResponse = MatchResponseType.fromWire(stored['response'] as String?);
-            // The same answer is already there: this was a replay of one that landed.
-            if (storedResponse == response) return _result(ref, response);
-            if (storedResponse != null) {
-                // One response, never overwritten (FR-REQUEST-004 deferred).
-                return const Failed(ConflictFailure(code: 'ALREADY_RESPONDED'));
-            }
-            // Unanswered and still refused: the request is no longer open.
-            return const Failed(ConflictFailure(code: 'REQUEST_NOT_OPEN'));
-        } on FirebaseException catch (error) {
-            return Failed(failureFromFirebase(error));
-        }
     }
 
     Future<Result<RespondResult>> _result(

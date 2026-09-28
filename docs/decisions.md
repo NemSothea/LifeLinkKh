@@ -742,3 +742,32 @@ DEC-014 still holds: donors and requesters use the app, and the portal has no si
 A Google account that is also a donor in the app gets admin rights in the app's rules too, because
 the claim sits on the one Firebase user. Use a Google account for admin work that is not also
 used to donate. An admin's access still ends by deleting `admins/{uid}` and disabling the user.
+
+## DEC-018 — No card on the project: the functions run in the portal, Firebase stays on Spark
+
+**Date:** 2026-09-29 · **Raised by:** Nem Sothea (Tech Lead) · **Status:** accepted · **ADR:** [0010](tech-lead/adr/0010-portal-functions-replace-cloud-functions.md)
+
+### Context
+ADR 0009 put the server logic in Cloud Functions, which need the Blaze plan and a card on the
+project. Enabling it on 2026-09-27 cost a $50 card hold and most of a day. LifeLink is a free,
+non-profit class project with a $0 target until 500 users; a card on file is a liability the
+project gains nothing from.
+
+### Decision
+The six Cloud Functions become functions on the portal's own server (Vercel Hobby, `sin1`),
+reached by the app at `POST /api/functions/{name}` with the same callable protocol, and by the
+portal's admin actions in-process. `lifelinkkh` goes to the free Spark plan; the billing account
+is removed. The three Firestore triggers become calls the app makes (`createRequest`,
+`respondToMatch`) or work that runs inside Approve; the rules refuse the writes those calls make
+to every client. The portal holds one credential for this, `FIREBASE_SERVICE_ACCOUNT`.
+
+### Consequences
+- $0 with no card. Nothing on the project can bill.
+- The portal is now on the app's critical path: with it down, a donor cannot post or answer.
+  The offline queue covers a brief outage for answers; a request that cannot be posted says so.
+- An APK from before this decision can no longer post or answer: the first release after it
+  moves `minVersionCode` so those installs are told to update.
+- Sothea's part, once, in this order: set `FIREBASE_SERVICE_ACCOUNT` on Vercel and redeploy; test
+  post → approve → push → accept on two phones; then delete the six old Functions and switch the
+  plan to Spark (`production-checklist.md` Parts A, B and D).
+

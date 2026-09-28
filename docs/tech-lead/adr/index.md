@@ -11,4 +11,5 @@ next: 0010
 | 0006 | Flutter follows the course architecture; Riverpod 2.x with codegen | accepted | 2026-08-17 |
 | 0007 | Session JWT lives one hour; expiry repaired by silent re-authentication | accepted | 2026-08-17 |
 | 0008 | A request notifies at most 25 donors; only notified donors get a match row | accepted | 2026-08-19 |
-| 0009 | Firebase (Firestore + Cloud Functions) replaces Spring Boot and PostgreSQL | accepted on branch `feat/firebase-backend` | 2026-09-26 |
+| 0009 | Firebase (Firestore + Cloud Functions) replaces Spring Boot and PostgreSQL | accepted on branch `feat/firebase-backend`; Cloud Functions half superseded by 0010 | 2026-09-26 |
+| 0010 | The portal's server runs the functions; Cloud Functions and the Blaze plan go | accepted | 2026-09-29 |

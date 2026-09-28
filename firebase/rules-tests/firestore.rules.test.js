@@ -191,53 +191,22 @@ describe('donors', () => {
 });
 
 describe('requests', () => {
-  test('a signed-in user posts a request with its contact in one batch', async () => {
+  // ADR 0010: posting is the portal's createRequest. No client writes a request, however
+  // well-formed — the shape check, the rate limit and the hospital stamp all live there.
+  test('no client posts a request, not even a valid one in a batch with its contact', async () => {
     const db = as('req-1');
     const batch = writeBatch(db);
     batch.set(doc(db, 'requests/r1'), newRequest('req-1'));
     batch.set(doc(db, 'requests/r1/private/contact'), contact);
-    await assertSucceeds(batch.commit());
-  });
-
-  test('signed out cannot post', async () => {
+    await assertFails(batch.commit());
+    await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('req-1')));
+    await assertFails(setDoc(doc(admin(), 'requests/r1'), newRequest('admin-1')));
     await assertFails(setDoc(doc(anon(), 'requests/r1'), newRequest('req-1')));
   });
 
-  test('you cannot post as someone else', async () => {
-    await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('someone-else')));
-  });
-
-  test('a new request starts PENDING with zero counts — approval and counts belong to Functions', async () => {
-    await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('req-1', { status: 'OPEN' })));
-    await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('req-1', { status: 'FULFILLED' })));
-    await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('req-1', { alertedCount: 25 })));
-    await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('req-1', { acceptedCount: 1 })));
-  });
-
-  test('invalid values are refused', async () => {
-    await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('req-1', { unitsNeeded: 0 })));
-    await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('req-1', { urgency: 'SOON' })));
-    await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('req-1', { hospitalId: 'nowhere' })));
-    await assertFails(setDoc(doc(as('req-1'), 'requests/r1'), newRequest('req-1', { patientBloodType: 'AB' })));
-  });
-
-  test('the contact must be a Cambodian mobile, normalized to +855', async () => {
-    for (const bad of ['012345678', '+85513345678', '+8551234567', '+855181234567 ', '+1 555 0100']) {
-      const db = as('req-1');
-      const batch = writeBatch(db);
-      batch.set(doc(db, 'requests/r1'), newRequest('req-1'));
-      batch.set(doc(db, 'requests/r1/private/contact'), { ...contact, contactPhone: bad });
-      await assertFails(batch.commit());
-    }
-    const db = as('req-1');
-    const batch = writeBatch(db);
-    batch.set(doc(db, 'requests/r1'), newRequest('req-1'));
-    batch.set(doc(db, 'requests/r1/private/contact'), { ...contact, contactPhone: '+855181234567' });
-    await assertSucceeds(batch.commit());
-  });
-
-  test('you cannot attach a contact to someone else\'s request', async () => {
+  test('no client writes a contact — not the creator, not an intruder', async () => {
     await seed((db) => setDoc(doc(db, 'requests/r1'), newRequest('req-1')));
+    await assertFails(setDoc(doc(as('req-1'), 'requests/r1/private/contact'), contact));
     await assertFails(setDoc(doc(as('intruder'), 'requests/r1/private/contact'), contact));
   });
 
@@ -359,37 +328,18 @@ describe('matches — MatchService.respond', () => {
     await assertFails(getDoc(doc(as('staff-no-claim', { hospitalId: HOSPITAL }), 'matches/r1_d1')));
   });
 
-  test('the donor accepts or declines, once', async () => {
-    await seedRequestWithMatch('req-1', 'd1');
-    const ref = doc(as('d1'), 'matches/r1_d1');
-    await assertSucceeds(updateDoc(ref, { response: 'ACCEPTED', respondedAt: serverTimestamp() }));
-    // ALREADY_RESPONDED: one answer, never overwritten.
-    await assertFails(updateDoc(ref, { response: 'DECLINED', respondedAt: serverTimestamp() }));
-  });
-
-  test('UNKNOWN_RESPONSE and WITHDRAWN are refused', async () => {
-    await seedRequestWithMatch('req-1', 'd1');
-    const ref = doc(as('d1'), 'matches/r1_d1');
-    await assertFails(updateDoc(ref, { response: 'MAYBE', respondedAt: serverTimestamp() }));
-    await assertFails(updateDoc(ref, { response: 'WITHDRAWN', respondedAt: serverTimestamp() }));
-  });
-
-  test('the donor cannot touch anything but the answer', async () => {
+  // ADR 0010: the answer is the portal's respondToMatch, which enforces one answer, only
+  // ACCEPTED or DECLINED, only by the match's donor, only while the request is OPEN. The rule
+  // that did that is gone, so every client update is refused — including a correct one.
+  test('no client answers a match, not even its donor with a correct answer', async () => {
     await seedRequestWithMatch('req-1', 'd1');
     await assertFails(updateDoc(doc(as('d1'), 'matches/r1_d1'),
-      { response: 'ACCEPTED', respondedAt: serverTimestamp(), distanceKm: 0 }));
-  });
-
-  test('NOT_YOUR_MATCH: another donor cannot answer it', async () => {
-    await seedRequestWithMatch('req-1', 'd1');
+      { response: 'ACCEPTED', respondedAt: serverTimestamp() }));
     await assertFails(updateDoc(doc(as('d2'), 'matches/r1_d1'),
       { response: 'ACCEPTED', respondedAt: serverTimestamp() }));
-  });
-
-  test('a cancelled request takes no answers', async () => {
-    await seedRequestWithMatch('req-1', 'd1', { status: 'CANCELLED' });
-    await assertFails(updateDoc(doc(as('d1'), 'matches/r1_d1'),
+    await assertFails(updateDoc(doc(admin(), 'matches/r1_d1'),
       { response: 'ACCEPTED', respondedAt: serverTimestamp() }));
+    await assertFails(deleteDoc(doc(as('d1'), 'matches/r1_d1')));
   });
 });
 

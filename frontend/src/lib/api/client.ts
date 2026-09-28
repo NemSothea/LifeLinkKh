@@ -2,15 +2,18 @@
  * The only place this app talks HTTP. Components never call `fetch` directly
  * (docs/tech-lead/coding-standards.md).
  *
- * ADR 0009, phase 5: the portal talks to Firebase instead of the Spring Boot API — Firestore and
- * the callable Functions over REST, **from the Next server, as the signed-in staff member**. The
- * staff member's own ID token is the bearer on every call, so the Security Rules decide what each
- * read returns exactly as they do for the app; nothing here holds an admin credential, and there is
- * no service account on this server. The token stays in the httpOnly cookie (`session.ts`) and
- * never reaches page script, which the Firebase Web SDK in the browser could not have kept.
+ * ADR 0009, phase 5: the portal talks to Firebase instead of the Spring Boot API — Firestore over
+ * REST, **from the Next server, as the signed-in staff member**. The staff member's own ID token
+ * is the bearer on every read, so the Security Rules decide what each read returns exactly as
+ * they do for the app. The token stays in the httpOnly cookie (`session.ts`) and never reaches
+ * page script, which the Firebase Web SDK in the browser could not have kept.
  *
- * Emulators: set `FIRESTORE_EMULATOR_HOST`, `FIREBASE_AUTH_EMULATOR_HOST` and
- * `FUNCTIONS_EMULATOR_HOST` (host:port each) and every call goes there instead.
+ * ADR 0010: the writes that were Cloud Functions (approve, confirm, and the app's three) run on
+ * this server too, under `src/server/`. That is the one place holding the Admin credential; the
+ * reads here still use none.
+ *
+ * Emulators: set `FIRESTORE_EMULATOR_HOST` and `FIREBASE_AUTH_EMULATOR_HOST` (host:port each)
+ * and every call goes there instead.
  *
  * Never read a secret through `NEXT_PUBLIC_`: that prefix embeds the value in the
  * browser bundle where anyone can read it.
@@ -18,8 +21,6 @@
 // Trimmed, and an empty value counts as unset: a variable saved blank or with a stray newline
 // in a hosting dashboard would otherwise put `projects//databases` in every URL.
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID?.trim() || 'lifelinkkh';
-/** Where the Functions are deployed — `setGlobalOptions` in firebase/functions/src/index.js. */
-const FUNCTIONS_REGION = 'asia-southeast1';
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -141,36 +142,25 @@ export async function firestoreGet(
     return { ok: true, data: decodeDoc(result.data) };
 }
 
-// ── Callable Functions ─────────────────────────────────────────────────────────────────────────
-
-function functionUrl(name: string): string {
-    const emulator = process.env.FUNCTIONS_EMULATOR_HOST;
-    return emulator
-        ? `http://${emulator}/${PROJECT_ID}/${FUNCTIONS_REGION}/${name}`
-        : `https://${FUNCTIONS_REGION}-${PROJECT_ID}.cloudfunctions.net/${name}`;
-}
+// ── Portal functions ───────────────────────────────────────────────────────────────────────────
 
 /**
- * The callable protocol over plain HTTP: `{data}` in, `{result}` out. A refusal comes back as
- * the HttpsError's code in the Functions' own spelling — `already-exists`, `failed-precondition`,
- * `permission-denied` — which is what the Server Actions branch on. The message is dropped: it
- * is written for a developer, and a page must not describe the server.
+ * The callable protocol, in-process (ADR 0010): the same `{data}` in and result out as the Cloud
+ * Functions, but the handler runs on this server, as the bearer of the admin's session token. A
+ * refusal comes back as the error's code in the Functions' own spelling — `already-exists`,
+ * `failed-precondition`, `permission-denied` — which is what the Server Actions branch on. The
+ * message is dropped: it is written for a developer, and a page must not describe the server.
  */
 export async function callFunction<T>(
     name: string,
     data: unknown,
     token: string,
 ): Promise<ApiResult<T>> {
-    const result = await send<{ result: T }>(functionUrl(name), {
-        method: 'POST',
-        headers: authHeaders(token),
-        body: { data },
-        errorCode: (body) => {
-            const status = (body as { error?: { status?: string } } | null)?.error?.status;
-            return status ? status.toLowerCase().replace(/_/g, '-') : null;
-        },
-    });
-    return result.ok ? { ok: true, data: result.data.result } : result;
+    const { invoke } = await import('@/server/invoke');
+    const outcome = await invoke(name, data, token);
+    return outcome.ok
+        ? { ok: true, data: outcome.result as T }
+        : { ok: false, error: outcome.error.code };
 }
 
 // ── Firebase Auth (Identity Toolkit) ───────────────────────────────────────────────────────────

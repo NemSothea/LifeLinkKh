@@ -2,6 +2,9 @@ import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig: NextConfig = {
+    // firebase-admin (ADR 0010) is loaded by Node at runtime, not bundled: it carries gRPC and
+    // protobuf files that the bundler cannot follow.
+    serverExternalPackages: ['firebase-admin'],
     async redirects() {
         return [
             {

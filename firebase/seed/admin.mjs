@@ -20,7 +20,7 @@
 import { applicationDefault, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
-import { portalEmail } from '../functions/src/portal-accounts.js';
+import { portalEmail } from '../../frontend/src/server/portal-accounts.js';
 
 const projectFlag = process.argv.indexOf('--project');
 const projectId = projectFlag > -1 ? process.argv[projectFlag + 1] : 'demo-lifelink';

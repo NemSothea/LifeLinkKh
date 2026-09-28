@@ -6,26 +6,6 @@ part of 'account_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$functionsHash() => r'4565d1a774f57a141f49bbcf2c07d7d71775b651';
-
-/// A provider rather than `FirebaseFunctions.instanceFor` at the call site, so no widget
-/// test reaches a platform channel. `main.dart` points the same instance at the emulator.
-///
-/// Copied from [functions].
-@ProviderFor(functions)
-final functionsProvider = Provider<FirebaseFunctions>.internal(
-  functions,
-  name: r'functionsProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$functionsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef FunctionsRef = ProviderRef<FirebaseFunctions>;
 String _$accountRepositoryHash() => r'7596fd65db7e6be8b41141990ca3060d22a7c8ff';
 
 /// See also [accountRepository].

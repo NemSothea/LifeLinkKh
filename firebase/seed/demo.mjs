@@ -1,24 +1,34 @@
 // Demo data for the emulator (ADR 0009, phase 6) — what scripts/seed-demo-request.sql and
 // reset-demo-data.sql did for Postgres. Two O- donors in Doun Penh, one requester, and:
 //
-//   - one CRITICAL request at Calmette, approved (DEC-015) so the real onRequestApproved Function
-//     matches it, then accepted by the first donor — the portal has a donation to confirm;
+//   - one CRITICAL request at Calmette, approved (DEC-015) and matched by the real
+//     handleRequestApproved — the portal's own code, called here (ADR 0010) — then accepted by
+//     the first donor through the real respondToMatch — the portal has a donation to confirm;
 //   - one URGENT request left PENDING — the portal's review queue has something to approve live.
 //
-// The emulator must be running with Functions (`npm run emulators:app`).
+// The emulator must be running (`npm run emulators:app`).
 //
 //   npm run seed:demo             # emulator, project lifelinkkh. Clears requests/matches/donations first.
 //
 // Emulator only, by design: it deletes data.
-import { initializeApp } from 'firebase-admin/app';
-import { FieldValue, Timestamp, getFirestore } from 'firebase-admin/firestore';
 import { geohashForLocation } from 'geofire-common';
+// The portal's firebase-admin, not this package's: see admin-sdk.js for why.
+import { FieldValue, getFirestore, initializeApp } from '../../frontend/src/server/admin-sdk.js';
+import { handleRequestApproved } from '../../frontend/src/server/request-lifecycle.js';
+import { respondToMatch } from '../../frontend/src/server/respond-to-match.js';
 
 process.env.FIRESTORE_EMULATOR_HOST ??= '127.0.0.1:8081';
 initializeApp({ projectId: 'lifelinkkh' });
 const db = getFirestore();
 const now = () => FieldValue.serverTimestamp();
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// FCM has no emulator, and the demo donors have no token anyway: record instead of send.
+const messaging = {
+  async sendEach(messages) {
+    await Promise.all(messages.map((m) => db.collection('_outbox').add(m)));
+    return { responses: messages.map(() => ({ success: true })) };
+  },
+};
+const quiet = { info() {}, warn() {} };
 const CALMETTE = '8c251b94-1968-481a-9b77-112b87790b00';
 const DOUN_PENH = { lat: 11.5725, lng: 104.9173 };
 
@@ -48,19 +58,18 @@ async function post(id, fields) {
 }
 
 const request = await post('demo-request', { patientBloodType: 'AB+', urgency: 'CRITICAL' });
-// The admin's approval, as reviewRequest writes it — the PENDING → OPEN update is what fires matching.
+// The admin's approval, as reviewRequest does it: the status flips, then the matching runs.
 await request.update({ status: 'OPEN', reviewedBy: 'demo-seed', reviewedAt: now(), updatedAt: now() });
-
-// The match document, not `matchedAt`: the Function claims `matchedAt` first and writes the
-// matches after, so waiting on the claim races the write.
-const match = db.doc('matches/demo-request_demo-donor-a');
-for (let i = 0; i < 30 && !(await match.get()).exists; i++) await sleep(1000);
-if (!(await match.get()).exists) {
-  console.error('onRequestApproved never ran. Start the emulators with Functions: npm run emulators:app');
+const matched = await handleRequestApproved({ db, messaging, requestId: 'demo-request', log: quiet });
+if (matched.outcome !== 'matched' || matched.alerted === 0) {
+  console.error(`matching found nobody (${JSON.stringify(matched)}) — is the seed data intact?`);
   process.exit(1);
 }
-await match.update({ response: 'ACCEPTED', respondedAt: Timestamp.now() });
-for (let i = 0; i < 30 && !(await request.collection('acceptedDonors').doc('demo-donor-a').get()).exists; i++) await sleep(1000);
+// The first donor's answer, as the app sends it.
+await respondToMatch({
+  db, messaging, caller: { uid: 'demo-donor-a', token: {} },
+  data: { matchId: 'demo-request_demo-donor-a', response: 'ACCEPTED' }, log: quiet,
+});
 
 await post('demo-pending', { patientBloodType: 'O+', urgency: 'URGENT' });
 

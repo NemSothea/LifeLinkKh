@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeFirebase, fakeJwt } from '@/test/fake-firebase';
+import { HttpsError } from '@/server/https-error.js';
+
+// The functions run on this server (ADR 0010); here they are a mock, so no Admin SDK loads.
+const invokeMock = vi.hoisted(() => vi.fn());
+vi.mock('@/server/invoke', () => ({ invoke: invokeMock }));
 import { clearReferenceDataCache } from './reference-data';
 
 // The session lives in an httpOnly cookie. `next/headers` only exists inside a request, so it is
@@ -73,6 +78,7 @@ afterEach(() => {
     vi.unstubAllGlobals();
     clearReferenceDataCache();
     cookieStore.value = null;
+    invokeMock.mockReset();
 });
 
 describe('listOpenRequests', () => {
@@ -154,28 +160,58 @@ describe('listFulfilledRequests', () => {
 });
 
 describe('confirmDonation', () => {
-    it('calls the confirmDonation Function as the admin', async () => {
+    it('runs the confirmDonation function as the admin', async () => {
         cookieStore.value = admin;
-        const calls = fakeFirebase({}, { confirmDonation: { body: { result: { id: 'r1_d1' } } } });
+        invokeMock.mockResolvedValue({ ok: true, result: { id: 'r1_d1' } });
 
-        await confirmDonation('r1', 'r1_d1', '2026-09-25');
+        const result = await confirmDonation('r1', 'r1_d1', '2026-09-25');
 
-        expect(calls[0].body).toEqual({
-            data: { requestId: 'r1', matchId: 'r1_d1', donatedOn: '2026-09-25' },
-        });
-        expect(calls[0].token).toBe(admin);
+        expect(result).toEqual({ ok: true, data: { id: 'r1_d1' } });
+        expect(invokeMock).toHaveBeenCalledWith(
+            'confirmDonation',
+            { requestId: 'r1', matchId: 'r1_d1', donatedOn: '2026-09-25' },
+            admin,
+        );
     });
 
     it('an already-confirmed donation is a handled failure, not a thrown exception', async () => {
         cookieStore.value = admin;
-        fakeFirebase(
-            {},
-            { confirmDonation: { status: 409, body: { error: { status: 'ALREADY_EXISTS' } } } },
-        );
+        invokeMock.mockResolvedValue({
+            ok: false,
+            error: new HttpsError('already-exists', 'already confirmed'),
+        });
 
         expect(await confirmDonation('r1', 'r1_d1', '2026-09-25')).toEqual({
             ok: false,
             error: 'already-exists',
+        });
+    });
+});
+
+describe('reviewRequest', () => {
+    it('sends APPROVE with no reason', async () => {
+        cookieStore.value = admin;
+        invokeMock.mockResolvedValue({ ok: true, result: { status: 'OPEN' } });
+
+        await reviewRequest('p1', 'APPROVE');
+
+        expect(invokeMock).toHaveBeenCalledWith(
+            'reviewRequest',
+            { requestId: 'p1', decision: 'APPROVE' },
+            admin,
+        );
+    });
+
+    it('sends REJECT with its reason', async () => {
+        cookieStore.value = admin;
+        invokeMock.mockResolvedValue({ ok: true, result: { status: 'REJECTED' } });
+
+        await reviewRequest('p1', 'REJECT', 'No such patient');
+
+        expect(invokeMock.mock.calls[0][1]).toEqual({
+            requestId: 'p1',
+            decision: 'REJECT',
+            reason: 'No such patient',
         });
     });
 });
@@ -227,32 +263,5 @@ describe('listPendingRequests (DEC-015)', () => {
             contactPhone: '+85512345678',
         });
         expect(byId.get('p1')).toMatchObject({ contactName: null, contactPhone: null });
-    });
-});
-
-describe('reviewRequest', () => {
-    it('sends APPROVE with no reason', async () => {
-        cookieStore.value = admin;
-        const calls = fakeFirebase({}, { reviewRequest: { body: { result: { status: 'OPEN' } } } });
-
-        await reviewRequest('p1', 'APPROVE');
-
-        expect(calls[0].body).toEqual({ data: { requestId: 'p1', decision: 'APPROVE' } });
-    });
-
-    it('sends REJECT with its reason', async () => {
-        cookieStore.value = admin;
-        const calls = fakeFirebase(
-            {},
-            { reviewRequest: { body: { result: { status: 'REJECTED' } } } },
-        );
-
-        await reviewRequest('p1', 'REJECT', 'No such patient');
-
-        expect(calls[0].body.data).toEqual({
-            requestId: 'p1',
-            decision: 'REJECT',
-            reason: 'No such patient',
-        });
     });
 });

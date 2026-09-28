@@ -31,11 +31,12 @@ run_step() {
     fi
 }
 
-# Firebase (ADR 0009): the Security Rules and the Functions, each against the emulator. The
-# emulator is a Java program, which is why JAVA_HOME is still pinned above.
+# Firebase (ADR 0009): the Security Rules against the emulator. The emulator is a Java program,
+# which is why JAVA_HOME is still pinned above.
 run_step "firestore rules" bash -c 'cd firebase && npm run test:rules'
-run_step "functions unit" bash -c 'cd firebase/functions && npm test'
-run_step "functions emulator" bash -c 'cd firebase/functions && npm run test:emulator'
+# The portal's server functions (ADR 0010): pure, then against the Firestore + Auth emulators.
+run_step "server functions unit" bash -c 'cd frontend && npm run test:server'
+run_step "server functions emulator" bash -c 'cd frontend && npm run test:server:emulator'
 
 if [ -f frontend/package.json ]; then
     run_step "web lint" bash -c 'cd frontend && npm run lint'

@@ -5,10 +5,10 @@
 /// Every value is an optional override, passed with `--dart-define`:
 /// ```
 /// flutter run --dart-define=FIRESTORE_EMULATOR=10.0.2.2:8081 \
-///             --dart-define=FUNCTIONS_EMULATOR=10.0.2.2:5001
+///             --dart-define=PORTAL_URL=http://10.0.2.2:3000
 /// ```
 /// `10.0.2.2` is the Android emulator's alias for the host machine, where the Firebase
-/// emulator suite listens (ADR 0009, `firebase/README.md`).
+/// emulator suite and a local portal listen (ADR 0009, ADR 0010, `firebase/README.md`).
 class Env {
     Env._();
 
@@ -30,13 +30,15 @@ class Env {
 
     static ({String host, int port})? get firestoreEmulator => _hostPort(_firestoreEmulator);
 
-    /// `host:port` of a Functions emulator, e.g. `10.0.2.2:5001` — for DEC-016's
-    /// `deleteAccount` callable. Separate from [firestoreEmulator] because the two
-    /// emulators listen on different ports, and a demo may well run only one of them.
-    /// Unset is the deployed `asia-southeast1` Functions.
-    static const String _functionsEmulator = String.fromEnvironment('FUNCTIONS_EMULATOR');
+    /// Where the portal's functions are (ADR 0010): `createRequest`, `respondToMatch`,
+    /// `deleteAccount` at `$portalUrl/api/functions/{name}`. The deployed portal by
+    /// default; a local `next dev` for a demo against the emulators.
+    static const String _portalUrl = String.fromEnvironment(
+        'PORTAL_URL',
+        defaultValue: 'https://lifelinkkh.vercel.app',
+    );
 
-    static ({String host, int port})? get functionsEmulator => _hostPort(_functionsEmulator);
+    static String get portalUrl => _portalUrl.isEmpty ? 'https://lifelinkkh.vercel.app' : _portalUrl;
 
     static ({String host, int port})? _hostPort(String value) {
         final parts = value.split(':');

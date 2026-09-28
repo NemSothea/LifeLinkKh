@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -15,7 +14,6 @@ import 'src/core/settings/locale_controller.dart';
 import 'src/core/settings/onboarding_controller.dart';
 import 'src/core/settings/preferences_locale_store.dart';
 import 'src/core/settings/preferences_onboarding_store.dart';
-import 'src/features/account/application/account_providers.dart';
 import 'src/features/notify/application/push_providers.dart';
 import 'src/features/notify/application/push_session_sync.dart';
 import 'src/features/notify/data/firebase_push_arrivals.dart';
@@ -53,15 +51,6 @@ Future<void> main() async {
     if (emulator != null) {
         FirebaseFirestore.instance.useFirestoreEmulator(emulator.host, emulator.port);
     }
-    // DEC-016: the same for the `deleteAccount` callable. The instance must be the regional
-    // one `functionsProvider` hands out — pointing `FirebaseFunctions.instance` (us-central1)
-    // at the emulator would leave the app still calling the deployed Function.
-    final functionsEmulator = Env.functionsEmulator;
-    if (functionsEmulator != null) {
-        FirebaseFunctions.instanceFor(region: functionsRegion)
-            .useFunctionsEmulator(functionsEmulator.host, functionsEmulator.port);
-    }
-
     // Awaited too, and for a related reason: `LocaleStore.read()` is synchronous so the
     // first frame already paints in the chosen language. That only works if the backing
     // store is loaded before `runApp`.

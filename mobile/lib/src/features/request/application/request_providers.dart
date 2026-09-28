@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../core/api/portal_api_providers.dart';
 import '../../../core/error/result.dart';
 import '../../../core/firebase/firestore_providers.dart';
 import '../data/firestore_request_repository.dart';
@@ -18,6 +19,7 @@ part 'request_providers.g.dart';
 FirestoreRequestRepository firestoreRequestRepository(FirestoreRequestRepositoryRef ref) =>
     FirestoreRequestRepository(
         ref.watch(firestoreProvider),
+        api: ref.watch(portalApiProvider),
         currentUid: ref.watch(currentUidProvider),
     );
 

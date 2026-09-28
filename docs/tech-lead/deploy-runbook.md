@@ -159,7 +159,7 @@ Since ADR 0009 there is no backend to reach and no `API_BASE_URL`: a release bui
 real `lifelinkkh` project, whose config `google-services.json` carries. DEC-007's tunnel to a
 laptop backend is obsolete. What a tester's install needs instead is the real project set up —
 [`production-checklist.md`](production-checklist.md) Parts A–C (Blaze plan and budget alert,
-Firestore in `asia-southeast1`, rules/indexes/Functions deployed, reference data and the admin
+Firestore in `asia-southeast1`, rules/indexes deployed, the portal live on Vercel with `FIREBASE_SERVICE_ACCOUNT`, reference data and the admin
 seeded). Its Part E also covers the **Play app-signing SHA-1**, without which Google sign-in fails
 on every Play install.
 
@@ -229,7 +229,7 @@ answers) into YAML instead of answering them.
 | Release build still installs over/as the debug-signed app, or Play Console rejects the upload as unsigned | `key.properties` missing or `storeFile` path wrong | Confirm `mobile/android/key.properties` exists and `storeFile` is an absolute, existing path |
 | Google Sign-In fails silently on the installed release build only | Release SHA-1 (Step 4) not registered, or `google-services.json` not re-downloaded after adding it | Step 4, then rebuild — a stale `google-services.json` is the most common miss here |
 | Play Console: "You need to use a different version code" | `pubspec.yaml`'s `+N` reused | Bump it (Step 6) |
-| Testers sign in but see no data, or every write fails | Firestore rules/indexes or Functions not deployed to `lifelinkkh`, or the build was made with `FIRESTORE_EMULATOR` set | Step 5; rebuild without the emulator define |
+| Testers sign in but see no data, or every write fails | Firestore rules/indexes not deployed, or the portal's `FIREBASE_SERVICE_ACCOUNT` missing — so nothing can be posted; not deployed to `lifelinkkh`, or the build was made with `FIRESTORE_EMULATOR` set | Step 5; rebuild without the emulator define |
 | `keytool -genkeypair` overwrote/reused a keystore you didn't mean to touch | Ran Step 1 against an existing filename | `keytool` does not warn before overwriting; always pick a new filename or check `ls` first |
 
 ---
@@ -237,7 +237,7 @@ answers) into YAML instead of answering them.
 ## Related
 
 - [`local-development.md`](local-development.md) — first half: running the stack locally
-- [`firebase/README.md`](../../firebase/README.md) — deploying rules, indexes and Functions
+- [`firebase/README.md`](../../firebase/README.md) — deploying rules and indexes
 - [`docs/demo-runbook.md`](../demo-runbook.md) — the golden path for a live demo, not a Play Store release
 - [`docs/scope.md`](../scope.md) — why `FR-SECURITY-001` (account/data deletion) stays deferred only
   while the pilot is team-only — it must be closed before a public store listing

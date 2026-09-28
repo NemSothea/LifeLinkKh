@@ -5,14 +5,15 @@
 **Blood emergencies in Cambodia are coordinated by Facebook post. This is the alternative.**
 
 A donor-matching app that pushes a location-aware alert to compatible donors within seconds —
-Flutter for donors, Next.js for the admin portal, one Firebase project (Firestore, Auth, Cloud
-Functions) behind both. An admin checks every request before any donor is alerted.
+Flutter for donors, Next.js for the admin portal (which also runs the server logic), one Firebase
+project (Firestore, Auth, FCM) behind both. An admin checks every request before any donor is
+alerted.
 
 **Live portal:** https://lifelinkkh.vercel.app/km · **Android app:** signed APK from the portal's
 [download page](https://lifelinkkh.vercel.app/km/download) (no Play Store until 500 users).
 
 ![Flutter](https://img.shields.io/badge/Flutter-Android-02569B?logo=flutter&logoColor=white)
-![Firebase](https://img.shields.io/badge/Firebase-Firestore_·_Functions-FFCA28?logo=firebase&logoColor=black)
+![Firebase](https://img.shields.io/badge/Firebase-Firestore_·_Auth_·_FCM-FFCA28?logo=firebase&logoColor=black)
 ![Next.js](https://img.shields.io/badge/Next.js-App_Router-000000?logo=nextdotjs&logoColor=white)
 ![Khmer + English](https://img.shields.io/badge/i18n-ខ្មែរ_%2B_English-C8102E)
 
@@ -84,9 +85,9 @@ phone, and cannot read GPS in the background. Those two capabilities *are* the p
 
 1. **Donor register** — blood type, district, last-donation date, with an automatic 56-day
    eligibility check.
-2. **Urgent request broadcast** — a family or hospital posts a need; an admin approves it; a Cloud
-   Function then selects matching donors by **ABO/Rh compatibility** (a lookup table, not a string
-   match) and distance, and alerts them by push.
+2. **Urgent request broadcast** — a family or hospital posts a need; an admin approves it; the
+   portal's server then selects matching donors by **ABO/Rh compatibility** (a lookup table, not a
+   string match) and distance, and alerts them by push.
 3. **Donation history and eligibility** — the 56-day cooldown, visible, with the date a donor becomes
    eligible again.
 
@@ -103,23 +104,23 @@ dead signal. A hospital basement is exactly where this app gets used.
 flowchart TB
     subgraph clients [" "]
         M["📱 Flutter app<br/>donors · requesters<br/><i>Riverpod · go_router · cloud_firestore</i>"]
-        W["🖥️ Next.js portal on Vercel<br/>public board · admin<br/><i>App Router · Tailwind · shadcn/ui · REST from the Next server</i>"]
+        W["🖥️ Next.js portal on Vercel (sin1)<br/>public board · admin<br/><i>App Router · Tailwind · shadcn/ui · REST from the Next server</i>"]
+        FN["⚙️ The portal's functions — same server<br/><i>createRequest · respondToMatch · deleteAccount (the app)<br/>reviewRequest · confirmDonation (the admin)</i>"]
     end
 
-    subgraph fb ["Firebase — project lifelinkkh, asia-southeast1"]
+    subgraph fb ["Firebase — project lifelinkkh, asia-southeast1, Spark plan"]
         AUTH["🔑 Firebase Auth"]
         FS[("🗄️ Firestore<br/><i>Security Rules</i>")]
-        FN["⚙️ Cloud Functions<br/><i>onRequestCreated · onRequestApproved · onMatchAnswered<br/>reviewRequest · confirmDonation · deleteAccount</i>"]
     end
     FCM["🔔 Firebase Cloud Messaging"]
 
     M --> AUTH
     W --> AUTH
-    M -->|SDK| FS
+    M -->|SDK, reads| FS
     W -->|REST, admin ID token| FS
-    W -->|callable| FN
-    FS -->|triggers| FN
-    FN --> FS
+    M -->|POST /api/functions, ID token| FN
+    W -->|in-process| FN
+    FN -->|Admin SDK| FS
     FN -->|push alert| FCM
     FCM -.->|wakes the phone| M
 
@@ -128,17 +129,19 @@ flowchart TB
     style FCM fill:#FFA000,color:#000
 ```
 
-There is no server of our own. The clients talk to Firebase directly, the **Security Rules**
-(`firebase/firestore.rules`, one emulator test per rule) are the only thing between a client and
-the data, and six **Cloud Functions** do what a client must not:
+The clients read Firebase directly and the **Security Rules** (`firebase/firestore.rules`, one
+emulator test per rule) are the only thing between a client and the data. What a client must not
+write is done by five **functions on the portal's server**
+([ADR 0010](docs/tech-lead/adr/0010-portal-functions-replace-cloud-functions.md) — they were Cloud
+Functions until the project went to the free Spark plan), reached at `POST /api/functions/{name}`
+with the caller's Firebase ID token:
 
-| Function | Kind | Does |
+| Function | Caller | Does |
 |---|---|---|
-| `onRequestCreated` | trigger | Rate limit; the request waits as `PENDING` |
-| `reviewRequest` | callable, admin | Approve (`OPEN`) or reject with a reason; pushes the requester |
-| `onRequestApproved` | trigger | On `PENDING → OPEN`: matching, match documents, donor push |
-| `onMatchAnswered` | trigger | Accepted count, public board row, "donor accepted" push |
-| `confirmDonation` | callable, admin | Records the donation, starts the 56-day cooldown |
+| `createRequest` | the app | Shape check, rate limit, hospital name; writes the request as `PENDING` with its private contact |
+| `reviewRequest` | the admin | Approve (`OPEN`) or reject with a reason; on approve, matching, match documents, donor push, requester told |
+| `respondToMatch` | the app | The donor's one answer; on accept, the accepted count, the public board row, "donor accepted" push |
+| `confirmDonation` | the admin | Records the donation, starts the 56-day cooldown |
 | `deleteAccount` | callable, self | Deletes personal data, anonymises counts (DEC-016) |
 
  Why the Spring Boot +
@@ -148,7 +151,7 @@ PostgreSQL stack was replaced: [ADR 0009](docs/tech-lead/adr/0009-firebase-repla
 |---|---|---|
 | Mobile | Flutter → native Android | Four layers per feature, Riverpod 2.x with code generation ([ADR 0006](docs/tech-lead/adr/0006-flutter-course-architecture.md)) |
 | Data | Cloud Firestore + Security Rules | Model and the reason behind each rule: [`firestore-data-model.md`](docs/tech-lead/firestore-data-model.md) |
-| Server logic | Cloud Functions (Node 22, `asia-southeast1`) | Matching, push fan-out, donation confirmation |
+| Server logic | The portal's own Node server on Vercel (`frontend/src/server/`, Admin SDK) | Matching, push fan-out, approve/confirm, the app's writes — [ADR 0010](docs/tech-lead/adr/0010-portal-functions-replace-cloud-functions.md) |
 | Identity | Firebase Auth | Google Sign-In in the app; Google or username + password for the portal admin (DEC-017) |
 | Web | Next.js App Router · TypeScript · Tailwind · shadcn/ui | Public board, admin review queue and dashboard; talks to Firebase over REST from its own server, admin ID token in an httpOnly cookie. Hosted on Vercel (free plan, `sin1`) |
 | Push | Firebase Cloud Messaging | Alert language follows the donor's own setting |
@@ -162,7 +165,7 @@ this table.
 | Layer | Versions | Pinned in |
 |---|---|---|
 | **Mobile** | Flutter **3.44.6** · Dart ^3.12.2 · flutter_riverpod 2.6 · go_router 17 · firebase_core 4 · cloud_firestore 6 · firebase_auth 6 · firebase_messaging 16 · google_sign_in 7 · geolocator 14 | `mobile/pubspec.yaml`, `.github/workflows/ci.yml` |
-| **Firebase** | firebase-functions 7 · firebase-admin 14 · firebase-tools 15 · Node **22** | `firebase/functions/package.json`, `firebase/package.json` |
+| **Firebase** | firebase-admin 14 · firebase-tools 15 · Node **22** | `frontend/package.json`, `firebase/package.json` |
 | **Web portal** | Next.js **15.5** · React **19.1** · TypeScript 5 · Tailwind CSS 4 · shadcn/ui (Radix) · next-intl 4 · next-themes · Node **22** | `frontend/package.json` |
 | **Tooling** | Firebase Emulator Suite (Java **21**) · GitHub Actions | `firebase/firebase.json`, `.github/workflows/` |
 
@@ -183,7 +186,7 @@ erDiagram
     admins ||--|| users : "portal access"
 ```
 
-The ABO/Rh compatibility table is a constant in the matching Function and reference data, never
+The ABO/Rh compatibility table is a constant in the matching code and reference data, never
 user input — a wrong entry would mean giving somebody incompatible blood, so the unit tests pin it
 ([ADR 0004](docs/tech-lead/adr/0004-abo-rh-compatibility-lookup-table.md)). The requester's contact
 lives in its own document because Firestore rules cannot hide a field. Every collection, and which
@@ -219,8 +222,8 @@ Two things the table does not say out loud:
 ```bash
 cp .env.example .env                           # NEVER commit .env
 
-cd firebase && npm install && (cd functions && npm install)
-npm run emulators:app                          # Firestore :8081 · Auth :9099 · Functions :5001 · UI :4000
+cd firebase && npm install
+npm run emulators:app                          # Firestore :8081 · Auth :9099 · UI :4000
 ```
 
 In a second terminal:
@@ -233,14 +236,14 @@ npm run seed:demo                                          # demo donors + one m
 
 cd ../frontend && npm install
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8081 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
-FUNCTIONS_EMULATOR_HOST=127.0.0.1:5001 npm run dev         # portal on http://localhost:3000
+npm run dev                                    # portal on http://localhost:3000 — the app writes through it
 ```
 
-And the app:
+And the app (with the portal up):
 
 ```bash
-bash scripts/demo-mobile.sh --firestore-emulator   # Android emulator → 10.0.2.2:8081
-# or: cd mobile && flutter run --dart-define=FIRESTORE_EMULATOR=10.0.2.2:8081
+bash scripts/demo-mobile.sh --firestore-emulator   # Android emulator → 10.0.2.2:8081, portal 10.0.2.2:3000
+# or: cd mobile && flutter run --dart-define=FIRESTORE_EMULATOR=10.0.2.2:8081 --dart-define=PORTAL_URL=http://10.0.2.2:3000
 ```
 
 | What | Where |
@@ -248,18 +251,17 @@ bash scripts/demo-mobile.sh --firestore-emulator   # Android emulator → 10.0.2
 | Web portal | http://localhost:3000 |
 | Emulator UI (browse Firestore, Auth) | http://localhost:4000 |
 
-Plain `flutter run` (no `FIRESTORE_EMULATOR`) talks to the real `lifelinkkh` project. The
-emulators keep nothing across a restart, and they deliver **no pushes** — FCM has no emulator.
+Plain `flutter run` (no defines) talks to the real `lifelinkkh` project and the deployed portal.
+The emulators keep nothing across a restart, and they deliver **no pushes** — FCM has no emulator.
 A new request stays `PENDING` until an admin approves it on the portal; only then are donors
-matched. For real pushes, deploy to the real project:
-`npx firebase deploy --only firestore,functions --project lifelinkkh` (Blaze plan).
+matched. For real pushes, use the real project and the deployed portal.
 
 ### Production
 
 | Piece | Where | How |
 |---|---|---|
-| Firebase (rules, indexes, Functions) | `lifelinkkh`, Blaze plan, $1 budget alert — target cost $0 until 500 users | [`production-checklist.md`](docs/tech-lead/production-checklist.md) Parts A–C |
-| Portal | Vercel — https://lifelinkkh.vercel.app | Part D |
+| Firebase (rules, indexes) | `lifelinkkh`, **Spark plan — no card**, $0 | [`production-checklist.md`](docs/tech-lead/production-checklist.md) Parts A–C |
+| Portal + the functions | Vercel Hobby — https://lifelinkkh.vercel.app, `FIREBASE_SERVICE_ACCOUNT` set there | Part D |
 | Android app | Signed APK on GitHub Releases, linked from `/{locale}/download` | `bash scripts/build-release-apk.sh`, then `cd firebase && npm run release`; [`deploy-runbook.md`](docs/tech-lead/deploy-runbook.md) Path A |
 | Play Store | Later — after 500 users, or sooner if M7 is graded literally | `deploy-runbook.md` Path B |
 
@@ -277,7 +279,7 @@ its own: [`firebase/README.md`](firebase/README.md). Standing up a demo:
 | Needed for | What | Without it |
 |---|---|---|
 | Google Sign-In | `mobile/android/app/google-services.json` + this machine's debug SHA-1 in the Firebase console | The sign-in sheet returns nothing, silently |
-| Real pushes, real data | The `lifelinkkh` project on the Blaze plan, Functions deployed | Use the emulators; matching still runs, pushes do not |
+| Real pushes, real data | The `lifelinkkh` project and the deployed portal (or a local one with `FIREBASE_SERVICE_ACCOUNT`) | Use the emulators; matching still runs, pushes do not |
 | Seeding / metrics on the real project | A service-account JSON in `secrets/`, via `GOOGLE_APPLICATION_CREDENTIALS` | Emulator only |
 | Portal against the real project | `FIREBASE_API_KEY` (the Web API key — not a secret) | Emulator only |
 | Google sign-in on the portal | `GOOGLE_CLIENT_ID` (`PORTAL_PASSWORD_SIGN_IN=off` makes Google the only way in) | Password form only |

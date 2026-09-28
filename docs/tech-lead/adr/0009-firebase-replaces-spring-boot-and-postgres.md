@@ -7,6 +7,11 @@ deciders: Tech Lead
 supersedes: 0001 (backend + database rows), 0007 (session JWT)
 ---
 
+> **Amended 2026-09-29 by [ADR 0010](0010-portal-functions-replace-cloud-functions.md):** the six
+> Cloud Functions this ADR introduced moved into the portal's server on Vercel, and `lifelinkkh`
+> is on the free Spark plan. Firestore, Auth, the data model, the rules and the portal's REST
+> reads are as described here; every "Function" below is now a function in `frontend/src/server/`.
+>
 > **ACCEPTED 2026-09-26** by Nem Sothea as Tech Lead, on the branch `feat/firebase-backend`.
 > **Not an independent sign-off** — the same person holds Security and co-PO. `main` keeps the
 > Spring Boot + PostgreSQL stack and stays the demo fallback until this branch has run the golden

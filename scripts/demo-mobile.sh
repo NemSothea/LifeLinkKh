@@ -55,6 +55,7 @@ case "$target" in
         echo "📱 emulator: $device"
         refresh_fcm "$device"
         firestore="10.0.2.2:8081"
+        portal="http://10.0.2.2:3000"
         ;;
     usb)
         device=$("$adb" devices | awk '$2 == "device" && $1 !~ /^emulator-/ {print $1; exit}')
@@ -62,14 +63,17 @@ case "$target" in
             echo "❌ no physical Android device on adb. Cable in, USB debugging on, accept the prompt."
             exit 1
         fi
-        # With the emulator, the phone's own 127.0.0.1:8081 tunnels to this Mac's :8081.
+        # With the emulator, the phone's own 127.0.0.1:8081 tunnels to this Mac's :8081, and
+        # :3000 to the local portal, whose functions the app calls (ADR 0010).
         if $use_emulator; then
             "$adb" -s "$device" reverse tcp:8081 tcp:8081 >/dev/null
-            echo "📱 phone: $device (adb reverse tcp:8081 → host)"
+            "$adb" -s "$device" reverse tcp:3000 tcp:3000 >/dev/null
+            echo "📱 phone: $device (adb reverse tcp:8081, tcp:3000 → host)"
         else
             echo "📱 phone: $device"
         fi
         firestore="127.0.0.1:8081"
+        portal="http://127.0.0.1:3000"
         ;;
     ios)
         device=$(xcrun simctl list devices booted | awk -F'[()]' '/Booted/ {print $2; exit}')
@@ -81,6 +85,7 @@ case "$target" in
         echo "⚠️  the simulator has no APNs — this account never receives a push."
         echo "   Fine for browsing; never the donor, and not the requester if the acceptance alert is shown."
         firestore="127.0.0.1:8081"
+        portal="http://127.0.0.1:3000"
         ;;
     *)
         echo "usage: bash scripts/demo-mobile.sh [emulator [avd] | usb | ios] [--firestore-emulator]"
@@ -90,8 +95,10 @@ esac
 
 cd mobile
 if $use_emulator; then
-    echo "🔗 FIRESTORE_EMULATOR=$firestore"
-    exec flutter run -d "$device" --dart-define=FIRESTORE_EMULATOR="$firestore"
+    echo "🔗 FIRESTORE_EMULATOR=$firestore  PORTAL_URL=$portal  (the portal must be running: npm run dev)"
+    exec flutter run -d "$device" \
+        --dart-define=FIRESTORE_EMULATOR="$firestore" \
+        --dart-define=PORTAL_URL="$portal"
 fi
 echo "🔗 real Firebase project lifelinkkh"
 exec flutter run -d "$device"

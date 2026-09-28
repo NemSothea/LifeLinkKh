@@ -3,8 +3,10 @@
 // compile here.
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../core/api/portal_api.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/firestore_failure_mapper.dart';
+import '../../../core/error/portal_failure_mapper.dart';
 import '../../../core/error/result.dart';
 import '../../donor/domain/blood_type.dart';
 import '../domain/blood_request.dart';
@@ -18,17 +20,21 @@ import '../domain/urgency.dart';
 /// `requests`, `requests/{id}/private/contact` and `hospitals` on Firestore (ADR 0009) —
 /// what `/requests`, `/public/requests` and `/hospitals` were.
 ///
-/// Posting writes the request (as `PENDING`, DEC-015) and its contact in one batch. No
-/// donor is matched until an admin approves it; only then does the Function match donors,
-/// push them and stamp `alertedCount`. [create] therefore returns at once — it used to
-/// wait for that stamp, but after DEC-015 the stamp can be hours away.
+/// Posting goes through the portal's `createRequest` (ADR 0010), which writes the request
+/// (as `PENDING`, DEC-015) and its contact in one batch, with the rate limit and the
+/// hospital's name; the rules refuse the write from here. No donor is matched until an admin
+/// approves it; only then does the portal match donors, push them and stamp `alertedCount`.
+/// [create] therefore returns at once — the stamp can be hours away.
 final class FirestoreRequestRepository implements RequestRepository {
     FirestoreRequestRepository(
         this._db, {
+        required PortalApi api,
         required String? Function() currentUid,
-    }) : _currentUid = currentUid;
+    }) : _api = api,
+         _currentUid = currentUid;
 
     final FirebaseFirestore _db;
+    final PortalApi _api;
     final String? Function() _currentUid;
 
     /// The hospital list, read once — five documents that change when a migration would
@@ -59,30 +65,23 @@ final class FirestoreRequestRepository implements RequestRepository {
         if (!draft.isComplete || bloodType == null || hospitalId == null || phone == null) {
             return const Failed(ValidationFailure(code: 'INCOMPLETE_REQUEST'));
         }
+        final Object? created;
         try {
-            final ref = _requests.doc();
-            final batch = _db.batch()
-                ..set(ref, {
-                    'createdBy': uid,
-                    'hospitalId': hospitalId,
-                    'patientBloodType': bloodType.wireValue,
-                    'unitsNeeded': draft.unitsNeeded,
-                    'urgency': draft.urgency.wireValue,
-                    // The rules refuse anything else on create: an admin reviews every
-                    // request before a donor is alerted (DEC-015).
-                    'status': RequestStatus.pending.wireValue,
-                    'alertedCount': 0,
-                    'acceptedCount': 0,
-                    'createdAt': FieldValue.serverTimestamp(),
-                    'updatedAt': FieldValue.serverTimestamp(),
-                })
-                // Its own document: a rule cannot hide one field of a public one (ADR 0009).
-                ..set(ref.collection('private').doc('contact'), {
-                    'contactName': draft.contactName.trim(),
-                    'contactPhone': phone,
-                });
-            await batch.commit();
-            return fetchDetail(ref.id);
+            created = await _api.call('createRequest', {
+                'hospitalId': hospitalId,
+                'patientBloodType': bloodType.wireValue,
+                'unitsNeeded': draft.unitsNeeded,
+                'urgency': draft.urgency.wireValue,
+                'contactName': draft.contactName.trim(),
+                'contactPhone': phone,
+            });
+        } on PortalCallException catch (error) {
+            return Failed(failureFromPortalCall(error));
+        }
+        final requestId = created is Map ? created['requestId'] as String? : null;
+        if (requestId == null) return const Failed(UnknownFailure(message: 'createRequest: no id'));
+        try {
+            return await fetchDetail(requestId);
         } on FirebaseException catch (error) {
             return Failed(failureFromFirebase(error));
         }

@@ -1,15 +1,17 @@
 # Owned by Tech Lead. There is no DevOps role.
 #
-# Three jobs, one per part of the product (ADR 0009): firebase (rules + Functions), web (the
-# Next.js portal) and mobile (Flutter). scripts/verify-all.sh runs the same steps locally.
+# Three jobs, one per part of the product (ADR 0009): firebase (rules, plus the portal's server
+# functions — ADR 0010 — because this is the job with the emulators), web (the Next.js portal)
+# and mobile (Flutter). scripts/verify-all.sh runs the same steps locally.
 name: ci
 on:
   push: { branches: [ main ] }
   pull_request: {}
 
 jobs:
-  # ADR 0009: the backend is Firebase. The Security Rules and the Functions are tested against
-  # the Firestore emulator, which is a Java program — hence setup-java.
+  # ADR 0009: the backend is Firebase. The Security Rules and the portal's server functions
+  # (ADR 0010, frontend/src/server) are tested against the Firestore and Auth emulators, which
+  # are a Java program — hence setup-java.
   firebase:
     runs-on: ubuntu-latest
     steps:
@@ -20,27 +22,27 @@ jobs:
           distribution: temurin
       - uses: actions/setup-node@v4
         with:
-          # 22, matching `engines` in firebase/functions/package.json.
+          # 22, what Vercel runs the portal's server on.
           node-version: '22'
           cache: npm
           cache-dependency-path: |
             firebase/package-lock.json
-            firebase/functions/package-lock.json
+            frontend/package-lock.json
       # `npm install`, not `npm ci`, for the reason given in the web job: the lockfiles are
       # generated on macOS and omit Linux-only optional packages.
       - working-directory: firebase
         run: npm install --no-audit --no-fund
-      - working-directory: firebase/functions
+      - working-directory: frontend
         run: npm install --no-audit --no-fund
       - name: firestore rules
         working-directory: firebase
         run: npm run test:rules
-      - name: functions unit
-        working-directory: firebase/functions
-        run: npm test
-      - name: functions against the emulator
-        working-directory: firebase/functions
-        run: npm run test:emulator
+      - name: server functions, unit
+        working-directory: frontend
+        run: npm run test:server
+      - name: server functions against the emulators
+        working-directory: frontend
+        run: npm run test:server:emulator
 
   web:
     runs-on: ubuntu-latest

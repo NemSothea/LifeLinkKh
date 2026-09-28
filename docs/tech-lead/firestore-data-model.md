@@ -16,7 +16,7 @@
 v1 has no hospital staff (DEC-014). The claim and the record are both written by
 `firebase/seed/admin.mjs` (Admin SDK). The rules require both: a claim outlives a revoke by up to
 an hour, the record does not. Every write the rules refuse to a client —
-match creation, counts, donations, `lastDonationDate` after a confirmed donation — is a Function's job.
+match creation, counts, donations, `lastDonationDate` after a confirmed donation — is the portal's functions' (ADR 0010; Cloud Functions before) job.
 
 ## Collections
 
@@ -38,16 +38,16 @@ Doc id is the uid — one profile per account, which was `UNIQUE (user_id)`. Own
 **nobody else**, not a requester. Matching reads it through the Admin SDK.
 
 ### `requests/{requestId}` — was `blood_requests`
-`createdBy` uid · `hospitalId` · `hospital` {name, districtCode} (written by the Function) ·
+`createdBy` uid · `hospitalId` · `hospital` {name, districtCode} (written by `createRequest`) ·
 `patientBloodType` · `unitsNeeded` 1–20 · `urgency` `'CRITICAL'|'URGENT'|'ROUTINE'` ·
 `status` `'PENDING'|'OPEN'|'REJECTED'|'FULFILLED'|'CANCELLED'|'EXPIRED'` · `alertedCount` · `acceptedCount` ·
-`createdAt` · `updatedAt` · and three the `onRequestCreated` Function adds: `matchedAt` (its
+`createdAt` · `updatedAt` · and three the approval adds: `matchedAt` (its
 at-most-once claim — a redelivered event that finds it set does nothing), `hospital`, and
 `cancelReason: 'RATE_LIMITED'` on the sixth request from one creator inside ten minutes.
 
 **Public read once approved** — this document is the public board (DEC-009), so nothing on it is private.
 Create: signed in, `createdBy` is you, `status PENDING`, counts `0`. Update: the creator may move
-`PENDING|OPEN → CANCELLED` and touch nothing else. Counts and `FULFILLED` belong to Functions.
+`PENDING|OPEN → CANCELLED` and touch nothing else. Creating one, counts and `FULFILLED` belong to the portal's functions (ADR 0010).
 
 **Review (DEC-015).** A request starts `PENDING`: not on the public board, alerting nobody. The
 `reviewRequest` callable (admin only) moves it to `OPEN` — the `onRequestApproved` trigger then
@@ -67,7 +67,7 @@ from `RequestViews`. Created by the creator only, in the same batch as the reque
 ### `requests/{requestId}/acceptedDonors/{donorUid}` — the board's `acceptedDonors`
 `displayName` · `bloodType` · `districtCode` · `respondedAt`
 
-Public read, Function write. Same fields as `PublicDonorResponse`: no match id, no uid in the body.
+Public read, server write. Same fields as `PublicDonorResponse`: no match id, no uid in the body.
 
 ### `matches/{requestId}_{donorUid}` — was `request_matches`
 `requestId` · `donorUid` · `requesterUid` · `hospitalId` · `distanceKm` number|null ·
@@ -83,7 +83,7 @@ rules — the client treats `permission-denied` on an already-answered match as 
 `donorUid` · `hospitalId` · `requestId`|null · `donatedOn` · `confirmedBy` · `createdAt`
 
 Read by the donor and the admin. Written only by the `confirmDonation`
-Function, which also sets `donors/{uid}.lastDonationDate` and may mark the request `FULFILLED`.
+function, which also sets `donors/{uid}.lastDonationDate` and may mark the request `FULFILLED`.
 
 ### `admins/{uid}` — was `users.role = 'ADMIN'`, `users.username`
 `displayName` · `username` · `updatedAt`
@@ -97,7 +97,7 @@ Public read, no client write. Seeded by `firebase/seed/` from the same values as
 
 ## Not carried over
 
-- `blood_compatibility` — a constant in the Functions code (still a table, ADR 0004).
+- `blood_compatibility` — a constant in the matching code, `frontend/src/server/matching.js` (still a table, ADR 0004).
 - `telegram_auth_challenges` — Telegram sign-in dropped in phase 1 (ADR 0009).
 - `password_hash`, `deactivated_at` — Firebase Auth owns credentials and disabling. The username
   is kept on `admins/{uid}` and is the Auth email's local part (`{username}@portal.lifelink.invalid`).

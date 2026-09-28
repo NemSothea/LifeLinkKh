@@ -1,9 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { HttpsError } from '@/server/https-error.js';
 import { callFunction, decodeValue, firestoreGet, firestoreQuery, identityToolkit } from './client';
+
+// The functions run on this server (ADR 0010); here they are a mock, so no Admin SDK loads.
+const invokeMock = vi.hoisted(() => vi.fn());
+vi.mock('@/server/invoke', () => ({ invoke: invokeMock }));
 
 afterEach(() => {
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
+    invokeMock.mockReset();
 });
 
 const ok = (body: unknown) => ({ ok: true, status: 200, json: async () => body });
@@ -169,48 +175,26 @@ describe('firestoreGet', () => {
 });
 
 describe('callFunction', () => {
-    it('posts {data} with the bearer and unwraps {result}', async () => {
-        const fetchMock = vi.fn().mockResolvedValue(ok({ result: { id: 'd1' } }));
-        vi.stubGlobal('fetch', fetchMock);
+    it('runs the function in-process as the bearer and unwraps its result', async () => {
+        invokeMock.mockResolvedValue({ ok: true, result: { id: 'd1' } });
 
         expect(await callFunction('confirmDonation', { requestId: 'r1' }, 'id-token')).toEqual({
             ok: true,
             data: { id: 'd1' },
         });
-        const [url, init] = fetchMock.mock.calls[0];
-        expect(url).toBe('https://asia-southeast1-lifelinkkh.cloudfunctions.net/confirmDonation');
-        expect(JSON.parse(init.body)).toEqual({ data: { requestId: 'r1' } });
-        expect(init.headers.Authorization).toBe('Bearer id-token');
+        expect(invokeMock).toHaveBeenCalledWith('confirmDonation', { requestId: 'r1' }, 'id-token');
     });
 
     it("reports the HttpsError code in the Functions' spelling, and drops the message", async () => {
-        vi.stubGlobal(
-            'fetch',
-            vi.fn().mockResolvedValue(
-                failed(409, {
-                    error: {
-                        status: 'ALREADY_EXISTS',
-                        message: 'That username is already in use.',
-                    },
-                }),
-            ),
-        );
+        invokeMock.mockResolvedValue({
+            ok: false,
+            error: new HttpsError('already-exists', 'That username is already in use.'),
+        });
 
-        const result = await callFunction('confirmDonation', {}, 'id-token');
-
-        expect(result).toEqual({ ok: false, error: 'already-exists' });
-    });
-
-    it('goes to the emulator when FUNCTIONS_EMULATOR_HOST is set', async () => {
-        vi.stubEnv('FUNCTIONS_EMULATOR_HOST', '127.0.0.1:5001');
-        const fetchMock = vi.fn().mockResolvedValue(ok({ result: null }));
-        vi.stubGlobal('fetch', fetchMock);
-
-        await callFunction('confirmDonation', {}, 'id-token');
-
-        expect(fetchMock.mock.calls[0][0]).toBe(
-            'http://127.0.0.1:5001/lifelinkkh/asia-southeast1/confirmDonation',
-        );
+        expect(await callFunction('confirmDonation', {}, 'id-token')).toEqual({
+            ok: false,
+            error: 'already-exists',
+        });
     });
 });
 

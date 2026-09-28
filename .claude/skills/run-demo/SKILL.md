@@ -1,6 +1,6 @@
 ---
 name: run-demo
-description: Stand up the LifeLink KH demo on this machine — Firebase emulators (Firestore + Auth + Functions), fresh seed and demo data, the admin portal in a browser, and the Flutter app on emulator / USB phone / iOS simulator pointed at the local Firestore emulator. Use when the user says "run the demo", "start the emulators", "open the portal", "run mobile", "prep for defense", or "reset demo data".
+description: Stand up the LifeLink KH demo on this machine — Firebase emulators (Firestore + Auth), fresh seed and demo data, the admin portal in a browser (it also serves the app's functions, ADR 0010), and the Flutter app on emulator / USB phone / iOS simulator pointed at the local emulator and portal. Use when the user says "run the demo", "start the emulators", "open the portal", "run mobile", "prep for defense", or "reset demo data".
 argument-hint: "[all | stack | reset | portal | mobile [emulator|usb|ios] | check | stop]"
 ---
 
@@ -28,14 +28,15 @@ say so and stop rather than improvising a deploy.
 ## 1. Stack — Firebase emulators
 
 ```bash
-cd firebase && npm run emulators:app     # Firestore :8081 · Auth :9099 · Functions :5001 · UI :4000
+cd firebase && npm run emulators:app     # Firestore :8081 · Auth :9099 · UI :4000
 ```
 
 - Run with `run_in_background: true`; it stays attached. Wait for `All emulators ready`
   (poll `curl -fsS http://127.0.0.1:8081/` and `http://127.0.0.1:4000/`).
 - Needs **Java 21**. A version error → report it; do not install a JDK.
-- `node_modules` missing in `firebase/` or `firebase/functions/` → `npm install` in each first.
-- Always `emulators:app` (project `lifelinkkh`, with Functions), never `npm run emulators` — that is
+- `node_modules` missing in `firebase/` or `frontend/` → `npm install` in each first (the demo seed
+  runs the portal's handlers, which live in `frontend/src/server`).
+- Always `emulators:app` (project `lifelinkkh`), never `npm run emulators` — that is
   the tests' `demo-lifelink` sandbox, which the app cannot see.
 
 ## 2. Data — seed
@@ -53,8 +54,8 @@ npm run seed:demo                                          # 2 O− donors, requ
   root). Unset → the seed creates no admin; tell the user. Under 12 characters → `REFUSED`.
 - `seed:demo` deletes requests, matches and donations first. It is emulator-only, so no
   confirmation is needed on the emulator stack; it must print `… 1 accepted — ready to confirm in
-  the portal` and `demo-pending: waiting in the portal's review queue`. `onRequestApproved never
-  ran` → the emulators lack Functions; go back to step 1.
+  the portal` and `demo-pending: waiting in the portal's review queue`. `matching found nobody`
+  → the seed data is not intact; re-run `seed:app` first.
 - Why every rehearsal: a confirmed donation puts that donor into a 56-day cooldown, and the next
   run matches nobody (runbook §4, trap 2).
 
@@ -62,11 +63,12 @@ npm run seed:demo                                          # 2 O− donors, requ
 
 ```bash
 cd frontend
-FIRESTORE_EMULATOR_HOST=127.0.0.1:8081 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
-FUNCTIONS_EMULATOR_HOST=127.0.0.1:5001 npm run dev
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8081 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 npm run dev
 ```
 
-- Background it. All three variables or none.
+- Background it. Both variables or none. **The portal must be up before the app** (step 4): the
+  app posts requests, answers alerts and deletes accounts through `http://<host>:3000/api/functions/…`
+  (ADR 0010) — `demo-mobile.sh` passes `PORTAL_URL` for it.
 - `open http://localhost:3000/en/portal` — the public board, signed out; show this first.
 - `open http://localhost:3000/en/sign-in` — the only account is `soborey` (ADMIN, DEC-014).
   No hospital-staff accounts exist.
@@ -109,7 +111,7 @@ phone and before the request is posted (runbook §4 "Prove the match"):
 End with one block, nothing more:
 
 ```
-emulators ✅ | ❌  (firestore, auth, functions)
+emulators ✅ | ❌  (firestore, auth)
 data      ✅ seeded (+admin, +demo) | ⏭ skipped
 portal    ✅ 200 | ❌
 mobile    ✅ running on <device> | ⏳ building | ⏭

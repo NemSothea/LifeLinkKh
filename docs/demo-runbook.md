@@ -5,9 +5,10 @@ It is the golden path plus the known gaps — say the gaps out loud rather than 
 notices them live.
 
 > **Rewritten 2026-09-26 for ADR 0009.** There is no Spring Boot backend, no PostgreSQL and no
-> Docker any more. The app and the portal talk to Firebase (Firestore + Auth + Cloud Functions,
-> region `asia-southeast1`, project `lifelinkkh`). Locally that means the **Firebase Emulator
-> Suite**; for real pushes it means the **real project**. `firebase/README.md` is the up-to-date
+> Docker any more. The app and the portal talk to Firebase (Firestore + Auth + FCM, region
+> `asia-southeast1`, project `lifelinkkh`); since ADR 0010 the server logic runs in the portal
+> itself, which the app calls for its writes. Locally that means the **Firebase Emulator Suite**
+> plus a local portal; for real pushes it means the **real project** and the deployed portal. `firebase/README.md` is the up-to-date
 > how-to for the Firebase side and this file does not repeat it; this file is the demo on top.
 
 ## 0. Pick the mode first
@@ -18,17 +19,17 @@ stage: **whether a push arrives.**
 | | Emulator stack (section 1) | Real project (section 2) |
 |---|---|---|
 | Data | Local Firestore + Auth emulators, wiped when they stop | `lifelinkkh` in the cloud, persistent |
-| Matching | The real `onRequestApproved`, in the Functions emulator, once the admin approves (DEC-015) | The deployed Function |
-| Pushes | **None.** FCM has no emulator; the Function tries real FCM and fails without credentials | Real FCM, to the real phones |
-| Needs | Java 21, Node, no internet for the data (Google Sign-In on the phone still needs it) | Blaze plan, Functions deployed, internet on every device |
+| Matching | The real `handleRequestApproved`, in the local portal, when the admin clicks Approve (DEC-015) | The same code on Vercel |
+| Pushes | **None.** FCM has no emulator; without a service account the portal writes each push to `_outbox` | Real FCM, to the real phones |
+| Needs | Java 21, Node, the portal running, no internet for the data (Google Sign-In on the phone still needs it) | The deployed portal with `FIREBASE_SERVICE_ACCOUNT` set, internet on every device |
 | Good for | Rehearsal, portal work, a demo where the push is narrated | The defense, if the alert arriving on a phone is the moment you want |
 
-Why no pushes from the emulator: the Functions send through `firebase-admin` messaging. On a
-`demo-` project (the tests) every push is written to the `_outbox` collection instead — that is
-how the tests read exactly what a donor would receive. The app's emulator runs as project
-`lifelinkkh` (the app is built for that id), so the Function takes the real-FCM branch and the
-send fails for want of a credential. The match documents are still written, so the donor's app
-still shows the request; only the notification is missing.
+Why no pushes from the emulator: the portal's functions send through `firebase-admin` messaging.
+On a `demo-` project (the tests), and on the emulators without `FIREBASE_SERVICE_ACCOUNT`, every
+push is written to the `_outbox` collection instead — that is how the tests read exactly what a
+donor would receive. The match documents are still written, so the donor's app still shows the
+request; only the notification is missing. (A local portal with the service account set *does*
+push for real, even against the emulators — that is the one way to get a push in a rehearsal.)
 
 DEC-012 still holds either way: the defense runs from one machine. Firebase App Hosting is the
 recommended home for the portal if it ever needs a public URL (same region and billing as the
@@ -39,16 +40,15 @@ rest); Vercel is acceptable for a class demo. Neither is required on the day.
 One-time, in `firebase/`:
 
 ```bash
-cd firebase
-npm install
-(cd functions && npm install)
+cd firebase && npm install
+cd ../frontend && npm install     # the demo seed runs the portal's handlers
 ```
 
 Then, every time — **terminal 1**, left running:
 
 ```bash
 cd firebase
-npm run emulators:app     # Firestore :8081 · Auth :9099 · Functions :5001 · UI :4000, project lifelinkkh
+npm run emulators:app     # Firestore :8081 · Auth :9099 · UI :4000, project lifelinkkh
 ```
 
 It needs **Java 21** (the emulators are a Java program). Wait for `All emulators ready`.
@@ -65,13 +65,13 @@ npm run seed:demo                                    # the demo request, see bel
 
 `seed:demo` writes two O− donors in Doun Penh (Nem Sothea, Sok Dara), a requester (Chea Srey),
 one **CRITICAL AB+ request at Calmette** and one **URGENT O+ request left PENDING**. The CRITICAL
-one is approved as an admin would (DEC-015), so the real `onRequestApproved` Function matches it —
-which is why Functions must be running; the script waits for the match, then has the first donor
-accept, so the portal has a donation to confirm. The PENDING one sits in the portal's **Waiting
-for review** queue, so approving a request can be shown live. It deletes
-`requests`, `matches` and `donations` first and it only ever talks to the emulator — it prints
+one is approved as an admin would (DEC-015) and matched by the real `handleRequestApproved` — the
+portal's own code, called by the script (ADR 0010) — then the first donor accepts through the real
+`respondToMatch`, so the portal has a donation to confirm. The PENDING one sits in the portal's
+**Waiting for review** queue, so approving a request can be shown live. It deletes `requests`,
+`matches` and `donations` first and it only ever talks to the emulator — it prints
 `… donors alerted, 1 accepted — ready to confirm in the portal` when it worked, and
-`onRequestApproved never ran` when the emulators were started without Functions.
+`matching found nobody` when `seed:app` was skipped.
 
 **Terminal 3** — the portal:
 
@@ -79,12 +79,12 @@ for review** queue, so approving a request can be shown live. It deletes
 cd frontend
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8081 \
 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
-FUNCTIONS_EMULATOR_HOST=127.0.0.1:5001 \
 npm run dev
 ```
 
-Set **all three or none**: one left set points the portal at an emulator and the others at the
-real project, which reads as an empty or broken portal. Putting them in `frontend/.env.local`
+Set **both or none**: one left set points the portal at an emulator and the other at the real
+project, which reads as an empty or broken portal. **The portal must be up before the phones**:
+the app posts requests, answers alerts and deletes accounts through it (ADR 0010). Putting them in `frontend/.env.local`
 (gitignored) saves typing; Next reads its own directory's env files, not the repo root's `.env`.
 
 Confirm before doing anything else: the Emulator UI at http://localhost:4000 shows the seeded
@@ -94,20 +94,22 @@ collections, and http://localhost:3000/en/portal lists the Calmette request.
 
 ## 2. Or: the real project
 
-Once per project (Tech Lead, needs the Blaze plan on `lifelinkkh`):
+Once per project (Tech Lead):
 
 ```bash
 cd firebase
-npx firebase deploy --only firestore,functions --project lifelinkkh    # rules, indexes, Functions
-npm run seed -- --project lifelinkkh                                     # districts + hospitals
+npx firebase deploy --only firestore --project lifelinkkh    # rules, indexes
+npm run seed -- --project lifelinkkh                          # districts + hospitals
 PORTAL_ADMIN_PASSWORD='<12+ chars>' npm run seed:admin -- --project lifelinkkh
 ```
+
+The functions are the portal on Vercel: `FIREBASE_SERVICE_ACCOUNT` set there is what makes them
+write and push (`production-checklist.md` Part D). No Blaze plan, no card.
 
 The two seed commands need `GOOGLE_APPLICATION_CREDENTIALS` pointing at a service-account JSON
 (`.env.example` explains where it lives and why it is never committed), and they refuse to run
 if an emulator host variable is set — otherwise `--project lifelinkkh` would silently mean the
-emulator. Before the Functions go live, set a **budget alert** on the billing account; a class
-project stays inside the free tier, and the alert is what tells you it did not.
+emulator. The project is on the free Spark plan; nothing here can be billed.
 
 `seed:demo` is emulator-only by design (it deletes data). On the real project the demo request
 is the one Account B posts on stage.
@@ -213,7 +215,7 @@ matched; the Functions emulator's terminal logs each run. The `seed:demo` donors
 `fcmToken: null` — they are documents, not installs, and never receive a push. That is expected.
 
 Who can give to whom, if the question comes up mid-demo (ADR 0004 — whole blood and red cells
-only; the table is a constant in `firebase/functions/src/matching.js`):
+only; the table is a constant in `frontend/src/server/matching.js`):
 
 | Patient | Accepts blood from |
 |---|---|
@@ -228,7 +230,7 @@ only; the table is a constant in `firebase/functions/src/matching.js`):
 
 ### The ways this goes silent
 
-Each one is a filter in `selectCandidates` (`firebase/functions/src/matching.js`), and none of
+Each one is a filter in `selectCandidates` (`frontend/src/server/matching.js`), and none of
 them produces an error the audience can see.
 
 1. **One account playing both roles.** A donor never matches their own request. Deliberate, and
@@ -404,9 +406,9 @@ Worth exercising deliberately, because none of it is on the golden path:
 bash scripts/verify-all.sh          # every client, one pass — same steps CI runs
 ```
 
-Rules tests, Functions unit and emulator tests, web lint/types/tests, `flutter analyze` and
-`flutter test`. Individually: `cd firebase && npm run test:rules`,
-`cd firebase/functions && npm test && npm run test:emulator`,
+Rules tests, the portal's server functions (unit and emulator), web lint/types/tests,
+`flutter analyze` and `flutter test`. Individually: `cd firebase && npm run test:rules`,
+`cd frontend && npm run test:server && npm run test:server:emulator`,
 `cd frontend && npm run lint && npx tsc --noEmit && npm test -- --run`,
 `cd mobile && flutter analyze && flutter test`. Run them before the demo, not during it.
 

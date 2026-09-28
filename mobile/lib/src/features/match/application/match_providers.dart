@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../core/api/portal_api_providers.dart';
 import '../../../core/database/database_providers.dart';
 import '../../../core/error/result.dart';
 import '../../../core/firebase/firestore_providers.dart';
@@ -28,6 +29,7 @@ MatchSyncDao matchSyncDao(MatchSyncDaoRef ref) => MatchSyncDao(ref.watch(appData
 MatchRepository remoteMatchRepository(RemoteMatchRepositoryRef ref) => FirestoreMatchRepository(
     ref.watch(firestoreProvider),
     ref.watch(firestoreRequestRepositoryProvider),
+    api: ref.watch(portalApiProvider),
     currentUid: ref.watch(currentUidProvider),
 );
 

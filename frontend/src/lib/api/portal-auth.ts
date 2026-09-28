@@ -15,7 +15,7 @@ export type PortalSession = {
 
 /**
  * A username as Firebase Auth knows it. The same mapping as `portalEmail` in
- * `firebase/functions/src/portal-accounts.js`, which the admin seed uses — change both or neither.
+ * `frontend/src/server/portal-accounts.js`, which the admin seed uses — change both or neither.
  */
 export function portalEmail(username: string): string {
     return `${username}@portal.lifelink.invalid`;

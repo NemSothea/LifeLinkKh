@@ -12,7 +12,7 @@ import PageHeader from '@/components/PageHeader';
  * sign-in; this page has no Google sign-in to build that on, and a form that deleted an account
  * from an email address alone would let anyone delete anyone. So it gives the in-app steps and,
  * for someone who cannot use the app, the address to write to — an operator verifies the person
- * and runs `npm run delete-account` (firebase/functions/scripts/delete-account.mjs).
+ * and runs `npm run delete-account` (firebase/scripts/delete-account.mjs).
  *
  * `SUPPORT_EMAIL` is read on the server. Unset, the page still gives the in-app steps and says
  * the address is not configured — which is a launch blocker, not a state to ship in.
