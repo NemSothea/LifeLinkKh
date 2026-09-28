@@ -49,9 +49,12 @@ export default function GoogleSignIn({
     clientId,
     locale,
     copy,
+    divider = true,
 }: {
     clientId: string;
     locale: string;
+    /** The "or" rule above the button — only when the password form is on the page too. */
+    divider?: boolean;
     copy: Copy;
 }) {
     const buttonRef = useRef<HTMLDivElement>(null);
@@ -100,11 +103,13 @@ export default function GoogleSignIn({
                 strategy="afterInteractive"
                 onLoad={() => setLoaded(true)}
             />
-            <div className="flex items-center gap-3 text-xs text-black/45 dark:text-white/45">
-                <span className="h-px flex-1 bg-black/10 dark:bg-white/15" />
-                {copy.or}
-                <span className="h-px flex-1 bg-black/10 dark:bg-white/15" />
-            </div>
+            {divider ? (
+                <div className="flex items-center gap-3 text-xs text-black/45 dark:text-white/45">
+                    <span className="h-px flex-1 bg-black/10 dark:bg-white/15" />
+                    {copy.or}
+                    <span className="h-px flex-1 bg-black/10 dark:bg-white/15" />
+                </div>
+            ) : null}
             {error ? (
                 <p
                     role="alert"

@@ -4,6 +4,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 import LegalLinks from '@/components/LegalLinks';
 import { IconDroplet } from '@/components/icons';
 import { hasPortalSession } from '@/lib/api/session';
+import { passwordSignInEnabled } from '@/lib/api/sign-in-options';
 import GoogleSignIn from './google-sign-in';
 import SignInForm from './sign-in-form';
 
@@ -22,6 +23,10 @@ export default async function SignInPage({ params }: { params: Promise<{ locale:
     if (await hasPortalSession()) {
         redirect(`/${locale}/portal`);
     }
+
+    const googleClientId = process.env.GOOGLE_CLIENT_ID;
+    // Never both off: without a Google client the password form is the only way in.
+    const showPassword = passwordSignInEnabled() || !googleClientId;
 
     return (
         <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-6">
@@ -42,31 +47,34 @@ export default async function SignInPage({ params }: { params: Promise<{ locale:
 
             <p className="mb-6 text-sm text-black/60 dark:text-white/60">{t('intro')}</p>
 
-            <SignInForm
-                locale={locale}
-                copy={{
-                    usernameLabel: t('usernameLabel'),
-                    passwordLabel: t('passwordLabel'),
-                    submitCta: t('submitCta'),
-                    submitting: t('submitting'),
-                    failed: t('failed'),
-                    failedRateLimited: t('failedRateLimited'),
-                    failedUnreachable: t('failedUnreachable'),
-                    showPassword: t('showPassword'),
-                    hidePassword: t('hidePassword'),
-                    rememberUsername: t('rememberUsername'),
-                    rememberHint: t('rememberHint'),
-                    usernamePlaceholder: t('usernamePlaceholder'),
-                    passwordPlaceholder: t('passwordPlaceholder'),
-                }}
-            />
+            {showPassword ? (
+                <SignInForm
+                    locale={locale}
+                    copy={{
+                        usernameLabel: t('usernameLabel'),
+                        passwordLabel: t('passwordLabel'),
+                        submitCta: t('submitCta'),
+                        submitting: t('submitting'),
+                        failed: t('failed'),
+                        failedRateLimited: t('failedRateLimited'),
+                        failedUnreachable: t('failedUnreachable'),
+                        showPassword: t('showPassword'),
+                        hidePassword: t('hidePassword'),
+                        rememberUsername: t('rememberUsername'),
+                        rememberHint: t('rememberHint'),
+                        usernamePlaceholder: t('usernamePlaceholder'),
+                        passwordPlaceholder: t('passwordPlaceholder'),
+                    }}
+                />
+            ) : null}
 
             {/* Shown only once the OAuth client is configured, so a deploy without it keeps
                 the password form alone rather than a button that cannot work. */}
-            {process.env.GOOGLE_CLIENT_ID ? (
-                <div className="mt-6">
+            {googleClientId ? (
+                <div className={showPassword ? 'mt-6' : undefined}>
                     <GoogleSignIn
-                        clientId={process.env.GOOGLE_CLIENT_ID}
+                        clientId={googleClientId}
+                        divider={showPassword}
                         locale={locale}
                         copy={{
                             or: t('or'),

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { portalGoogleLogin, portalLogin, type PortalSession } from '@/lib/api/portal-auth';
 import type { ApiResult } from '@/lib/api/client';
 import { routing, type Locale } from '@/i18n/routing';
+import { passwordSignInEnabled } from '@/lib/api/sign-in-options';
 import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from '@/lib/api/session';
 
 /**
@@ -42,6 +43,9 @@ export async function signInAction(
         return 'invalid';
     }
 
+    // Turned off, the form is not rendered — and a hand-made POST is refused here as well.
+    if (!passwordSignInEnabled()) return 'invalid';
+
     return startSession(await portalLogin(username.trim(), password), locale);
 }
 
@@ -57,7 +61,14 @@ export async function googleSignInAction(
     if (typeof credential !== 'string' || credential === '' || typeof locale !== 'string') {
         return 'invalid';
     }
-    return startSession(await portalGoogleLogin(credential), locale);
+    const result = await portalGoogleLogin(credential);
+    // The page collapses every refusal into one sentence; the server log keeps Firebase's code
+    // (never the token or the account) so a misconfigured OAuth client can be told apart from a
+    // Google account that simply is not an admin.
+    if (!result.ok && result.error !== 'NOT_ADMIN') {
+        console.warn(`Google sign-in refused by Firebase Auth: ${result.error}`);
+    }
+    return startSession(result, locale);
 }
 
 async function startSession(
