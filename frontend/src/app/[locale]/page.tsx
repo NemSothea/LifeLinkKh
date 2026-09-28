@@ -32,7 +32,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                             {t('title')}
                         </h1>
-                        <p className="text-sm text-black/60 dark:text-white/60">{t('tagline')}</p>
+                        <p className="text-sm text-black/70 dark:text-white/70">{t('tagline')}</p>
                     </div>
                 </div>
                 <LanguageSwitcher />
@@ -102,14 +102,14 @@ function EntryCard({
                 className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
                     primary
                         ? 'bg-brand text-white'
-                        : 'bg-black/[0.04] text-black/60 dark:bg-white/10 dark:text-white/70'
+                        : 'bg-black/[0.04] text-black/70 dark:bg-white/10 dark:text-white/70'
                 }`}
             >
                 {icon}
             </span>
             <div className="min-w-0 flex-1">
                 <h2 className="text-lg font-semibold">{title}</h2>
-                <p className="mt-1 text-sm text-black/60 dark:text-white/60">{body}</p>
+                <p className="mt-1 text-sm text-black/70 dark:text-white/70">{body}</p>
             </div>
             <IconArrowRight
                 className={`mt-2.5 h-5 w-5 shrink-0 transition-transform group-hover:translate-x-0.5 ${

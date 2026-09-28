@@ -1,38 +1,57 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  /* Blood red, the one place in this app where the colour is the subject — same value
+    --background: #ffffff;
+    --foreground: #171717;
+    /* Blood red, the one place in this app where the colour is the subject — same value
      as `AppTheme._seed`/`_primaryLight`. An earlier version of this token matched
      Material 3's `ColorScheme.fromSeed(seedColor: _seed).primary` instead (#904A44),
      since that's what the algorithm actually renders from this seed — a muddy brick
      red, not blood red. `AppTheme` now overrides `primary` past the algorithm for
      exactly this reason, so match that override, not the raw fromSeed output. */
-  --brand: #c62828;
+    --brand: #c62828;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-brand: var(--brand);
-  --font-sans: var(--font-inter), var(--font-kantumruy), ui-sans-serif, system-ui, sans-serif;
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-brand: var(--brand);
+    --font-sans: var(--font-inter), var(--font-kantumruy), ui-sans-serif, system-ui, sans-serif;
+    /* One step up from Tailwind's defaults (12/14/16/18px). Most copy here is text-sm and
+     text-xs, which read as a blur in Khmer, whose stacked vowels and subscripts need room. */
+    --text-xs: 0.8125rem;
+    --text-xs--line-height: 1.5;
+    --text-sm: 0.9375rem;
+    --text-sm--line-height: 1.55;
+    --text-base: 1.0625rem;
+    --text-base--line-height: 1.6;
+    --text-lg: 1.1875rem;
+    --text-lg--line-height: 1.55;
+}
+
+/* Khmer: everything a little larger again (rem-based, so sizes and spacing scale together),
+   and taller lines so subscripts on one line do not touch the vowels above the next. */
+html:lang(km) {
+    font-size: 106.25%;
+}
+html:lang(km) body {
+    line-height: 1.7;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    /* Matches `AppTheme._primaryDark` exactly — chosen there for the same reason this
+    :root {
+        --background: #0a0a0a;
+        --foreground: #ededed;
+        /* Matches `AppTheme._primaryDark` exactly — chosen there for the same reason this
        file lifts it: the light value alone is 3.3:1 against a dark surface, under
        WCAG AA's 4.5:1 for text. #D15353 clears 4.5:1 here and on the app's own dark
        surface, while staying recognizably the same red. */
-    --brand: #d15353;
-  }
+        --brand: #d15353;
+    }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
 }

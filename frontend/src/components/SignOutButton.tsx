@@ -31,7 +31,7 @@ export default async function SignOutButton({
                 Admin — it stays so a shared machine answers "who is signed in" at a glance. */}
             <span className="hidden items-baseline gap-2 sm:flex">
                 {displayName ? (
-                    <span className="text-sm text-black/60 dark:text-white/60">{displayName}</span>
+                    <span className="text-sm text-black/70 dark:text-white/70">{displayName}</span>
                 ) : null}
                 {role ? (
                     <span
@@ -46,7 +46,7 @@ export default async function SignOutButton({
                 <Link
                     href={`/${locale}/portal/password`}
                     data-testid="change-password-link"
-                    className="text-sm font-medium text-black/60 underline-offset-4 hover:underline dark:text-white/60"
+                    className="text-sm font-medium text-black/70 underline-offset-4 hover:underline dark:text-white/70"
                 >
                     {password('title')}
                 </Link>

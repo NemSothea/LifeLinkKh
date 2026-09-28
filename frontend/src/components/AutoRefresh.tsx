@@ -60,7 +60,7 @@ export default function AutoRefresh({ intervalMs = DEFAULT_INTERVAL_MS }: { inte
     return (
         <div
             data-testid="portal-auto-refresh"
-            className="flex items-center gap-2 text-xs text-black/50 dark:text-white/50"
+            className="flex items-center gap-2 text-xs text-black/65 dark:text-white/65"
         >
             <span
                 className={`h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500 ${

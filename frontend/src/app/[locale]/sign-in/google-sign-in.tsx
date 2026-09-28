@@ -104,7 +104,7 @@ export default function GoogleSignIn({
                 onLoad={() => setLoaded(true)}
             />
             {divider ? (
-                <div className="flex items-center gap-3 text-xs text-black/45 dark:text-white/45">
+                <div className="flex items-center gap-3 text-xs text-black/60 dark:text-white/60">
                     <span className="h-px flex-1 bg-black/10 dark:bg-white/15" />
                     {copy.or}
                     <span className="h-px flex-1 bg-black/10 dark:bg-white/15" />
@@ -125,7 +125,7 @@ export default function GoogleSignIn({
                 aria-busy={pending}
             />
             {pending ? (
-                <p className="text-center text-sm text-black/60 dark:text-white/60">
+                <p className="text-center text-sm text-black/70 dark:text-white/70">
                     {copy.submitting}
                 </p>
             ) : null}

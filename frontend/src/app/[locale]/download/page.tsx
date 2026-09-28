@@ -57,7 +57,7 @@ export default async function DownloadPage({ params }: { params: Promise<{ local
             >
                 {t('downloadCta')}
             </a>
-            <p className="mb-8 text-xs text-black/50 dark:text-white/50">
+            <p className="mb-8 text-xs text-black/65 dark:text-white/65">
                 {versionName ? t('versionLabel', { version: versionName }) : t('androidOnly')}
             </p>
 
@@ -75,7 +75,7 @@ export default async function DownloadPage({ params }: { params: Promise<{ local
                 <h2 className="mb-2 text-lg font-semibold">{t('warningHeading')}</h2>
                 <p className="text-sm text-black/80 dark:text-white/80">{t('warningBody')}</p>
                 {certSha256 ? (
-                    <p className="mt-2 text-xs break-all text-black/60 dark:text-white/60">
+                    <p className="mt-2 text-xs break-all text-black/70 dark:text-white/70">
                         {t('certLabel')} <code className="font-mono">{certSha256}</code>
                     </p>
                 ) : null}
@@ -86,13 +86,13 @@ export default async function DownloadPage({ params }: { params: Promise<{ local
                 <p className="text-sm text-black/80 dark:text-white/80">{t('updatesBody')}</p>
             </section>
 
-            <p className="mb-8 text-sm text-black/60 dark:text-white/60">{t('iphone')}</p>
+            <p className="mb-8 text-sm text-black/70 dark:text-white/70">{t('iphone')}</p>
 
             <div className="flex flex-col gap-4">
                 <LegalLinks locale={locale} />
                 <Link
                     href={`/${locale}`}
-                    className="text-sm font-medium text-black/60 underline-offset-4 hover:underline dark:text-white/60"
+                    className="text-sm font-medium text-black/70 underline-offset-4 hover:underline dark:text-white/70"
                 >
                     {t('backCta')}
                 </Link>

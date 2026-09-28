@@ -33,7 +33,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
                             LifeLink KH
                         </p>
                         <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
-                        <p className="text-xs text-black/50 dark:text-white/50">{t('effective')}</p>
+                        <p className="text-xs text-black/65 dark:text-white/65">{t('effective')}</p>
                     </div>
                 </div>
                 <LanguageSwitcher />
@@ -85,7 +85,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
 
             <Link
                 href={`/${locale}`}
-                className="text-sm font-medium text-black/60 underline-offset-4 hover:underline dark:text-white/60"
+                className="text-sm font-medium text-black/70 underline-offset-4 hover:underline dark:text-white/70"
             >
                 {t('backCta')}
             </Link>

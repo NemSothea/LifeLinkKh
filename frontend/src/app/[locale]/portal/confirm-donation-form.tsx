@@ -51,7 +51,7 @@ export default function ConfirmDonationForm({
                 <input type="hidden" name="donorName" value={donorName} />
                 <input type="hidden" name="donatedOn" value={donatedOn} />
 
-                <label className="flex flex-col text-xs text-black/60 dark:text-white/60">
+                <label className="flex flex-col text-xs text-black/70 dark:text-white/70">
                     {copy.donatedOnLabel}
                     <input
                         type="date"

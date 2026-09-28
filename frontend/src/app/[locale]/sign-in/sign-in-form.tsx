@@ -159,7 +159,7 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
                         aria-pressed={passwordVisible}
                         aria-controls={passwordId}
                         data-testid="sign-in-toggle-password"
-                        className="absolute right-2 rounded-lg p-1.5 text-black/45 transition-colors hover:text-black/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:text-white/45 dark:hover:text-white/70"
+                        className="absolute right-2 rounded-lg p-1.5 text-black/60 transition-colors hover:text-black/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:text-white/60 dark:hover:text-white/70"
                     >
                         {passwordVisible ? (
                             <IconEyeOff className="h-4.5 w-4.5" />
@@ -188,7 +188,7 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
                     />
                     {copy.rememberUsername}
                 </label>
-                <p className="pl-6 text-xs text-black/50 dark:text-white/50">{copy.rememberHint}</p>
+                <p className="pl-6 text-xs text-black/65 dark:text-white/65">{copy.rememberHint}</p>
             </div>
 
             <SubmitButton idle={copy.submitCta} busy={copy.submitting} />

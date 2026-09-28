@@ -94,7 +94,7 @@ export default async function DeleteAccountPage({
 
             <Link
                 href={`/${locale}`}
-                className="text-sm font-medium text-black/60 underline-offset-4 hover:underline dark:text-white/60"
+                className="text-sm font-medium text-black/70 underline-offset-4 hover:underline dark:text-white/70"
             >
                 {t('backCta')}
             </Link>

@@ -115,7 +115,7 @@ export default async function PortalPage({
                         >
                             <span>
                                 <strong className="text-lg">{requests.length}</strong>{' '}
-                                <span className="text-black/60 dark:text-white/60">
+                                <span className="text-black/70 dark:text-white/70">
                                     {t('openLabel')}
                                 </span>
                             </span>
@@ -288,7 +288,7 @@ function FulfilledSection({
 
     return (
         <details data-testid="portal-fulfilled" className="group mt-10">
-            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-black/60 select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:text-white/60">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-black/70 select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:text-white/70">
                 <IconChevron className="h-4 w-4 transition-transform duration-200 group-open:rotate-180" />
                 <IconCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 {heading}
@@ -298,7 +298,7 @@ function FulfilledSection({
             {newestFirst.length === 0 ? (
                 <p
                     data-testid="portal-fulfilled-empty"
-                    className="mt-3 text-sm text-black/50 dark:text-white/50"
+                    className="mt-3 text-sm text-black/65 dark:text-white/65"
                 >
                     {emptyLabel}
                 </p>
@@ -318,13 +318,13 @@ function FulfilledSection({
                                 {unitsLabelFor(request)}
                             </span>
                             {request.hospital ? (
-                                <span className="text-black/50 dark:text-white/50">
+                                <span className="text-black/65 dark:text-white/65">
                                     {request.hospital.name}
                                 </span>
                             ) : null}
                             <RelativeTime
                                 iso={request.createdAt}
-                                className="ml-auto text-xs text-black/45 tabular-nums dark:text-white/45"
+                                className="ml-auto text-xs text-black/60 tabular-nums dark:text-white/60"
                             />
                         </li>
                     ))}

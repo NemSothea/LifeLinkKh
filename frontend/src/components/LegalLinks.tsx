@@ -8,7 +8,7 @@ import { getTranslations } from 'next-intl/server';
 export default async function LegalLinks({ locale }: { locale: string }) {
     const t = await getTranslations('privacy');
     return (
-        <nav className="flex gap-4 text-xs text-black/50 dark:text-white/50">
+        <nav className="flex gap-4 text-xs text-black/65 dark:text-white/65">
             <Link href={`/${locale}/privacy`} className="underline-offset-4 hover:underline">
                 {t('title')}
             </Link>

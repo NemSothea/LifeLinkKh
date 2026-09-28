@@ -16,7 +16,7 @@ export default function EmptyState({
     return (
         <div
             data-testid={testId}
-            className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-black/15 py-16 text-center text-black/50 dark:border-white/15 dark:text-white/50"
+            className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-black/15 py-16 text-center text-black/65 dark:border-white/15 dark:text-white/65"
         >
             {icon}
             <p>{children}</p>

@@ -45,7 +45,7 @@ export default async function SignInPage({ params }: { params: Promise<{ locale:
                 <LanguageSwitcher />
             </div>
 
-            <p className="mb-6 text-sm text-black/60 dark:text-white/60">{t('intro')}</p>
+            <p className="mb-6 text-sm text-black/70 dark:text-white/70">{t('intro')}</p>
 
             {showPassword ? (
                 <SignInForm
@@ -87,7 +87,7 @@ export default async function SignInPage({ params }: { params: Promise<{ locale:
                 </div>
             ) : null}
 
-            <p className="mt-8 text-xs text-black/45 dark:text-white/45">{t('noSelfSignup')}</p>
+            <p className="mt-8 text-xs text-black/60 dark:text-white/60">{t('noSelfSignup')}</p>
             <div className="mt-4">
                 <LegalLinks locale={locale} />
             </div>

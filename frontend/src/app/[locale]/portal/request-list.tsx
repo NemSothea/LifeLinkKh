@@ -187,7 +187,7 @@ export default function RequestList({
                             className={`rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
                                 urgency === f.value
                                     ? (URGENCY_STYLE[f.value] ?? 'bg-brand text-white')
-                                    : 'text-black/50 hover:text-black dark:text-white/50 dark:hover:text-white'
+                                    : 'text-black/65 hover:text-black dark:text-white/65 dark:hover:text-white'
                             }`}
                         >
                             {f.label}
@@ -283,7 +283,7 @@ function progressStyle(request: RequestViewModel): string {
         case 'URGENT':
             return 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300';
         default:
-            return 'bg-black/[0.04] text-black/60 dark:bg-white/10 dark:text-white/60';
+            return 'bg-black/[0.04] text-black/70 dark:bg-white/10 dark:text-white/70';
     }
 }
 
@@ -322,7 +322,7 @@ function RequestRow({
                                 urgency={request.urgency}
                                 label={urgencyLabel(request.urgency, copy)}
                             />
-                            <span className="text-sm text-black/60 dark:text-white/60">
+                            <span className="text-sm text-black/70 dark:text-white/70">
                                 {request.unitsLabel}
                             </span>
                             {/* How old the request is, live. Staff triage on elapsed
@@ -330,7 +330,7 @@ function RequestRow({
                                 and rendered on none. */}
                             <RelativeTime
                                 iso={request.createdAt}
-                                className="text-sm text-black/50 tabular-nums dark:text-white/50"
+                                className="text-sm text-black/65 tabular-nums dark:text-white/65"
                             />
                         </div>
                         {request.hospital ? (
@@ -342,7 +342,7 @@ function RequestRow({
                     </div>
 
                     <div className="hidden shrink-0 items-center gap-4 text-sm tabular-nums sm:flex">
-                        <span className="flex items-center gap-1.5 text-black/60 dark:text-white/60">
+                        <span className="flex items-center gap-1.5 text-black/70 dark:text-white/70">
                             <IconBell className="h-4 w-4" />
                             {request.alertedCount}
                         </span>
@@ -370,7 +370,7 @@ function RequestRow({
                     {request.acceptedDonors.length === 0 ? (
                         <p
                             data-testid={`portal-request-${request.id}-no-donors`}
-                            className="text-sm text-black/50 dark:text-white/50"
+                            className="text-sm text-black/65 dark:text-white/65"
                         >
                             {copy.noAcceptedDonors}
                         </p>
@@ -388,7 +388,7 @@ function RequestRow({
                                         </span>
                                         <span className="text-sm">
                                             <span className="font-medium">{donor.displayName}</span>
-                                            <span className="text-black/50 dark:text-white/50">
+                                            <span className="text-black/65 dark:text-white/65">
                                                 {' · '}
                                                 {donor.bloodType}
                                                 {districtLabel(donor.districtName, locale)
@@ -399,7 +399,7 @@ function RequestRow({
                                                 and rendered for none. Staff coordinating
                                                 arrivals need to see who answered an hour
                                                 ago and still has not turned up. */}
-                                            <span className="block text-xs text-black/45 dark:text-white/45">
+                                            <span className="block text-xs text-black/60 dark:text-white/60">
                                                 {copy.acceptedAtLabel}{' '}
                                                 <RelativeTime iso={donor.respondedAt} />
                                             </span>

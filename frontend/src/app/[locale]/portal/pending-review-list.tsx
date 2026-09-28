@@ -48,11 +48,11 @@ export default function PendingReviewList({
             <h2 className="flex items-center gap-2 text-lg font-semibold">
                 <IconAlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 {copy.heading}
-                <span className="tabular-nums text-black/50 dark:text-white/50">
+                <span className="tabular-nums text-black/65 dark:text-white/65">
                     ({requests.length})
                 </span>
             </h2>
-            <p className="mb-4 text-sm text-black/60 dark:text-white/60">{copy.hint}</p>
+            <p className="mb-4 text-sm text-black/70 dark:text-white/70">{copy.hint}</p>
             <ul className="flex flex-col gap-3">
                 {requests.map((request) => (
                     <PendingRow key={request.id} request={request} locale={locale} copy={copy} />
@@ -93,12 +93,12 @@ function PendingRow({
                             urgency={request.urgency}
                             label={copy.urgency[request.urgency] ?? request.urgency}
                         />
-                        <span className="text-black/60 dark:text-white/60">
+                        <span className="text-black/70 dark:text-white/70">
                             {copy.unitsLabel[request.id]}
                         </span>
                         <RelativeTime
                             iso={request.createdAt}
-                            className="text-black/50 tabular-nums dark:text-white/50"
+                            className="text-black/65 tabular-nums dark:text-white/65"
                         />
                     </div>
                     {request.hospital ? (
@@ -220,7 +220,7 @@ function PendingRow({
                                         data-testid={`reject-reason-${request.id}`}
                                         className="rounded-xl border border-black/20 px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:border-white/25 dark:bg-black/30"
                                     />
-                                    <span className="self-end text-xs text-black/45 tabular-nums dark:text-white/45">
+                                    <span className="self-end text-xs text-black/60 tabular-nums dark:text-white/60">
                                         {reason.length}/{REASON_MAX}
                                     </span>
                                 </label>

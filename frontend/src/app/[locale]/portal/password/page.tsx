@@ -35,7 +35,7 @@ export default async function ChangePasswordPage({
                     LifeLink KH
                 </p>
                 <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
-                <p className="mt-2 text-sm text-black/60 dark:text-white/60">
+                <p className="mt-2 text-sm text-black/70 dark:text-white/70">
                     {t('intro')}
                     {displayName ? ` (${displayName})` : ''}
                 </p>
@@ -58,13 +58,13 @@ export default async function ChangePasswordPage({
                 }}
             />
 
-            <p className="mt-6 text-xs text-black/45 dark:text-white/45">
+            <p className="mt-6 text-xs text-black/60 dark:text-white/60">
                 {t('noteOtherSessions')}
             </p>
 
             <Link
                 href={`/${locale}/portal`}
-                className="mt-6 inline-block text-sm font-medium text-black/60 underline-offset-4 hover:underline dark:text-white/60"
+                className="mt-6 inline-block text-sm font-medium text-black/70 underline-offset-4 hover:underline dark:text-white/70"
             >
                 {t('backCta')}
             </Link>

@@ -48,7 +48,11 @@ export default function ChangePasswordForm({ copy }: { copy: Copy }) {
                 </p>
             ) : null}
 
-            <Field name="currentPassword" label={copy.currentLabel} autoComplete="current-password" />
+            <Field
+                name="currentPassword"
+                label={copy.currentLabel}
+                autoComplete="current-password"
+            />
             <Field
                 name="newPassword"
                 label={copy.newLabel}
@@ -85,7 +89,7 @@ function Field({
                 data-testid={`password-${name}`}
                 className="rounded-xl border border-black/20 px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:border-white/25 dark:bg-black/30"
             />
-            {hint ? <span className="text-xs text-black/50 dark:text-white/50">{hint}</span> : null}
+            {hint ? <span className="text-xs text-black/65 dark:text-white/65">{hint}</span> : null}
         </label>
     );
 }
