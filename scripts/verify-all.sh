@@ -31,7 +31,6 @@ run_step() {
     fi
 }
 
-# backend — format check, tests, coverage gate. Integration tests SKIP without Docker.
 # Firebase (ADR 0009): the Security Rules and the Functions, each against the emulator. The
 # emulator is a Java program, which is why JAVA_HOME is still pinned above.
 run_step "firestore rules" bash -c 'cd firebase && npm run test:rules'
