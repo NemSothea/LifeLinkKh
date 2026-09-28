@@ -97,8 +97,9 @@ most dangerous file in this project.
   cd firebase
   export GOOGLE_APPLICATION_CREDENTIALS="$PWD/../secrets/firebase-service-account.json"
   npm run seed -- --project lifelinkkh                                   # 14 districts, 5 hospitals
+  PORTAL_ADMIN_USERNAME=nemsothea PORTAL_ADMIN_NAME='Nem Sothea' \
   PORTAL_ADMIN_PASSWORD='<16+ chars, from a password manager>' \
-    npm run seed:admin -- --project lifelinkkh                           # soborey
+    npm run seed:admin -- --project lifelinkkh                           # the admin
   npm run metrics -- --project lifelinkkh                                # reads work; all zeros
   ```
 
@@ -142,7 +143,7 @@ is kept for when the 500-user decision is made.
   `https://<project>.vercel.app` URL:
   - [ ] `/km` loads, and its footer health line says reachable. That is a real read of Firestore.
   - [ ] `/km/portal` signed out shows the board (empty is fine).
-  - [ ] Sign in as `soborey`. The header shows Soborey · ADMIN, and the "Waiting for review"
+  - [ ] Sign in as `nemsothea`. The header shows Nem Sothea · ADMIN, and the "Waiting for review"
     queue is absent when there is nothing to review.
   - [ ] A wrong password says "wrong username or password", not an error page.
   - [ ] `/km/delete-account` shows the support address, not "not set up".
@@ -229,8 +230,9 @@ items do not come from code.
   donor, and the app is not medical advice.
 
 **Should do early:**
-- [ ] A second admin account for the day `soborey` is unavailable. It needs an `admins/{uid}`
-  record and the claim. Extend `seed/admin.mjs` rather than editing by hand.
+- [ ] A second admin account for the day `nemsothea` is unavailable: run `seed:admin` again with
+  another `PORTAL_ADMIN_USERNAME`. (`soborey` exists on `lifelinkkh` but is **disabled** — its
+  first password was exposed on 2026-09-28. Re-enable it only after `--reset-passwords`.)
 - [ ] Watch the billing page and the Functions logs weekly for the first month. At **500 users**,
   make the paid-or-not decision with `npm run metrics -- --project lifelinkkh` and the month's
   usage in hand.

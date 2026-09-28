@@ -10,6 +10,8 @@
 //   PORTAL_ADMIN_PASSWORD=… npm run seed:admin                       # emulator, demo-lifelink
 //   PORTAL_ADMIN_PASSWORD=… npm run seed:admin:app                   # emulator, lifelinkkh
 //   PORTAL_ADMIN_PASSWORD=… npm run seed:admin -- --project lifelinkkh   # REAL project
+//   PORTAL_ADMIN_USERNAME=nemsothea PORTAL_ADMIN_NAME='Nem Sothea' PORTAL_ADMIN_PASSWORD=… \
+//     npm run seed:admin -- --project lifelinkkh                        # another admin
 //
 // To end an admin's access: delete admins/{uid} (the rules refuse them on the next read) and
 // disable the user in the Firebase console. The password is never logged.
@@ -32,7 +34,16 @@ if (real && (process.env.FIRESTORE_EMULATOR_HOST || process.env.FIREBASE_AUTH_EM
   process.exit(1);
 }
 
-const ADMIN = { username: 'soborey', displayName: 'Soborey' };
+// PORTAL_ADMIN_USERNAME / PORTAL_ADMIN_NAME pick another admin; soborey stays the default.
+const username = process.env.PORTAL_ADMIN_USERNAME ?? 'soborey';
+if (!/^[a-z0-9][a-z0-9._-]{2,31}$/.test(username)) {
+  console.error(`PORTAL_ADMIN_USERNAME "${username}" must be 3-32 lowercase letters, digits, ".", "_" or "-".`);
+  process.exit(1);
+}
+const ADMIN = {
+  username,
+  displayName: process.env.PORTAL_ADMIN_NAME ?? username.charAt(0).toUpperCase() + username.slice(1),
+};
 const MIN_LENGTH = 12;
 
 const password = process.env.PORTAL_ADMIN_PASSWORD;
