@@ -8,8 +8,8 @@ A donor-matching app that pushes a location-aware alert to compatible donors wit
 Flutter for donors, Next.js for the admin portal, one Firebase project (Firestore, Auth, Cloud
 Functions) behind both. An admin checks every request before any donor is alerted.
 
-**Live portal:** https://life-link-kh.vercel.app · **Android app:** signed APK from the portal's
-[download page](https://life-link-kh.vercel.app/en/download) (no Play Store until 500 users).
+**Live portal:** https://lifelinkkh.vercel.app/km · **Android app:** signed APK from the portal's
+[download page](https://lifelinkkh.vercel.app/km/download) (no Play Store until 500 users).
 
 ![Flutter](https://img.shields.io/badge/Flutter-Android-02569B?logo=flutter&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore_·_Functions-FFCA28?logo=firebase&logoColor=black)
@@ -256,7 +256,7 @@ matched. For real pushes, deploy to the real project:
 | Piece | Where | How |
 |---|---|---|
 | Firebase (rules, indexes, Functions) | `lifelinkkh`, Blaze plan, $1 budget alert — target cost $0 until 500 users | [`production-checklist.md`](docs/tech-lead/production-checklist.md) Parts A–C |
-| Portal | Vercel — https://life-link-kh.vercel.app | Part D |
+| Portal | Vercel — https://lifelinkkh.vercel.app | Part D |
 | Android app | Signed APK on GitHub Releases, linked from `/{locale}/download` | `bash scripts/build-release-apk.sh`, then `cd firebase && npm run release`; [`deploy-runbook.md`](docs/tech-lead/deploy-runbook.md) Path A |
 | Play Store | Later — after 500 users, or sooner if M7 is graded literally | `deploy-runbook.md` Path B |
 
