@@ -6,7 +6,10 @@
 
 A donor-matching app that pushes a location-aware alert to compatible donors within seconds —
 Flutter for donors, Next.js for the admin portal, one Firebase project (Firestore, Auth, Cloud
-Functions) behind both.
+Functions) behind both. An admin checks every request before any donor is alerted.
+
+**Live portal:** https://life-link-kh.vercel.app · **Android app:** signed APK from the portal's
+[download page](https://life-link-kh.vercel.app/en/download) (no Play Store until 500 users).
 
 ![Flutter](https://img.shields.io/badge/Flutter-Android-02569B?logo=flutter&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore_·_Functions-FFCA28?logo=firebase&logoColor=black)
@@ -30,14 +33,26 @@ Anyone can read it — no account, no login. Khmer is the default, because the u
 
 ## The admin portal
 
-The same URL, signed in. v1 has one portal role, `ADMIN` ([DEC-014](docs/decisions.md)): the admin
-gets the board *plus* its actions — confirming a donation, the recently-fulfilled list — rather
-than a separate screen. There are no hospital-staff accounts in v1.
+The same URL, signed in. v1 has one portal role, `ADMIN` ([DEC-014](docs/decisions.md)), and no
+hospital-staff accounts. Admins sign in with **Google** or a **username + password**
+([DEC-017](docs/decisions.md)). Built on shadcn/ui, with a Light / Dark / Auto theme switch, Khmer
+and English, and 44px touch targets on phones.
+
+- **Review queue** — every new request is `PENDING` until an admin approves it (matching and
+  donor alerts run then) or rejects it with a reason the requester sees
+  ([DEC-015](docs/decisions.md)).
+- **Requests** — open requests, confirming a donation, the recently-fulfilled list, pagination.
+- **Dashboard** (`/portal/dashboard`) — the five PRD metrics plus review time for a chosen period,
+  and charts: requests over time, blood-type demand vs donors, by hospital, by district. Each
+  chart exports as PNG; the whole period exports as `.xlsx`.
+- **Notification bell** — requests waiting for review and donations waiting for confirmation.
+
+Public pages, no sign-in: the board, `/download` (the APK), `/privacy` (privacy policy) and
+`/delete-account` (how to delete an account, [DEC-016](docs/decisions.md)).
 
 ![The board, signed in](docs/assets/screens/portal-staff-km.png)
 
-*Screenshot taken before DEC-014, when hospital staff had their own accounts; the signed-in board
-is otherwise the same.*
+*Screenshot taken before DEC-014 and the shadcn/ui redesign; the current portal looks different.*
 
 ## The donor app
 
@@ -66,11 +81,15 @@ phone, and cannot read GPS in the background. Those two capabilities *are* the p
 
 1. **Donor register** — blood type, district, last-donation date, with an automatic 56-day
    eligibility check.
-2. **Urgent request broadcast** — a family or hospital posts a need; a Cloud Function selects
-   matching donors by **ABO/Rh compatibility** (a lookup table, not a string match) and distance,
-   then alerts them by push.
+2. **Urgent request broadcast** — a family or hospital posts a need; an admin approves it; a Cloud
+   Function then selects matching donors by **ABO/Rh compatibility** (a lookup table, not a string
+   match) and distance, and alerts them by push.
 3. **Donation history and eligibility** — the 56-day cooldown, visible, with the date a donor becomes
    eligible again.
+
+Also in the app: **delete your account** (Me → Delete account; personal data goes, anonymous counts
+stay — [DEC-016](docs/decisions.md)), a privacy policy link, and an update check that tells a
+sideloaded install when a newer APK is out.
 
 The app reads through **Firestore's offline cache**, so what a donor has already seen survives a
 dead signal. A hospital basement is exactly where this app gets used.
@@ -81,13 +100,13 @@ dead signal. A hospital basement is exactly where this app gets used.
 flowchart TB
     subgraph clients [" "]
         M["📱 Flutter app<br/>donors · requesters<br/><i>Riverpod · go_router · cloud_firestore</i>"]
-        W["🖥️ Next.js portal<br/>admin<br/><i>App Router · Tailwind · REST from the Next server</i>"]
+        W["🖥️ Next.js portal on Vercel<br/>public board · admin<br/><i>App Router · Tailwind · shadcn/ui · REST from the Next server</i>"]
     end
 
     subgraph fb ["Firebase — project lifelinkkh, asia-southeast1"]
         AUTH["🔑 Firebase Auth"]
         FS[("🗄️ Firestore<br/><i>Security Rules</i>")]
-        FN["⚙️ Cloud Functions<br/><i>onRequestCreated · onMatchAnswered · confirmDonation</i>"]
+        FN["⚙️ Cloud Functions<br/><i>onRequestCreated · onRequestApproved · onMatchAnswered<br/>reviewRequest · confirmDonation · deleteAccount</i>"]
     end
     FCM["🔔 Firebase Cloud Messaging"]
 
@@ -108,9 +127,18 @@ flowchart TB
 
 There is no server of our own. The clients talk to Firebase directly, the **Security Rules**
 (`firebase/firestore.rules`, one emulator test per rule) are the only thing between a client and
-the data, and three **Cloud Functions** do what a client must not: `onRequestCreated` (rate limit,
-matching, match documents, donor push), `onMatchAnswered` (accepted count, public board row,
-"donor accepted" push) and `confirmDonation` (callable, admin only). Why the Spring Boot +
+the data, and six **Cloud Functions** do what a client must not:
+
+| Function | Kind | Does |
+|---|---|---|
+| `onRequestCreated` | trigger | Rate limit; the request waits as `PENDING` |
+| `reviewRequest` | callable, admin | Approve (`OPEN`) or reject with a reason; pushes the requester |
+| `onRequestApproved` | trigger | On `PENDING → OPEN`: matching, match documents, donor push |
+| `onMatchAnswered` | trigger | Accepted count, public board row, "donor accepted" push |
+| `confirmDonation` | callable, admin | Records the donation, starts the 56-day cooldown |
+| `deleteAccount` | callable, self | Deletes personal data, anonymises counts (DEC-016) |
+
+ Why the Spring Boot +
 PostgreSQL stack was replaced: [ADR 0009](docs/tech-lead/adr/0009-firebase-replaces-spring-boot-and-postgres.md).
 
 | Layer | Technology | Note |
@@ -118,21 +146,21 @@ PostgreSQL stack was replaced: [ADR 0009](docs/tech-lead/adr/0009-firebase-repla
 | Mobile | Flutter → native Android | Four layers per feature, Riverpod 2.x with code generation ([ADR 0006](docs/tech-lead/adr/0006-flutter-course-architecture.md)) |
 | Data | Cloud Firestore + Security Rules | Model and the reason behind each rule: [`firestore-data-model.md`](docs/tech-lead/firestore-data-model.md) |
 | Server logic | Cloud Functions (Node 22, `asia-southeast1`) | Matching, push fan-out, donation confirmation |
-| Identity | Firebase Auth | Google Sign-In in the app; email + password for the portal admin |
-| Web | Next.js App Router · TypeScript · Tailwind | Public board + admin actions; talks to Firebase over REST from its own server, admin ID token in an httpOnly cookie |
+| Identity | Firebase Auth | Google Sign-In in the app; Google or username + password for the portal admin (DEC-017) |
+| Web | Next.js App Router · TypeScript · Tailwind · shadcn/ui | Public board, admin review queue and dashboard; talks to Firebase over REST from its own server, admin ID token in an httpOnly cookie. Hosted on Vercel (free plan, `sin1`) |
 | Push | Firebase Cloud Messaging | Alert language follows the donor's own setting |
 | Location | `geolocator`, no map widget | Coordinates satisfy GPS; a map is a week of work for no gain ([DEC-004](docs/decisions.md)) |
 
 ### Versions
 
-As of 2026-09-26. The file in the last column is the source of truth — check it before trusting
+As of 2026-09-28. The file in the last column is the source of truth — check it before trusting
 this table.
 
 | Layer | Versions | Pinned in |
 |---|---|---|
 | **Mobile** | Flutter **3.44.6** · Dart ^3.12.2 · flutter_riverpod 2.6 · go_router 17 · firebase_core 4 · cloud_firestore 6 · firebase_auth 6 · firebase_messaging 16 · google_sign_in 7 · geolocator 14 | `mobile/pubspec.yaml`, `.github/workflows/ci.yml` |
 | **Firebase** | firebase-functions 7 · firebase-admin 14 · firebase-tools 15 · Node **22** | `firebase/functions/package.json`, `firebase/package.json` |
-| **Web portal** | Next.js **15.5** · React **19.1** · TypeScript 5 · Tailwind CSS 4 · next-intl 4 · Node **22** | `frontend/package.json` |
+| **Web portal** | Next.js **15.5** · React **19.1** · TypeScript 5 · Tailwind CSS 4 · shadcn/ui (Radix) · next-intl 4 · next-themes · Node **22** | `frontend/package.json` |
 | **Tooling** | Firebase Emulator Suite (Java **21**) · GitHub Actions | `firebase/firebase.json`, `.github/workflows/` |
 
 ### Data model
@@ -219,8 +247,22 @@ bash scripts/demo-mobile.sh --firestore-emulator   # Android emulator → 10.0.2
 
 Plain `flutter run` (no `FIRESTORE_EMULATOR`) talks to the real `lifelinkkh` project. The
 emulators keep nothing across a restart, and they deliver **no pushes** — FCM has no emulator.
-For real pushes, deploy to the real project:
+A new request stays `PENDING` until an admin approves it on the portal; only then are donors
+matched. For real pushes, deploy to the real project:
 `npx firebase deploy --only firestore,functions --project lifelinkkh` (Blaze plan).
+
+### Production
+
+| Piece | Where | How |
+|---|---|---|
+| Firebase (rules, indexes, Functions) | `lifelinkkh`, Blaze plan, $1 budget alert — target cost $0 until 500 users | [`production-checklist.md`](docs/tech-lead/production-checklist.md) Parts A–C |
+| Portal | Vercel — https://life-link-kh.vercel.app | Part D |
+| Android app | Signed APK on GitHub Releases, linked from `/{locale}/download` | `bash scripts/build-release-apk.sh`, then `cd firebase && npm run release`; [`deploy-runbook.md`](docs/tech-lead/deploy-runbook.md) Path A |
+| Play Store | Later — after 500 users, or sooner if M7 is graded literally | `deploy-runbook.md` Path B |
+
+A new portal admin by Google account: have them sign in with Google once, then run
+`PORTAL_ADMIN_GOOGLE_EMAIL=… npm run seed:admin -- --project lifelinkkh`. A deletion request that
+came through the web link: `npm run delete-account -- --uid <uid> --project lifelinkkh`.
 
 **Full procedure, including every failure we have actually hit:**
 [`docs/tech-lead/local-development.md`](docs/tech-lead/local-development.md). The Firebase side on
@@ -235,17 +277,24 @@ its own: [`firebase/README.md`](firebase/README.md). Standing up a demo:
 | Real pushes, real data | The `lifelinkkh` project on the Blaze plan, Functions deployed | Use the emulators; matching still runs, pushes do not |
 | Seeding / metrics on the real project | A service-account JSON in `secrets/`, via `GOOGLE_APPLICATION_CREDENTIALS` | Emulator only |
 | Portal against the real project | `FIREBASE_API_KEY` (the Web API key — not a secret) | Emulator only |
+| Google sign-in on the portal | `GOOGLE_CLIENT_ID` (`PORTAL_PASSWORD_SIGN_IN=off` makes Google the only way in) | Password form only |
+| Signed release APK | A release keystore on this machine | `build-release-apk.sh` refuses to build |
 
 ### ⚠️ Before you deploy this anywhere
 
 **Donor names on the public board are world-readable** — a deliberate override of the auth threat
-model for the pilot ([DEC-009](docs/decisions.md)), safe only because every donor row is a
-team-created test account. Account and data deletion (`FR-SECURITY-001`) and a privacy policy are
-also owed before a store release. Each has a recorded reason and a recorded expiry: *before any
-real donor's data is in this database*. See [`docs/scope.md`](docs/scope.md).
+model for the pilot ([DEC-009](docs/decisions.md)); the privacy policy says so plainly. Account
+deletion (DEC-016 — in the app, and at `/{locale}/delete-account`) and the privacy policy
+(`/{locale}/privacy`, English and Khmer) are built. Still open before a public launch: published
+admin review hours, because a `PENDING` request alerts nobody until an admin acts
+([DEC-015](docs/decisions.md)), and the rest of
+[`production-checklist.md`](docs/tech-lead/production-checklist.md) Part F. See
+[`docs/scope.md`](docs/scope.md).
 
 No password is in this repository: the portal admin's comes from `PORTAL_ADMIN_PASSWORD` at seed
-time and lives only in Firebase Auth ([DEC-013](docs/decisions.md)).
+time and lives only in Firebase Auth ([DEC-013](docs/decisions.md)). Prefer Google sign-in for
+admins ([DEC-017](docs/decisions.md)), with a Google account that is not also used to donate — the
+admin claim sits on the one Firebase user, so it applies in the app too.
 
 ---
 
@@ -256,7 +305,7 @@ writing, including the ones we rejected and the ones we got wrong and reversed.
 
 | Start here | What it holds |
 |---|---|
-| [`docs/decisions.md`](docs/decisions.md) | Every decision (DEC-001…014) with the reasoning, the alternatives, and what each one cost |
+| [`docs/decisions.md`](docs/decisions.md) | Every decision (DEC-001…017) with the reasoning, the alternatives, and what each one cost |
 | [`docs/scope.md`](docs/scope.md) | **19 features requested, 8 built, 8 deferred — and why each cut was made.** The answer to "why isn't feature X in your app" |
 | [`docs/tech-lead/adr/`](docs/tech-lead/adr/) | 9 ADRs: Google Sign-In over phone OTP, location precision, the ABO/Rh table, session lifetime, why microservices was raised and rejected, and why Firebase replaced Spring Boot + PostgreSQL |
 | [`docs/security/`](docs/security/) | Threat models and security reviews, ASVS Level 1 baseline |
@@ -288,7 +337,7 @@ bash scripts/verify-all.sh   # every client, one command — the same script CI 
 |---|---|
 | Firebase | Security Rules tests against the Firestore emulator · Functions unit tests (matching, push) · Functions emulator tests (every handler, FCM faked) |
 | Mobile | `flutter_test` unit · widget · layout goldens |
-| Web | Vitest + React Testing Library (Playwright e2e is planned, not built) |
+| Web | Vitest + React Testing Library — 72 tests (Playwright e2e is planned, not built) |
 
 A skipped test is not a pass. The rules and Functions emulator tests need Java 21 for the emulator.
 
@@ -298,10 +347,10 @@ A skipped test is not a pass. The rules and Functions emulator tests need Java 2
 
 ```
 firebase/           Security Rules + tests, Cloud Functions, seed and metrics scripts
-frontend/           Next.js web portal (public board + admin)
+frontend/           Next.js web portal (public board, download, privacy + admin review/dashboard)
 mobile/             Flutter app (donors/requesters)
 docs/               Decisions, ADRs, specs, threat models, QA — see above
-scripts/            verify-all.sh, demo-mobile.sh
+scripts/            verify-all.sh, demo-mobile.sh, build-release-apk.sh
 .capybara/          Multi-role framework state
 ```
 
@@ -320,7 +369,7 @@ The slides and everything needed to run the live demo behind them:
 | Screenshots used by the deck and this README | [`docs/assets/screens/`](docs/assets/screens/) |
 
 The portal admin's password is not in this repository — it is whatever `PORTAL_ADMIN_PASSWORD`
-held when `npm run seed:admin` ran ([`docs/demo-runbook.md`](docs/demo-runbook.md) §9).
+held when `npm run seed:admin` ran, or sign in with the admin's Google account ([`docs/demo-runbook.md`](docs/demo-runbook.md) §9).
 
 ## Project context
 
