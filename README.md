@@ -29,7 +29,7 @@ Anyone can read it — no account, no login. Khmer is the default, because the u
 | | |
 |---|---|
 | ![The same board in English](docs/assets/screens/board-public-en.png) | ![The front door](docs/assets/screens/landing-km.png) |
-| **The same board, one tap later.** Every string in both clients ships in Khmer and English. | **The front door.** The board is one card away; the health line proves browser → Next server → Firestore, unmocked. |
+| **The same board, one tap later.** Every string in both clients ships in Khmer and English. | **The front door.** Get the app first, the board one card below, and the privacy and account-deletion pages. |
 
 ## The admin portal
 
@@ -50,9 +50,12 @@ and English, and 44px touch targets on phones.
 Public pages, no sign-in: the board, `/download` (the APK), `/privacy` (privacy policy) and
 `/delete-account` (how to delete an account, [DEC-016](docs/decisions.md)).
 
-![The board, signed in](docs/assets/screens/portal-staff-km.png)
+| | |
+|---|---|
+| ![The board, signed in](docs/assets/screens/portal-staff-km.png) | ![The dashboard](docs/assets/screens/portal-dashboard-km.png) |
+| **Signed in.** The review queue on top — requester, callback number, Approve / Reject — then the open requests. | **The dashboard.** PRD metrics against their targets, and the charts behind them. |
 
-*Screenshot taken before DEC-014 and the shadcn/ui redesign; the current portal looks different.*
+*Captured from the emulators with the demo seed (`npm run seed:demo`), so the numbers are small.*
 
 ## The donor app
 
