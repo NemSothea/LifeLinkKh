@@ -15,6 +15,16 @@ describe('buildMessage', () => {
     expect(buildMessage('REQUEST_ALERT', { ...args, language: null }).notification.title).toBe('សំណើឈាមបន្ទាន់');
   });
 
+  test('an approval that matched nobody says so, instead of "donors are being alerted"', () => {
+    const some = buildMessage('REQUEST_APPROVED', { ...args, language: 'en', alerted: 3 });
+    const none = buildMessage('REQUEST_APPROVED', { ...args, language: 'en', alerted: 0 });
+    expect(some.notification.body).toBe('AB+ at Calmette Hospital — donors nearby are being alerted');
+    expect(none.notification.body).toMatch(/no eligible donor is nearby/);
+    expect(none.notification.title).toBe(some.notification.title);
+    // The app routes on the data half; both open the request.
+    expect(none.data).toEqual({ type: 'REQUEST_APPROVED', requestId: 'r1' });
+  });
+
   test('the acceptance push names no donor — it can sit on a lock screen', () => {
     const m = buildMessage('DONOR_ACCEPTED', { ...args, language: 'en' });
     expect(m.notification.body).toBe('AB+ at Calmette Hospital — open LifeLink to see your request');

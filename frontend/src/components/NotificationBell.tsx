@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Bell, ClipboardCheck, HeartHandshake } from 'lucide-react';
+import { Bell, ClipboardCheck, HeartHandshake, UserX } from 'lucide-react';
 import RelativeTime from '@/components/RelativeTime';
 import type { AdminNotification } from '@/lib/notifications';
 import { FOCUS_EVENT } from '@/components/useFocusTarget';
@@ -13,6 +13,13 @@ import { FOCUS_EVENT } from '@/components/useFocusTarget';
  * record — clearing site data only means everything shows as new once.
  */
 const SEEN_KEY = 'lifelink.portal.notificationsSeenAt';
+
+const ICONS = { pending: ClipboardCheck, accepted: HeartHandshake, unmatched: UserX } as const;
+const TITLE_KEYS = {
+    pending: 'pendingTitle',
+    accepted: 'acceptedTitle',
+    unmatched: 'unmatchedTitle',
+} as const;
 
 function readSeen(): string {
     try {
@@ -122,8 +129,7 @@ export default function NotificationBell({ items }: { items: AdminNotification[]
                         <ul className="max-h-[min(24rem,60vh)] overflow-y-auto p-1">
                             {items.map((item) => {
                                 const isNew = seenAt != null && item.at > seenAt;
-                                const Icon =
-                                    item.kind === 'pending' ? ClipboardCheck : HeartHandshake;
+                                const Icon = ICONS[item.kind];
                                 return (
                                     <li key={item.id}>
                                         <Link
@@ -150,9 +156,9 @@ export default function NotificationBell({ items }: { items: AdminNotification[]
                                         >
                                             <span
                                                 className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full ${
-                                                    item.kind === 'pending'
-                                                        ? 'bg-warning-surface text-warning'
-                                                        : 'bg-accent text-brand'
+                                                    item.kind === 'accepted'
+                                                        ? 'bg-accent text-brand'
+                                                        : 'bg-warning-surface text-warning'
                                                 }`}
                                             >
                                                 <Icon className="size-4" aria-hidden="true" />
@@ -160,9 +166,7 @@ export default function NotificationBell({ items }: { items: AdminNotification[]
                                             <span className="min-w-0 flex-1">
                                                 <span className="flex items-center gap-2">
                                                     <span className="text-sm font-medium">
-                                                        {item.kind === 'pending'
-                                                            ? t('pendingTitle')
-                                                            : t('acceptedTitle')}
+                                                        {t(TITLE_KEYS[item.kind])}
                                                     </span>
                                                     {isNew ? (
                                                         <span

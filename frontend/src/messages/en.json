@@ -315,7 +315,8 @@
         "empty": "You're all caught up.",
         "pendingTitle": "New request to review",
         "acceptedTitle": "Donor accepted — confirm the donation",
-        "newBadge": "New"
+        "newBadge": "New",
+        "unmatchedTitle": "No donor matched — the family needs help finding blood"
     },
     "home": {
         "howHeading": "How it works",

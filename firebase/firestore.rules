@@ -149,7 +149,7 @@ service cloud.firestore {
     // ── matches/{requestId_donorUid} ────────────────────────────────────────────────────────────
     match /matches/{matchId} {
       allow read: if (signedIn() && resource.data.donorUid == uid()) || isAdmin();
-      // Only onRequestCreated creates one, so only notified donors have a match (ADR 0008).
+      // Only onRequestApproved creates one, so only matched donors have a match (ADR 0008).
       allow create, delete: if false;
       // One answer, never overwritten (FR-REQUEST-004 deferred), and only while the request is open.
       allow update: if signedIn() && resource.data.donorUid == uid()

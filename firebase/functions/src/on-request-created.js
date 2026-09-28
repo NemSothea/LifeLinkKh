@@ -166,9 +166,12 @@ export async function handleRequestApproved({ db, messaging, requestId, now = ne
   }
   if (sent.length || dead.length) await stamp.commit();
 
-  // DEC-015: the requester has been waiting for review; tell them it is live.
-  await notifyRequester({ db, messaging, requestId, request, hospitalName: hospital.name, type: 'REQUEST_APPROVED', log });
+  // DEC-015: the requester has been waiting for review; tell them it is live — and, when
+  // nobody matched, that nobody did. The request stays OPEN with alertedCount 0, which is
+  // what the portal's bell flags for the admin.
+  await notifyRequester({ db, messaging, requestId, request, hospitalName: hospital.name, type: 'REQUEST_APPROVED', alerted: candidates.length, log });
 
+  if (candidates.length === 0) log.warn(`request ${requestId}: no eligible donor matched — needs the admin`);
   log.info(`request ${requestId}: ${candidates.length} matched, ${sent.length} pushed, ${dead.length} dead tokens`);
   return { outcome: 'matched', alerted: candidates.length, pushed: sent.length };
 }
@@ -177,7 +180,7 @@ export async function handleRequestApproved({ db, messaging, requestId, now = ne
  * One push to the request's creator — approved or rejected (DEC-015). Never fails the caller:
  * the status change is the fact, the push is a courtesy.
  */
-export async function notifyRequester({ db, messaging, requestId, request, hospitalName, type, log = console }) {
+export async function notifyRequester({ db, messaging, requestId, request, hospitalName, type, alerted, log = console }) {
   const requester = await db.doc(`users/${request.createdBy}`).get();
   const token = requester.get('fcmToken');
   if (!token) return 0;
@@ -190,6 +193,7 @@ export async function notifyRequester({ db, messaging, requestId, request, hospi
         requestId,
         patientBloodType: request.patientBloodType,
         hospitalName: hospitalName ?? request.hospital?.name ?? '',
+        alerted,
       }),
     }]);
     if (dead.length) await requester.ref.update({ fcmToken: null });

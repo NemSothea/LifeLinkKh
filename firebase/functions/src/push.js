@@ -20,6 +20,17 @@ const TEXT = {
       km: (type, hospital) => `ឈាមប្រភេទ ${type} នៅ ${hospital} — កំពុងជូនដំណឹងដល់អ្នកបរិច្ចាគនៅក្បែរ`,
     },
   },
+  // The same approval when matching found nobody. "Donors are being alerted" would be a lie
+  // the family waits on; the truth, plus who is now on it, is what lets them call the
+  // hospital or a blood center instead. Same `type` on the data half: the app opens the
+  // request either way.
+  REQUEST_APPROVED_NO_DONORS: {
+    title: { en: 'Your request was approved', km: 'សំណើរបស់អ្នកត្រូវបានអនុម័ត' },
+    body: {
+      en: (type, hospital) => `${type} at ${hospital} — no eligible donor is nearby right now. Our admin has been told; please also ask the hospital`,
+      km: (type, hospital) => `ឈាមប្រភេទ ${type} នៅ ${hospital} — មិនទាន់មានអ្នកបរិច្ចាគដែលអាចផ្តល់បាននៅក្បែរទេ។ អ្នកគ្រប់គ្រងបានដឹងហើយ សូមសួរមន្ទីរពេទ្យផងដែរ`,
+    },
+  },
   REQUEST_REJECTED: {
     title: { en: 'Your request was not approved', km: 'សំណើរបស់អ្នកមិនត្រូវបានអនុម័តទេ' },
     body: {
@@ -42,10 +53,13 @@ export const DEAD_TOKEN_CODES = new Set([
   'messaging/invalid-registration-token',
 ]);
 
-/** One message per recipient; `language` anything but 'en' reads Khmer, same as the backend. */
-export function buildMessage(type, { token, language, requestId, patientBloodType, hospitalName }) {
+/**
+ * One message per recipient; `language` anything but 'en' reads Khmer, same as the backend.
+ * `alerted` matters to REQUEST_APPROVED only: zero picks the wording that says so.
+ */
+export function buildMessage(type, { token, language, requestId, patientBloodType, hospitalName, alerted }) {
   const lang = language === 'en' ? 'en' : 'km';
-  const text = TEXT[type];
+  const text = TEXT[type === 'REQUEST_APPROVED' && alerted === 0 ? 'REQUEST_APPROVED_NO_DONORS' : type];
   return {
     token,
     notification: {

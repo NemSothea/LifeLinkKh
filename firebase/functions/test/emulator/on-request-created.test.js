@@ -142,6 +142,16 @@ describe('onRequestApproved — matching', () => {
     expect(sent).toEqual([]);
   });
 
+  test('with nobody to alert, the requester is told that — not that donors are coming', async () => {
+    await db.doc('users/requester').set({ language: 'en', role: 'REQUESTER', fcmToken: 'family-token' });
+    await postRequest('r1');
+    expect(await handle('r1')).toMatchObject({ alerted: 0, pushed: 0 });
+    expect((await db.doc('requests/r1').get()).get('alertedCount')).toBe(0);
+    const toFamily = sent.find((m) => m.token === 'family-token');
+    expect(toFamily.notification.body).toMatch(/no eligible donor is nearby/);
+    expect(toFamily.data).toEqual({ type: 'REQUEST_APPROVED', requestId: 'r1' });
+  });
+
   test('the requester is told the request is live, in their language', async () => {
     await donor('sothea', { token: 'token-1' });
     await db.doc('users/requester').set({ language: 'en', role: 'REQUESTER', fcmToken: 'family-token' });
