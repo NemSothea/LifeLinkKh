@@ -15,7 +15,9 @@
  * Never read a secret through `NEXT_PUBLIC_`: that prefix embeds the value in the
  * browser bundle where anyone can read it.
  */
-const PROJECT_ID = process.env.FIREBASE_PROJECT_ID ?? 'lifelinkkh';
+// Trimmed, and an empty value counts as unset: a variable saved blank or with a stray newline
+// in a hosting dashboard would otherwise put `projects//databases` in every URL.
+const PROJECT_ID = process.env.FIREBASE_PROJECT_ID?.trim() || 'lifelinkkh';
 /** Where the Functions are deployed — `setGlobalOptions` in firebase/functions/src/index.js. */
 const FUNCTIONS_REGION = 'asia-southeast1';
 
@@ -183,7 +185,7 @@ export async function identityToolkit<T>(method: string, body: unknown): Promise
     const root = emulator
         ? `http://${emulator}/identitytoolkit.googleapis.com/v1`
         : 'https://identitytoolkit.googleapis.com/v1';
-    const key = process.env.FIREBASE_API_KEY ?? (emulator ? 'emulator' : '');
+    const key = process.env.FIREBASE_API_KEY?.trim() || (emulator ? 'emulator' : '');
     return send<T>(`${root}/accounts:${method}?key=${encodeURIComponent(key)}`, {
         method: 'POST',
         body,
