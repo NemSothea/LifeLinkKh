@@ -37,6 +37,18 @@
     --input: #d4d4d8;
     --ring: #c62828;
     --radius: 0.875rem;
+
+    /* Chart series, in fixed order (validated: CVD-adjacent and normal-vision floors pass in both
+       themes; slots 3–4 sit under 3:1 on white, so every chart carries a legend, hover values
+       and a table view). Never the brand red: red already means "critical" in this portal. */
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --series-3: #1baf7a;
+    --series-4: #eda100;
+    --series-5: #e87ba4;
+    /* Pie/donut "Other": far lighter than every slice, so it separates from its neighbours. */
+    --series-other: #d4d4d8;
+    --chart-grid: #e4e4e7;
 }
 
 /* #D15353 matches `AppTheme._primaryDark`: the light red is 3.3:1 on a dark surface, under
@@ -64,6 +76,14 @@
     --border: #2a2a2e;
     --input: #3f3f46;
     --ring: #d15353;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-other: #52525b;
+    --chart-grid: #2a2a2e;
 }
 
 @theme inline {
@@ -123,4 +143,67 @@ body {
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
+}
+
+/* Motion. Short and one-directional: things rise in, bars grow from their baseline. Staggered by
+   `--i` (set inline per item). Everything is off under prefers-reduced-motion. */
+@keyframes ll-rise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+}
+@keyframes ll-grow-y {
+    from {
+        transform: scaleY(0);
+    }
+}
+@keyframes ll-grow-x {
+    from {
+        transform: scaleX(0);
+    }
+}
+@keyframes ll-spin-in {
+    from {
+        opacity: 0;
+        transform: rotate(-90deg) scale(0.92);
+    }
+}
+.animate-spin-in {
+    transform-origin: center;
+    transform-box: fill-box;
+    animation: ll-spin-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes ll-fade {
+    from {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.98);
+    }
+}
+.animate-rise {
+    animation: ll-rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 60ms);
+}
+.animate-grow-y {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: ll-grow-y 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 25ms);
+}
+.animate-grow-x {
+    transform-origin: left;
+    animation: ll-grow-x 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 40ms);
+}
+.animate-pop {
+    animation: ll-fade 0.16s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+    .animate-rise,
+    .animate-grow-y,
+    .animate-grow-x,
+    .animate-spin-in,
+    .animate-pop {
+        animation: none;
+    }
 }

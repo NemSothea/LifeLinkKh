@@ -5,7 +5,6 @@ import AutoRefresh from '@/components/AutoRefresh';
 import HealthStatus from '@/components/HealthStatus';
 import { getHealth } from '@/lib/api/health';
 import EmptyState from '@/components/EmptyState';
-import RelativeTime from '@/components/RelativeTime';
 import { hasPortalSession, portalDisplayName, portalRole } from '@/lib/api/session';
 import SignOutButton from '@/components/SignOutButton';
 import { listPublicRequests } from '@/lib/api/board';
@@ -16,17 +15,13 @@ import {
     type PendingRequest,
     type PortalRequest,
 } from '@/lib/api/portal';
-import {
-    IconAlertTriangle,
-    IconCheck,
-    IconDroplet,
-    IconInbox,
-    IconLogIn,
-} from '@/components/icons';
+import { IconAlertTriangle, IconInbox, IconLogIn } from '@/components/icons';
 import PendingReviewList from './pending-review-list';
 import RequestList, { type RequestViewModel } from './request-list';
 import PageHeader from '@/components/PageHeader';
-import { ChevronDown } from 'lucide-react';
+import PortalTabs from '@/components/PortalTabs';
+import FulfilledList from './fulfilled-list';
+import { adminNotifications } from '@/lib/notifications';
 
 /**
  * The live board, and the portal, on one page.
@@ -91,7 +86,15 @@ export default async function PortalPage({
 
     return (
         <main className="mx-auto max-w-4xl p-6 sm:p-10">
-            <PageHeader locale={locale} title={t('title')}>
+            <PageHeader
+                locale={locale}
+                title={t('title')}
+                notifications={
+                    isAdmin && result.ok
+                        ? adminNotifications(locale, pending, result.data as PortalRequest[])
+                        : undefined
+                }
+            >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     {result.ok ? (
                         <div
@@ -116,6 +119,7 @@ export default async function PortalPage({
                             ) : null}
                         </div>
                     ) : null}
+                    {isAdmin ? <PortalTabs locale={locale} active="requests" /> : null}
                     {isAdmin ? (
                         <SignOutButton locale={locale} displayName={displayName} role={role} />
                     ) : (
@@ -244,83 +248,19 @@ export default async function PortalPage({
             )}
 
             {isAdmin && result.ok ? (
-                <FulfilledSection
-                    requests={fulfilled}
+                <FulfilledList
+                    rows={fulfilled.map((request) => ({
+                        id: request.id,
+                        patientBloodType: request.patientBloodType,
+                        hospitalName: request.hospital?.name ?? null,
+                        createdAt: request.createdAt,
+                        unitsLabel: t('unitsNeeded', { count: request.unitsNeeded }),
+                    }))}
                     heading={t('fulfilledHeading')}
                     emptyLabel={t('fulfilledEmpty')}
-                    unitsLabelFor={(request) => t('unitsNeeded', { count: request.unitsNeeded })}
                 />
             ) : null}
         </main>
-    );
-}
-
-/**
- * Work already done, kept on screen instead of vanishing.
- *
- * Collapsed by default — the open list is the job; this is the receipt. Newest first,
- * because the question it answers is "did that confirmation go through", asked minutes
- * after the confirmation.
- */
-function FulfilledSection({
-    requests,
-    heading,
-    emptyLabel,
-    unitsLabelFor,
-}: {
-    requests: PortalRequest[];
-    heading: string;
-    emptyLabel: string;
-    unitsLabelFor: (request: PortalRequest) => string;
-}) {
-    const newestFirst = [...requests].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
-    return (
-        <details data-testid="portal-fulfilled" className="group mt-10">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl text-sm font-semibold text-foreground/80 select-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
-                <ChevronDown
-                    className="size-5 transition-transform duration-200 group-open:rotate-180"
-                    aria-hidden="true"
-                />
-                <IconCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                {heading}
-                <span className="tabular-nums">({newestFirst.length})</span>
-            </summary>
-
-            {newestFirst.length === 0 ? (
-                <p
-                    data-testid="portal-fulfilled-empty"
-                    className="mt-3 text-sm text-muted-foreground"
-                >
-                    {emptyLabel}
-                </p>
-            ) : (
-                <ul className="mt-3 flex flex-col gap-2">
-                    {newestFirst.map((request) => (
-                        <li
-                            key={request.id}
-                            data-testid={`portal-fulfilled-${request.id}`}
-                            className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm"
-                        >
-                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-600/10 text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                                <IconDroplet className="mr-0.5 -ml-0.5 h-3 w-3 opacity-70" />
-                                {request.patientBloodType}
-                            </span>
-                            <span className="text-foreground/75">{unitsLabelFor(request)}</span>
-                            {request.hospital ? (
-                                <span className="text-muted-foreground">
-                                    {request.hospital.name}
-                                </span>
-                            ) : null}
-                            <RelativeTime
-                                iso={request.createdAt}
-                                className="ml-auto text-xs text-muted-foreground tabular-nums"
-                            />
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </details>
     );
 }
 

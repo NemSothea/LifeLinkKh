@@ -2,6 +2,7 @@
 
 import { useId, useRef, useState } from 'react';
 import RelativeTime from '@/components/RelativeTime';
+import Pagination, { paginate } from '@/components/Pagination';
 import type { PendingRequest } from '@/lib/api/portal';
 import { IconAlertTriangle, IconBuilding, IconCheck, IconDroplet } from '@/components/icons';
 import { reviewRequestAction } from './actions';
@@ -19,6 +20,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Phone } from 'lucide-react';
+import { useFocusTarget } from '@/components/useFocusTarget';
 
 type Copy = {
     heading: string;
@@ -39,6 +41,9 @@ type Copy = {
     unitsLabel: Record<string, string>;
 };
 
+/** Five at a time: each one is a phone call to make, not a row to scan. */
+const PENDING_PAGE_SIZE = 5;
+
 /** The same limit `reviewRequest` enforces — kept here so the form stops at it, not the server. */
 const REASON_MAX = 200;
 
@@ -56,21 +61,38 @@ export default function PendingReviewList({
     locale: string;
     copy: Copy;
 }) {
+    const [page, setPage] = useState(1);
+    const { current, totalPages, visible } = paginate(requests, page, PENDING_PAGE_SIZE);
+    useFocusTarget(
+        'pending-',
+        requests.map((r) => r.id),
+        PENDING_PAGE_SIZE,
+        setPage,
+    );
+
     return (
         <section data-testid="portal-pending" className="mb-10">
             <h2 className="flex items-center gap-2 text-lg font-semibold">
                 <IconAlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 {copy.heading}
-                <span className="tabular-nums text-black/65 dark:text-white/65">
-                    ({requests.length})
-                </span>
+                <span className="text-muted-foreground tabular-nums">({requests.length})</span>
             </h2>
-            <p className="mb-4 text-sm text-black/70 dark:text-white/70">{copy.hint}</p>
+            <p className="mb-4 text-sm text-muted-foreground">{copy.hint}</p>
             <ul className="flex flex-col gap-3">
-                {requests.map((request) => (
+                {visible.map((request) => (
                     <PendingRow key={request.id} request={request} locale={locale} copy={copy} />
                 ))}
             </ul>
+            <div className="mt-4">
+                <Pagination
+                    page={current}
+                    totalPages={totalPages}
+                    total={requests.length}
+                    pageSize={PENDING_PAGE_SIZE}
+                    onChange={setPage}
+                    testIdPrefix="pending-page"
+                />
+            </div>
         </section>
     );
 }
@@ -91,8 +113,9 @@ function PendingRow({
 
     return (
         <li
+            id={`pending-${request.id}`}
             data-testid={`portal-pending-${request.id}`}
-            className="flex flex-col gap-4 rounded-2xl border border-amber-300 bg-warning-surface p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-amber-900"
+            className="animate-rise flex flex-col gap-4 rounded-2xl border border-amber-300 bg-warning-surface p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-amber-900"
         >
             <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold text-white">

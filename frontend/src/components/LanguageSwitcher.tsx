@@ -61,7 +61,7 @@ export default function LanguageSwitcher() {
                 <div
                     role="menu"
                     aria-label={t('language')}
-                    className="absolute right-0 z-50 mt-2 w-44 overflow-hidden rounded-xl border border-black/10 bg-white p-1 shadow-lg dark:border-white/15 dark:bg-neutral-900"
+                    className="animate-pop absolute right-0 z-50 mt-2 w-44 overflow-hidden rounded-xl border border-black/10 bg-white p-1 shadow-lg dark:border-white/15 dark:bg-neutral-900"
                 >
                     {routing.locales.map((locale) => {
                         const active = locale === activeLocale;

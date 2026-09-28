@@ -71,7 +71,7 @@ export default function ThemeSwitcher() {
                 <div
                     role="menu"
                     aria-label={t('theme')}
-                    className="absolute right-0 z-50 mt-2 w-44 overflow-hidden rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-lg"
+                    className="animate-pop absolute right-0 z-50 mt-2 w-44 overflow-hidden rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-lg"
                 >
                     {OPTIONS.map(({ value, icon: Icon, label }) => {
                         const active = mounted && theme === value;

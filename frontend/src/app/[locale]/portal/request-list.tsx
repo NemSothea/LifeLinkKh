@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Pagination, { paginate } from '@/components/Pagination';
 import EmptyState from '@/components/EmptyState';
 import RelativeTime from '@/components/RelativeTime';
 import type { PortalRequest } from '@/lib/api/portal';
@@ -12,13 +13,14 @@ import {
     IconBell,
     IconBuilding,
     IconCheck,
-    IconChevron,
     IconDroplet,
     IconInbox,
     IconSearch,
 } from '@/components/icons';
 import { Input } from '@/components/ui/input';
 import { ChevronDown } from 'lucide-react';
+import type { CSSProperties } from 'react';
+import { useFocusTarget } from '@/components/useFocusTarget';
 
 /**
  * A request row as this list renders it, from **either** source, plus its
@@ -144,9 +146,13 @@ export default function RequestList({
             (request.hospital?.name.toLowerCase().includes(q) ?? false)
         );
     });
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-    const currentPage = Math.min(page, totalPages);
-    const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const { current: currentPage, totalPages, visible } = paginate(filtered, page, PAGE_SIZE);
+    useFocusTarget(
+        'request-',
+        filtered.map((r) => r.id),
+        PAGE_SIZE,
+        setPage,
+    );
 
     function updateQuery(value: string) {
         setQuery(value);
@@ -207,9 +213,10 @@ export default function RequestList({
             ) : (
                 <>
                     <ul data-testid="portal-request-list" className="flex flex-col gap-4">
-                        {visible.map((request) => (
+                        {visible.map((request, index) => (
                             <RequestRow
                                 key={request.id}
+                                index={index}
                                 request={request}
                                 canConfirm={canConfirm}
                                 locale={locale}
@@ -217,49 +224,14 @@ export default function RequestList({
                             />
                         ))}
                     </ul>
-                    {totalPages > 1 ? (
-                        <nav
-                            aria-label={copy.pageLabel
-                                .replace('{page}', String(currentPage))
-                                .replace('{total}', String(totalPages))}
-                            className="flex items-center justify-center gap-1"
-                        >
-                            <button
-                                type="button"
-                                data-testid="portal-page-prev"
-                                disabled={currentPage === 1}
-                                onClick={() => setPage(currentPage - 1)}
-                                className="flex size-11 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-30"
-                            >
-                                <IconChevron className="h-5 w-5 rotate-90" />
-                            </button>
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                                <button
-                                    key={n}
-                                    type="button"
-                                    data-testid={`portal-page-${n}`}
-                                    onClick={() => setPage(n)}
-                                    aria-current={n === currentPage ? 'page' : undefined}
-                                    className={`size-11 rounded-full text-sm font-medium tabular-nums transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none ${
-                                        n === currentPage
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'text-foreground/80 hover:bg-secondary'
-                                    }`}
-                                >
-                                    {n}
-                                </button>
-                            ))}
-                            <button
-                                type="button"
-                                data-testid="portal-page-next"
-                                disabled={currentPage === totalPages}
-                                onClick={() => setPage(currentPage + 1)}
-                                className="flex size-11 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-30"
-                            >
-                                <IconChevron className="h-5 w-5 -rotate-90" />
-                            </button>
-                        </nav>
-                    ) : null}
+                    <Pagination
+                        page={currentPage}
+                        totalPages={totalPages}
+                        total={filtered.length}
+                        pageSize={PAGE_SIZE}
+                        onChange={setPage}
+                        testIdPrefix="portal-page"
+                    />
                 </>
             )}
         </div>
@@ -292,11 +264,13 @@ function progressStyle(request: RequestViewModel): string {
 }
 
 function RequestRow({
+    index,
     request,
     canConfirm,
     locale,
     copy,
 }: {
+    index: number;
     request: RequestViewModel;
     canConfirm: boolean;
     locale: string;
@@ -306,8 +280,10 @@ function RequestRow({
 
     return (
         <li
+            id={`request-${request.id}`}
             data-testid={`portal-request-${request.id}`}
-            className={`overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-sm transition-shadow hover:shadow-md ${
+            style={{ '--i': index } as CSSProperties}
+            className={`animate-rise overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-sm transition-shadow hover:shadow-md ${
                 isCritical
                     ? 'border-red-300 border-l-4 border-l-brand dark:border-red-900'
                     : 'border-border'

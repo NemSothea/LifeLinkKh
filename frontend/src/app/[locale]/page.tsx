@@ -4,6 +4,7 @@ import LegalLinks from '@/components/LegalLinks';
 import { Download } from 'lucide-react';
 import { IconArrowRight, IconInbox } from '@/components/icons';
 import PageHeader from '@/components/PageHeader';
+import type { CSSProperties } from 'react';
 
 /**
  * The portal's front door. Most visitors are donors or families who came for the app, so
@@ -31,6 +32,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     title={t('downloadCardTitle')}
                     body={t('downloadCardBody')}
                     primary
+                    index={0}
                 />
                 <EntryCard
                     href={`/${locale}/portal`}
@@ -38,6 +40,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     icon={<IconInbox className="h-6 w-6" />}
                     title={t('portalCardTitle')}
                     body={t('portalCardBody')}
+                    index={1}
                 />
             </div>
 
@@ -61,6 +64,7 @@ function EntryCard({
     title,
     body,
     primary = false,
+    index,
 }: {
     href: string;
     testId: string;
@@ -68,12 +72,14 @@ function EntryCard({
     title: string;
     body: string;
     primary?: boolean;
+    index: number;
 }) {
     return (
         <Link
             href={href}
             data-testid={testId}
-            className={`group flex items-start gap-4 rounded-2xl border p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none ${
+            style={{ '--i': index } as CSSProperties}
+            className={`animate-rise group flex items-start gap-4 rounded-2xl border p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none ${
                 primary
                     ? 'border-primary bg-primary text-primary-foreground'
                     : 'border-border bg-card text-card-foreground hover:border-brand/40'
