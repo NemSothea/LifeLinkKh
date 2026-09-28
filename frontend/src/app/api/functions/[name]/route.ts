@@ -15,6 +15,19 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
+/**
+ * GET is not a call, but it answers in the protocol's own shape instead of Next's HTML 405, so
+ * whether a deployment carries this route can be checked from a browser: a JSON body with
+ * `METHOD_NOT_ALLOWED` and the function's name means it does.
+ */
+export async function GET(_request: Request, { params }: { params: Promise<{ name: string }> }) {
+    const { name } = await params;
+    return NextResponse.json(
+        { error: { status: 'METHOD_NOT_ALLOWED', message: `POST to call ${name}.` } },
+        { status: 405 },
+    );
+}
+
 export async function POST(request: Request, { params }: { params: Promise<{ name: string }> }) {
     const { name } = await params;
     const authorization = request.headers.get('authorization') ?? '';
