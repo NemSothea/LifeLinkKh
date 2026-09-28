@@ -1,5 +1,6 @@
 {
     "app": {
+        "language": "Language",
         "title": "LifeLink KH",
         "tagline": "Connecting blood donors with the people who need them",
         "portalCardTitle": "Open requests",
