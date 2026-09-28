@@ -734,8 +734,8 @@ DEC-014 still holds: donors and requesters use the app, and the portal has no si
 - The button appears only when `GOOGLE_CLIENT_ID` is set, so a deploy without it keeps the
   password form alone. Google admins see no "Change password" link.
 - `PORTAL_PASSWORD_SIGN_IN=off` removes the password form and makes the server refuse a password
-  sign-in, leaving Google as the only way in. **Production runs with it off**, set on Vercel on
-  2026-09-28. Unset (the emulators, local development) the form stays, and it also stays whenever
+  sign-in, leaving Google as the only way in. **Production leaves it unset** and offers both,
+  decided 2026-09-28 for the admins' convenience. Unset (the emulators, local development) the form stays, and it also stays whenever
   `GOOGLE_CLIENT_ID` is missing, so the portal can never end up with no way in.
 
 ### Consequences

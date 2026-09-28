@@ -131,7 +131,7 @@ is kept for when the 500-user decision is made.
   | `FIREBASE_API_KEY` | Firebase → Project settings → General → Web API key |
   | `SUPPORT_EMAIL` | the monitored address for deletion requests (DEC-016) |
   | `GOOGLE_CLIENT_ID` | optional, for admin Google sign-in (DEC-017): Authentication → Sign-in method → Google → Web SDK configuration → **Web client ID**. Add the portal's URL under that OAuth client's **Authorized JavaScript origins** in Google Cloud → Credentials |
-  | `PORTAL_PASSWORD_SIGN_IN` | `off`: Google is the only admin sign-in (DEC-017). Set it only once a Google admin can sign in |
+  | `PORTAL_PASSWORD_SIGN_IN` | leave **unset**: the portal offers both Google and username+password (DEC-017). `off` would make it Google-only |
   | `APK_DOWNLOAD_URL` | LifeLink's page on `https://kosignstore.wecambodia.com/` (unset: GitHub Releases) |
   | `APK_CERT_SHA256` | optional: the signing certificate SHA-256 `build-release-apk.sh` prints, shown on `/download` |
 
