@@ -1,66 +1,47 @@
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
-import HealthStatus from '@/components/HealthStatus';
 import LegalLinks from '@/components/LegalLinks';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { IconArrowRight, IconDroplet, IconInbox } from '@/components/icons';
-import { getHealth } from '@/lib/api/health';
+import { Download } from 'lucide-react';
+import { IconArrowRight, IconInbox } from '@/components/icons';
+import PageHeader from '@/components/PageHeader';
 
 /**
- * The portal's front door. Until now this was the M2 health page — a status badge and
- * no way in, so anyone who landed on `/` had to already know `/portal` existed and type
- * it. The health check stays (it still proves browser → Next server → Firestore end
- * to end, unmocked), demoted to a footer line rather than being the
- * whole page.
- *
- * A Server Component like the rest of the portal. One card: the portal itself, which is the
- * public board signed out and the admin's working page signed in.
+ * The portal's front door. Most visitors are donors or families who came for the app, so
+ * "Get the app" is the first, filled card; the request board is the second. The API health
+ * line moved to the admin's portal page — a donor has no use for it.
  */
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
     const t = await getTranslations('app');
-    const health = await getHealth();
 
     return (
         <main className="mx-auto max-w-3xl p-6 sm:p-10">
-            <header className="mb-10 flex flex-wrap items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand text-white shadow-sm">
-                        <IconDroplet className="h-5 w-5" />
-                    </span>
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                            {t('title')}
-                        </h1>
-                        <p className="text-sm text-black/70 dark:text-white/70">{t('tagline')}</p>
-                    </div>
-                </div>
-                <LanguageSwitcher />
-            </header>
+            <PageHeader
+                locale={locale}
+                title={t('title')}
+                subtitle={t('tagline')}
+                className="mb-10"
+            />
 
             <div className="flex flex-col gap-4">
+                <EntryCard
+                    href={`/${locale}/download`}
+                    testId="home-download-link"
+                    icon={<Download className="size-6" aria-hidden="true" />}
+                    title={t('downloadCardTitle')}
+                    body={t('downloadCardBody')}
+                    primary
+                />
                 <EntryCard
                     href={`/${locale}/portal`}
                     testId="home-portal-link"
                     icon={<IconInbox className="h-6 w-6" />}
                     title={t('portalCardTitle')}
                     body={t('portalCardBody')}
-                    primary
-                />
-                <EntryCard
-                    href={`/${locale}/download`}
-                    testId="home-download-link"
-                    icon={<IconDroplet className="h-6 w-6" />}
-                    title={t('downloadCardTitle')}
-                    body={t('downloadCardBody')}
                 />
             </div>
 
-            <footer className="flex flex-col gap-3 pt-10">
-                <HealthStatus
-                    reachable={health.ok}
-                    status={health.ok ? health.data.status : undefined}
-                />
+            <footer className="pt-10">
                 <LegalLinks locale={locale} />
             </footer>
         </main>
@@ -92,28 +73,30 @@ function EntryCard({
         <Link
             href={href}
             data-testid={testId}
-            className={`group flex items-start gap-4 rounded-2xl border bg-white p-5 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:bg-white/[0.03] ${
+            className={`group flex items-start gap-4 rounded-2xl border p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none ${
                 primary
-                    ? 'border-black/10 border-l-4 border-l-brand dark:border-white/15'
-                    : 'border-black/10 dark:border-white/15'
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-card text-card-foreground hover:border-brand/40'
             }`}
         >
             <span
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                    primary
-                        ? 'bg-brand text-white'
-                        : 'bg-black/[0.04] text-black/70 dark:bg-white/10 dark:text-white/70'
+                className={`flex size-12 shrink-0 items-center justify-center rounded-xl ${
+                    primary ? 'bg-white/15 text-white' : 'bg-accent text-brand'
                 }`}
             >
                 {icon}
             </span>
             <div className="min-w-0 flex-1">
                 <h2 className="text-lg font-semibold">{title}</h2>
-                <p className="mt-1 text-sm text-black/70 dark:text-white/70">{body}</p>
+                <p
+                    className={`mt-1 text-sm ${primary ? 'text-white/90' : 'text-muted-foreground'}`}
+                >
+                    {body}
+                </p>
             </div>
             <IconArrowRight
-                className={`mt-2.5 h-5 w-5 shrink-0 transition-transform group-hover:translate-x-0.5 ${
-                    primary ? 'text-brand' : 'text-black/30 dark:text-white/30'
+                className={`mt-3 h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1 ${
+                    primary ? 'text-white' : 'text-muted-foreground'
                 }`}
             />
         </Link>

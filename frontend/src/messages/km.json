@@ -1,5 +1,9 @@
 {
     "app": {
+        "theme": "ផ្ទៃពណ៌",
+        "themeLight": "ភ្លឺ",
+        "themeDark": "ងងឹត",
+        "themeSystem": "តាមឧបករណ៍",
         "language": "ភាសា",
         "title": "ជីវិត — LifeLink KH",
         "tagline": "ភ្ជាប់អ្នកបរិច្ចាគឈាមទៅនឹងអ្នកដែលត្រូវការ",

@@ -1,8 +1,20 @@
 'use client';
 
-import { useId, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { confirmDonationAction } from './actions';
 import { IconCheck } from '@/components/icons';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type Copy = {
     donatedOnLabel: string;
@@ -40,7 +52,6 @@ export default function ConfirmDonationForm({
     const [open, setOpen] = useState(false);
     const [donatedOn, setDonatedOn] = useState(() => new Date().toISOString().slice(0, 10));
     const formRef = useRef<HTMLFormElement>(null);
-    const titleId = useId();
 
     return (
         <>
@@ -51,76 +62,52 @@ export default function ConfirmDonationForm({
                 <input type="hidden" name="donorName" value={donorName} />
                 <input type="hidden" name="donatedOn" value={donatedOn} />
 
-                <label className="flex flex-col text-xs text-black/70 dark:text-white/70">
+                <label className="flex flex-col gap-1 text-sm text-muted-foreground">
                     {copy.donatedOnLabel}
-                    <input
+                    <Input
                         type="date"
                         required
                         max={new Date().toISOString().slice(0, 10)}
                         value={donatedOn}
                         onChange={(e) => setDonatedOn(e.target.value)}
-                        className="rounded-xl border border-black/20 px-2 py-1 text-sm text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:border-white/25 dark:bg-black/30 dark:text-white"
+                        className="text-foreground"
                     />
                 </label>
-                <button
+                <Button
                     type="button"
                     onClick={() => setOpen(true)}
                     data-testid={`confirm-donation-${matchId}`}
-                    className="flex items-center gap-1.5 rounded-xl bg-brand px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    className="w-full sm:w-auto"
                 >
                     <IconCheck className="h-4 w-4" />
                     {copy.confirmDonationCta}
-                </button>
+                </Button>
             </form>
 
-            {open ? (
-                <div
-                    role="presentation"
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-                    onClick={() => setOpen(false)}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Escape') setOpen(false);
-                    }}
-                >
-                    <div
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby={titleId}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-neutral-900"
-                    >
-                        <h2 id={titleId} className="text-lg font-semibold">
-                            {copy.dialogTitle}
-                        </h2>
-                        <p className="mt-2 text-sm text-black/70 dark:text-white/70">
+            {/* Radix AlertDialog: focus moves in and stays in, Escape and Cancel close it, the page
+                behind stops scrolling, and a click outside does NOT confirm by accident. */}
+            <AlertDialog open={open} onOpenChange={setOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{copy.dialogTitle}</AlertDialogTitle>
+                        <AlertDialogDescription>
                             {copy.dialogBody
                                 .replace('{name}', donorName)
                                 .replace(
                                     '{date}',
                                     new Date(donatedOn + 'T00:00:00').toLocaleDateString(locale),
                                 )}
-                        </p>
-                        <div className="mt-6 flex justify-end gap-2">
-                            <button
-                                type="button"
-                                autoFocus
-                                onClick={() => setOpen(false)}
-                                className="rounded-xl px-3 py-1.5 text-sm font-medium text-black/70 hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:text-white/70 dark:hover:bg-white/10"
-                            >
-                                {copy.cancelCta}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => formRef.current?.requestSubmit()}
-                                className="flex items-center gap-1.5 rounded-xl bg-brand px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                            >
-                                <IconCheck className="h-4 w-4" />
-                                {copy.dialogConfirmCta}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ) : null}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel autoFocus>{copy.cancelCta}</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => formRef.current?.requestSubmit()}>
+                            <IconCheck className="h-4 w-4" />
+                            {copy.dialogConfirmCta}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

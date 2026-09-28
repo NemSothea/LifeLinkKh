@@ -1,7 +1,8 @@
 import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { IconDroplet } from '@/components/icons';
+import Notice from '@/components/Notice';
+import PillLink from '@/components/PillLink';
+import { IconArrowLeft, IconShield } from '@/components/icons';
+import PageHeader from '@/components/PageHeader';
 
 /**
  * The web link Google Play requires for account deletion (DEC-016). Public — the whole point is
@@ -27,20 +28,7 @@ export default async function DeleteAccountPage({
 
     return (
         <main className="mx-auto max-w-2xl p-6 sm:p-10">
-            <header className="mb-8 flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand text-white shadow-sm">
-                        <IconDroplet className="h-5 w-5" />
-                    </span>
-                    <div>
-                        <p className="text-sm font-semibold tracking-wide text-brand uppercase">
-                            LifeLink KH
-                        </p>
-                        <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
-                    </div>
-                </div>
-                <LanguageSwitcher />
-            </header>
+            <PageHeader locale={locale} title={t('title')} />
 
             <section className="mb-8">
                 <h2 className="mb-2 text-lg font-semibold">{t('inAppHeading')}</h2>
@@ -65,12 +53,9 @@ export default async function DeleteAccountPage({
                         </a>
                     </p>
                 ) : (
-                    <p
-                        data-testid="delete-account-no-email"
-                        className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
-                    >
+                    <Notice tone="warning" testId="delete-account-no-email" className="mt-3">
                         {t('noEmailConfigured')}
-                    </p>
+                    </Notice>
                 )}
             </section>
 
@@ -83,21 +68,14 @@ export default async function DeleteAccountPage({
                 </ul>
             </section>
 
-            <p className="mb-6 text-sm">
-                <Link
-                    href={`/${locale}/privacy`}
-                    className="font-medium text-brand underline-offset-4 hover:underline"
-                >
+            <div className="flex flex-wrap gap-2">
+                <PillLink href={`/${locale}/privacy`} icon={<IconShield />}>
                     {t('privacyLink')}
-                </Link>
-            </p>
-
-            <Link
-                href={`/${locale}`}
-                className="text-sm font-medium text-black/70 underline-offset-4 hover:underline dark:text-white/70"
-            >
-                {t('backCta')}
-            </Link>
+                </PillLink>
+                <PillLink href={`/${locale}`} icon={<IconArrowLeft />}>
+                    {t('backCta')}
+                </PillLink>
+            </div>
         </main>
     );
 }

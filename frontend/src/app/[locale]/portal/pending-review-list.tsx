@@ -6,6 +6,19 @@ import type { PendingRequest } from '@/lib/api/portal';
 import { IconAlertTriangle, IconBuilding, IconCheck, IconDroplet } from '@/components/icons';
 import { reviewRequestAction } from './actions';
 import { UrgencyBadge } from './request-list';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Phone } from 'lucide-react';
 
 type Copy = {
     heading: string;
@@ -74,13 +87,12 @@ function PendingRow({
     const [dialog, setDialog] = useState<'approve' | 'reject' | null>(null);
     const [reason, setReason] = useState('');
     const approveRef = useRef<HTMLFormElement>(null);
-    const titleId = useId();
     const reasonId = useId();
 
     return (
         <li
             data-testid={`portal-pending-${request.id}`}
-            className="flex flex-col gap-3 rounded-2xl border border-amber-300 bg-amber-50/60 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-amber-800 dark:bg-amber-950/30"
+            className="flex flex-col gap-4 rounded-2xl border border-amber-300 bg-warning-surface p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-amber-900"
         >
             <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold text-white">
@@ -93,57 +105,56 @@ function PendingRow({
                             urgency={request.urgency}
                             label={copy.urgency[request.urgency] ?? request.urgency}
                         />
-                        <span className="text-black/70 dark:text-white/70">
-                            {copy.unitsLabel[request.id]}
-                        </span>
+                        <span className="text-foreground/75">{copy.unitsLabel[request.id]}</span>
                         <RelativeTime
                             iso={request.createdAt}
-                            className="text-black/65 tabular-nums dark:text-white/65"
+                            className="text-muted-foreground tabular-nums"
                         />
                     </div>
                     {request.hospital ? (
                         <p className="mt-1 flex items-center gap-1.5 font-medium">
-                            <IconBuilding className="h-4 w-4 text-black/40 dark:text-white/40" />
+                            <IconBuilding className="h-4 w-4 text-muted-foreground" />
                             {request.hospital.name}
                         </p>
                     ) : null}
                     {request.contactName || request.contactPhone ? (
-                        <p className="mt-1 text-black/70 dark:text-white/70">
+                        <p className="mt-1 text-foreground/75">
                             {copy.contactLabel}: {request.contactName}
-                            {request.contactPhone ? (
-                                <>
-                                    {' · '}
-                                    <a
-                                        href={`tel:${request.contactPhone}`}
-                                        className="font-mono underline-offset-4 hover:underline"
-                                    >
-                                        {request.contactPhone}
-                                    </a>
-                                </>
-                            ) : null}
                         </p>
+                    ) : null}
+                    {/* Calling the family is how an admin checks a request is real, so the number
+                        is a 44px call button rather than an 18px text link. */}
+                    {request.contactPhone ? (
+                        <Button asChild variant="outline" className="mt-2 rounded-full font-mono">
+                            <a
+                                href={`tel:${request.contactPhone}`}
+                                data-testid={`call-${request.id}`}
+                            >
+                                <Phone className="size-4" aria-hidden="true" />
+                                {request.contactPhone}
+                            </a>
+                        </Button>
                     ) : null}
                 </div>
             </div>
 
-            <div className="flex shrink-0 gap-2">
-                <button
+            <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex">
+                <Button
                     type="button"
+                    variant="outline"
                     onClick={() => setDialog('reject')}
                     data-testid={`reject-${request.id}`}
-                    className="rounded-xl border border-black/15 px-3 py-1.5 text-sm font-medium text-black/70 hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:border-white/20 dark:text-white/70 dark:hover:bg-white/10"
                 >
                     {copy.rejectCta}
-                </button>
-                <button
+                </Button>
+                <Button
                     type="button"
                     onClick={() => setDialog('approve')}
                     data-testid={`approve-${request.id}`}
-                    className="flex items-center gap-1.5 rounded-xl bg-brand px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                 >
                     <IconCheck className="h-4 w-4" />
                     {copy.approveCta}
-                </button>
+                </Button>
             </div>
 
             <form ref={approveRef} action={reviewRequestAction} className="hidden">
@@ -152,110 +163,75 @@ function PendingRow({
                 <input type="hidden" name="locale" value={locale} />
             </form>
 
-            {dialog ? (
-                <div
-                    role="presentation"
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-                    onClick={() => setDialog(null)}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Escape') setDialog(null);
-                    }}
-                >
-                    <div
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby={titleId}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-neutral-900"
-                    >
-                        {dialog === 'approve' ? (
-                            <>
-                                <h2 id={titleId} className="text-lg font-semibold">
-                                    {copy.approveDialogTitle}
-                                </h2>
-                                <p className="mt-2 text-sm text-black/70 dark:text-white/70">
+            {/* Radix AlertDialog: focus is trapped inside, Escape and Cancel close it, the page
+                behind stops scrolling, and a click outside never approves by accident. */}
+            <AlertDialog open={dialog !== null} onOpenChange={(open) => !open && setDialog(null)}>
+                <AlertDialogContent>
+                    {dialog === 'approve' ? (
+                        <>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>{copy.approveDialogTitle}</AlertDialogTitle>
+                                <AlertDialogDescription>
                                     {copy.approveDialogBody}
-                                </p>
-                                <div className="mt-6 flex justify-end gap-2">
-                                    <CancelButton
-                                        label={copy.cancelCta}
-                                        onClick={() => setDialog(null)}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => approveRef.current?.requestSubmit()}
-                                        data-testid={`approve-confirm-${request.id}`}
-                                        className="flex items-center gap-1.5 rounded-xl bg-brand px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                                    >
-                                        <IconCheck className="h-4 w-4" />
-                                        {copy.approveDialogCta}
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <form action={reviewRequestAction}>
-                                <input type="hidden" name="requestId" value={request.id} />
-                                <input type="hidden" name="decision" value="REJECT" />
-                                <input type="hidden" name="locale" value={locale} />
-                                <h2 id={titleId} className="text-lg font-semibold">
-                                    {copy.rejectDialogTitle}
-                                </h2>
-                                <p className="mt-2 text-sm text-black/70 dark:text-white/70">
-                                    {copy.rejectDialogBody}
-                                </p>
-                                <label
-                                    htmlFor={reasonId}
-                                    className="mt-4 flex flex-col gap-1 text-sm"
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel autoFocus>{copy.cancelCta}</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={() => approveRef.current?.requestSubmit()}
+                                    data-testid={`approve-confirm-${request.id}`}
                                 >
-                                    {copy.rejectReasonLabel}
-                                    <textarea
-                                        id={reasonId}
-                                        name="reason"
-                                        required
-                                        maxLength={REASON_MAX}
-                                        rows={3}
-                                        value={reason}
-                                        onChange={(e) => setReason(e.target.value)}
-                                        placeholder={copy.rejectReasonPlaceholder}
-                                        data-testid={`reject-reason-${request.id}`}
-                                        className="rounded-xl border border-black/20 px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:border-white/25 dark:bg-black/30"
-                                    />
-                                    <span className="self-end text-xs text-black/60 tabular-nums dark:text-white/60">
-                                        {reason.length}/{REASON_MAX}
-                                    </span>
-                                </label>
-                                <div className="mt-4 flex justify-end gap-2">
-                                    <CancelButton
-                                        label={copy.cancelCta}
-                                        onClick={() => setDialog(null)}
-                                    />
-                                    <button
-                                        type="submit"
-                                        disabled={reason.trim() === ''}
-                                        data-testid={`reject-confirm-${request.id}`}
-                                        className="rounded-xl bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50"
-                                    >
-                                        {copy.rejectDialogCta}
-                                    </button>
-                                </div>
-                            </form>
-                        )}
-                    </div>
-                </div>
-            ) : null}
+                                    <IconCheck className="h-4 w-4" />
+                                    {copy.approveDialogCta}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </>
+                    ) : (
+                        <form action={reviewRequestAction} className="grid gap-4">
+                            <input type="hidden" name="requestId" value={request.id} />
+                            <input type="hidden" name="decision" value="REJECT" />
+                            <input type="hidden" name="locale" value={locale} />
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>{copy.rejectDialogTitle}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    {copy.rejectDialogBody}
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <label
+                                htmlFor={reasonId}
+                                className="flex flex-col gap-1.5 text-sm font-medium"
+                            >
+                                {copy.rejectReasonLabel}
+                                <Textarea
+                                    id={reasonId}
+                                    name="reason"
+                                    required
+                                    maxLength={REASON_MAX}
+                                    rows={3}
+                                    value={reason}
+                                    onChange={(e) => setReason(e.target.value)}
+                                    placeholder={copy.rejectReasonPlaceholder}
+                                    data-testid={`reject-reason-${request.id}`}
+                                />
+                                <span className="self-end text-xs font-normal text-muted-foreground tabular-nums">
+                                    {reason.length}/{REASON_MAX}
+                                </span>
+                            </label>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel autoFocus>{copy.cancelCta}</AlertDialogCancel>
+                                <Button
+                                    type="submit"
+                                    variant="destructive"
+                                    disabled={reason.trim() === ''}
+                                    data-testid={`reject-confirm-${request.id}`}
+                                >
+                                    {copy.rejectDialogCta}
+                                </Button>
+                            </AlertDialogFooter>
+                        </form>
+                    )}
+                </AlertDialogContent>
+            </AlertDialog>
         </li>
-    );
-}
-
-function CancelButton({ label, onClick }: { label: string; onClick: () => void }) {
-    return (
-        <button
-            type="button"
-            autoFocus
-            onClick={onClick}
-            className="rounded-xl px-3 py-1.5 text-sm font-medium text-black/70 hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:text-white/70 dark:hover:bg-white/10"
-        >
-            {label}
-        </button>
     );
 }

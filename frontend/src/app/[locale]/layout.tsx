@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { notFound } from 'next/navigation';
 import { Inter, Kantumruy_Pro } from 'next/font/google';
 import { routing, type Locale } from '@/i18n/routing';
+import ThemeProvider from '@/components/ThemeProvider';
 import '../globals.css';
 
 // Same pairing as the Flutter app's AppTheme: Inter for Latin, Kantumruy Pro filling in
@@ -34,9 +35,16 @@ export default async function LocaleLayout({
     }
 
     return (
-        <html lang={locale} className={`${inter.variable} ${kantumruyPro.variable}`}>
+        // suppressHydrationWarning: next-themes sets the class on <html> before React hydrates.
+        <html
+            lang={locale}
+            className={`${inter.variable} ${kantumruyPro.variable}`}
+            suppressHydrationWarning
+        >
             <body className="antialiased">
-                <NextIntlClientProvider>{children}</NextIntlClientProvider>
+                <ThemeProvider>
+                    <NextIntlClientProvider>{children}</NextIntlClientProvider>
+                </ThemeProvider>
             </body>
         </html>
     );

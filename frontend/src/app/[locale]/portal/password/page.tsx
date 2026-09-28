@@ -1,8 +1,10 @@
 import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
+import PillLink from '@/components/PillLink';
+import { IconArrowLeft } from '@/components/icons';
 import { redirect } from 'next/navigation';
 import { hasPortalSession, portalDisplayName } from '@/lib/api/session';
 import ChangePasswordForm from './change-password-form';
+import PageHeader from '@/components/PageHeader';
 
 /**
  * The signed-in admin changing their own password — not an admin screen. The action
@@ -30,16 +32,12 @@ export default async function ChangePasswordPage({
 
     return (
         <main className="mx-auto max-w-md p-6 sm:p-10">
-            <header className="mb-6">
-                <p className="text-sm font-semibold tracking-wide text-brand uppercase">
-                    LifeLink KH
-                </p>
-                <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
-                <p className="mt-2 text-sm text-black/70 dark:text-white/70">
-                    {t('intro')}
-                    {displayName ? ` (${displayName})` : ''}
-                </p>
-            </header>
+            <PageHeader
+                locale={locale}
+                title={t('title')}
+                subtitle={`${t('intro')}${displayName ? ` (${displayName})` : ''}`}
+                className="mb-6"
+            />
 
             <ChangePasswordForm
                 copy={{
@@ -62,12 +60,11 @@ export default async function ChangePasswordPage({
                 {t('noteOtherSessions')}
             </p>
 
-            <Link
-                href={`/${locale}/portal`}
-                className="mt-6 inline-block text-sm font-medium text-black/70 underline-offset-4 hover:underline dark:text-white/70"
-            >
-                {t('backCta')}
-            </Link>
+            <div className="mt-6">
+                <PillLink href={`/${locale}/portal`} icon={<IconArrowLeft />}>
+                    {t('backCta')}
+                </PillLink>
+            </div>
         </main>
     );
 }

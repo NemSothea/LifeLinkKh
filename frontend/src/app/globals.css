@@ -1,24 +1,101 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Dark mode follows the `.dark` class next-themes puts on <html> (Light / Dark / Auto), not the
+   media query alone, so a visitor can override their device setting. */
+@custom-variant dark (&:is(.dark *));
 
 :root {
     --background: #ffffff;
     --foreground: #171717;
     /* Blood red, the one place in this app where the colour is the subject — same value
-     as `AppTheme._seed`/`_primaryLight`. An earlier version of this token matched
-     Material 3's `ColorScheme.fromSeed(seedColor: _seed).primary` instead (#904A44),
-     since that's what the algorithm actually renders from this seed — a muddy brick
-     red, not blood red. `AppTheme` now overrides `primary` past the algorithm for
-     exactly this reason, so match that override, not the raw fromSeed output. */
+       as `AppTheme._seed`/`_primaryLight`. An earlier version of this token matched
+       Material 3's `ColorScheme.fromSeed(seedColor: _seed).primary` instead (#904A44),
+       since that's what the algorithm actually renders from this seed — a muddy brick
+       red, not blood red. `AppTheme` now overrides `primary` past the algorithm for
+       exactly this reason, so match that override, not the raw fromSeed output. */
     --brand: #c62828;
+
+    /* shadcn/ui tokens. Primary is the brand red for filled buttons in BOTH themes: white on
+       #c62828 is 5.6:1, while white on the lighter dark-theme #d15353 is only 3.7:1. */
+    --card: #ffffff;
+    --card-foreground: #171717;
+    --popover: #ffffff;
+    --popover-foreground: #171717;
+    --primary: #c62828;
+    --primary-foreground: #ffffff;
+    --secondary: #f4f4f5;
+    --secondary-foreground: #18181b;
+    --muted: #f4f4f5;
+    --muted-foreground: #52525b;
+    --accent: #fdecec;
+    --accent-foreground: #9f1d1d;
+    --destructive: #b91c1c;
+    --warning: #92400e;
+    --warning-surface: #fffbeb;
+    --border: #e4e4e7;
+    --input: #d4d4d8;
+    --ring: #c62828;
+    --radius: 0.875rem;
+}
+
+/* #D15353 matches `AppTheme._primaryDark`: the light red is 3.3:1 on a dark surface, under
+   WCAG AA's 4.5:1 for text, and this one clears it. Used for red text on dark. */
+.dark {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --brand: #d15353;
+
+    --card: #141414;
+    --card-foreground: #ededed;
+    --popover: #141414;
+    --popover-foreground: #ededed;
+    --primary: #c62828;
+    --primary-foreground: #ffffff;
+    --secondary: #1f1f22;
+    --secondary-foreground: #ededed;
+    --muted: #1f1f22;
+    --muted-foreground: #a1a1aa;
+    --accent: #2a1515;
+    --accent-foreground: #f3b4b4;
+    --destructive: #dc2626;
+    --warning: #fcd34d;
+    --warning-surface: #2a2110;
+    --border: #2a2a2e;
+    --input: #3f3f46;
+    --ring: #d15353;
 }
 
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
     --color-brand: var(--brand);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-warning: var(--warning);
+    --color-warning-surface: var(--warning-surface);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: calc(var(--radius) - 6px);
+    --radius-md: calc(var(--radius) - 4px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+
     --font-sans: var(--font-inter), var(--font-kantumruy), ui-sans-serif, system-ui, sans-serif;
     /* One step up from Tailwind's defaults (12/14/16/18px). Most copy here is text-sm and
-     text-xs, which read as a blur in Khmer, whose stacked vowels and subscripts need room. */
+       text-xs, which read as a blur in Khmer, whose stacked vowels and subscripts need room. */
     --text-xs: 0.8125rem;
     --text-xs--line-height: 1.5;
     --text-sm: 0.9375rem;
@@ -38,16 +115,8 @@ html:lang(km) body {
     line-height: 1.7;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --background: #0a0a0a;
-        --foreground: #ededed;
-        /* Matches `AppTheme._primaryDark` exactly — chosen there for the same reason this
-       file lifts it: the light value alone is 3.3:1 against a dark surface, under
-       WCAG AA's 4.5:1 for text. #D15353 clears 4.5:1 here and on the app's own dark
-       surface, while staying recognizably the same red. */
-        --brand: #d15353;
-    }
+* {
+    border-color: var(--border);
 }
 
 body {

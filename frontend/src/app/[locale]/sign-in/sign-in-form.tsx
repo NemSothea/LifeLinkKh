@@ -1,9 +1,12 @@
 'use client';
 
 import { useActionState, useEffect, useId, useRef, useState } from 'react';
+import Notice from '@/components/Notice';
 import { useFormStatus } from 'react-dom';
 import { IconEye, IconEyeOff } from '@/components/icons';
 import { signInAction, type SignInError } from './actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 type Copy = {
     usernameLabel: string;
@@ -101,18 +104,14 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
             <input type="hidden" name="locale" value={locale} />
 
             {error ? (
-                <p
-                    data-testid="sign-in-error"
-                    role="alert"
-                    className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/60 dark:text-red-400"
-                >
+                <Notice tone="error" testId="sign-in-error">
                     {errorMessage[error]}
-                </p>
+                </Notice>
             ) : null}
 
-            <label htmlFor={usernameId} className="flex flex-col gap-1 text-sm">
+            <label htmlFor={usernameId} className="flex flex-col gap-1.5 text-sm font-medium">
                 {copy.usernameLabel}
-                <input
+                <Input
                     ref={usernameRef}
                     id={usernameId}
                     type="text"
@@ -128,14 +127,13 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
                     autoCorrect="off"
                     spellCheck={false}
                     data-testid="sign-in-username"
-                    className="rounded-xl border border-black/20 px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:border-white/25 dark:bg-black/30"
                 />
             </label>
 
-            <label htmlFor={passwordId} className="flex flex-col gap-1 text-sm">
+            <label htmlFor={passwordId} className="flex flex-col gap-1.5 text-sm font-medium">
                 {copy.passwordLabel}
                 <span className="relative flex items-center">
-                    <input
+                    <Input
                         id={passwordId}
                         // Toggled, not two inputs: swapping between a password and a text
                         // field would drop what has been typed and, worse, let a browser
@@ -146,7 +144,7 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
                         placeholder={copy.passwordPlaceholder}
                         autoComplete="current-password"
                         data-testid="sign-in-password"
-                        className="w-full rounded-xl border border-black/20 py-2 pr-11 pl-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:border-white/25 dark:bg-black/30"
+                        className="pr-12"
                     />
                     <button
                         // type="button" matters: inside a form, a button with no type is a
@@ -159,7 +157,7 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
                         aria-pressed={passwordVisible}
                         aria-controls={passwordId}
                         data-testid="sign-in-toggle-password"
-                        className="absolute right-2 rounded-lg p-1.5 text-black/60 transition-colors hover:text-black/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:text-white/60 dark:hover:text-white/70"
+                        className="absolute right-0 flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                     >
                         {passwordVisible ? (
                             <IconEyeOff className="h-4.5 w-4.5" />
@@ -171,7 +169,10 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
             </label>
 
             <div className="flex flex-col gap-1">
-                <label htmlFor={rememberId} className="flex items-center gap-2 text-sm">
+                <label
+                    htmlFor={rememberId}
+                    className="flex min-h-11 cursor-pointer items-center gap-3 text-sm"
+                >
                     <input
                         id={rememberId}
                         type="checkbox"
@@ -184,11 +185,11 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
                             persistUsername(event.target.checked, usernameRef.current?.value ?? '');
                         }}
                         data-testid="sign-in-remember"
-                        className="h-4 w-4 rounded border-black/25 accent-brand dark:border-white/25"
+                        className="size-5 shrink-0 cursor-pointer rounded accent-brand"
                     />
                     {copy.rememberUsername}
                 </label>
-                <p className="pl-6 text-xs text-black/65 dark:text-white/65">{copy.rememberHint}</p>
+                <p className="pl-8 text-xs text-muted-foreground">{copy.rememberHint}</p>
             </div>
 
             <SubmitButton idle={copy.submitCta} busy={copy.submitting} />
@@ -203,13 +204,14 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
 function SubmitButton({ idle, busy }: { idle: string; busy: string }) {
     const { pending } = useFormStatus();
     return (
-        <button
+        <Button
             type="submit"
+            size="lg"
             disabled={pending}
             data-testid="sign-in-submit"
-            className="mt-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-60"
+            className="mt-2"
         >
             {pending ? busy : idle}
-        </button>
+        </Button>
     );
 }

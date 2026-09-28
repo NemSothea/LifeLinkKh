@@ -1,5 +1,9 @@
 {
     "app": {
+        "theme": "Theme",
+        "themeLight": "Light",
+        "themeDark": "Dark",
+        "themeSystem": "Auto (device)",
         "language": "Language",
         "title": "LifeLink KH",
         "tagline": "Connecting blood donors with the people who need them",

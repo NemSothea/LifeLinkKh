@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { IconDroplet } from '@/components/icons';
+import PillLink from '@/components/PillLink';
+import { IconArrowLeft, IconTrash } from '@/components/icons';
+import PageHeader from '@/components/PageHeader';
 
 /**
  * The privacy policy — the public URL the Play listing and the Data safety form point at.
@@ -23,21 +23,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
 
     return (
         <main className="mx-auto max-w-2xl p-6 sm:p-10">
-            <header className="mb-8 flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand text-white shadow-sm">
-                        <IconDroplet className="h-5 w-5" />
-                    </span>
-                    <div>
-                        <p className="text-sm font-semibold tracking-wide text-brand uppercase">
-                            LifeLink KH
-                        </p>
-                        <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
-                        <p className="text-xs text-black/65 dark:text-white/65">{t('effective')}</p>
-                    </div>
-                </div>
-                <LanguageSwitcher />
-            </header>
+            <PageHeader locale={locale} title={t('title')} subtitle={t('effective')} />
 
             <p className="mb-8 text-sm text-black/80 dark:text-white/80">{t('intro')}</p>
 
@@ -73,22 +59,16 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
                         </a>
                     </p>
                 ) : null}
-                <p className="mt-2 text-sm">
-                    <Link
-                        href={`/${locale}/delete-account`}
-                        className="font-medium text-brand underline-offset-4 hover:underline"
-                    >
+                <p className="mt-3">
+                    <PillLink href={`/${locale}/delete-account`} icon={<IconTrash />}>
                         {t('deleteLink')}
-                    </Link>
+                    </PillLink>
                 </p>
             </section>
 
-            <Link
-                href={`/${locale}`}
-                className="text-sm font-medium text-black/70 underline-offset-4 hover:underline dark:text-white/70"
-            >
+            <PillLink href={`/${locale}`} icon={<IconArrowLeft />}>
                 {t('backCta')}
-            </Link>
+            </PillLink>
         </main>
     );
 }

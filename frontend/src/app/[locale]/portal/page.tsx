@@ -1,8 +1,10 @@
 import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
+import Notice from '@/components/Notice';
+import PillLink from '@/components/PillLink';
 import AutoRefresh from '@/components/AutoRefresh';
+import HealthStatus from '@/components/HealthStatus';
+import { getHealth } from '@/lib/api/health';
 import EmptyState from '@/components/EmptyState';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 import RelativeTime from '@/components/RelativeTime';
 import { hasPortalSession, portalDisplayName, portalRole } from '@/lib/api/session';
 import SignOutButton from '@/components/SignOutButton';
@@ -17,12 +19,14 @@ import {
 import {
     IconAlertTriangle,
     IconCheck,
-    IconChevron,
     IconDroplet,
     IconInbox,
+    IconLogIn,
 } from '@/components/icons';
 import PendingReviewList from './pending-review-list';
 import RequestList, { type RequestViewModel } from './request-list';
+import PageHeader from '@/components/PageHeader';
+import { ChevronDown } from 'lucide-react';
 
 /**
  * The live board, and the portal, on one page.
@@ -70,6 +74,7 @@ export default async function PortalPage({
     const [result, fulfilledResult, pendingResult] = isAdmin
         ? await Promise.all([listOpenRequests(), listFulfilledRequests(), listPendingRequests()])
         : [await listPublicRequests(), { ok: false } as const, { ok: false } as const];
+    const health = isAdmin ? await getHealth() : null;
     const fulfilled = fulfilledResult.ok ? fulfilledResult.data : [];
     const pending: PendingRequest[] = pendingResult.ok ? pendingResult.data : [];
     // No cast: the two sources have genuinely different donor shapes, and `sortByUrgency`
@@ -86,32 +91,12 @@ export default async function PortalPage({
 
     return (
         <main className="mx-auto max-w-4xl p-6 sm:p-10">
-            <header className="mb-8 flex flex-wrap items-end justify-between gap-3">
-                <div>
-                    <p className="text-sm font-semibold tracking-wide text-brand uppercase">
-                        LifeLink KH
-                    </p>
-                    <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-                </div>
-                <div className="flex items-center gap-3">
-                    <LanguageSwitcher />
-                    {isAdmin ? (
-                        <SignOutButton locale={locale} displayName={displayName} role={role} />
-                    ) : (
-                        // The only thing a visitor is offered. Not a wall in front of the
-                        // board — a door beside it, for the people who have a key.
-                        <Link
-                            href={`/${locale}/sign-in`}
-                            data-testid="staff-sign-in-link"
-                            className="rounded-full border border-black/10 px-3 py-1.5 text-sm font-medium text-black/70 transition-colors hover:bg-black/[0.03] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:border-white/15 dark:text-white/70 dark:hover:bg-white/[0.05]"
-                        >
-                            {t('staffSignInCta')}
-                        </Link>
-                    )}
+            <PageHeader locale={locale} title={t('title')}>
+                <div className="flex flex-wrap items-center justify-between gap-3">
                     {result.ok ? (
                         <div
                             data-testid="portal-summary"
-                            className="flex items-center gap-4 rounded-full border border-black/10 bg-black/[0.02] px-5 py-2 text-sm tabular-nums dark:border-white/15 dark:bg-white/[0.04]"
+                            className="flex min-h-11 items-center gap-4 rounded-full border border-border bg-secondary/60 px-5 text-sm tabular-nums"
                         >
                             <span>
                                 <strong className="text-lg">{requests.length}</strong>{' '}
@@ -131,53 +116,57 @@ export default async function PortalPage({
                             ) : null}
                         </div>
                     ) : null}
+                    {isAdmin ? (
+                        <SignOutButton locale={locale} displayName={displayName} role={role} />
+                    ) : (
+                        // The only thing a visitor is offered. Not a wall in front of the
+                        // board — a door beside it, for the people who have a key.
+                        <PillLink
+                            href={`/${locale}/sign-in`}
+                            icon={<IconLogIn />}
+                            testId="staff-sign-in-link"
+                        >
+                            {t('staffSignInCta')}
+                        </PillLink>
+                    )}
                 </div>
-            </header>
+            </PageHeader>
 
             {result.ok ? (
-                <div className="mb-6 flex justify-end">
+                <div className="mb-6 flex flex-wrap items-center justify-end gap-x-6 gap-y-2">
+                    {/* The API health line lives here, for the admin — a donor has no use for it. */}
+                    {health ? (
+                        <HealthStatus
+                            reachable={health.ok}
+                            status={health.ok ? health.data.status : undefined}
+                        />
+                    ) : null}
                     <AutoRefresh intervalMs={isAdmin ? 30_000 : 120_000} />
                 </div>
             ) : null}
 
             {confirmed ? (
-                <p
-                    data-testid="confirm-donation-success"
-                    className="mb-6 flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
-                >
-                    <IconCheck className="h-5 w-5 shrink-0" />
+                <Notice tone="success" testId="confirm-donation-success" className="mb-6">
                     {t('confirmSuccess', { name: confirmed })}
-                </p>
+                </Notice>
             ) : null}
 
             {confirmError ? (
-                <p
-                    data-testid="confirm-donation-error"
-                    className="mb-6 flex items-center gap-2 rounded-xl border border-red-300 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-950/60 dark:text-red-400"
-                >
-                    <IconAlertTriangle className="h-5 w-5 shrink-0" />
+                <Notice tone="error" testId="confirm-donation-error" className="mb-6">
                     {t('confirmFailed')}
-                </p>
+                </Notice>
             ) : null}
 
             {reviewed ? (
-                <p
-                    data-testid="review-success"
-                    className="mb-6 flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
-                >
-                    <IconCheck className="h-5 w-5 shrink-0" />
+                <Notice tone="success" testId="review-success" className="mb-6">
                     {reviewed === 'approved' ? t('reviewApproved') : t('reviewRejected')}
-                </p>
+                </Notice>
             ) : null}
 
             {reviewError ? (
-                <p
-                    data-testid="review-error"
-                    className="mb-6 flex items-center gap-2 rounded-xl border border-red-300 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-950/60 dark:text-red-400"
-                >
-                    <IconAlertTriangle className="h-5 w-5 shrink-0" />
+                <Notice tone="error" testId="review-error" className="mb-6">
                     {reviewError === 'gone' ? t('reviewGone') : t('reviewFailed')}
-                </p>
+                </Notice>
             ) : null}
 
             {pending.length > 0 ? (
@@ -288,8 +277,11 @@ function FulfilledSection({
 
     return (
         <details data-testid="portal-fulfilled" className="group mt-10">
-            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-black/70 select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:text-white/70">
-                <IconChevron className="h-4 w-4 transition-transform duration-200 group-open:rotate-180" />
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl text-sm font-semibold text-foreground/80 select-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
+                <ChevronDown
+                    className="size-5 transition-transform duration-200 group-open:rotate-180"
+                    aria-hidden="true"
+                />
                 <IconCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 {heading}
                 <span className="tabular-nums">({newestFirst.length})</span>
@@ -298,7 +290,7 @@ function FulfilledSection({
             {newestFirst.length === 0 ? (
                 <p
                     data-testid="portal-fulfilled-empty"
-                    className="mt-3 text-sm text-black/65 dark:text-white/65"
+                    className="mt-3 text-sm text-muted-foreground"
                 >
                     {emptyLabel}
                 </p>
@@ -308,23 +300,21 @@ function FulfilledSection({
                         <li
                             key={request.id}
                             data-testid={`portal-fulfilled-${request.id}`}
-                            className="flex flex-wrap items-center gap-3 rounded-xl border border-black/10 bg-black/[0.015] px-4 py-3 text-sm dark:border-white/10 dark:bg-white/[0.02]"
+                            className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm"
                         >
                             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-600/10 text-xs font-bold text-emerald-700 dark:text-emerald-400">
                                 <IconDroplet className="mr-0.5 -ml-0.5 h-3 w-3 opacity-70" />
                                 {request.patientBloodType}
                             </span>
-                            <span className="text-black/70 dark:text-white/70">
-                                {unitsLabelFor(request)}
-                            </span>
+                            <span className="text-foreground/75">{unitsLabelFor(request)}</span>
                             {request.hospital ? (
-                                <span className="text-black/65 dark:text-white/65">
+                                <span className="text-muted-foreground">
                                     {request.hospital.name}
                                 </span>
                             ) : null}
                             <RelativeTime
                                 iso={request.createdAt}
-                                className="ml-auto text-xs text-black/60 tabular-nums dark:text-white/60"
+                                className="ml-auto text-xs text-muted-foreground tabular-nums"
                             />
                         </li>
                     ))}

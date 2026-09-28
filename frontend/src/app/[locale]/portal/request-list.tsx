@@ -17,6 +17,8 @@ import {
     IconInbox,
     IconSearch,
 } from '@/components/icons';
+import { Input } from '@/components/ui/input';
+import { ChevronDown } from 'lucide-react';
 
 /**
  * A request row as this list renders it, from **either** source, plus its
@@ -167,27 +169,29 @@ export default function RequestList({
         <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-3">
                 <div className="relative min-w-[220px] flex-1">
-                    <IconSearch className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-black/40 dark:text-white/40" />
-                    <input
+                    <IconSearch className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
                         type="text"
                         value={query}
                         onChange={(event) => updateQuery(event.target.value)}
                         placeholder={copy.searchPlaceholder}
                         data-testid="portal-search"
-                        className="w-full rounded-full border border-black/10 bg-black/[0.02] py-2 pr-4 pl-9 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:border-white/15 dark:bg-white/[0.04]"
+                        className="rounded-full pr-4 pl-10"
                     />
                 </div>
-                <div className="flex items-center gap-1 rounded-full border border-black/10 p-1 dark:border-white/15">
+                <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-border p-1">
                     {filters.map((f) => (
                         <button
                             key={f.value}
                             type="button"
                             data-testid={`portal-filter-${f.value.toLowerCase()}`}
                             onClick={() => updateUrgency(f.value)}
-                            className={`rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
+                            aria-pressed={urgency === f.value}
+                            className={`min-h-11 shrink-0 rounded-full px-4 text-sm font-semibold whitespace-nowrap transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none ${
                                 urgency === f.value
-                                    ? (URGENCY_STYLE[f.value] ?? 'bg-brand text-white')
-                                    : 'text-black/65 hover:text-black dark:text-white/65 dark:hover:text-white'
+                                    ? (URGENCY_STYLE[f.value] ??
+                                      'bg-primary text-primary-foreground')
+                                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                             }`}
                         >
                             {f.label}
@@ -225,9 +229,9 @@ export default function RequestList({
                                 data-testid="portal-page-prev"
                                 disabled={currentPage === 1}
                                 onClick={() => setPage(currentPage - 1)}
-                                className="rounded-full px-3 py-1.5 text-sm font-medium text-black/70 transition-colors hover:bg-black/[0.03] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:pointer-events-none disabled:opacity-30 dark:text-white/70 dark:hover:bg-white/[0.05]"
+                                className="flex size-11 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-30"
                             >
-                                <IconChevron className="h-4 w-4 rotate-90" />
+                                <IconChevron className="h-5 w-5 rotate-90" />
                             </button>
                             {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
                                 <button
@@ -236,10 +240,10 @@ export default function RequestList({
                                     data-testid={`portal-page-${n}`}
                                     onClick={() => setPage(n)}
                                     aria-current={n === currentPage ? 'page' : undefined}
-                                    className={`h-8 w-8 rounded-full text-sm font-medium tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
+                                    className={`size-11 rounded-full text-sm font-medium tabular-nums transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none ${
                                         n === currentPage
-                                            ? 'bg-brand text-white'
-                                            : 'text-black/70 hover:bg-black/[0.03] dark:text-white/70 dark:hover:bg-white/[0.05]'
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'text-foreground/80 hover:bg-secondary'
                                     }`}
                                 >
                                     {n}
@@ -250,9 +254,9 @@ export default function RequestList({
                                 data-testid="portal-page-next"
                                 disabled={currentPage === totalPages}
                                 onClick={() => setPage(currentPage + 1)}
-                                className="rounded-full px-3 py-1.5 text-sm font-medium text-black/70 transition-colors hover:bg-black/[0.03] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:pointer-events-none disabled:opacity-30 dark:text-white/70 dark:hover:bg-white/[0.05]"
+                                className="flex size-11 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-30"
                             >
-                                <IconChevron className="h-4 w-4 -rotate-90" />
+                                <IconChevron className="h-5 w-5 -rotate-90" />
                             </button>
                         </nav>
                     ) : null}
@@ -303,14 +307,14 @@ function RequestRow({
     return (
         <li
             data-testid={`portal-request-${request.id}`}
-            className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition-shadow hover:shadow-md dark:bg-white/[0.03] ${
+            className={`overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-sm transition-shadow hover:shadow-md ${
                 isCritical
-                    ? 'border-red-300 border-l-4 border-l-brand dark:border-red-800'
-                    : 'border-black/10 dark:border-white/15'
+                    ? 'border-red-300 border-l-4 border-l-brand dark:border-red-900'
+                    : 'border-border'
             }`}
         >
             <details className="group">
-                <summary className="flex cursor-pointer list-none items-center gap-4 p-5 select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+                <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-4 gap-y-3 p-4 select-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none sm:flex-nowrap sm:p-5">
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold text-white shadow-inner">
                         <IconDroplet className="mr-0.5 -ml-1 h-3.5 w-3.5 opacity-70" />
                         {request.patientBloodType}
@@ -341,8 +345,10 @@ function RequestRow({
                         ) : null}
                     </div>
 
-                    <div className="hidden shrink-0 items-center gap-4 text-sm tabular-nums sm:flex">
-                        <span className="flex items-center gap-1.5 text-black/70 dark:text-white/70">
+                    {/* On a phone this wraps to its own line under the hospital — it was hidden there, and
+                        "1 of 3 accepted" is the number the admin opens the card for. */}
+                    <div className="order-last flex basis-full items-center gap-3 pl-15 text-sm tabular-nums sm:order-none sm:basis-auto sm:gap-4 sm:pl-0">
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
                             <IconBell className="h-4 w-4" />
                             {request.alertedCount}
                         </span>
@@ -363,10 +369,15 @@ function RequestRow({
                         </span>
                     </div>
 
-                    <IconChevron className="h-5 w-5 shrink-0 text-black/40 transition-transform duration-200 group-open:rotate-180 dark:text-white/40" />
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors group-hover:bg-secondary">
+                        <ChevronDown
+                            className="size-5 transition-transform duration-200 group-open:rotate-180"
+                            aria-hidden="true"
+                        />
+                    </span>
                 </summary>
 
-                <div className="border-t border-black/10 bg-black/[0.015] p-5 dark:border-white/10 dark:bg-white/[0.02]">
+                <div className="border-t border-border bg-muted/40 p-4 sm:p-5">
                     {request.acceptedDonors.length === 0 ? (
                         <p
                             data-testid={`portal-request-${request.id}-no-donors`}
@@ -380,10 +391,10 @@ function RequestRow({
                                 <li
                                     key={donorKey(donor)}
                                     data-testid={`portal-donor-${donorKey(donor)}`}
-                                    className="flex flex-col gap-3 rounded-xl border border-black/10 bg-white p-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/[0.04]"
+                                    className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/10 text-xs font-semibold dark:bg-white/10">
+                                        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-brand">
                                             {donor.displayName.charAt(0).toUpperCase()}
                                         </span>
                                         <span className="text-sm">
@@ -406,7 +417,7 @@ function RequestRow({
                                         </span>
                                     </div>
                                     {canConfirm && 'matchId' in donor ? (
-                                        <div className="flex flex-wrap items-end gap-2">
+                                        <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-end">
                                             <ConfirmDonationForm
                                                 requestId={request.id}
                                                 matchId={donor.matchId}

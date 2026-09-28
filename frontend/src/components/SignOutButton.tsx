@@ -1,4 +1,6 @@
-import Link from 'next/link';
+import PillLink from '@/components/PillLink';
+import { Button } from '@/components/ui/button';
+import { IconKey, IconLogOut } from '@/components/icons';
 import { getTranslations } from 'next-intl/server';
 import { signOutAction } from '@/app/[locale]/sign-in/actions';
 import { portalHasPassword } from '@/lib/api/session';
@@ -25,13 +27,13 @@ export default async function SignOutButton({
     const hasPassword = await portalHasPassword();
 
     return (
-        <form action={signOutAction} className="flex items-center gap-2">
+        <form action={signOutAction} className="flex flex-wrap items-center gap-2">
             <input type="hidden" name="locale" value={locale} />
             {/* Which account this is. v1 has one portal role, so the badge only ever says
                 Admin — it stays so a shared machine answers "who is signed in" at a glance. */}
-            <span className="hidden items-baseline gap-2 sm:flex">
+            <span className="flex items-center gap-2 pr-1">
                 {displayName ? (
-                    <span className="text-sm text-black/70 dark:text-white/70">{displayName}</span>
+                    <span className="text-sm font-medium text-foreground/85">{displayName}</span>
                 ) : null}
                 {role ? (
                     <span
@@ -43,21 +45,18 @@ export default async function SignOutButton({
                 ) : null}
             </span>
             {hasPassword ? (
-                <Link
+                <PillLink
                     href={`/${locale}/portal/password`}
-                    data-testid="change-password-link"
-                    className="text-sm font-medium text-black/70 underline-offset-4 hover:underline dark:text-white/70"
+                    icon={<IconKey />}
+                    testId="change-password-link"
                 >
                     {password('title')}
-                </Link>
+                </PillLink>
             ) : null}
-            <button
-                type="submit"
-                data-testid="sign-out"
-                className="rounded-full border border-black/10 px-3 py-1.5 text-sm font-medium text-black/70 transition-colors hover:bg-black/[0.03] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:border-white/15 dark:text-white/70 dark:hover:bg-white/[0.05]"
-            >
+            <Button type="submit" variant="outline" className="rounded-full" data-testid="sign-out">
+                <IconLogOut />
                 {t('signOutCta')}
-            </button>
+            </Button>
         </form>
     );
 }

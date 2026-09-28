@@ -1,7 +1,9 @@
 'use client';
 
 import Script from 'next/script';
+import Notice from '@/components/Notice';
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { useTheme } from 'next-themes';
 import { googleSignInAction, type SignInError } from './actions';
 
 type Copy = {
@@ -61,6 +63,7 @@ export default function GoogleSignIn({
     const [error, setError] = useState<SignInError | null>(null);
     const [pending, startTransition] = useTransition();
     const [loaded, setLoaded] = useState(false);
+    const { resolvedTheme } = useTheme();
 
     const errorMessage: Record<SignInError, string> = {
         invalid: copy.failed,
@@ -82,14 +85,15 @@ export default function GoogleSignIn({
             },
         });
         id.renderButton(buttonRef.current, {
-            theme: 'outline',
+            // Google's own dark variant on a dark page, instead of a white button on black.
+            theme: resolvedTheme === 'dark' ? 'filled_black' : 'outline',
             size: 'large',
             shape: 'pill',
             text: 'signin_with',
             width: buttonRef.current.clientWidth || 320,
             locale,
         });
-    }, [clientId, locale]);
+    }, [clientId, locale, resolvedTheme]);
 
     // The script may already be on the page after a client-side navigation back here.
     useEffect(() => {
@@ -111,17 +115,16 @@ export default function GoogleSignIn({
                 </div>
             ) : null}
             {error ? (
-                <p
-                    role="alert"
-                    data-testid="google-sign-in-error"
-                    className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/60 dark:text-red-400"
-                >
+                <Notice tone="error" testId="google-sign-in-error">
                     {errorMessage[error]}
-                </p>
+                </Notice>
             ) : null}
             <div
                 ref={buttonRef}
-                className="flex min-h-11 w-full justify-center"
+                // Google draws the button in an iframe. Under a dark colour-scheme the browser
+                // paints that iframe's background white — the white box around the button.
+                style={{ colorScheme: 'light' }}
+                className="flex min-h-11 w-full justify-center overflow-hidden rounded-full"
                 aria-busy={pending}
             />
             {pending ? (

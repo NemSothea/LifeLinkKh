@@ -1,12 +1,11 @@
 import { getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 import LegalLinks from '@/components/LegalLinks';
-import { IconDroplet } from '@/components/icons';
 import { hasPortalSession } from '@/lib/api/session';
 import { passwordSignInEnabled } from '@/lib/api/sign-in-options';
 import GoogleSignIn from './google-sign-in';
 import SignInForm from './sign-in-form';
+import PageHeader from '@/components/PageHeader';
 
 /**
  * Portal admin sign-in — the screen that replaces `PORTAL_DEV_JWT`. v1 has no hospital staff.
@@ -30,22 +29,7 @@ export default async function SignInPage({ params }: { params: Promise<{ locale:
 
     return (
         <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-6">
-            <div className="mb-8 flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand text-white shadow-sm">
-                        <IconDroplet className="h-5 w-5" />
-                    </span>
-                    <div>
-                        <p className="text-sm font-semibold tracking-wide text-brand uppercase">
-                            LifeLink KH
-                        </p>
-                        <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
-                    </div>
-                </div>
-                <LanguageSwitcher />
-            </div>
-
-            <p className="mb-6 text-sm text-black/70 dark:text-white/70">{t('intro')}</p>
+            <PageHeader locale={locale} title={t('title')} subtitle={t('intro')} className="mb-6" />
 
             {showPassword ? (
                 <SignInForm

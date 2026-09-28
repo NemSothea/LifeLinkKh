@@ -1,8 +1,10 @@
 'use client';
 
 import { useActionState } from 'react';
+import Notice from '@/components/Notice';
 import { useFormStatus } from 'react-dom';
 import { changePasswordAction, type ChangePasswordResult } from './actions';
+import { Input } from '@/components/ui/input';
 
 type Copy = {
     currentLabel: string;
@@ -35,17 +37,12 @@ export default function ChangePasswordForm({ copy }: { copy: Copy }) {
     return (
         <form action={formAction} className="flex flex-col gap-4">
             {result ? (
-                <p
-                    role="alert"
-                    data-testid={succeeded ? 'password-changed' : 'password-error'}
-                    className={`rounded-xl border px-4 py-3 text-sm ${
-                        succeeded
-                            ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                            : 'border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/60 dark:text-red-400'
-                    }`}
+                <Notice
+                    tone={succeeded ? 'success' : 'error'}
+                    testId={succeeded ? 'password-changed' : 'password-error'}
                 >
                     {message[result]}
-                </p>
+                </Notice>
             ) : null}
 
             <Field
@@ -80,14 +77,13 @@ function Field({
     return (
         <label className="flex flex-col gap-1 text-sm">
             {label}
-            <input
+            <Input
                 type="password"
                 name={name}
                 required
                 minLength={8}
                 autoComplete={autoComplete}
                 data-testid={`password-${name}`}
-                className="rounded-xl border border-black/20 px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand dark:border-white/25 dark:bg-black/30"
             />
             {hint ? <span className="text-xs text-black/65 dark:text-white/65">{hint}</span> : null}
         </label>
