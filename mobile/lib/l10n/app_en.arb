@@ -1067,5 +1067,17 @@
     "donorSexUnspecified": "Prefer not to say",
     "@donorSexUnspecified": {
         "description": "Sex option: not given, counts the longer wait"
+    },
+    "matchCheckTitle": "Before you accept: does any of these apply to you?",
+    "@matchCheckTitle": {
+        "description": "Accept sheet: self-check heading (DEC-019)"
+    },
+    "matchCheckUnderweight": "weigh less than 45 kg",
+    "@matchCheckUnderweight": {
+        "description": "Accept sheet self-check line"
+    },
+    "matchCheckWarning": "You may be turned away at the centre. Check with the centre before you go. If you cannot donate, decline instead.",
+    "@matchCheckWarning": {
+        "description": "Accept sheet: shown when any self-check line is ticked; never blocks accepting"
     }
 }

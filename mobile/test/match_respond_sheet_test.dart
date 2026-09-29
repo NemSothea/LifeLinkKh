@@ -133,5 +133,35 @@ void main() {
         expect(find.text('Checked by a LifeLink admin'), findsOneWidget);
         expect(find.byKey(const Key('match-money-notice')), findsOneWidget);
     });
-}
 
+    /// DEC-019: the self-check warns, and never stops a donor from accepting.
+    testWidgets('ticking a self-check line warns but accept still works', (tester) async {
+        final repository = _FakeMatchRepository();
+        await tester.pumpWidget(_wrap(repository));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('match-accept')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('match-self-check')), findsOneWidget);
+        expect(find.byKey(const Key('match-self-check-warning')), findsNothing);
+
+        await tester.tap(find.byKey(const Key('match-self-check-1')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('match-self-check-warning')), findsOneWidget);
+
+        await tester.ensureVisible(find.byKey(const Key('match-accept-confirm')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('match-accept-confirm')));
+        await tester.pumpAndSettle();
+        expect(repository.responses, [MatchResponseType.accepted]);
+    });
+
+    testWidgets('declining asks no health questions', (tester) async {
+        final repository = _FakeMatchRepository();
+        await tester.pumpWidget(_wrap(repository));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('match-decline')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('match-self-check')), findsNothing);
+    });
+}

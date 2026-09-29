@@ -358,11 +358,22 @@ ButtonStyle _acceptStyle(BuildContext context) {
 }
 
 /// The confirm step: what is being answered, then the answer, then a way out.
-class _RespondSheet extends StatelessWidget {
+class _RespondSheet extends StatefulWidget {
     const _RespondSheet({required this.match, required this.response});
 
     final Match match;
     final MatchResponseType response;
+
+    @override
+    State<_RespondSheet> createState() => _RespondSheetState();
+}
+
+class _RespondSheetState extends State<_RespondSheet> {
+    /// Which self-check lines the donor ticked (DEC-019). Only ever read to warn.
+    final Set<int> _ticked = {};
+
+    Match get match => widget.match;
+    MatchResponseType get response => widget.response;
 
     @override
     Widget build(BuildContext context) {
@@ -373,7 +384,20 @@ class _RespondSheet extends StatelessWidget {
         final accepting = response == MatchResponseType.accepted;
         final distance = request.distanceKm;
 
-        return Padding(
+        // DEC-019: the deferrals a donor can check at home, so nobody travels to the centre
+        // only to be turned away. A warning, never a gate: the centre decides, and a donor who
+        // ticks something by mistake must still be able to accept.
+        final selfCheck = [
+            l10n.matchCheckUnderweight,
+            l10n.donateGuideWaitFever,
+            l10n.donateGuideWaitAntibiotics,
+            l10n.donateGuideWaitDengue,
+            l10n.donateGuideWaitTattoo,
+            l10n.donateGuideWaitPregnant,
+            l10n.donateGuideWaitSurgery,
+        ];
+
+        return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(
                 AppTokens.space24,
                 0,
@@ -433,6 +457,31 @@ class _RespondSheet extends StatelessWidget {
                         l10n.inboxYourBloodTypeCompatible(match.myBloodType.wireValue),
                         style: theme.textTheme.bodyMedium,
                     ),
+                    if (accepting) ...[
+                        const SizedBox(height: AppTokens.space16),
+                        Text(
+                            l10n.matchCheckTitle,
+                            key: const Key('match-self-check'),
+                            style: theme.textTheme.titleSmall,
+                        ),
+                        for (var i = 0; i < selfCheck.length; i++)
+                            CheckboxListTile(
+                                key: Key('match-self-check-$i'),
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                controlAffinity: ListTileControlAffinity.leading,
+                                value: _ticked.contains(i),
+                                title: Text(selfCheck[i]),
+                                onChanged: (on) => setState(
+                                    () => on == true ? _ticked.add(i) : _ticked.remove(i),
+                                ),
+                            ),
+                        if (_ticked.isNotEmpty)
+                            Padding(
+                                padding: const EdgeInsets.only(top: AppTokens.space8),
+                                child: _SelfCheckWarning(text: l10n.matchCheckWarning),
+                            ),
+                    ],
                     const SizedBox(height: AppTokens.space24),
                     if (accepting)
                         FilledButton.icon(
@@ -497,6 +546,42 @@ class _ReviewedBadge extends StatelessWidget {
                             ),
                         ),
                     ],
+                ),
+            ),
+        );
+    }
+}
+
+/// Amber, not red: ticking a line is honest, not a failure. Announced as a live region.
+class _SelfCheckWarning extends StatelessWidget {
+    const _SelfCheckWarning({required this.text});
+
+    final String text;
+
+    @override
+    Widget build(BuildContext context) {
+        final tokens = AppTokens.of(context);
+        return Semantics(
+            container: true,
+            liveRegion: true,
+            child: DecoratedBox(
+                key: const Key('match-self-check-warning'),
+                decoration: BoxDecoration(
+                    color: tokens.urgencyMedium,
+                    borderRadius: BorderRadius.circular(14),
+                ),
+                child: Padding(
+                    padding: const EdgeInsets.all(AppTokens.space12),
+                    child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                            Icon(Icons.info_outline, size: 20, color: tokens.onUrgencyMedium),
+                            const SizedBox(width: AppTokens.space12),
+                            Expanded(
+                                child: Text(text, style: TextStyle(color: tokens.onUrgencyMedium)),
+                            ),
+                        ],
+                    ),
                 ),
             ),
         );
