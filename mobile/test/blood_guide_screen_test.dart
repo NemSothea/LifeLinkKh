@@ -30,8 +30,8 @@ void main() {
 
     testWidgets('the family guide exists in Khmer', (tester) async {
         await tester.pumpWidget(_app(const BloodGuideScreen(), locale: 'km'));
-        expect(find.text('ក្រុមឈាមណាក៏អាចជួយបាន'), findsOneWidget);
-        expect(find.text('ឈាមមិនគិតថ្លៃ'), findsOneWidget);
+        expect(find.text('ក្រុមឈាមអ្វីក៏អាចជួយបាន'), findsOneWidget);
+        expect(find.text('ឈាមឥតគិតថ្លៃ'), findsOneWidget);
     });
 
     testWidgets('the donor guide lists when to wait and where to donate', (tester) async {

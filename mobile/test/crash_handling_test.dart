@@ -105,7 +105,7 @@ void main() {
 
     testWidgets('the friendly screen speaks the user language', (tester) async {
         await tester.pumpWidget(_localized(const ScreenFailure(), locale: 'km'));
-        expect(find.text('មានបញ្ហាលើអេក្រង់នេះ'), findsOneWidget);
+        expect(find.text('អេក្រង់នេះមានបញ្ហា'), findsOneWidget);
     });
 
     /// An error above MaterialApp has no theme, no localisations and no text direction.
