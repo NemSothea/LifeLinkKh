@@ -20,6 +20,7 @@ class RetryableFailure extends StatelessWidget {
         required this.message,
         required this.onRetry,
         this.error,
+        this.isRetrying = false,
         super.key,
     });
 
@@ -27,13 +28,20 @@ class RetryableFailure extends StatelessWidget {
     final VoidCallback onRetry;
     final Object? error;
 
+    /// True while the retry is in flight: the button shows a spinner and cannot be
+    /// tapped twice, and the card stays where it is instead of the section vanishing.
+    final bool isRetrying;
+
     @override
     Widget build(BuildContext context) {
         final l10n = AppLocalizations.of(context)!;
         final scheme = Theme.of(context).colorScheme;
         final offline = error is NetworkFailure;
 
-        return Card(
+        return Semantics(
+            container: true,
+            liveRegion: true,
+            child: Card(
             margin: EdgeInsets.zero,
             child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
@@ -48,12 +56,19 @@ class RetryableFailure extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         FilledButton.tonalIcon(
-                            onPressed: onRetry,
-                            icon: const Icon(Icons.refresh),
+                            onPressed: isRetrying ? null : onRetry,
+                            icon: isRetrying
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                                : const Icon(Icons.refresh),
                             label: Text(l10n.retry),
                         ),
                     ],
                 ),
+            ),
             ),
         );
     }

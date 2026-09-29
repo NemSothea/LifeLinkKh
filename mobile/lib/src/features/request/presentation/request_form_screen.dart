@@ -12,6 +12,8 @@ import '../application/request_providers.dart';
 import 'hospital_dropdown.dart';
 import 'request_detail_screen.dart';
 import 'urgency_selector.dart';
+import '../../../core/error/failure.dart';
+import '../../../core/widgets/inline_error.dart';
 
 /// `FR-REQUEST-001` — the one-minute urgent-request form.
 ///
@@ -31,7 +33,9 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
     final TextEditingController _contactName = TextEditingController();
     final TextEditingController _contactPhone = TextEditingController();
     bool _isSending = false;
-    bool _sendFailed = false;
+    /// Why the last send failed, or null. Kept as the failure, not a flag, so the
+    /// message can say "no connection" when that is what it was.
+    Failure? _sendFailure;
 
     @override
     void dispose() {
@@ -79,17 +83,18 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
 
         setState(() {
             _isSending = true;
-            _sendFailed = false;
+            _sendFailure = null;
         });
         final result = await ref.read(myRequestsControllerProvider.notifier).create(draft);
         if (!mounted) return;
         switch (result) {
             case Success(value: final created):
                 context.pushReplacement(RequestDetailScreen.routeFor(created.id));
-            case Failed():
+            case Failed(:final failure):
+                HapticFeedback.heavyImpact();
                 setState(() {
                     _isSending = false;
-                    _sendFailed = true;
+                    _sendFailure = failure;
                 });
         }
     }
@@ -203,15 +208,13 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                                 onChanged: controller.setContactPhone,
                             ),
                             const SizedBox(height: 24),
-                            if (_sendFailed)
+                            if (_sendFailure != null)
                                 Padding(
                                     padding: const EdgeInsets.only(bottom: 16),
-                                    child: Text(
-                                        l10n.requestCreateFailed,
+                                    child: InlineError(
                                         key: const Key('request-send-failed'),
-                                        style: TextStyle(
-                                            color: Theme.of(context).colorScheme.error,
-                                        ),
+                                        message: l10n.requestCreateFailed,
+                                        error: _sendFailure,
                                     ),
                                 ),
                             SizedBox(

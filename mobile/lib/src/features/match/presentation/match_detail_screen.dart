@@ -3,15 +3,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/time/relative_time.dart';
+import '../../../core/widgets/inline_error.dart';
+import '../../../core/widgets/retryable_failure.dart';
 import '../../request/domain/blood_request.dart';
 import '../../request/presentation/urgency_badge.dart';
 import '../application/match_providers.dart';
 import '../domain/match.dart';
 import '../domain/match_response_type.dart';
-import '../domain/respond_result.dart';
 
 /// A single match — request detail, then accept/decline, then (on accept) the
 /// requester's contact. `NOTIFY-donor-alert` screen 2 and 3 in the prototype.
@@ -41,7 +43,7 @@ class MatchDetailScreen extends ConsumerStatefulWidget {
 
 class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
     bool _isResponding = false;
-    bool _respondFailed = false;
+    Failure? _respondFailure;
 
     Future<void> _respond(MatchResponseType response) async {
         // A firmer tick for yes than for no: accepting is the commitment. Not awaited —
@@ -53,7 +55,7 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
         }
         setState(() {
             _isResponding = true;
-            _respondFailed = false;
+            _respondFailure = null;
         });
         final result = await ref
             .read(myMatchesControllerProvider.notifier)
@@ -61,14 +63,19 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
         if (!mounted) return;
         setState(() {
             _isResponding = false;
-            _respondFailed = result is Failed<RespondResult>;
+            _respondFailure = switch (result) {
+                Failed(:final failure) => failure,
+                _ => null,
+            };
         });
+        if (_respondFailure != null) HapticFeedback.heavyImpact();
     }
 
     @override
     Widget build(BuildContext context) {
         final l10n = AppLocalizations.of(context)!;
-        final matches = ref.watch(myMatchesControllerProvider).valueOrNull ?? const [];
+        final inbox = ref.watch(myMatchesControllerProvider);
+        final matches = inbox.valueOrNull ?? const [];
         Match? match;
         for (final candidate in matches) {
             if (candidate.matchId == widget.matchId) {
@@ -80,14 +87,24 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
         return Scaffold(
             appBar: AppBar(title: Text(l10n.inboxTitle)),
             body: SafeArea(
-                child: match == null
-                    ? Center(
-                        child: Text(
-                            l10n.requestDetailFailed,
-                            key: const Key('match-not-found'),
+                // Opened from a tapped notification on a cold start, the inbox is still
+                // loading — that used to render "could not load" for the first second.
+                child: match != null
+                    ? _body(context, l10n, match)
+                    : inbox.isLoading && !inbox.hasValue
+                    ? const Center(child: CircularProgressIndicator(key: Key('match-loading')))
+                    : Center(
+                        child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: RetryableFailure(
+                                key: const Key('match-not-found'),
+                                message: l10n.requestDetailFailed,
+                                error: inbox.error,
+                                isRetrying: inbox.isLoading,
+                                onRetry: () => ref.invalidate(myMatchesControllerProvider),
+                            ),
                         ),
-                    )
-                    : _body(context, l10n, match),
+                    ),
             ),
         );
     }
@@ -237,12 +254,13 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
     }
 
     List<Widget> _respondActions(AppLocalizations l10n, Match match) => [
-        if (_respondFailed)
+        if (_respondFailure != null)
             Padding(
                 padding: const EdgeInsets.only(bottom: 16),
-                child: Text(
-                    l10n.matchRespondFailed,
+                child: InlineError(
                     key: const Key('match-respond-failed'),
+                    message: l10n.matchRespondFailed,
+                    error: _respondFailure,
                 ),
             ),
         Row(

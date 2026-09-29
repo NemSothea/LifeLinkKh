@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,9 +57,14 @@ final class _FakeRequestRepository implements RequestRepository {
     bool failBoard;
     int boardFetches = 0;
 
+    /// When set, every fetch after the first waits on it — how a test holds a retry
+    /// in flight long enough to look at the screen mid-retry.
+    Completer<void>? retryGate;
+
     @override
     Future<Result<List<BloodRequest>>> fetchPublicBoard() async {
         boardFetches++;
+        if (boardFetches > 1 && retryGate != null) await retryGate!.future;
         if (failBoard) {
             failBoard = false;
             return const Failed(NetworkFailure());
@@ -264,5 +271,37 @@ void main() {
         await _settle(tester);
 
         expect(tester.widget(find.byKey(const Key('donor-home-matches-empty'))), isA<Card>());
+    });
+
+    /// Retrying one failed section used to count as a first load, which put the whole
+    /// tab back under the skeleton — the eligibility card and every other section
+    /// vanished until the one retry came back.
+    testWidgets('retrying the board keeps the rest of Home on screen', (tester) async {
+        final repository = _FakeRequestRepository(
+            board: [_request(id: 'calmette', urgency: Urgency.urgent)],
+            failBoard: true,
+        )..retryGate = Completer<void>();
+
+        await tester.pumpWidget(_wrap(requests: repository));
+        await _settle(tester);
+        await tester.ensureVisible(find.text('Try again'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Try again'));
+        await tester.pump();
+
+        expect(find.byKey(const Key('home-loading')), findsNothing);
+        expect(find.byKey(const Key('donor-home-board-failed')), findsOneWidget);
+        // The retry is visibly in flight on the card itself.
+        expect(
+            find.descendant(
+                of: find.byKey(const Key('donor-home-board-failed')),
+                matching: find.byType(CircularProgressIndicator),
+            ),
+            findsOneWidget,
+        );
+
+        repository.retryGate!.complete();
+        await _settle(tester);
+        expect(find.byKey(const Key('donor-home-board-calmette')), findsOneWidget);
     });
 }

@@ -11,6 +11,9 @@ import '../domain/donor_profile.dart';
 import 'blood_type_grid.dart';
 import 'district_dropdown.dart';
 import 'eligibility_card.dart';
+import '../../../core/error/failure.dart';
+import '../../../core/widgets/inline_error.dart';
+import 'package:flutter/services.dart';
 
 /// The three-step donor setup from `FR-DONOR-001`: name and blood type → location → last
 /// donation, with a progress bar, then a one-shot eligibility result.
@@ -39,7 +42,7 @@ class _DonorSetupScreenState extends ConsumerState<DonorSetupScreen> {
     /// `donorProfileControllerProvider`.
     DonorProfile? _saved;
     bool _isSaving = false;
-    bool _saveFailed = false;
+    Failure? _saveFailure;
 
     bool _isLocating = false;
     /// `null` = not tried this visit. Set on every attempt so the message reflects the most
@@ -73,7 +76,7 @@ class _DonorSetupScreenState extends ConsumerState<DonorSetupScreen> {
         final draft = ref.read(donorSetupProvider).draft;
         setState(() {
             _isSaving = true;
-            _saveFailed = false;
+            _saveFailure = null;
         });
         final result = await ref.read(donorProfileControllerProvider.notifier).save(draft);
         if (!mounted) return;
@@ -82,8 +85,9 @@ class _DonorSetupScreenState extends ConsumerState<DonorSetupScreen> {
             switch (result) {
                 case Success(value: final profile):
                     _saved = profile;
-                case Failed():
-                    _saveFailed = true;
+                case Failed(:final failure):
+                    HapticFeedback.heavyImpact();
+                    _saveFailure = failure;
             }
         });
     }
@@ -172,13 +176,13 @@ class _DonorSetupScreenState extends ConsumerState<DonorSetupScreen> {
                         },
                     ),
                 ),
-                if (_saveFailed)
+                if (_saveFailure != null)
                     Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(
-                            l10n.donorSaveFailed,
+                        child: InlineError(
                             key: const Key('donor-save-failed'),
-                            style: TextStyle(color: Theme.of(context).colorScheme.error),
+                            message: l10n.donorSaveFailed,
+                            error: _saveFailure,
                         ),
                     ),
                 Padding(
@@ -301,10 +305,9 @@ class _DonorSetupScreenState extends ConsumerState<DonorSetupScreen> {
                 if (_locationSucceeded == false)
                     Padding(
                         padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                            l10n.donorLocationUnavailable,
+                        child: InlineError(
                             key: const Key('donor-location-unavailable'),
-                            style: TextStyle(color: Theme.of(context).colorScheme.error),
+                            message: l10n.donorLocationUnavailable,
                         ),
                     ),
             ],

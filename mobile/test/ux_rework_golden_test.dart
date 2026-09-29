@@ -12,10 +12,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifelink_kh/l10n/app_localizations.dart';
+import 'package:lifelink_kh/src/core/error/failure.dart';
 import 'package:lifelink_kh/src/core/error/result.dart';
 import 'package:lifelink_kh/src/core/settings/onboarding_controller.dart';
 import 'package:lifelink_kh/src/core/settings/onboarding_store.dart';
 import 'package:lifelink_kh/src/core/theme/app_theme.dart';
+import 'package:lifelink_kh/src/core/widgets/inline_error.dart';
+import 'package:lifelink_kh/src/core/widgets/retryable_failure.dart';
 import 'package:lifelink_kh/src/features/auth/application/auth_providers.dart';
 import 'package:lifelink_kh/src/features/auth/presentation/sign_in_screen.dart';
 import 'package:lifelink_kh/src/features/donation/application/donation_providers.dart';
@@ -194,6 +197,44 @@ void main() {
         testWidgets('match detail — ${variant.name}', (tester) async {
             await _pumpScreen(tester, variant, home: _matchDetail());
             await _expectGolden('match_detail', variant);
+        });
+
+        testWidgets('error states — ${variant.name}', (tester) async {
+            await _pumpScreen(
+                tester,
+                variant,
+                home: Builder(
+                    builder: (context) {
+                        final l10n = AppLocalizations.of(context)!;
+                        return Scaffold(
+                            body: ListView(
+                                padding: const EdgeInsets.all(24),
+                                children: [
+                                    InlineError(message: l10n.requestCreateFailed),
+                                    const SizedBox(height: 16),
+                                    InlineError(
+                                        message: l10n.requestCreateFailed,
+                                        error: const NetworkFailure(),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    RetryableFailure(
+                                        message: l10n.homeBoardFailed,
+                                        onRetry: () {},
+                                    ),
+                                    const SizedBox(height: 16),
+                                    RetryableFailure(
+                                        message: l10n.homeBoardFailed,
+                                        onRetry: () {},
+                                        isRetrying: true,
+                                    ),
+                                ],
+                            ),
+                        );
+                    },
+                ),
+                signedIn: false,
+            );
+            await _expectGolden('error_states', variant);
         });
 
         testWidgets('accept confirm sheet — ${variant.name}', (tester) async {

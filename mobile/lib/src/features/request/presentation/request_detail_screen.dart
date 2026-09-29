@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -9,6 +10,8 @@ import '../application/request_providers.dart';
 import '../domain/blood_request.dart';
 import '../domain/request_status.dart';
 import 'urgency_badge.dart';
+import '../../../core/widgets/inline_error.dart';
+import '../../../core/widgets/retryable_failure.dart';
 
 /// A single request — the "waiting for responders" screen from the prototype, reached
 /// by `pushReplacement` right after `RequestFormScreen` creates it.
@@ -32,7 +35,7 @@ class RequestDetailScreen extends ConsumerStatefulWidget {
 
 class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
     bool _isCancelling = false;
-    bool _cancelFailed = false;
+    Failure? _cancelFailure;
 
     Future<void> _cancel() async {
         final l10n = AppLocalizations.of(context)!;
@@ -57,7 +60,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
 
         setState(() {
             _isCancelling = true;
-            _cancelFailed = false;
+            _cancelFailure = null;
         });
         final result = await ref
             .read(myRequestsControllerProvider.notifier)
@@ -65,8 +68,12 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
         if (!mounted) return;
         setState(() {
             _isCancelling = false;
-            _cancelFailed = result is Failed<BloodRequest>;
+            _cancelFailure = switch (result) {
+                Failed(:final failure) => failure,
+                _ => null,
+            };
         });
+        if (_cancelFailure != null) HapticFeedback.heavyImpact();
         if (result is Success<BloodRequest>) {
             ref.invalidate(requestDetailProvider(widget.requestId));
         }
@@ -84,12 +91,18 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                     loading: () => const Center(
                         child: CircularProgressIndicator(key: Key('request-detail-loading')),
                     ),
+                    // Retryable in place: a bare sentence left backing out of the screen as
+                    // the only way to try again.
                     error: (error, _) => Center(
-                        child: Text(
-                            error is NetworkFailure
-                                ? l10n.sectionFailedNetwork
-                                : l10n.requestDetailFailed,
-                            key: const Key('request-detail-failed'),
+                        child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: RetryableFailure(
+                                key: const Key('request-detail-failed'),
+                                message: l10n.requestDetailFailed,
+                                error: error,
+                                onRetry: () =>
+                                    ref.invalidate(requestDetailProvider(widget.requestId)),
+                            ),
                         ),
                     ),
                     data: (request) => _body(context, l10n, request),
@@ -219,13 +232,13 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                     if (request.status == RequestStatus.open && request.acceptedCount == 0)
                         Text(l10n.requestWaitingForResponders, textAlign: TextAlign.center),
                     const SizedBox(height: 32),
-                    if (_cancelFailed)
+                    if (_cancelFailure != null)
                         Padding(
                             padding: const EdgeInsets.only(bottom: 16),
-                            child: Text(
-                                l10n.requestCancelFailed,
+                            child: InlineError(
                                 key: const Key('request-cancel-failed'),
-                                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                                message: l10n.requestCancelFailed,
+                                error: _cancelFailure,
                             ),
                         ),
                     if (request.status.isCancellable)

@@ -35,7 +35,8 @@ class DonationHistoryScreen extends ConsumerWidget {
                         ref.refresh(donorProfileControllerProvider.future),
                     ]),
                     child: switch (donations) {
-                        AsyncValue(isLoading: true, hasValue: false) => const Center(
+                        // Not while retrying a failure: that keeps its card, with a spinner on the button.
+                        AsyncValue(isLoading: true, hasValue: false, hasError: false) => const Center(
                             child: CircularProgressIndicator(key: Key('donation-history-loading')),
                         ),
                         // A `ListView`, not a `Center`: `RefreshIndicator` drives the
@@ -53,6 +54,7 @@ class DonationHistoryScreen extends ConsumerWidget {
                                     key: const Key('donation-history-failed'),
                                     message: l10n.donationHistoryFailed,
                                     error: error,
+                                    isRetrying: donations.isLoading,
                                     onRetry: () =>
                                         ref.invalidate(myDonationsControllerProvider),
                                 ),

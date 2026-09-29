@@ -10,6 +10,7 @@ import '../application/donor_providers.dart';
 import '../domain/donor_profile.dart';
 import 'donor_setup_screen.dart';
 import 'eligibility_card.dart';
+import '../../../core/widgets/inline_error.dart';
 
 /// The donor's own profile: what is on record, whether they may donate today, and the
 /// availability toggle.
@@ -112,11 +113,14 @@ class DonorProfileScreen extends ConsumerWidget {
                         .read(donorProfileControllerProvider.notifier)
                         .setAvailability(value),
                 ),
-                if (ref.watch(donorProfileControllerProvider).hasError)
-                    Text(
-                        l10n.donorSaveFailed,
+                if (ref.watch(donorProfileControllerProvider) case AsyncValue(
+                    hasError: true,
+                    :final error,
+                ))
+                    InlineError(
                         key: const Key('donor-profile-save-failed'),
-                        style: TextStyle(color: Theme.of(context).colorScheme.error),
+                        message: l10n.donorSaveFailed,
+                        error: error,
                     ),
             ],
         );

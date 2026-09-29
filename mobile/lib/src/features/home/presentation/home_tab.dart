@@ -62,7 +62,10 @@ class HomeTab extends ConsumerWidget {
         // own while its first answer was in flight, so opening the app put two or three
         // spinners on screen at once, stacked down the list. Until every section has an
         // answer, the tab shows one; after that, a pull-to-refresh keeps the old values up.
-        bool firstLoad(AsyncValue<Object?> value) => value.isLoading && !value.hasValue;
+        // A retry after a failure is not a first load: it keeps its failed card (with a
+        // spinner on the button) rather than blanking the whole tab back to the skeleton.
+        bool firstLoad(AsyncValue<Object?> value) =>
+            value.isLoading && !value.hasValue && !value.hasError;
         final loading = firstLoad(profile) ||
             (hasDonorProfile && firstLoad(matches)) ||
             firstLoad(myRequests) ||
@@ -139,6 +142,7 @@ class HomeTab extends ConsumerWidget {
                                         key: const Key('donor-home-matches-failed'),
                                         message: l10n.inboxFailed,
                                         error: error,
+                                        isRetrying: matches.isLoading,
                                         onRetry: () =>
                                             ref.invalidate(myMatchesControllerProvider),
                                     ),
@@ -201,6 +205,7 @@ class HomeTab extends ConsumerWidget {
                     key: const Key('home-my-requests-failed'),
                     message: l10n.myRequestsFailed,
                     error: requests.error,
+                    isRetrying: requests.isLoading,
                     onRetry: () => ref.invalidate(myRequestsControllerProvider),
                 ),
             ];
@@ -521,6 +526,7 @@ class _BoardSection extends ConsumerWidget {
                         key: const Key('donor-home-board-failed'),
                         message: l10n.homeBoardFailed,
                         error: error,
+                        isRetrying: board.isLoading,
                         onRetry: () => ref.invalidate(publicBoardControllerProvider),
                     ),
                     AsyncValue(hasValue: true, value: final list) => _boardList(
