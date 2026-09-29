@@ -1,0 +1,34 @@
+# SEC-REVIEW-003 F-09: known-vulnerable dependencies are found by a bot, not by a review months
+# later. Security updates open at once; version updates weekly, grouped so they do not drown
+# the queue. The remediation windows (critical 7 days, high 30) are in
+# docs/security/security-checklist.md §Dependencies.
+#
+# Dependabot reads this file from the default branch only. Until feat/firebase-backend reaches
+# main, it does nothing; `target-branch` makes it update the live branch once it does.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /frontend
+    target-branch: feat/firebase-backend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch: { update-types: [minor, patch] }
+  - package-ecosystem: npm
+    directory: /firebase
+    target-branch: feat/firebase-backend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch: { update-types: [minor, patch] }
+  - package-ecosystem: pub
+    directory: /mobile
+    target-branch: feat/firebase-backend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch: { update-types: [minor, patch] }
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: feat/firebase-backend
+    schedule: { interval: monthly }

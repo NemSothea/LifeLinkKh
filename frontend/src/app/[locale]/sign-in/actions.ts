@@ -1,13 +1,14 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { portalGoogleLogin, portalLogin, type PortalSession } from '@/lib/api/portal-auth';
 import type { ApiResult } from '@/lib/api/client';
 import { routing, type Locale } from '@/i18n/routing';
 import { passwordSignInEnabled } from '@/lib/api/sign-in-options';
 import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from '@/lib/api/session';
-import { serverAuth } from '@/server/firebase-admin';
+import { serverAuth, serverDb } from '@/server/firebase-admin';
+import { clearSignInFailures, recordSignInFailure, signInBlocked } from '@/server/sign-in-throttle';
 
 /**
  * Sign in, and put the session where page script cannot reach it.
@@ -47,7 +48,32 @@ export async function signInAction(
     // Turned off, the form is not rendered — and a hand-made POST is refused here as well.
     if (!passwordSignInEnabled()) return 'invalid';
 
-    return startSession(await portalLogin(username.trim(), password), locale);
+    // SEC-REVIEW-003 F-08: per-IP, on top of Firebase's per-account lockout. The throttle
+    // failing open is deliberate — a Firestore outage must not lock the admin out as well.
+    const ip = await clientIp();
+    const throttle = await guarded(() => signInBlocked(serverDb(), ip));
+    if (throttle === true) return 'rateLimited';
+
+    const result = await portalLogin(username.trim(), password);
+    if (result.ok) await guarded(() => clearSignInFailures(serverDb(), ip));
+    else if (result.error !== 'unreachable')
+        await guarded(() => recordSignInFailure(serverDb(), ip));
+    return startSession(result, locale);
+}
+
+/** Vercel puts the client first in `x-forwarded-for`; locally there is none. */
+async function clientIp(): Promise<string> {
+    const h = await headers();
+    return h.get('x-forwarded-for')?.split(',')[0]?.trim() || h.get('x-real-ip')?.trim() || 'local';
+}
+
+async function guarded<T>(step: () => Promise<T>): Promise<T | null> {
+    try {
+        return await step();
+    } catch (error) {
+        console.warn(`sign-in throttle unavailable: ${(error as Error)?.message ?? error}`);
+        return null;
+    }
 }
 
 /**
