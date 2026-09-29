@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../core/settings/onboarding_controller.dart';
+import '../core/widgets/route_not_found_screen.dart';
 import '../features/account/presentation/delete_account_screen.dart';
 import '../features/auth/application/auth_providers.dart';
 import '../features/auth/presentation/sign_in_screen.dart';
@@ -30,6 +31,11 @@ part 'app_router.g.dart';
 GoRouter appRouter(AppRouterRef ref) {
     return GoRouter(
         initialLocation: SignInScreen.path,
+        // An address no route matches: our own screen, in the user's language, with a
+        // way home, instead of go_router's English "Page Not Found" and the raw path.
+        errorBuilder: (context, state) => RouteNotFoundScreen(
+            onGoHome: () => GoRouter.of(context).go(HomeScreen.path),
+        ),
         // Re-runs `redirect` when the session changes — on sign-in, on sign-out, and on the
         // terminal 401 that ADR 0007 cannot repair.
         refreshListenable: _AuthListenable(ref),

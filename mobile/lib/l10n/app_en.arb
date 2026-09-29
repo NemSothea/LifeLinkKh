@@ -903,5 +903,21 @@
     "privacyPolicy": "Privacy policy",
     "@privacyPolicy": {
         "description": "Me tab row opening the privacy policy page in the browser"
+    },
+    "screenFailedTitle": "Something went wrong on this screen",
+    "@screenFailedTitle": {
+        "description": "Shown in place of a screen that failed to draw (a bug), instead of Flutter's grey error box"
+    },
+    "screenFailedBody": "Go back and try again. If it keeps happening, close the app and open it again.",
+    "@screenFailedBody": {
+        "description": "Under screenFailedTitle: what the user can do about a screen that failed to draw"
+    },
+    "routeNotFoundTitle": "This page does not exist",
+    "@routeNotFoundTitle": {
+        "description": "Shown for an unknown in-app address, e.g. an old or broken link"
+    },
+    "routeNotFoundAction": "Go to Home",
+    "@routeNotFoundAction": {
+        "description": "Button on the page-not-found screen"
     }
 }

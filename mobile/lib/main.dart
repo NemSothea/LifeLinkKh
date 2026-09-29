@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'src/app.dart';
 import 'src/core/config/env.dart';
+import 'src/core/error/crash_handling.dart';
 import 'src/core/firebase/firestore_providers.dart';
 import 'src/core/settings/locale_controller.dart';
 import 'src/core/settings/onboarding_controller.dart';
@@ -31,6 +32,9 @@ import 'src/features/update/data/preferences_update_dismissal_store.dart';
 /// place and require the FlutterFire CLI in CI for no gain.
 Future<void> main() async {
     final binding = WidgetsFlutterBinding.ensureInitialized();
+
+    // First, so an error anywhere below — Firebase init included — is caught by it.
+    installCrashHandlers();
 
     // Keeps the native launch screen up past the first frame, until `LifeLinkApp` sees
     // the session restore resolve — otherwise a signed-in donor watches the splash hand

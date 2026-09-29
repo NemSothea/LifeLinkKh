@@ -206,5 +206,9 @@
     "updateNewVersion": "កំណែថ្មី៖ {version}",
     "updateOpenFailed": "មិនអាចបើកកម្មវិធីរុករកបានទេ។ សូមបើកតំណនេះដើម្បីទាញយក៖",
     "updateWhatsNew": "អ្វីដែលថ្មី",
-    "privacyPolicy": "គោលការណ៍ឯកជនភាព"
+    "privacyPolicy": "គោលការណ៍ឯកជនភាព",
+    "screenFailedTitle": "មានបញ្ហាលើអេក្រង់នេះ",
+    "screenFailedBody": "សូមថយក្រោយ ហើយព្យាយាមម្តងទៀត។ បើនៅតែកើតឡើង សូមបិទកម្មវិធី ហើយបើកវាឡើងវិញ។",
+    "routeNotFoundTitle": "រកមិនឃើញទំព័រនេះទេ",
+    "routeNotFoundAction": "ទៅទំព័រដើម"
 }
