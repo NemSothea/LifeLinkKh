@@ -702,7 +702,7 @@
     "@donateGuideBeforeTitle": {
         "description": "Guide section heading"
     },
-    "donateGuideBeforeMeal": "Eat a proper meal and drink plenty of water.",
+    "donateGuideBeforeMeal": "Have a proper meal or snack in the 4 hours before, and drink plenty of water.",
     "@donateGuideBeforeMeal": {
         "description": "Guide item"
     },
@@ -722,7 +722,7 @@
     "@donateGuideDuringCheck": {
         "description": "Guide item"
     },
-    "donateGuideDuringTime": "The donation itself takes about 10 minutes. The whole visit is usually under an hour.",
+    "donateGuideDuringTime": "A standard donation in Cambodia is 350 ml. The draw takes about 10 minutes, and the whole visit is usually under an hour.",
     "@donateGuideDuringTime": {
         "description": "Guide item"
     },
@@ -750,7 +750,7 @@
     "@donateGuideNextTitle": {
         "description": "Guide section heading"
     },
-    "donateGuideNextCooldown": "You can donate again after 56 days. LifeLink counts the days and tells you when.",
+    "donateGuideNextCooldown": "LifeLink counts 56 days from your last donation, but the blood centre may ask you to wait longer: often 3 months for men and 4 months for women. Follow what the centre tells you.",
     "@donateGuideNextCooldown": {
         "description": "Guide item"
     },
@@ -919,5 +919,133 @@
     "routeNotFoundAction": "Go to Home",
     "@routeNotFoundAction": {
         "description": "Button on the page-not-found screen"
+    },
+    "bloodGuideCta": "How getting blood works",
+    "@bloodGuideCta": {
+        "description": "Link to the family guide on how patients get blood in Cambodia (DEC-019)"
+    },
+    "bloodGuideTitle": "How getting blood works",
+    "@bloodGuideTitle": {
+        "description": "Title of the family guide screen"
+    },
+    "bloodGuideIntro": "In Cambodia, most blood for patients comes from relatives and friends who donate. Here is what your family needs to know.",
+    "@bloodGuideIntro": {
+        "description": "Family guide intro"
+    },
+    "bloodGuideAnyTypeTitle": "Any blood type can help",
+    "@bloodGuideAnyTypeTitle": {
+        "description": "Family guide section: replacement donation"
+    },
+    "bloodGuideAnyTypeDonate": "Relatives and friends can donate at the hospital's blood bank or at the National Blood Transfusion Center, whatever their blood type.",
+    "@bloodGuideAnyTypeDonate": {
+        "description": "Family guide: replacement donation, point 1"
+    },
+    "bloodGuideAnyTypeStock": "Their blood goes into the tested stock, and the blood bank gives the patient the type they need.",
+    "@bloodGuideAnyTypeStock": {
+        "description": "Family guide: replacement donation, point 2"
+    },
+    "bloodGuideAnyTypeAsk": "Ask the hospital's blood bank how many donors they need from your family.",
+    "@bloodGuideAnyTypeAsk": {
+        "description": "Family guide: replacement donation, point 3"
+    },
+    "bloodGuideFreeTitle": "Blood is free",
+    "@bloodGuideFreeTitle": {
+        "description": "Family guide section: cost and brokers"
+    },
+    "bloodGuideFreeFee": "By national policy, blood is free to the patient. The hospital may charge a fee for testing and processing. Ask the hospital how much.",
+    "@bloodGuideFreeFee": {
+        "description": "Family guide: cost, point 1"
+    },
+    "bloodGuideFreeNeverPay": "Never pay anyone for blood or for a donor. If someone offers to sell you blood, tell the hospital.",
+    "@bloodGuideFreeNeverPay": {
+        "description": "Family guide: cost, point 2"
+    },
+    "bloodGuideRelativeTitle": "Blood from close relatives",
+    "@bloodGuideRelativeTitle": {
+        "description": "Family guide section: directed donation warning"
+    },
+    "bloodGuideRelativeBody": "Do not arrange for a parent's, child's or sibling's blood to go straight to the patient. Let them donate to the blood bank. The hospital decides how blood from relatives is used.",
+    "@bloodGuideRelativeBody": {
+        "description": "Family guide: why close relatives should not give directly (TA-GVHD risk)"
+    },
+    "bloodGuideAppTitle": "How LifeLink helps",
+    "@bloodGuideAppTitle": {
+        "description": "Family guide section: what the app does"
+    },
+    "bloodGuideAppReview": "An admin checks your request. Then LifeLink alerts nearby volunteer donors whose blood type fits.",
+    "@bloodGuideAppReview": {
+        "description": "Family guide: app, point 1"
+    },
+    "bloodGuideAppDonors": "Donors who accept see your phone number and come to donate at the hospital or blood bank.",
+    "@bloodGuideAppDonors": {
+        "description": "Family guide: app, point 2"
+    },
+    "bloodGuideSource": "Based on Cambodia's national blood policy and WHO guidance. The hospital's blood bank has the final word on its own rules.",
+    "@bloodGuideSource": {
+        "description": "Family guide footer: sources and who decides"
+    },
+    "moneyNotice": "LifeLink never asks for money. Never pay or accept payment for blood: by national policy, it is free.",
+    "@moneyNotice": {
+        "description": "Warning shown on the request form and match screens (DEC-019)"
+    },
+    "matchReviewedBadge": "Checked by a LifeLink admin",
+    "@matchReviewedBadge": {
+        "description": "Badge on a request a donor was alerted to: an admin approved it (DEC-015)"
+    },
+    "requestNoDonorsTitle": "No matching donor nearby yet",
+    "@requestNoDonorsTitle": {
+        "description": "Request detail, open with no donor alerted"
+    },
+    "requestNoDonorsBody": "Your relatives and friends can still help. At the hospital's blood bank, a donor of any blood type counts towards the blood your patient needs.",
+    "@requestNoDonorsBody": {
+        "description": "Request detail, open with no donor alerted: point to replacement donation"
+    },
+    "donateGuideBeforeWeight": "You need to weigh at least 45 kg and usually be 18 to 60 years old.",
+    "@donateGuideBeforeWeight": {
+        "description": "Donation guide: weight and age"
+    },
+    "donateGuideWaitTitle": "Wait before donating if you…",
+    "@donateGuideWaitTitle": {
+        "description": "Donation guide section: temporary deferrals"
+    },
+    "donateGuideWaitFever": "had a fever or felt ill in the last 2 weeks",
+    "@donateGuideWaitFever": {
+        "description": "Donation guide deferral"
+    },
+    "donateGuideWaitAntibiotics": "took antibiotics in the last 2 weeks",
+    "@donateGuideWaitAntibiotics": {
+        "description": "Donation guide deferral"
+    },
+    "donateGuideWaitDengue": "had dengue or malaria in the last 6 months",
+    "@donateGuideWaitDengue": {
+        "description": "Donation guide deferral"
+    },
+    "donateGuideWaitTattoo": "got a tattoo, piercing or acupuncture in the last 12 months",
+    "@donateGuideWaitTattoo": {
+        "description": "Donation guide deferral"
+    },
+    "donateGuideWaitPregnant": "are pregnant or breastfeeding, or gave birth in the last 6 months",
+    "@donateGuideWaitPregnant": {
+        "description": "Donation guide deferral"
+    },
+    "donateGuideWaitSurgery": "had surgery or received blood in the last 12 months",
+    "@donateGuideWaitSurgery": {
+        "description": "Donation guide deferral"
+    },
+    "donateGuideWaitNote": "Staff at the centre make the final check. If you are not sure, ask them before you donate.",
+    "@donateGuideWaitNote": {
+        "description": "Donation guide: deferrals are decided by the centre"
+    },
+    "donateGuideWhereTitle": "Where to donate",
+    "@donateGuideWhereTitle": {
+        "description": "Donation guide section: locations"
+    },
+    "donateGuideWhereNbtc": "National Blood Transfusion Center (NBTC): St 271, next to Khmer-Soviet Friendship Hospital, Phnom Penh. Walk-ins welcome.",
+    "@donateGuideWhereNbtc": {
+        "description": "Donation guide: NBTC location (hours unverified, DEC-019 checklist)"
+    },
+    "donateGuideWhereOther": "Hospital blood banks and mobile blood drives also collect blood. Watch the Cambodia Blood Service page for dates.",
+    "@donateGuideWhereOther": {
+        "description": "Donation guide: other places"
     }
 }

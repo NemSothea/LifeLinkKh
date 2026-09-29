@@ -41,6 +41,7 @@ import 'package:lifelink_kh/src/features/request/domain/hospital.dart';
 import 'package:lifelink_kh/src/features/request/domain/request_repository.dart';
 import 'package:lifelink_kh/src/features/request/domain/request_status.dart';
 import 'package:lifelink_kh/src/features/request/domain/urgency.dart';
+import 'package:lifelink_kh/src/features/request/presentation/blood_guide_screen.dart';
 
 import 'support/auth_fakes.dart';
 
@@ -197,6 +198,11 @@ void main() {
         testWidgets('match detail — ${variant.name}', (tester) async {
             await _pumpScreen(tester, variant, home: _matchDetail());
             await _expectGolden('match_detail', variant);
+        });
+
+        testWidgets('family blood guide — ${variant.name}', (tester) async {
+            await _pumpScreen(tester, variant, home: const BloodGuideScreen(), signedIn: false);
+            await _expectGolden('blood_guide', variant);
         });
 
         testWidgets('error states — ${variant.name}', (tester) async {

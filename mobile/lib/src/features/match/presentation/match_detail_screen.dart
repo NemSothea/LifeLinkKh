@@ -14,6 +14,7 @@ import '../../request/presentation/urgency_badge.dart';
 import '../application/match_providers.dart';
 import '../domain/match.dart';
 import '../domain/match_response_type.dart';
+import '../../../core/widgets/money_notice.dart';
 
 /// A single match — request detail, then accept/decline, then (on accept) the
 /// requester's contact. `NOTIFY-donor-alert` screen 2 and 3 in the prototype.
@@ -124,9 +125,20 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
                             child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                    UrgencyBadge(
-                                        key: const Key('match-urgency'),
-                                        urgency: request.urgency,
+                                    // Every request a donor is alerted to was approved by an
+                                    // admin first (DEC-015); DEC-019 makes that visible, since
+                                    // "is this real?" is the donor's first question.
+                                    Wrap(
+                                        spacing: AppTokens.space8,
+                                        runSpacing: AppTokens.space8,
+                                        crossAxisAlignment: WrapCrossAlignment.center,
+                                        children: [
+                                            UrgencyBadge(
+                                                key: const Key('match-urgency'),
+                                                urgency: request.urgency,
+                                            ),
+                                            const _ReviewedBadge(),
+                                        ],
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
@@ -254,6 +266,8 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
     }
 
     List<Widget> _respondActions(AppLocalizations l10n, Match match) => [
+        const MoneyNotice(key: Key('match-money-notice')),
+        const SizedBox(height: 16),
         if (_respondFailure != null)
             Padding(
                 padding: const EdgeInsets.only(bottom: 16),
@@ -305,6 +319,9 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
                     Text(l10n.matchContactTitle, style: Theme.of(context).textTheme.titleSmall),
                     const SizedBox(height: 8),
                     SelectableText('${contact.displayName} · ${contact.phone}'),
+                    const SizedBox(height: 8),
+                    // The moment a stranger's number is on screen is when money could come up.
+                    const MoneyNotice(key: Key('match-accepted-money-notice')),
                     const SizedBox(height: 8),
                     Text(
                         l10n.matchContactUnverified,
@@ -439,6 +456,48 @@ class _RespondSheet extends StatelessWidget {
                         child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
                     ),
                 ],
+            ),
+        );
+    }
+}
+
+/// "Checked by a LifeLink admin", next to the urgency badge.
+class _ReviewedBadge extends StatelessWidget {
+    const _ReviewedBadge();
+
+    @override
+    Widget build(BuildContext context) {
+        final l10n = AppLocalizations.of(context)!;
+        final tokens = AppTokens.of(context);
+        return DecoratedBox(
+            key: const Key('match-reviewed'),
+            decoration: BoxDecoration(
+                color: tokens.success,
+                borderRadius: BorderRadius.circular(999),
+            ),
+            child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppTokens.space8 + 2,
+                    vertical: AppTokens.space4,
+                ),
+                child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                        Icon(Icons.verified_user_outlined, size: 14, color: tokens.onSuccess),
+                        const SizedBox(width: AppTokens.space4),
+                        Flexible(
+                            child: Text(
+                                l10n.matchReviewedBadge,
+                                style: TextStyle(
+                                    color: tokens.onSuccess,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 11,
+                                    letterSpacing: 0.4,
+                                ),
+                            ),
+                        ),
+                    ],
+                ),
             ),
         );
     }

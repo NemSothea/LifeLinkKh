@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/error/failure.dart';
@@ -12,6 +13,8 @@ import '../domain/request_status.dart';
 import 'urgency_badge.dart';
 import '../../../core/widgets/inline_error.dart';
 import '../../../core/widgets/retryable_failure.dart';
+import '../../../core/widgets/money_notice.dart';
+import 'blood_guide_screen.dart';
 
 /// A single request — the "waiting for responders" screen from the prototype, reached
 /// by `pushReplacement` right after `RequestFormScreen` creates it.
@@ -229,8 +232,26 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                     const SizedBox(height: 32),
                     // Only once donors can actually answer — while pending no one has been
                     // asked yet, and a rejected request never will be.
-                    if (request.status == RequestStatus.open && request.acceptedCount == 0)
+                    // DEC-019: an approved request that alerted nobody is not a dead end.
+                    // Relatives of any type can still donate as replacement at the blood bank.
+                    if (request.status == RequestStatus.open && request.alertedCount == 0)
+                        _ReviewCard(
+                            key: const Key('request-no-donors'),
+                            icon: Icons.bloodtype_outlined,
+                            title: l10n.requestNoDonorsTitle,
+                            body: Text(l10n.requestNoDonorsBody),
+                        )
+                    else if (request.status == RequestStatus.open && request.acceptedCount == 0)
                         Text(l10n.requestWaitingForResponders, textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    TextButton.icon(
+                        key: const Key('request-detail-blood-guide'),
+                        onPressed: () => context.push(BloodGuideScreen.path),
+                        icon: const Icon(Icons.info_outline),
+                        label: Text(l10n.bloodGuideCta),
+                    ),
+                    const SizedBox(height: 8),
+                    const MoneyNotice(),
                     const SizedBox(height: 32),
                     if (_cancelFailure != null)
                         Padding(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/widgets/guide_section.dart';
 
 /// "What to expect when you donate" — `BRIEF-DONATION-001`. Static, no API: before, at the
 /// centre, after, and next time.
@@ -30,16 +31,40 @@ class DonationGuideScreen extends StatelessWidget {
                     children: [
                         Text(l10n.donateGuideIntro, style: theme.textTheme.bodyLarge),
                         const SizedBox(height: 16),
-                        _Section(
+                        GuideSection(
                             icon: Icons.restaurant_outlined,
                             title: l10n.donateGuideBeforeTitle,
                             items: [
+                                l10n.donateGuideBeforeWeight,
                                 l10n.donateGuideBeforeMeal,
                                 l10n.donateGuideBeforeSleep,
                                 l10n.donateGuideBeforeId,
                             ],
                         ),
-                        _Section(
+                        // DEC-019: the temporary deferrals a donor can check at home (WHO 2012),
+                        // so nobody travels to the centre only to be turned away. Informational:
+                        // the note under the list says the centre decides.
+                        GuideSection(
+                            key: const Key('donation-guide-wait'),
+                            icon: Icons.pause_circle_outline,
+                            title: l10n.donateGuideWaitTitle,
+                            items: [
+                                l10n.donateGuideWaitFever,
+                                l10n.donateGuideWaitAntibiotics,
+                                l10n.donateGuideWaitDengue,
+                                l10n.donateGuideWaitTattoo,
+                                l10n.donateGuideWaitPregnant,
+                                l10n.donateGuideWaitSurgery,
+                                l10n.donateGuideWaitNote,
+                            ],
+                        ),
+                        GuideSection(
+                            key: const Key('donation-guide-where'),
+                            icon: Icons.place_outlined,
+                            title: l10n.donateGuideWhereTitle,
+                            items: [l10n.donateGuideWhereNbtc, l10n.donateGuideWhereOther],
+                        ),
+                        GuideSection(
                             icon: Icons.local_hospital_outlined,
                             title: l10n.donateGuideDuringTitle,
                             items: [
@@ -47,7 +72,7 @@ class DonationGuideScreen extends StatelessWidget {
                                 l10n.donateGuideDuringTime,
                             ],
                         ),
-                        _Section(
+                        GuideSection(
                             key: const Key('donation-guide-after'),
                             icon: Icons.volunteer_activism_outlined,
                             title: l10n.donateGuideAfterTitle,
@@ -58,7 +83,7 @@ class DonationGuideScreen extends StatelessWidget {
                                 l10n.donateGuideAfterCare,
                             ],
                         ),
-                        _Section(
+                        GuideSection(
                             icon: Icons.event_available_outlined,
                             title: l10n.donateGuideNextTitle,
                             items: [l10n.donateGuideNextCooldown],
@@ -70,62 +95,6 @@ class DonationGuideScreen extends StatelessWidget {
                                 color: theme.colorScheme.onSurfaceVariant,
                             ),
                         ),
-                    ],
-                ),
-            ),
-        );
-    }
-}
-
-class _Section extends StatelessWidget {
-    const _Section({
-        required this.icon,
-        required this.title,
-        required this.items,
-        super.key,
-    });
-
-    final IconData icon;
-    final String title;
-    final List<String> items;
-
-    @override
-    Widget build(BuildContext context) {
-        final theme = Theme.of(context);
-
-        return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                        Row(
-                            children: [
-                                Icon(icon, color: theme.colorScheme.primary),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                    child: Text(title, style: theme.textTheme.titleMedium),
-                                ),
-                            ],
-                        ),
-                        const SizedBox(height: 8),
-                        for (final item in items)
-                            Padding(
-                                padding: const EdgeInsets.only(top: 6),
-                                child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                        const Padding(
-                                            padding: EdgeInsets.only(top: 2, right: 10),
-                                            child: Icon(Icons.check, size: 18),
-                                        ),
-                                        Expanded(
-                                            child: Text(item, style: theme.textTheme.bodyMedium),
-                                        ),
-                                    ],
-                                ),
-                            ),
                     ],
                 ),
             ),

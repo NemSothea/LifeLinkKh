@@ -122,4 +122,16 @@ void main() {
         expect(repository.responses, [MatchResponseType.declined]);
         expect(find.byKey(const Key('match-declined')), findsOneWidget);
     });
+
+    /// DEC-019: the donor sees the request was checked, and is told never to pay or be paid,
+    /// before answering and again once the family's number is on screen.
+    testWidgets('a donor sees the admin check and the money warning', (tester) async {
+        final repository = _FakeMatchRepository();
+        await tester.pumpWidget(_wrap(repository));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('match-reviewed')), findsOneWidget);
+        expect(find.text('Checked by a LifeLink admin'), findsOneWidget);
+        expect(find.byKey(const Key('match-money-notice')), findsOneWidget);
+    });
 }
+

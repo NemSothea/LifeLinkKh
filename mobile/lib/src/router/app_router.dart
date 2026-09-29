@@ -15,6 +15,7 @@ import '../features/donor/presentation/donor_setup_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/onboarding/presentation/intro_screen.dart';
 import '../features/match/presentation/match_detail_screen.dart';
+import '../features/request/presentation/blood_guide_screen.dart';
 import '../features/request/presentation/request_detail_screen.dart';
 import '../features/request/presentation/request_form_screen.dart';
 
@@ -96,6 +97,11 @@ GoRouter appRouter(AppRouterRef ref) {
             GoRoute(
                 path: DonationGuideScreen.path,
                 builder: (context, state) => const DonationGuideScreen(),
+            ),
+            // DEC-019: how a family actually gets blood in Cambodia.
+            GoRoute(
+                path: BloodGuideScreen.path,
+                builder: (context, state) => const BloodGuideScreen(),
             ),
             // M4 — FR-REQUEST-001/002, FR-MATCH-001, FR-NOTIFY-001.
             GoRoute(

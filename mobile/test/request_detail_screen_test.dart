@@ -40,14 +40,15 @@ final class _OneRequestRepository implements RequestRepository {
     Future<Result<BloodRequest>> cancel(String requestId) => throw UnimplementedError();
 }
 
-BloodRequest _request(RequestStatus status, {String? rejectReason}) => BloodRequest(
+BloodRequest _request(RequestStatus status, {String? rejectReason, int alertedCount = 0}) =>
+    BloodRequest(
     id: 'req-1',
     status: status,
     patientBloodType: BloodType.oNegative,
     unitsNeeded: 2,
     urgency: Urgency.critical,
     hospitalName: 'Calmette Hospital',
-    alertedCount: 0,
+    alertedCount: alertedCount,
     acceptedCount: 0,
     createdAt: DateTime.now().subtract(const Duration(minutes: 3)),
     rejectReason: rejectReason,
@@ -127,5 +128,26 @@ void main() {
         await pump(tester, _request(RequestStatus.pending), locale: const Locale('km'));
         expect(find.text('កំពុងរង់ចាំការពិនិត្យ'), findsOneWidget);
         expect(find.text('Waiting for review'), findsNothing);
+    });
+
+    /// DEC-019: an approved request that alerted nobody points the family to replacement
+    /// donation at the blood bank, where relatives of any blood type count.
+    testWidgets('open with no donor alerted says relatives of any type can still help',
+        (tester) async {
+        await pump(tester, _request(RequestStatus.open));
+        expect(find.byKey(const Key('request-no-donors')), findsOneWidget);
+        expect(find.textContaining('a donor of any blood type counts'), findsOneWidget);
+        expect(find.byKey(const Key('request-detail-blood-guide')), findsOneWidget);
+    });
+
+    testWidgets('open with donors alerted waits for them instead', (tester) async {
+        await pump(tester, _request(RequestStatus.open, alertedCount: 4));
+        expect(find.byKey(const Key('request-no-donors')), findsNothing);
+        expect(find.text('Waiting for the first donor to accept'), findsOneWidget);
+    });
+
+    testWidgets('the requester is told never to pay for blood', (tester) async {
+        await pump(tester, _request(RequestStatus.open, alertedCount: 4));
+        expect(find.textContaining('Never pay or accept payment for blood'), findsOneWidget);
     });
 }

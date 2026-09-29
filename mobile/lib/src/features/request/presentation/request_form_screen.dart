@@ -14,6 +14,8 @@ import 'request_detail_screen.dart';
 import 'urgency_selector.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/widgets/inline_error.dart';
+import '../../../core/widgets/money_notice.dart';
+import 'blood_guide_screen.dart';
 
 /// `FR-REQUEST-001` — the one-minute urgent-request form.
 ///
@@ -113,6 +115,10 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                            // DEC-019: first, because a family whose relatives are the
+                            // "wrong" type may not need a stranger at all.
+                            _BloodGuideLink(label: l10n.bloodGuideCta),
+                            const SizedBox(height: 16),
                             Text(
                                 l10n.requestPatientBloodTypeLabel,
                                 style: Theme.of(context).textTheme.titleSmall,
@@ -208,6 +214,8 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                                 onChanged: controller.setContactPhone,
                             ),
                             const SizedBox(height: 24),
+                            const MoneyNotice(key: Key('request-form-money-notice')),
+                            const SizedBox(height: 16),
                             if (_sendFailure != null)
                                 Padding(
                                     padding: const EdgeInsets.only(bottom: 16),
@@ -232,6 +240,30 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                         ],
                     ),
                 ),
+            ),
+        );
+    }
+}
+
+/// A tonal card that opens the family guide. A card, not a text link: on the one screen a
+/// frightened family fills in, "any blood type can help" must be seen, not found.
+class _BloodGuideLink extends StatelessWidget {
+    const _BloodGuideLink({required this.label});
+
+    final String label;
+
+    @override
+    Widget build(BuildContext context) {
+        final scheme = Theme.of(context).colorScheme;
+        return Card(
+            margin: EdgeInsets.zero,
+            color: scheme.secondaryContainer,
+            child: ListTile(
+                key: const Key('request-form-blood-guide'),
+                leading: Icon(Icons.info_outline, color: scheme.onSecondaryContainer),
+                title: Text(label, style: TextStyle(color: scheme.onSecondaryContainer)),
+                trailing: Icon(Icons.chevron_right, color: scheme.onSecondaryContainer),
+                onTap: () => context.push(BloodGuideScreen.path),
             ),
         );
     }
