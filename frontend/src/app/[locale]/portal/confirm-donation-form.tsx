@@ -31,7 +31,7 @@ type Copy = {
  * Server Action (`confirmDonationAction`); this component never calls the API
  * directly.
  *
- * A misclick here starts a donor's 56-day cooldown for a donation that may not have
+ * A misclick here starts a donor's 90- or 120-day cooldown for a donation that may not have
  * happened. There is no undo (`FR-REQUEST-004`-style withdrawal doesn't exist for
  * donations either), so a second, explicit step before the write is worth the extra
  * click.

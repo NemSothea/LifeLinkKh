@@ -1,4 +1,5 @@
 import 'blood_type.dart';
+import 'donor_sex.dart';
 
 /// What the three setup steps accumulate, and what `PUT /donors/me` sends.
 ///
@@ -20,6 +21,7 @@ final class DonorProfileDraft {
         this.updateCoordinates = false,
         this.lastDonationDate,
         this.isAvailable = true,
+        this.sex,
     });
 
     final String fullName;
@@ -42,6 +44,9 @@ final class DonorProfileDraft {
 
     final bool isAvailable;
 
+    /// Optional (DEC-019). Null is "prefer not to say".
+    final DonorSex? sex;
+
     bool get isComplete =>
         fullName.trim().isNotEmpty && bloodType != null && districtCode != null;
 
@@ -55,6 +60,8 @@ final class DonorProfileDraft {
         bool? isAvailable,
         bool clearLastDonationDate = false,
         bool clearCoordinates = false,
+        DonorSex? sex,
+        bool clearSex = false,
     }) {
         // Sticky once true: a donor who acquires a fix and then edits their name must not
         // have that fix silently downgraded back to "leave coordinates alone" on save.
@@ -72,6 +79,7 @@ final class DonorProfileDraft {
             lastDonationDate:
                 clearLastDonationDate ? null : lastDonationDate ?? this.lastDonationDate,
             isAvailable: isAvailable ?? this.isAvailable,
+            sex: clearSex ? null : sex ?? this.sex,
         );
     }
 

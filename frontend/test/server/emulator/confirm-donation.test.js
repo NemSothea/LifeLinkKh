@@ -36,10 +36,10 @@ async function refused(promise, code, detail) {
     if (detail) expect(error.details?.code).toBe(detail);
 }
 
-async function acceptedMatch(donorUid, fullName) {
+async function acceptedMatch(donorUid, fullName, extra = {}) {
     await db
         .doc(`donors/${donorUid}`)
-        .set({ fullName, bloodType: 'O+', districtCode: '1201', lastDonationDate: null });
+        .set({ fullName, bloodType: 'O+', districtCode: '1201', lastDonationDate: null, ...extra });
     await db
         .doc(`matches/r1_${donorUid}`)
         .set({ requestId: 'r1', donorUid, hospitalId: 'calmette', response: 'ACCEPTED' });
@@ -69,13 +69,19 @@ beforeEach(async () => {
 });
 
 describe('confirmDonation', () => {
+    test("a man's next eligible date is 90 days on, a woman's 120 (DEC-019)", async () => {
+        await acceptedMatch('d1', 'Nem Sothea', { sex: 'M' });
+        expect((await confirm()).donorNextEligibleOn).toBe('2026-12-24');
+    });
+
     test("records the donation, starts the cooldown, and answers in ConfirmDonationResponse's shape", async () => {
         expect(await confirm()).toEqual({
             id: 'r1_d1',
             donorDisplayName: 'Nem Sothea',
             donatedOn: '2026-09-25',
             requestStatus: 'OPEN',
-            donorNextEligibleOn: '2026-11-20',
+            // No sex on file: the 120-day wait (DEC-019).
+            donorNextEligibleOn: '2027-01-23',
         });
         expect((await db.doc('donations/r1_d1').get()).data()).toMatchObject({
             donorUid: 'd1',

@@ -4,8 +4,21 @@
 // every clause below is unit-tested without an emulator. Each clause is the SQL one, and the
 // comment on each says which line it was.
 
-/** Days between donations. EligibilityCalculator.COOLDOWN_DAYS; the app's Eligibility.cooldownDays. */
-export const COOLDOWN_DAYS = 56;
+/**
+ * Days between whole-blood donations, by `donors/{uid}.sex` (DEC-019). Until DEC-019 this was
+ * 56 days for everyone, the US rule. Blood centres in Cambodia reportedly ask for 3 months
+ * (men) and 4 months (women); WHO's minimums are 12 and 16 weeks. A donor who gave no sex, or
+ * a profile saved before the field existed, waits the longer interval: waiting too long only
+ * delays a donation, never harms one. The app's `Eligibility.cooldownDaysFor` is the twin of
+ * this, and both have a test at each boundary.
+ */
+export const COOLDOWN_DAYS = Object.freeze({ M: 90, F: 120 });
+export const COOLDOWN_DAYS_UNSPECIFIED = 120;
+
+/** @param {string|null|undefined} sex 'M', 'F', or absent */
+export function cooldownDaysFor(sex) {
+    return COOLDOWN_DAYS[sex] ?? COOLDOWN_DAYS_UNSPECIFIED;
+}
 
 /** ADR 0008: a ceiling, never a target. lifelink.matching.max-notified. */
 export const MAX_NOTIFIED = 25;
@@ -67,7 +80,7 @@ export function distanceKm(lat1, lng1, lat2, lng2) {
  * @param {{patientBloodType: string, createdBy: string}} args.request
  * @param {{lat: number, lng: number}} args.hospital
  * @param {Array<{uid: string, bloodType: string, isAvailable: boolean,
- *   lastDonationDate: string|null, lat: number|null, lng: number|null}>} args.donors
+ *   lastDonationDate: string|null, sex?: string|null, lat: number|null, lng: number|null}>} args.donors
  *   lastDonationDate already converted to a Phnom Penh 'YYYY-MM-DD'.
  * @param {Date} args.now
  * @returns {Array<{uid: string, distanceKm: number|null}>}
@@ -82,7 +95,7 @@ export function selectCandidates({
 }) {
     const compatible = COMPATIBLE_DONORS[request.patientBloodType];
     if (!compatible) return [];
-    const eligibleCutoff = minusDays(phnomPenhDate(now), COOLDOWN_DAYS);
+    const today = phnomPenhDate(now);
 
     return (
         donors
@@ -92,8 +105,12 @@ export function selectCandidates({
             .filter((d) => d.isAvailable === true)
             // dp.user_id <> :requesterUserId — a donor is never alerted to donate to themselves.
             .filter((d) => d.uid !== request.createdBy)
-            // last_donation_date IS NULL OR last_donation_date <= :eligibleCutoff (inclusive boundary)
-            .filter((d) => d.lastDonationDate == null || d.lastDonationDate <= eligibleCutoff)
+            // Never donated, or the donor's own interval has passed (inclusive boundary).
+            .filter(
+                (d) =>
+                    d.lastDonationDate == null ||
+                    d.lastDonationDate <= minusDays(today, cooldownDaysFor(d.sex)),
+            )
             .map((d) => ({ uid: d.uid, raw: distanceKm(hospital.lat, hospital.lng, d.lat, d.lng) }))
             // c.latitude IS NULL OR c.distance_km <= :radiusKm — no GPS still matches (ADR 0003).
             .filter((c) => c.raw == null || c.raw <= radiusKm)

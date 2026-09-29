@@ -8,6 +8,7 @@ import 'package:lifelink_kh/src/features/donor/data/firestore_donor_repository.d
 import 'package:lifelink_kh/src/features/donor/domain/blood_type.dart';
 import 'package:lifelink_kh/src/features/donor/domain/district.dart';
 import 'package:lifelink_kh/src/features/donor/domain/donor_profile.dart';
+import 'package:lifelink_kh/src/features/donor/domain/donor_sex.dart';
 import 'package:lifelink_kh/src/features/donor/domain/donor_profile_draft.dart';
 
 /// The document contract of `donors/{uid}` and `districts` (ADR 0009) — the Firestore
@@ -58,8 +59,10 @@ void main() {
             expect(profile.districtLabel('en'), 'Tuol Kouk');
             expect(profile.lastDonationDate, DateTime(2026, 8, 20));
             expect(profile.eligibility.isEligible, isFalse);
-            expect(profile.eligibility.eligibleOn, DateTime(2026, 10, 15));
-            expect(profile.eligibility.daysRemaining, 19);
+            // No `sex` field, like every profile saved before DEC-019: the 120-day wait.
+            expect(profile.sex, isNull);
+            expect(profile.eligibility.eligibleOn, DateTime(2026, 12, 18));
+            expect(profile.eligibility.daysRemaining, 83);
         });
 
         test('an unknown blood type is a failure, never a guessed default', () async {
@@ -135,7 +138,26 @@ void main() {
 
             final profile = (await repository.fetchProfile() as Success<DonorProfile?>).value!;
             expect(profile.lastDonationDate, DateTime(2026, 9, 26));
-            expect(profile.eligibility.daysRemaining, 56);
+            // No sex given: the longer, 120-day wait (DEC-019).
+            expect(profile.eligibility.daysRemaining, 120);
+        });
+
+        test('sex is stored as M or F, read back, and sets the wait', () async {
+            await repository.saveProfile(
+                draft.copyWith(lastDonationDate: DateTime(2026, 9, 26), sex: DonorSex.male),
+            );
+            final stored = (await db.doc('donors/donor-1').get()).data()!;
+            expect(stored['sex'], 'M');
+            final profile = (await repository.fetchProfile() as Success<DonorProfile?>).value!;
+            expect(profile.sex, DonorSex.male);
+            expect(profile.eligibility.daysRemaining, 90);
+        });
+
+        test('prefer not to say is stored as null, not left out', () async {
+            await repository.saveProfile(draft);
+            final stored = (await db.doc('donors/donor-1').get()).data()!;
+            expect(stored.containsKey('sex'), isTrue);
+            expect(stored['sex'], isNull);
         });
 
         test('an incomplete draft is refused before it reaches Firestore', () async {

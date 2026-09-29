@@ -42,10 +42,10 @@ void main() {
         expect(find.textContaining('next to Khmer-Soviet Friendship Hospital'), findsOneWidget);
     });
 
-    /// Until DEC-019 phase 2 changes the rule, the guide must not promise 56 days.
-    testWidgets('the donor guide warns the centre may ask for 3 or 4 months', (tester) async {
+    /// DEC-019 phase 2: the guide says the interval the app now counts.
+    testWidgets('the donor guide says 3 months for men and 4 for women', (tester) async {
         await tester.pumpWidget(_app(const DonationGuideScreen()));
-        await tester.scrollUntilVisible(find.textContaining('3 months for men'), 200);
-        expect(find.textContaining('4 months for women'), findsOneWidget);
+        await tester.scrollUntilVisible(find.textContaining('3 months (90 days) for men'), 200);
+        expect(find.textContaining('4 months (120 days) for women'), findsOneWidget);
     });
 }

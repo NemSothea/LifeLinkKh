@@ -11,6 +11,7 @@ import '../domain/donor_profile.dart';
 import 'donor_setup_screen.dart';
 import 'eligibility_card.dart';
 import '../../../core/widgets/inline_error.dart';
+import '../domain/donor_sex.dart';
 
 /// The donor's own profile: what is on record, whether they may donate today, and the
 /// availability toggle.
@@ -94,6 +95,15 @@ class DonorProfileScreen extends ConsumerWidget {
                     // including this one (ADR 0003).
                     value: profile.districtLabel(languageCode),
                     valueKey: const Key('donor-district-value'),
+                ),
+                _Field(
+                    label: l10n.donorSexLabel,
+                    value: switch (profile.sex) {
+                        DonorSex.male => l10n.donorSexMale,
+                        DonorSex.female => l10n.donorSexFemale,
+                        null => l10n.donorSexUnspecified,
+                    },
+                    valueKey: const Key('donor-sex-value'),
                 ),
                 _Field(
                     label: l10n.donorLastDonationLabel,

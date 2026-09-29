@@ -14,6 +14,7 @@ import 'eligibility_card.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/widgets/inline_error.dart';
 import 'package:flutter/services.dart';
+import '../domain/donor_sex.dart';
 
 /// The three-step donor setup from `FR-DONOR-001`: name and blood type → location → last
 /// donation, with a progress bar, then a one-shot eligibility result.
@@ -373,6 +374,36 @@ class _DonorSetupScreenState extends ConsumerState<DonorSetupScreen> {
                                 .clearLastDonationDate,
                             child: Text(l10n.donorNeverDonated),
                         ),
+                    ],
+                ),
+                const SizedBox(height: 32),
+                // DEC-019. On this step because it is about the next donation: it sets how
+                // long the donor waits. Optional, with "prefer not to say" as a real answer.
+                Text(l10n.donorSexLabel),
+                const SizedBox(height: 4),
+                Text(
+                    l10n.donorSexHint,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                        for (final (option, label, key) in [
+                            (DonorSex.male, l10n.donorSexMale, 'donor-sex-male'),
+                            (DonorSex.female, l10n.donorSexFemale, 'donor-sex-female'),
+                            (null, l10n.donorSexUnspecified, 'donor-sex-unspecified'),
+                        ])
+                            ChoiceChip(
+                                key: Key(key),
+                                label: Text(label),
+                                selected: setup.draft.sex == option,
+                                onSelected: (_) =>
+                                    ref.read(donorSetupProvider.notifier).setSex(option),
+                            ),
                     ],
                 ),
             ],

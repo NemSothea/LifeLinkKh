@@ -260,6 +260,9 @@ void main() {
             repository.profile = testProfile();
 
             await pump(tester, const DonorProfileScreen());
+            // Below the fold since the profile gained a sex row (DEC-019).
+            await tester.ensureVisible(find.byKey(const Key('donor-availability')));
+            await tester.pumpAndSettle();
             await tester.tap(find.byKey(const Key('donor-availability')));
             await tester.pumpAndSettle();
 
@@ -295,6 +298,9 @@ void main() {
             repository.saveFailure = const ServerFailure();
 
             await pump(tester, const DonorProfileScreen());
+            // Below the fold since the profile gained a sex row (DEC-019).
+            await tester.ensureVisible(find.byKey(const Key('donor-availability')));
+            await tester.pumpAndSettle();
             await tester.tap(find.byKey(const Key('donor-availability')));
             await tester.pumpAndSettle();
 

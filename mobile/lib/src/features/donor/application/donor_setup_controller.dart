@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../domain/blood_type.dart';
 import '../domain/donor_profile_draft.dart';
+import '../domain/donor_sex.dart';
 
 part 'donor_setup_controller.g.dart';
 
@@ -72,6 +73,11 @@ class DonorSetup extends _$DonorSetup {
     /// "I have never donated" — an explicit clear, not an unset field.
     void clearLastDonationDate() => state = state.copyWith(
         draft: state.draft.copyWith(clearLastDonationDate: true),
+    );
+
+    /// Null is "prefer not to say" (DEC-019).
+    void setSex(DonorSex? sex) => state = state.copyWith(
+        draft: state.draft.copyWith(sex: sex, clearSex: sex == null),
     );
 
     void next() {

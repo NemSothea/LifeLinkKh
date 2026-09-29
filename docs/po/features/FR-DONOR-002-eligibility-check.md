@@ -1,12 +1,20 @@
 ---
 id: FR-DONOR-002-eligibility-check
-title: Eligibility check — 56-day cooldown
+title: Eligibility check — cooldown between donations (90 days men, 120 women; DEC-019)
 area: DONOR
 status: accepted
 priority: Must Have
 owner: PO
 brief_ref: ../prd.md — FR-03
 ---
+
+> **Amended 2026-09-29 by DEC-019 (`../../decisions.md`).** The cooldown is no longer 56 days for
+> everyone, which is the US rule. It is **90 days for men and 120 days for women**, from the
+> donor's optional `sex` field; a donor who prefers not to say, or a profile saved before the field
+> existed, gets 120. Cambodian blood centres reportedly ask for 3 and 4 months, and WHO's minimums are
+> 12 and 16 weeks (`../research/2026-09-cambodia-donation-reality.md` §3). Implemented twice, with a
+> boundary test each: `mobile/.../donor/domain/eligibility.dart` and `frontend/src/server/matching.js`.
+> The criteria below keep their original wording; read "56 days" as "the donor's interval".
 
 ## Problem
 A donor who gave blood three weeks ago cannot give again, but neither they nor the system knows that

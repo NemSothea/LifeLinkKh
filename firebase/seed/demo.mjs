@@ -36,10 +36,11 @@ for (const collection of ['requests', 'matches', 'donations']) {
   await db.recursiveDelete(db.collection(collection));
 }
 
-for (const [uid, name] of [['demo-donor-a', 'Nem Sothea'], ['demo-donor-b', 'Sok Dara']]) {
+// sex sets the donation interval (DEC-019): 90 days for men, 120 for women.
+for (const [uid, name, sex] of [['demo-donor-a', 'Nem Sothea', 'M'], ['demo-donor-b', 'Sok Dara', 'F']]) {
   await db.doc(`users/${uid}`).set({ displayName: name, language: 'km', role: 'DONOR', fcmToken: null, createdAt: now(), updatedAt: now() });
   await db.doc(`donors/${uid}`).set({
-    fullName: name, bloodType: 'O-', districtCode: '1202', lastDonationDate: null, isAvailable: true,
+    fullName: name, bloodType: 'O-', districtCode: '1202', lastDonationDate: null, isAvailable: true, sex,
     ...DOUN_PENH, geohash: geohashForLocation([DOUN_PENH.lat, DOUN_PENH.lng]), createdAt: now(), updatedAt: now(),
   });
 }

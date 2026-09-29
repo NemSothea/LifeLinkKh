@@ -4,6 +4,7 @@ import { describe, expect, test } from 'vitest';
 import {
     COMPATIBLE_DONORS,
     MAX_NOTIFIED,
+    cooldownDaysFor,
     distanceKm,
     phnomPenhDate,
     selectCandidates,
@@ -71,13 +72,38 @@ describe('filters', () => {
         expect(uids(run([donor('requester'), donor('other')]))).toEqual(['other']);
     });
 
-    test('56-day cooldown, boundary inclusive, on the Phnom Penh calendar', () => {
+    // DEC-019: 90 days for men, 120 for women and for a donor who gave no sex. Twin of the
+    // app's eligibility_test.dart; "today" in run() is 2026-09-26.
+    test('the intervals: 90 for men, 120 for women and for not given', () => {
+        expect(cooldownDaysFor('M')).toBe(90);
+        expect(cooldownDaysFor('F')).toBe(120);
+        expect(cooldownDaysFor(null)).toBe(120);
+        expect(cooldownDaysFor(undefined)).toBe(120);
+    });
+
+    test('a man: 90 days is eligible, 89 is not — boundary inclusive, Phnom Penh calendar', () => {
         const rows = run([
-            donor('exactly-56', { lastDonationDate: '2026-08-01' }),
-            donor('55-days', { lastDonationDate: '2026-08-02' }),
+            donor('man-90', { sex: 'M', lastDonationDate: '2026-06-28' }),
+            donor('man-89', { sex: 'M', lastDonationDate: '2026-06-29' }),
             donor('never'),
         ]);
-        expect(uids(rows).sort()).toEqual(['exactly-56', 'never']);
+        expect(uids(rows).sort()).toEqual(['man-90', 'never']);
+    });
+
+    test('a woman: 120 days is eligible, 119 is not', () => {
+        const rows = run([
+            donor('woman-120', { sex: 'F', lastDonationDate: '2026-05-29' }),
+            donor('woman-119', { sex: 'F', lastDonationDate: '2026-05-30' }),
+        ]);
+        expect(uids(rows)).toEqual(['woman-120']);
+    });
+
+    test("no sex on file waits 120 days: a man's 90 is not enough", () => {
+        const rows = run([
+            donor('unknown-90', { lastDonationDate: '2026-06-28' }),
+            donor('unknown-120', { lastDonationDate: '2026-05-29' }),
+        ]);
+        expect(uids(rows)).toEqual(['unknown-120']);
     });
 
     test('"today" is Phnom Penh\'s date, not UTC\'s', () => {

@@ -143,7 +143,7 @@
     },
     "privacy": {
         "title": "Privacy policy",
-        "effective": "Effective 26 September 2026",
+        "effective": "Effective 29 September 2026",
         "intro": "LifeLink KH connects people in Phnom Penh who urgently need blood with nearby voluntary donors. It is free, it shows no ads, and it never sells or rents your information. This page says exactly what LifeLink collects, who can see it, and how to delete it.",
         "sections": [
             {
@@ -156,7 +156,7 @@
                 "heading": "What we collect",
                 "items": [
                     "Your account: the name and email address of the Google or Facebook account you sign in with, and your preferred language.",
-                    "If you register as a donor: your full name, blood type, district, the date you last gave blood (if you enter it), whether you are available to donate, and — only if you allow it — your phone's location when you set up your donor profile.",
+                    "If you register as a donor: your full name, blood type, district, the date you last gave blood (if you enter it), whether you are available to donate, your sex if you choose to give it (it sets how long you wait between donations), and — only if you allow it — your phone's location when you set up your donor profile.",
                     "If you post a request for blood: the patient's blood type, how many units, how urgent, the hospital, and the contact name and phone number you enter for donors to call.",
                     "When you answer a request: whether you accepted or declined, when, and your distance from the hospital.",
                     "When a donation is confirmed by our admin: the date, the hospital and the request it answered.",
@@ -166,7 +166,7 @@
             {
                 "heading": "How we use it",
                 "items": [
-                    "To find donors whose blood type is compatible, who are eligible (56 days since their last donation) and who are near the hospital, and to send them an alert.",
+                    "To find donors whose blood type is compatible, who are eligible (90 days since their last donation for men, 120 days for women or if sex is not given) and who are near the hospital, and to send them an alert.",
                     "To tell the person who asked for blood that their request was approved, rejected, or accepted by a donor.",
                     "To show you when you can donate again.",
                     "So our admin can check that a request is genuine before any donor is alerted, and record donations the hospital confirms.",
@@ -178,7 +178,7 @@
                 "items": [
                     "Anyone, without signing in, can see the public board: open requests (blood type, units, urgency, hospital, time) and, for each request, a shortened name (for example \"Nem S.\"), blood type and district of donors who accepted it. Requests waiting for review or rejected are not shown.",
                     "A donor who accepts a request can see the requester's contact name and phone number, so they can arrange the donation. Apart from the requester and our admin, nobody else can.",
-                    "Your donor profile (blood type, location, last donation) is visible only to you and our admin. Other users, including the families asking for blood, cannot see it. Matching reads it on our server.",
+                    "Your donor profile (blood type, sex, location, last donation) is visible only to you and our admin. Other users, including the families asking for blood, cannot see it. Matching reads it on our server.",
                     "Our admin can see everything above, to review requests, confirm donations and answer deletion requests.",
                     "Google (Firebase, sign-in, notifications), Facebook (if you sign in with it) and Vercel (the website) process data to provide their services to us. Their own privacy policies apply to what they do with it."
                 ]
@@ -207,7 +207,7 @@
             {
                 "heading": "Safety",
                 "paragraphs": [
-                    "LifeLink never asks donors or families for money. Donate only at a hospital or blood center. LifeLink's 56-day reminder is not medical advice; the hospital decides whether you can donate."
+                    "LifeLink never asks donors or families for money. Donate only at a hospital or blood center. LifeLink's count of days between donations is not medical advice; the hospital decides whether you can donate."
                 ]
             },
             {
@@ -443,7 +443,7 @@
                 "items": [
                     "National Blood Transfusion Center (NBTC): St 271, next to Khmer-Soviet Friendship Hospital, Phnom Penh. Walk-ins welcome.",
                     "Hospital blood banks and mobile blood drives also collect blood. Watch the Cambodia Blood Service page for dates.",
-                    "After a donation, the centre may ask you to wait 3 months (men) or 4 months (women) before the next one. Follow what the centre tells you."
+                    "After a donation, wait 3 months (men) or 4 months (women) before the next one. LifeLink counts this for you; the centre makes the final check."
                 ]
             }
         ],

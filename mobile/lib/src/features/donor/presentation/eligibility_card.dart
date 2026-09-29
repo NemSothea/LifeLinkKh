@@ -5,14 +5,14 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../domain/eligibility.dart';
 
-/// The 56-day cooldown, as the server computed it.
+/// The cooldown between donations (90 days men, 120 women; DEC-019).
 ///
 /// When not yet eligible this shows **both** the day count and the calendar date — an
 /// acceptance criterion of `FR-DONOR-001`, because a countdown alone cannot be planned
 /// around and a date alone hides how close it is.
 ///
 /// Nothing here computes anything. `daysRemaining` and `eligibleOn` are read from the
-/// response; two implementations of the 56-day rule would eventually disagree, and the
+/// response; two implementations of the cooldown rule would eventually disagree, and the
 /// one on the device is the one that cannot be fixed without a release.
 ///
 /// The eligible state gets a gradient and the theme's own primary colour — this is the

@@ -47,5 +47,6 @@ final class DonorService {
         districtCode: profile.districtCode,
         lastDonationDate: profile.lastDonationDate,
         isAvailable: profile.isAvailable,
+        sex: profile.sex,
     );
 }

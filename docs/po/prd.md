@@ -159,6 +159,11 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 
 ### FR-03: Eligibility Check (56-day cooldown)
 
+> **Amended 2026-09-29 by DEC-019** — the interval is **90 days for men and 120 for women**
+> (120 when sex is not given), not 56. Fifty-six days is the US rule; Cambodian centres reportedly
+> use 3 and 4 months, in line with WHO. Sex is a new, optional, sensitive field on the donor
+> profile, visible only to the donor and the admin. FR-09's reminder follows the same interval.
+
 | Field | Detail |
 |---|---|
 | Priority | Must Have |

@@ -53,8 +53,11 @@ service cloud.firestore {
               && d.geohash is string && d.geohash.size() > 0 && d.geohash.size() <= 12);
     }
     function validDonor(d) {
+      // `sex` (DEC-019) is allowed but not required: a profile saved before it existed, or by an
+      // older APK, has no such key, and matching gives it the longer 120-day interval.
       return d.keys().hasOnly(['fullName', 'bloodType', 'districtCode', 'lastDonationDate',
-                               'isAvailable', 'lat', 'lng', 'geohash', 'createdAt', 'updatedAt'])
+                               'isAvailable', 'lat', 'lng', 'geohash', 'sex',
+                               'createdAt', 'updatedAt'])
           && d.keys().hasAll(['fullName', 'bloodType', 'districtCode', 'lastDonationDate',
                               'isAvailable', 'lat', 'lng', 'geohash', 'createdAt', 'updatedAt'])
           && isName(d.fullName, 120)
@@ -64,6 +67,7 @@ service cloud.firestore {
           && (d.lastDonationDate == null
               || (d.lastDonationDate is timestamp && d.lastDonationDate <= request.time))
           && d.isAvailable is bool
+          && (!('sex' in d) || d.sex == null || d.sex in ['M', 'F'])
           && validCoordinates(d)
           && d.updatedAt == request.time;
     }

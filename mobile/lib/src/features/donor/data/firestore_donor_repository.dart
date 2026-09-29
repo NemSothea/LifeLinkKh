@@ -12,6 +12,7 @@ import '../domain/district.dart';
 import '../domain/donor_profile.dart';
 import '../domain/donor_profile_draft.dart';
 import '../domain/donor_repository.dart';
+import '../domain/donor_sex.dart';
 import '../domain/eligibility.dart';
 
 /// `donors/{uid}` and `districts` on Firestore (ADR 0009) — what `GET`/`PUT /donors/me`
@@ -84,6 +85,8 @@ final class FirestoreDonorRepository implements DonorRepository {
                 'districtCode': districtCode,
                 'lastDonationDate': _dateToTimestamp(draft.lastDonationDate),
                 'isAvailable': draft.isAvailable,
+                // DEC-019: sets the donation interval. Null is "prefer not to say".
+                'sex': draft.sex?.wireValue,
                 'lat': lat,
                 'lng': lng,
                 'geohash': geohash,
@@ -104,7 +107,12 @@ final class FirestoreDonorRepository implements DonorRepository {
                 districtNameEn: district?.nameEn ?? '',
                 lastDonationDate: lastDonationDate,
                 isAvailable: draft.isAvailable,
-                eligibility: Eligibility.forLastDonation(lastDonationDate, _now()),
+                sex: draft.sex,
+                eligibility: Eligibility.forLastDonation(
+                    lastDonationDate,
+                    _now(),
+                    sex: draft.sex,
+                ),
             ));
         } on FirebaseException catch (error) {
             return Failed(failureFromFirebase(error));
@@ -133,6 +141,7 @@ final class FirestoreDonorRepository implements DonorRepository {
         }
         final district = await _district(districtCode);
         final lastDonationDate = _timestampToDate(data['lastDonationDate']);
+        final sex = DonorSex.fromWire(data['sex']);
         return DonorProfile(
             id: uid,
             fullName: data['fullName'] as String? ?? '',
@@ -142,7 +151,8 @@ final class FirestoreDonorRepository implements DonorRepository {
             districtNameEn: district?.nameEn ?? '',
             lastDonationDate: lastDonationDate,
             isAvailable: data['isAvailable'] as bool? ?? true,
-            eligibility: Eligibility.forLastDonation(lastDonationDate, _now()),
+            sex: sex,
+            eligibility: Eligibility.forLastDonation(lastDonationDate, _now(), sex: sex),
         );
     }
 

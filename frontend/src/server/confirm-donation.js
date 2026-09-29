@@ -6,8 +6,8 @@
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { HttpsError } from './https-error.js';
 import { isAdmin } from './portal-accounts.js';
+import { cooldownDaysFor } from './matching.js';
 
-export const COOLDOWN_DAYS = 56;
 
 /** Today's date in Phnom Penh, as YYYY-MM-DD — the portal's date picker speaks this calendar. */
 export function phnomPenhToday(now = new Date()) {
@@ -69,7 +69,7 @@ export async function confirmDonation({ db, caller, data, now = new Date(), log 
             throw new HttpsError('not-found', 'No such request.', { code: 'REQUEST_NOT_FOUND' });
         }
         // Only an OPEN request takes a donation. A CANCELLED or REJECTED one has no need to fill,
-        // and confirming against it would still start the donor's 56-day cooldown and count a
+        // and confirming against it would still start the donor's cooldown and count a
         // donation in the metrics that no hospital asked for. FULFILLED is refused too: every
         // unit it needed is already on record.
         if (request.get('status') !== 'OPEN') {
@@ -140,6 +140,7 @@ export async function confirmDonation({ db, caller, data, now = new Date(), log 
         return {
             id: donationRef.id,
             donorDisplayName: donor.get('fullName') ?? '',
+            donorSex: donor.get('sex') ?? null,
             requestStatus: status,
         };
     });
@@ -148,9 +149,11 @@ export async function confirmDonation({ db, caller, data, now = new Date(), log 
         `donation confirmed ${result.id} by=${caller.uid} request=${requestId} status=${result.requestStatus}`,
     );
     // ConfirmDonationResponse's shape.
+    const { donorSex, ...response } = result;
     return {
-        ...result,
+        ...response,
         donatedOn,
-        donorNextEligibleOn: addDays(donatedOn, COOLDOWN_DAYS),
+        // The donor's own interval (DEC-019): 90 days for men, 120 otherwise.
+        donorNextEligibleOn: addDays(donatedOn, cooldownDaysFor(donorSex)),
     };
 }

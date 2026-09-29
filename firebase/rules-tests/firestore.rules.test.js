@@ -175,6 +175,16 @@ describe('donors', () => {
     await assertFails(setDoc(doc(as('u1'), 'donors/u1'), donor({ isEligible: true })));
   });
 
+  // DEC-019: sex sets the donation interval. Optional; only M, F or null.
+  test('sex may be M, F, null, or absent — nothing else', async () => {
+    await assertSucceeds(setDoc(doc(as('u1'), 'donors/u1'), donor({ sex: 'M' })));
+    await assertSucceeds(setDoc(doc(as('u2'), 'donors/u2'), donor({ sex: 'F' })));
+    await assertSucceeds(setDoc(doc(as('u3'), 'donors/u3'), donor({ sex: null })));
+    await assertSucceeds(setDoc(doc(as('u4'), 'donors/u4'), donor()));
+    await assertFails(setDoc(doc(as('u5'), 'donors/u5'), donor({ sex: 'X' })));
+    await assertFails(setDoc(doc(as('u5'), 'donors/u5'), donor({ sex: 1 })));
+  });
+
   test('a last-donation date in the future is refused', async () => {
     const future = Timestamp.fromMillis(Date.now() + 7 * 86_400_000);
     await assertFails(setDoc(doc(as('u1'), 'donors/u1'), donor({ lastDonationDate: future })));

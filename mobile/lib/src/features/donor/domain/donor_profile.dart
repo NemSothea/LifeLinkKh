@@ -1,4 +1,5 @@
 import 'blood_type.dart';
+import 'donor_sex.dart';
 import 'eligibility.dart';
 
 /// The donor profile as `GET`/`PUT /donors/me` return it.
@@ -17,6 +18,7 @@ final class DonorProfile {
         required this.isAvailable,
         required this.eligibility,
         this.lastDonationDate,
+        this.sex,
     });
 
     final String id;
@@ -35,6 +37,9 @@ final class DonorProfile {
 
     final Eligibility eligibility;
 
+    /// Null is "prefer not to say", and gets the longer interval (DEC-019).
+    final DonorSex? sex;
+
     String districtLabel(String languageCode) =>
         languageCode == 'en' ? districtNameEn : districtNameKm;
 
@@ -49,7 +54,8 @@ final class DonorProfile {
         other.districtNameEn == districtNameEn &&
         other.lastDonationDate == lastDonationDate &&
         other.isAvailable == isAvailable &&
-        other.eligibility == eligibility;
+        other.eligibility == eligibility &&
+        other.sex == sex;
 
     @override
     int get hashCode => Object.hash(
@@ -62,6 +68,7 @@ final class DonorProfile {
         lastDonationDate,
         isAvailable,
         eligibility,
+        sex,
     );
 
     @override

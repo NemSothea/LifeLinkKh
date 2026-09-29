@@ -42,7 +42,7 @@ final class FirestoreDonationRepository implements DonationRepository {
                 final data = doc.data();
                 final donatedOn = data['donatedOn'];
                 if (donatedOn is! Timestamp) {
-                    // No defaults. A donation with a guessed date is the 56-day cooldown lying.
+                    // No defaults. A donation with a guessed date is the cooldown lying.
                     throw const FormatException('donation document has no date');
                 }
                 final hospitalId = data['hospitalId'] as String?;

@@ -2,6 +2,15 @@
 
 Every new/changed FR gets an entry. What + Why are mandatory.
 
+## 2026-09-29 — DEC-019 phase 2: the cooldown is 90 days for men, 120 for women
+- **What:** `FR-DONOR-002` and PRD FR-03 amended. The app and the portal's matching count 90 days
+  for men and 120 for women (120 when sex is not given) instead of 56 for everyone. New optional
+  "Sex" question on the last donor-setup step, shown on the profile; stored as `donors/{uid}.sex`.
+  The donation guide, the web guide and the privacy page say the new numbers.
+  **Why:** 56 days is the US rule; Cambodian centres reportedly ask for 3 and 4 months, in line
+  with WHO, so the app was sending donors back weeks too early. Done without waiting for the
+  NBTC, because a longer wait is the safe side ([DEC-019](../decisions.md) amendment).
+
 ## 2026-09-29 — DEC-019 phase 1: guidance that matches how blood works in Cambodia
 - **What:** Research report [`research/2026-09-cambodia-donation-reality.md`](research/2026-09-cambodia-donation-reality.md)
   and [DEC-019](../decisions.md). The app gains a "How getting blood works" guide for families

@@ -774,8 +774,8 @@ to every client. The portal holds one credential for this, `FIREBASE_SERVICE_ACC
 
 ## DEC-019 — Guidance follows Cambodian practice; the cooldown waits for the NBTC
 
-**Date:** 2026-09-29 · **Raised by:** Nem Sothea (Tech Lead / PO) · **Status:** accepted for the
-guidance (phase 1); **pending NBTC confirmation** for the eligibility rule (phase 2) ·
+**Date:** 2026-09-29 · **Raised by:** Nem Sothea (Tech Lead / PO) · **Status:** accepted —
+phase 1 and phase 2 both built 2026-09-29 (see the amendment at the end) ·
 **Evidence:** [`po/research/2026-09-cambodia-donation-reality.md`](po/research/2026-09-cambodia-donation-reality.md)
 
 ### Context
@@ -812,3 +812,21 @@ findings change what the app says:
   guide now says so plainly rather than hiding it.
 - Admin review hours (DEC-015 asked for them to be published) are still unset. That is Sothea's
   decision; the copy says an admin checks every request, not how fast.
+
+### Amendment 2026-09-29 — phase 2 does not wait for the NBTC
+Sothea asked why the NBTC had to approve. It does not: nothing here needs its sign-off, and the
+call only confirms facts. Waiting longer than needed never harms a donor, while the old 56 days
+cleared people 4–9 weeks early, so the safe move was to change the rule now.
+
+- **Interval:** 90 days for men, 120 for women, 120 when sex is not given. That is the reported
+  Cambodian practice (3 and 4 months) and slightly stricter than WHO's 84 and 112 days. If the
+  NBTC gives different numbers, it is a one-line change on each side.
+- **Sex field:** `donors/{uid}.sex`, `'M'`, `'F'` or null, optional, allowed but not required by
+  `firestore.rules` so older APKs keep saving. Visible to the donor and the admin only; the
+  privacy page says so. Asked on the last setup step with "prefer not to say" as a real answer.
+- **Where:** `mobile/.../eligibility.dart` (`cooldownDaysFor`), `frontend/src/server/matching.js`
+  (`cooldownDaysFor`, used by matching and `confirmDonation`'s next-eligible date). Boundary tests
+  on both sides; rules test for the field.
+- **Consequence:** every existing donor without a sex on file now waits 120 days. A man who
+  wants the 90-day interval must add his sex in the profile.
+

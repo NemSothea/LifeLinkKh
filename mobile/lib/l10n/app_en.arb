@@ -750,7 +750,7 @@
     "@donateGuideNextTitle": {
         "description": "Guide section heading"
     },
-    "donateGuideNextCooldown": "LifeLink counts 56 days from your last donation, but the blood centre may ask you to wait longer: often 3 months for men and 4 months for women. Follow what the centre tells you.",
+    "donateGuideNextCooldown": "LifeLink counts 3 months (90 days) for men and 4 months (120 days) for women from your last donation, as blood centres in Cambodia do. The centre makes the final check.",
     "@donateGuideNextCooldown": {
         "description": "Guide item"
     },
@@ -1047,5 +1047,25 @@
     "donateGuideWhereOther": "Hospital blood banks and mobile blood drives also collect blood. Watch the Cambodia Blood Service page for dates.",
     "@donateGuideWhereOther": {
         "description": "Donation guide: other places"
+    },
+    "donorSexLabel": "Sex",
+    "@donorSexLabel": {
+        "description": "Donor setup and profile: optional sex field (DEC-019)"
+    },
+    "donorSexHint": "Blood centres in Cambodia ask men to wait 3 months and women 4 months between donations. LifeLink uses this only to count your wait. If you prefer not to say, it counts 4 months. Only you and the LifeLink admin can see it.",
+    "@donorSexHint": {
+        "description": "Why the app asks for sex, and who sees it"
+    },
+    "donorSexMale": "Male",
+    "@donorSexMale": {
+        "description": "Sex option"
+    },
+    "donorSexFemale": "Female",
+    "@donorSexFemale": {
+        "description": "Sex option"
+    },
+    "donorSexUnspecified": "Prefer not to say",
+    "@donorSexUnspecified": {
+        "description": "Sex option: not given, counts the longer wait"
     }
 }

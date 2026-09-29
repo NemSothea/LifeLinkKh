@@ -13,7 +13,7 @@ import 'package:lifelink_kh/src/features/donor/application/donor_providers.dart'
 
 import 'support/auth_fakes.dart';
 
-/// The history screen's subject is the 56-day cycle, so the two things a donor came to
+/// The history screen's subject is the donation cycle, so the two things a donor came to
 /// find out — what their donations added up to, and when they can give again — have to be
 /// on it. Before this they were on neither: the screen was a count and a list of dates.
 final class _FakeDonationRepository implements DonationRepository {
@@ -96,7 +96,7 @@ void main() {
         expect(find.text('You can donate again now.'), findsOneWidget);
     });
 
-    testWidgets('a donor inside the 56 days gets the date, not just a countdown',
+    testWidgets('a donor inside the cooldown gets the date, not just a countdown',
         (tester) async {
         await tester.pumpWidget(_wrap(donations: [_donation(1)], isEligible: false));
         await tester.pumpAndSettle();

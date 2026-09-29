@@ -115,6 +115,7 @@ export async function handleRequestApproved({
             bloodType: d.get('bloodType'),
             isAvailable: d.get('isAvailable'),
             lastDonationDate: last instanceof Timestamp ? phnomPenhDate(last.toDate()) : null,
+            sex: d.get('sex') ?? null,
             lat: d.get('lat') ?? null,
             lng: d.get('lng') ?? null,
         };
