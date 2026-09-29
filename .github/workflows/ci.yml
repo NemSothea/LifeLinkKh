@@ -20,7 +20,7 @@ jobs:
         with:
           java-version: '21'
           distribution: temurin
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           # 22, what Vercel runs the portal's server on.
           node-version: '22'
@@ -57,7 +57,7 @@ jobs:
             echo "yes=false" >> "$GITHUB_OUTPUT"
             echo "::notice::frontend/ not scaffolded yet (M2 step 3) — nothing to check."
           fi
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: steps.scaffolded.outputs.yes == 'true'
         with:
           # 22. Node 20 trips EBADENGINE on deps that require >=22.
