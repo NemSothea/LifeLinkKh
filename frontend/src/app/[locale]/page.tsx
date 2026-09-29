@@ -1,10 +1,11 @@
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import LegalLinks from '@/components/LegalLinks';
-import { CodeXml, Download, Mail } from 'lucide-react';
+import { CodeXml, Download, Mail, Phone } from 'lucide-react';
 import { IconArrowRight, IconInbox, IconShield, IconUsers } from '@/components/icons';
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
+import { SUPPORT_PHONE } from '@/lib/support';
 import type { CSSProperties } from 'react';
 
 const SOURCE_URL = 'https://github.com/NemSothea/LifeLinkKh';
@@ -112,18 +113,26 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </div>
             </section>
 
-            {supportEmail ? (
-                <section className="mt-10" data-testid="home-contact">
-                    <h2 className="mb-2 text-lg font-semibold">{th('contactHeading')}</h2>
-                    <p className="mb-3 text-sm text-muted-foreground">{th('contactBody')}</p>
+            <section className="mt-10" data-testid="home-contact">
+                <h2 className="mb-2 text-lg font-semibold">{th('contactHeading')}</h2>
+                <p className="mb-3 text-sm text-muted-foreground">{th('contactBody')}</p>
+                <div className="flex flex-wrap gap-2">
                     <Button asChild variant="outline" className="rounded-full">
-                        <a href={`mailto:${supportEmail}`}>
-                            <Mail aria-hidden="true" />
-                            {supportEmail}
+                        <a href={`tel:${SUPPORT_PHONE.tel}`} data-testid="home-contact-phone">
+                            <Phone aria-hidden="true" />
+                            {SUPPORT_PHONE.carrier}: {SUPPORT_PHONE.display}
                         </a>
                     </Button>
-                </section>
-            ) : null}
+                    {supportEmail ? (
+                        <Button asChild variant="outline" className="rounded-full">
+                            <a href={`mailto:${supportEmail}`}>
+                                <Mail aria-hidden="true" />
+                                {supportEmail}
+                            </a>
+                        </Button>
+                    ) : null}
+                </div>
+            </section>
 
             <footer className="pt-10">
                 <LegalLinks locale={locale} />
