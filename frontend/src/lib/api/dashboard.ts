@@ -217,7 +217,9 @@ export function computeDashboard(raw: Raw, range: DashboardRange): Dashboard {
             (d) => d.data.confirmedBy && inRange(time(d.data.donatedOn ?? d.data.createdAt)),
         ).length,
         pushSuccess:
-            alerts.length === 0 ? null : alerts.filter((m) => m.data.notifiedAt).length / alerts.length,
+            alerts.length === 0
+                ? null
+                : alerts.filter((m) => m.data.notifiedAt).length / alerts.length,
         alerts: alerts.length,
         medianReviewMinutes: median(reviews),
         waitingForReview: raw.requests.filter((r) => r.data.status === 'PENDING').length,
@@ -242,7 +244,8 @@ export function computeDashboard(raw: Raw, range: DashboardRange): Dashboard {
     const perHospital = new Map<string, number>();
     for (const r of requests) {
         const hospital = r.data.hospital as { name?: unknown } | undefined;
-        const name = typeof hospital?.name === 'string' ? hospital.name : String(r.data.hospitalId ?? '—');
+        const name =
+            typeof hospital?.name === 'string' ? hospital.name : String(r.data.hospitalId ?? '—');
         perHospital.set(name, (perHospital.get(name) ?? 0) + 1);
     }
     const hospitals = [...perHospital.entries()]
@@ -277,7 +280,15 @@ export function computeDashboard(raw: Raw, range: DashboardRange): Dashboard {
 export async function loadDashboard(range: DashboardRange): Promise<ApiResult<Dashboard>> {
     const token = await requirePortalToken();
     const names = ['donors', 'requests', 'matches', 'donations', 'districts'] as const;
-    const results = await Promise.all(names.map((collection) => firestoreQuery({ collection }, token)));
+    // What computeDashboard reads from a donor, and nothing else: no coordinates (ADR 0003).
+    const select: Partial<Record<(typeof names)[number], string[]>> = {
+        donors: ['createdAt', 'bloodType', 'isAvailable', 'districtCode'],
+    };
+    const results = await Promise.all(
+        names.map((collection) =>
+            firestoreQuery({ collection, select: select[collection] }, token),
+        ),
+    );
     const failed = results.find((r) => !r.ok);
     if (failed && !failed.ok) return failed;
     const [donors, requests, matches, donations, districts] = results.map((r) =>

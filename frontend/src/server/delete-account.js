@@ -3,6 +3,7 @@
 // safe to run twice — the `deleteAccount` callable wraps it for the app, and
 // scripts/delete-account.mjs wraps it for an operator answering a web request.
 import { FieldValue } from 'firebase-admin/firestore';
+import { boardId } from './board-id.js';
 import { HttpsError } from './https-error.js';
 
 /** How fresh the caller's sign-in must be. The app re-authenticates with Google just before. */
@@ -53,17 +54,21 @@ export async function deleteAccountData({ db, auth, uid, log = console }) {
     let acceptancesWithdrawn = 0;
     for (const match of asDonor.docs) {
         const requestRef = db.doc(`requests/${match.get('requestId')}`);
-        const boardRef = requestRef.collection('acceptedDonors').doc(uid);
+        const board = requestRef.collection('acceptedDonors');
+        // The row's id since SEC-REVIEW-003 F-11, and the uid it had before — a board written
+        // earlier still has those, and the name must come off it all the same.
+        const boardRefs = [board.doc(boardId(match.get('requestId'), uid)), board.doc(uid)];
         const withdrawn = await db.runTransaction(async (tx) => {
-            const [fresh, request, board] = await Promise.all([
+            const [fresh, request, ...rows] = await Promise.all([
                 tx.get(match.ref),
                 tx.get(requestRef),
-                tx.get(boardRef),
+                ...boardRefs.map((ref) => tx.get(ref)),
             ]);
             const withdraw =
                 fresh.get('response') === 'ACCEPTED' && request.get('status') === 'OPEN';
-            if (board.exists) {
-                tx.delete(boardRef);
+            const onBoard = rows.filter((row) => row.exists);
+            if (onBoard.length > 0) {
+                for (const row of onBoard) tx.delete(row.ref);
                 if (withdraw)
                     tx.update(requestRef, {
                         acceptedCount: FieldValue.increment(-1),

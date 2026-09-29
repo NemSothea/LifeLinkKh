@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { boardId } from '@/server/board-id.js';
 import { fakeFirebase, fakeJwt } from '@/test/fake-firebase';
 import { HttpsError } from '@/server/https-error.js';
 
@@ -65,6 +66,11 @@ const tables = {
             },
         },
     ],
+    // Who answered, which only the admin reads: the board row's id is not the uid (F-11).
+    matches: [
+        { id: 'r1_d1', fields: { requestId: 'r1', donorUid: 'd1', response: 'ACCEPTED' } },
+        { id: 'r1_d2', fields: { requestId: 'r1', donorUid: 'd2', response: 'ACCEPTED' } },
+    ],
     donations: [
         { id: 'r1_d2', fields: { donorUid: 'd2', hospitalId: 'calmette', requestId: 'r1' } },
     ],
@@ -129,6 +135,21 @@ describe('listOpenRequests', () => {
         );
         expect(donations?.token).toBe(admin);
         expect(JSON.stringify(donations?.body.structuredQuery.where)).toContain('"requestId"');
+    });
+
+    it('resolves a board row keyed by its opaque id to the donor who answered (F-11)', async () => {
+        cookieStore.value = admin;
+        const d1Row = tables['requests/r1/acceptedDonors'][1];
+        fakeFirebase({
+            ...tables,
+            'requests/r1/acceptedDonors': [{ ...d1Row, id: boardId('r1', 'd1') }],
+        });
+
+        const result = await listOpenRequests();
+
+        expect(result.ok && result.data[0].acceptedDonors).toMatchObject([
+            { matchId: 'r1_d1', displayName: 'Nem Sothea' },
+        ]);
     });
 
     it("falls back to the board's shortened name when the profile is gone", async () => {
@@ -315,4 +336,3 @@ describe('listReports (DEC-019)', () => {
         expect(calls.every((c) => c.token === admin)).toBe(true);
     });
 });
-

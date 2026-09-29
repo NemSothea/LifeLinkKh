@@ -64,6 +64,24 @@ describe('firestoreQuery', () => {
         expect(fetchMock.mock.calls[0][1].headers.Authorization).toBeUndefined();
     });
 
+    // SEC-REVIEW-003 F-11: donor coordinates never reach the portal server.
+    it('asks only for the selected fields, in a query and in a single read', async () => {
+        const fetchMock = vi.fn().mockResolvedValue(ok([]));
+        vi.stubGlobal('fetch', fetchMock);
+        await firestoreQuery({ collection: 'donors', select: ['bloodType', 'districtCode'] }, 't');
+        expect(JSON.parse(fetchMock.mock.calls[0][1].body).structuredQuery.select).toEqual({
+            fields: [{ fieldPath: 'bloodType' }, { fieldPath: 'districtCode' }],
+        });
+
+        fetchMock.mockResolvedValue(
+            ok({ name: 'projects/p/databases/(default)/documents/donors/u1' }),
+        );
+        await firestoreGet('donors/u1', 't', ['fullName']);
+        expect(fetchMock.mock.calls[1][0]).toMatch(
+            /documents\/donors\/u1\?mask\.fieldPaths=fullName$/,
+        );
+    });
+
     it('builds equality filters, ordering and a subcollection parent', async () => {
         const fetchMock = vi.fn().mockResolvedValue(ok([]));
         vi.stubGlobal('fetch', fetchMock);

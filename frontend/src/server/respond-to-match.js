@@ -7,6 +7,7 @@
 import { FieldValue } from 'firebase-admin/firestore';
 import { HttpsError } from './https-error.js';
 import { buildMessage, sendAll } from './push.js';
+import { boardId } from './board-id.js';
 import { docId } from './ids.js';
 
 /**
@@ -116,7 +117,9 @@ export async function handleMatchAnswered({
     }
 
     const requestRef = db.doc(`requests/${after.requestId}`);
-    const boardRef = requestRef.collection('acceptedDonors').doc(after.donorUid);
+    const boardRef = requestRef
+        .collection('acceptedDonors')
+        .doc(boardId(after.requestId, after.donorUid));
 
     // At most once, keyed on the board document: a redelivered event finds it and stops, so
     // acceptedCount is never counted twice and the family is never pushed twice.

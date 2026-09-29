@@ -6,6 +6,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest'
 import { deleteApp, initializeApp } from 'firebase-admin/app';
 import { Timestamp, getFirestore } from 'firebase-admin/firestore';
 import { handleMatchAnswered, respondToMatch } from '../../../src/server/respond-to-match.js';
+import { boardId } from '../../../src/server/board-id.js';
 
 process.env.FIRESTORE_EMULATOR_HOST ??= '127.0.0.1:8081';
 const PROJECT = 'demo-lifelink';
@@ -78,7 +79,11 @@ describe('onMatchAnswered', () => {
         expect(await answer(unanswered, accepted)).toEqual({ outcome: 'accepted', pushed: 1 });
 
         expect((await db.doc('requests/r1').get()).get('acceptedCount')).toBe(1);
-        expect((await db.doc('requests/r1/acceptedDonors/sothea').get()).data()).toEqual({
+        // SEC-REVIEW-003 F-11: the row is not keyed by the uid, and carries none.
+        expect((await db.doc('requests/r1/acceptedDonors/sothea').get()).exists).toBe(false);
+        expect(
+            (await db.doc(`requests/r1/acceptedDonors/${boardId('r1', 'sothea')}`).get()).data(),
+        ).toEqual({
             displayName: 'Nem S.',
             bloodType: 'A+',
             districtCode: '1201',
@@ -144,9 +149,11 @@ describe('respondToMatch', () => {
         expect(match.response).toBe('ACCEPTED');
         expect(match.respondedAt).toBeTruthy();
         expect((await db.doc('requests/r1').get()).get('acceptedCount')).toBe(1);
-        expect((await db.doc('requests/r1/acceptedDonors/sothea').get()).get('displayName')).toBe(
-            'Nem S.',
-        );
+        expect(
+            (await db.doc(`requests/r1/acceptedDonors/${boardId('r1', 'sothea')}`).get()).get(
+                'displayName',
+            ),
+        ).toBe('Nem S.');
         expect(sent.map((m) => m.data.type)).toEqual(['DONOR_ACCEPTED']);
     });
 

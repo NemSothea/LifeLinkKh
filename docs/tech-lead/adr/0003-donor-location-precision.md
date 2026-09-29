@@ -13,6 +13,15 @@ unblocks: V1__init.sql donor_profiles location columns; FR-MATCH-001 distance ra
 > sign this; if the PO disagrees, it is a schema change, and after `V1__init.sql` merges that costs a
 > second migration.
 >
+> **Amended 2026-09-29 (SEC-REVIEW-003 F-11).** Decision 2 said coordinates reach "not the portal,
+> not the requester, not admin". On Firestore (ADR 0009) the rules let the admin read `donors/{uid}`
+> whole — the portal needs the full name to confirm a donation and the counts for its dashboard,
+> and a rule cannot hide one field of a readable document. What holds instead: the portal's REST
+> reads name their fields (`mask.fieldPaths` / `select`) and never ask for `lat`, `lng` or
+> `geohash`, so the coordinates do not leave Firestore for the portal either. The residual is an
+> admin token used outside the portal, which could read them; an admin is the operator, and
+> moving coordinates to an owner-only subdocument is the fix if that ever stops being acceptable.
+>
 > Roster note (2026-08-17): PO moved to Sourn SAVOURN in the role rotation. Any re-review of this
 > decision needs Sourn's signature, not Moeun's.
 

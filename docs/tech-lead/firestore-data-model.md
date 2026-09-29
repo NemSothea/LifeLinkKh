@@ -31,11 +31,14 @@ address a push to this person.
 ### `donors/{uid}` — was `donor_profiles`
 `fullName` · `bloodType` (8 ABO/Rh values) · `districtCode` (must exist in `districts`) ·
 `lastDonationDate` timestamp|null (not in the future) · `isAvailable` bool ·
-`lat`, `lng`, `geohash` — all three null or all three set (ADR 0003: declining GPS is allowed) ·
-`createdAt` · `updatedAt`
+`lat`, `lng`, `geohash` — all three null or all three set (ADR 0003: declining GPS is allowed),
+geohash at most 10 characters · `sex` `'M'|'F'|null` (DEC-019) · `createdAt` · `updatedAt`
 
 Doc id is the uid — one profile per account, which was `UNIQUE (user_id)`. Owner and admin read;
-**nobody else**, not a requester. Matching reads it through the Admin SDK.
+**nobody else**, not a requester. Matching reads it through the Admin SDK. The portal asks only
+for the fields it shows (`fullName`; the dashboard's four) — never the coordinates (ADR 0003
+amendment, SEC-REVIEW-003 F-11). Once set, `lastDonationDate` only moves later and `sex` does not
+change: both set the cooldown matching reads (F-04).
 
 ### `requests/{requestId}` — was `blood_requests`
 `createdBy` uid · `hospitalId` · `hospital` {name, districtCode} (written by `createRequest`) ·
@@ -64,10 +67,14 @@ Split out because a rule cannot hide one field of a readable document. Read by t
 admin, and **a donor whose match on this request says `ACCEPTED`** — the `requesterContact` rule
 from `RequestViews`. Created by the creator only, in the same batch as the request. Never updated.
 
-### `requests/{requestId}/acceptedDonors/{donorUid}` — the board's `acceptedDonors`
+### `requests/{requestId}/acceptedDonors/{boardId}` — the board's `acceptedDonors`
 `displayName` · `bloodType` · `districtCode` · `respondedAt`
 
-Public read, server write. Same fields as `PublicDonorResponse`: no match id, no uid in the body.
+Public read, server write. Same fields as `PublicDonorResponse`: no match id, no uid in the body
+— and, since SEC-REVIEW-003 F-11, none in the id either: `boardId(requestId, donorUid)` is the
+first 24 hex characters of `sha256("{requestId}:{donorUid}")` (`frontend/src/server/board-id.js`),
+so one donor's rows on two requests cannot be linked. Rows written before that are keyed by the
+uid; `deleteAccount` removes both kinds, and the portal resolves both through `matches`.
 
 ### `matches/{requestId}_{donorUid}` — was `request_matches`
 `requestId` · `donorUid` · `requesterUid` · `hospitalId` · `distanceKm` number|null ·

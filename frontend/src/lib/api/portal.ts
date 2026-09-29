@@ -2,6 +2,7 @@ import { callFunction, firestoreGet, firestoreQuery, type ApiResult } from './cl
 import type { DistrictName } from './district';
 import { listDistricts } from './reference-data';
 import { acceptedDonors, requestFields } from './request-docs';
+import { boardId } from '@/server/board-id.js';
 import { requirePortalToken } from './session';
 
 /**
@@ -66,8 +67,18 @@ async function listRequests(
             const request = requestFields(doc);
             if (!withDonors) return { ok: true, data: { ...request, acceptedDonors: [] } };
 
-            const [donors, confirmed] = await Promise.all([
+            const [board, accepted, confirmed] = await Promise.all([
                 acceptedDonors(doc.id, token),
+                // The board row's id is not the donor's uid (SEC-REVIEW-003 F-11); the admin
+                // learns who answered from the matches, which only the admin may read.
+                firestoreQuery(
+                    {
+                        collection: 'matches',
+                        where: { requestId: doc.id, response: 'ACCEPTED' },
+                        select: ['donorUid'],
+                    },
+                    token,
+                ),
                 firestoreQuery(
                     {
                         collection: 'donations',
@@ -76,16 +87,29 @@ async function listRequests(
                     token,
                 ),
             ]);
-            if (!donors.ok) return donors;
+            if (!board.ok) return board;
+            if (!accepted.ok) return accepted;
             if (!confirmed.ok) return confirmed;
+            // Board row id → uid. A row written before F-11 is keyed by the uid itself.
+            const uidOf = new Map<string, string>();
+            for (const match of accepted.data) {
+                const uid = match.data.donorUid;
+                if (typeof uid !== 'string') continue;
+                uidOf.set(boardId(doc.id, uid), uid);
+                uidOf.set(uid, uid);
+            }
+            const donors = board.data.flatMap((row) => {
+                const uid = uidOf.get(row.id);
+                return uid ? [{ ...row, id: uid }] : [];
+            });
             const done = new Set(confirmed.data.map((donation) => String(donation.data.donorUid)));
-            const actionable = donors.data.filter((donor) => !done.has(donor.id));
+            const actionable = donors.filter((donor) => !done.has(donor.id));
             // The board row carries a shortened name ("Nem S.") because anyone can read it. The
             // admin confirming a donation at the hospital needs the full one, which only the
             // admin may read, from the donor's profile. A missing profile (the donor deleted
             // their account a moment ago) falls back to the board's name.
             const profiles = await Promise.all(
-                actionable.map((donor) => firestoreGet(`donors/${donor.id}`, token)),
+                actionable.map((donor) => firestoreGet(`donors/${donor.id}`, token, ['fullName'])),
             );
 
             return {
@@ -102,8 +126,8 @@ async function listRequests(
                                 ? profile.data.data.fullName
                                 : null;
                         return {
-                            // The match id is `{requestId}_{donorUid}` by construction, and the
-                            // board document's id is the donor's uid.
+                            // The match id is `{requestId}_{donorUid}` by construction; `donor.id`
+                            // is the uid, resolved from the matches above.
                             matchId: `${doc.id}_${donor.id}`,
                             displayName: fullName ?? String(donor.data.displayName ?? ''),
                             bloodType: String(donor.data.bloodType ?? ''),

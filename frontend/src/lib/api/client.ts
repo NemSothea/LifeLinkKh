@@ -85,6 +85,12 @@ export type Query = {
     where?: Record<string, string | number | boolean | null>;
     orderBy?: { field: string; direction: 'ASCENDING' | 'DESCENDING' };
     limit?: number;
+    /**
+     * Only these fields come back (`select`). For `donors`, which the rules let the admin read
+     * whole: the portal never asks for `lat`, `lng` or `geohash`, so a donor's coordinates never
+     * reach this server (ADR 0003, SEC-REVIEW-003 F-11).
+     */
+    select?: string[];
 };
 
 /**
@@ -113,6 +119,9 @@ export async function firestoreQuery(
               }
             : {}),
         ...(query.limit ? { limit: query.limit } : {}),
+        ...(query.select
+            ? { select: { fields: query.select.map((fieldPath) => ({ fieldPath })) } }
+            : {}),
     };
     const parent = query.parent ? `/${query.parent}` : '';
     const result = await send<
@@ -129,13 +138,20 @@ export async function firestoreQuery(
     };
 }
 
-/** One document, or `null` when it does not exist. */
+/**
+ * One document, or `null` when it does not exist. `fields` is a field mask, as `select` is for
+ * a query: only those come back.
+ */
 export async function firestoreGet(
     path: string,
     token: string | null,
+    fields?: string[],
 ): Promise<ApiResult<Doc | null>> {
+    const mask = fields?.length
+        ? `?${fields.map((f) => `mask.fieldPaths=${encodeURIComponent(f)}`).join('&')}`
+        : '';
     const result = await send<{ name: string; fields?: Record<string, FirestoreValue> }>(
-        `${firestoreBase()}/${path}`,
+        `${firestoreBase()}/${path}${mask}`,
         { method: 'GET', headers: authHeaders(token) },
     );
     if (!result.ok) return result.error === 'HTTP 404' ? { ok: true, data: null } : result;

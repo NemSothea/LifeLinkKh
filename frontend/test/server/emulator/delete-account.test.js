@@ -5,6 +5,7 @@ import { deleteApp, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { Timestamp, getFirestore } from 'firebase-admin/firestore';
 import { deleteAccount, deleteAccountData } from '../../../src/server/delete-account.js';
+import { boardId } from '../../../src/server/board-id.js';
 
 process.env.FIRESTORE_EMULATOR_HOST ??= '127.0.0.1:8081';
 process.env.FIREBASE_AUTH_EMULATOR_HOST ??= '127.0.0.1:9099';
@@ -90,8 +91,10 @@ beforeEach(async () => {
 
     // As a donor: accepted on someone's OPEN request, and on a FULFILLED one they gave blood to.
     await db.doc('requests/theirs-open').set(request('family', 'OPEN'));
+    // One board row keyed as respondToMatch writes it now (SEC-REVIEW-003 F-11), one by the uid
+    // as rows written before still are: both must come down.
     await db
-        .doc('requests/theirs-open/acceptedDonors/sothea')
+        .doc(`requests/theirs-open/acceptedDonors/${boardId('theirs-open', 'sothea')}`)
         .set({ displayName: 'Nem Sothea', bloodType: 'O-' });
     await db.doc('matches/theirs-open_sothea').set({
         requestId: 'theirs-open',
@@ -141,9 +144,13 @@ describe('deleteAccount', () => {
         for (const id of ['mine-open', 'mine-pending', 'mine-done']) {
             expect((await db.doc(`requests/${id}/private/contact`).get()).exists).toBe(false);
         }
-        expect((await db.doc('requests/theirs-open/acceptedDonors/sothea').get()).exists).toBe(
-            false,
-        );
+        expect(
+            (
+                await db
+                    .doc(`requests/theirs-open/acceptedDonors/${boardId('theirs-open', 'sothea')}`)
+                    .get()
+            ).exists,
+        ).toBe(false);
         expect((await db.doc('requests/theirs-done/acceptedDonors/sothea').get()).exists).toBe(
             false,
         );

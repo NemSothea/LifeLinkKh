@@ -50,7 +50,10 @@ export function fakeFirebase(
             // A single-document GET: `documents/requests/r1/private/contact`, looked up by its
             // collection path and id. Missing is a 404, as Firestore answers it.
             if (!url.endsWith(':runQuery')) {
-                const path = url.slice(url.indexOf('/documents/') + '/documents/'.length);
+                // `?mask.fieldPaths=…` is honoured, so a test can see which fields were asked for.
+                const [address, search = ''] = url.split('?');
+                const mask = new URLSearchParams(search).getAll('mask.fieldPaths');
+                const path = address.slice(address.indexOf('/documents/') + '/documents/'.length);
                 const id = path.slice(path.lastIndexOf('/') + 1);
                 const row = (tables[path.slice(0, path.lastIndexOf('/'))] ?? []).find(
                     (r) => r.id === id,
@@ -61,8 +64,17 @@ export function fakeFirebase(
                     status: 200,
                     json: async () => ({
                         name: `projects/lifelinkkh/databases/(default)/documents/${path}`,
-                        fields: (encode(row.fields) as { mapValue: { fields: unknown } }).mapValue
-                            .fields,
+                        fields: (
+                            encode(
+                                mask.length
+                                    ? Object.fromEntries(
+                                          Object.entries(row.fields).filter(([k]) =>
+                                              mask.includes(k),
+                                          ),
+                                      )
+                                    : row.fields,
+                            ) as { mapValue: { fields: unknown } }
+                        ).mapValue.fields,
                     }),
                 };
             }
