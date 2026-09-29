@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/theme/app_theme.dart';
 import '../domain/urgency.dart';
 
 /// Colour-coded urgency, matching the portal's own badge (`URGENCY_STYLE` in
@@ -71,32 +72,22 @@ class _UrgencyBadgeState extends State<UrgencyBadge> with SingleTickerProviderSt
     @override
     Widget build(BuildContext context) {
         final l10n = AppLocalizations.of(context)!;
-        final scheme = Theme.of(context).colorScheme;
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final tokens = AppTokens.of(context);
 
         final (Color background, Color foreground, String label) = switch (widget.urgency) {
-            Urgency.critical => (
-                scheme.errorContainer,
-                scheme.onErrorContainer,
-                l10n.requestUrgencyCritical,
-            ),
-            // Material 3 has no built-in "warning" role — hand-picked amber, tuned per
-            // brightness rather than a single hard-coded pair that would wash out or
-            // glow depending on the theme.
-            Urgency.urgent => isDark
-                ? (const Color(0xFF4A3600), const Color(0xFFFFD989), l10n.requestUrgencyUrgent)
-                : (const Color(0xFFFFF1C4), const Color(0xFF7A5900), l10n.requestUrgencyUrgent),
-            Urgency.routine => (
-                scheme.surfaceContainerHighest,
-                scheme.onSurfaceVariant,
-                l10n.requestUrgencyRoutine,
-            ),
+            Urgency.critical => (tokens.urgencyHigh, tokens.onUrgencyHigh, l10n.requestUrgencyCritical),
+            // The amber lives in AppTokens: Material 3 has no built-in "warning" role.
+            Urgency.urgent => (tokens.urgencyMedium, tokens.onUrgencyMedium, l10n.requestUrgencyUrgent),
+            Urgency.routine => (tokens.urgencyLow, tokens.onUrgencyLow, l10n.requestUrgencyRoutine),
         };
 
         final badge = DecoratedBox(
             decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(999)),
             child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppTokens.space8 + 2,
+                    vertical: AppTokens.space4,
+                ),
                 child: Text(
                     label,
                     style: TextStyle(

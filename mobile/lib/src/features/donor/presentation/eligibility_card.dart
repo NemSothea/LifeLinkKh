@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/theme/app_theme.dart';
 import '../domain/eligibility.dart';
 
 /// The 56-day cooldown, as the server computed it.
@@ -27,6 +28,7 @@ class EligibilityCard extends StatelessWidget {
     Widget build(BuildContext context) {
         final l10n = AppLocalizations.of(context)!;
         final scheme = Theme.of(context).colorScheme;
+        final tokens = AppTokens.of(context);
         final isEligible = eligibility.isEligible;
 
         final String message;
@@ -53,25 +55,25 @@ class EligibilityCard extends StatelessWidget {
                         ? LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [scheme.primary, scheme.primary.withValues(alpha: 0.78)],
+                            colors: [tokens.eligible, tokens.eligible.withValues(alpha: 0.78)],
                         )
                         : null,
-                    color: isEligible ? null : scheme.surfaceContainerHighest,
+                    color: isEligible ? null : tokens.cooldown,
                 ),
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppTokens.space16 + AppTokens.space4),
                 child: Row(
                     children: [
                         Icon(
                             isEligible ? Icons.check_circle_outline : Icons.schedule,
                             size: 32,
-                            color: isEligible ? scheme.onPrimary : scheme.onSurfaceVariant,
+                            color: isEligible ? tokens.onEligible : tokens.onCooldown,
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: AppTokens.space16),
                         Flexible(
                             child: Text(
                                 message,
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: isEligible ? scheme.onPrimary : scheme.onSurface,
+                                    color: isEligible ? tokens.onEligible : scheme.onSurface,
                                     fontWeight: FontWeight.w700,
                                 ),
                             ),

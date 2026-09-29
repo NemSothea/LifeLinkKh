@@ -40,6 +40,7 @@ class AppTheme {
 
         return base.copyWith(
             colorScheme: scheme,
+            extensions: [AppTokens.fromScheme(scheme, brightness)],
             textTheme: _textTheme(base.textTheme),
             pageTransitionsTheme: PageTransitionsTheme(
                 builders: {
@@ -116,6 +117,166 @@ class AppTheme {
             labelLarge: withFallback(inter.labelLarge),
             labelMedium: withFallback(inter.labelMedium),
             labelSmall: withFallback(inter.labelSmall),
+        );
+    }
+}
+
+/// Design tokens the Material 3 [ColorScheme] has no slot for: a spacing scale, the
+/// app's semantic colours (eligibility, urgency, offline, success), and the line height
+/// Khmer needs.
+///
+/// Read through [AppTokens.of], never `Theme.of(context).extension<AppTokens>()!`
+/// directly: a widget test that pumps a bare `MaterialApp` has no extension installed,
+/// and [of] derives the same values from whatever scheme is there instead of throwing.
+///
+/// Every colour is derived from the scheme or pinned per brightness here, once, so a
+/// badge on Home and the same badge on the request detail cannot drift apart.
+@immutable
+class AppTokens extends ThemeExtension<AppTokens> {
+    const AppTokens({
+        required this.eligible,
+        required this.onEligible,
+        required this.cooldown,
+        required this.onCooldown,
+        required this.urgencyLow,
+        required this.onUrgencyLow,
+        required this.urgencyMedium,
+        required this.onUrgencyMedium,
+        required this.urgencyHigh,
+        required this.onUrgencyHigh,
+        required this.offline,
+        required this.onOffline,
+        required this.success,
+        required this.onSuccess,
+        required this.khmerLineHeight,
+    });
+
+    /// Spacing scale, in logical pixels. Named by step, not by use, so a screen picks
+    /// the step that looks right rather than inventing a 14 or a 20.
+    static const double space4 = 4;
+    static const double space8 = 8;
+    static const double space12 = 12;
+    static const double space16 = 16;
+    static const double space24 = 24;
+    static const double space32 = 32;
+
+    /// "You can donate now" — good news, painted with the app's own red.
+    final Color eligible;
+    final Color onEligible;
+
+    /// The 56-day countdown. Calm and neutral: a countdown is not an alert.
+    final Color cooldown;
+    final Color onCooldown;
+
+    /// `Urgency.routine`.
+    final Color urgencyLow;
+    final Color onUrgencyLow;
+
+    /// `Urgency.urgent`. Material 3 has no warning role, so this amber is hand-picked
+    /// per brightness rather than one pair that washes out or glows.
+    final Color urgencyMedium;
+    final Color onUrgencyMedium;
+
+    /// `Urgency.critical`.
+    final Color urgencyHigh;
+    final Color onUrgencyHigh;
+
+    /// The offline strip.
+    final Color offline;
+    final Color onOffline;
+
+    /// A finished, good outcome — a fulfilled request, an accepted match.
+    final Color success;
+    final Color onSuccess;
+
+    /// Khmer stacks subscripts and vowels above and below the baseline; Latin line
+    /// heights clip them. Applied to Khmer text only.
+    final double khmerLineHeight;
+
+    factory AppTokens.fromScheme(ColorScheme scheme, Brightness brightness) {
+        final isDark = brightness == Brightness.dark;
+        return AppTokens(
+            eligible: scheme.primary,
+            onEligible: scheme.onPrimary,
+            cooldown: scheme.surfaceContainerHighest,
+            onCooldown: scheme.onSurfaceVariant,
+            urgencyLow: scheme.surfaceContainerHighest,
+            onUrgencyLow: scheme.onSurfaceVariant,
+            urgencyMedium: isDark ? const Color(0xFF4A3600) : const Color(0xFFFFF1C4),
+            onUrgencyMedium: isDark ? const Color(0xFFFFD989) : const Color(0xFF7A5900),
+            urgencyHigh: scheme.errorContainer,
+            onUrgencyHigh: scheme.onErrorContainer,
+            offline: scheme.errorContainer,
+            onOffline: scheme.onErrorContainer,
+            success: isDark ? const Color(0xFF1B4332) : const Color(0xFFDCF5E7),
+            onSuccess: isDark ? const Color(0xFF8FD9B6) : const Color(0xFF1B6E43),
+            khmerLineHeight: 1.6,
+        );
+    }
+
+    static AppTokens of(BuildContext context) {
+        final theme = Theme.of(context);
+        return theme.extension<AppTokens>() ??
+            AppTokens.fromScheme(theme.colorScheme, theme.brightness);
+    }
+
+    @override
+    AppTokens copyWith({
+        Color? eligible,
+        Color? onEligible,
+        Color? cooldown,
+        Color? onCooldown,
+        Color? urgencyLow,
+        Color? onUrgencyLow,
+        Color? urgencyMedium,
+        Color? onUrgencyMedium,
+        Color? urgencyHigh,
+        Color? onUrgencyHigh,
+        Color? offline,
+        Color? onOffline,
+        Color? success,
+        Color? onSuccess,
+        double? khmerLineHeight,
+    }) {
+        return AppTokens(
+            eligible: eligible ?? this.eligible,
+            onEligible: onEligible ?? this.onEligible,
+            cooldown: cooldown ?? this.cooldown,
+            onCooldown: onCooldown ?? this.onCooldown,
+            urgencyLow: urgencyLow ?? this.urgencyLow,
+            onUrgencyLow: onUrgencyLow ?? this.onUrgencyLow,
+            urgencyMedium: urgencyMedium ?? this.urgencyMedium,
+            onUrgencyMedium: onUrgencyMedium ?? this.onUrgencyMedium,
+            urgencyHigh: urgencyHigh ?? this.urgencyHigh,
+            onUrgencyHigh: onUrgencyHigh ?? this.onUrgencyHigh,
+            offline: offline ?? this.offline,
+            onOffline: onOffline ?? this.onOffline,
+            success: success ?? this.success,
+            onSuccess: onSuccess ?? this.onSuccess,
+            khmerLineHeight: khmerLineHeight ?? this.khmerLineHeight,
+        );
+    }
+
+    @override
+    AppTokens lerp(AppTokens? other, double t) {
+        if (other == null) return this;
+        Color c(Color a, Color b) => Color.lerp(a, b, t)!;
+        return AppTokens(
+            eligible: c(eligible, other.eligible),
+            onEligible: c(onEligible, other.onEligible),
+            cooldown: c(cooldown, other.cooldown),
+            onCooldown: c(onCooldown, other.onCooldown),
+            urgencyLow: c(urgencyLow, other.urgencyLow),
+            onUrgencyLow: c(onUrgencyLow, other.onUrgencyLow),
+            urgencyMedium: c(urgencyMedium, other.urgencyMedium),
+            onUrgencyMedium: c(onUrgencyMedium, other.onUrgencyMedium),
+            urgencyHigh: c(urgencyHigh, other.urgencyHigh),
+            onUrgencyHigh: c(onUrgencyHigh, other.onUrgencyHigh),
+            offline: c(offline, other.offline),
+            onOffline: c(onOffline, other.onOffline),
+            success: c(success, other.success),
+            onSuccess: c(onSuccess, other.onSuccess),
+            khmerLineHeight: t < 0.5 ? khmerLineHeight : other.khmerLineHeight,
         );
     }
 }

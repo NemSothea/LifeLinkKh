@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 /// The app's one signature mark — blood is the subject, so the badge is a soft radial
 /// glow behind a solid droplet, not a flat icon sitting on blank space.
 ///
@@ -9,15 +11,19 @@ import 'package:flutter/material.dart';
 /// `tool/render_splash_art.dart` renders it from this widget — so the hand-off from the
 /// OS splash to the first Flutter frame is the same pixels, not two drawings that drift.
 class BrandBadge extends StatelessWidget {
-    const BrandBadge({required this.color, super.key});
+    const BrandBadge({this.color, super.key});
 
     /// Logical size of the circle. The native splash art is rendered around this.
     static const double size = 104;
 
-    final Color color;
+    /// Defaults to the theme's own red. Passed explicitly by the splash renderer, which
+    /// draws both brightnesses from one isolated widget tree.
+    final Color? color;
 
     @override
     Widget build(BuildContext context) {
+        final tokens = AppTokens.of(context);
+        final color = this.color ?? tokens.eligible;
         return Container(
             width: size,
             height: size,
@@ -34,7 +40,7 @@ class BrandBadge extends StatelessWidget {
                     ),
                 ],
             ),
-            child: const Icon(Icons.bloodtype, size: 52, color: Colors.white),
+            child: Icon(Icons.bloodtype, size: 52, color: tokens.onEligible),
         );
     }
 }
