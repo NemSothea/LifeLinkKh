@@ -46,11 +46,13 @@ service cloud.firestore {
 
     // ── donors/{uid} ────────────────────────────────────────────────────────────────────────────
     function validCoordinates(d) {
-      // ADR 0003: declining GPS is allowed, so all three are null — or all three are set.
+      // ADR 0003: declining GPS is allowed, so all three are null — or all three are set. Ten
+      // geohash characters is about a metre, what the app sends; more would be a finer point on
+      // a person's home than matching needs (SEC-REVIEW-003 F-12).
       return (d.lat == null && d.lng == null && d.geohash == null)
           || (d.lat is number && d.lat >= -90 && d.lat <= 90
               && d.lng is number && d.lng >= -180 && d.lng <= 180
-              && d.geohash is string && d.geohash.size() > 0 && d.geohash.size() <= 12);
+              && d.geohash is string && d.geohash.size() > 0 && d.geohash.size() <= 10);
     }
     function validDonor(d) {
       // `sex` (DEC-019) is allowed but not required: a profile saved before it existed, or by an
@@ -62,7 +64,7 @@ service cloud.firestore {
                               'isAvailable', 'lat', 'lng', 'geohash', 'createdAt', 'updatedAt'])
           && isName(d.fullName, 120)
           && d.bloodType in bloodTypes()
-          && d.districtCode is string
+          && d.districtCode is string && d.districtCode.size() <= 16
           && exists(/databases/$(database)/documents/districts/$(d.districtCode))
           && (d.lastDonationDate == null
               || (d.lastDonationDate is timestamp && d.lastDonationDate <= request.time))
@@ -71,13 +73,26 @@ service cloud.firestore {
           && validCoordinates(d)
           && d.updatedAt == request.time;
     }
+    // SEC-REVIEW-003 F-04: what sets a donor's cooldown cannot be rolled back by the donor. Once
+    // there is a last donation it stays set and only moves later — a day of slack for a phone
+    // whose midnight is not Phnom Penh's, far short of the 56-day minimum. Once `sex` is given
+    // it stays (F→M would shorten the interval from 120 to 90 days); a mistake is the admin's to
+    // correct. Matching reads both (matching.js), so a donor must not be able to reset them.
+    function keepsCooldown(before, after) {
+      return (before.lastDonationDate == null
+              || (after.lastDonationDate != null
+                  && after.lastDonationDate >= before.lastDonationDate - duration.value(1, 'd')))
+          && (!('sex' in before) || before.sex == null
+              || ('sex' in after && after.sex == before.sex));
+    }
     match /donors/{donorId} {
       // Nobody else — not a requester, not the admin portal. Matching reads it with the Admin SDK.
       allow read: if (signedIn() && uid() == donorId) || isAdmin();
       allow create: if signedIn() && uid() == donorId
           && validDonor(incoming()) && incoming().createdAt == request.time;
       allow update: if signedIn() && uid() == donorId
-          && validDonor(incoming()) && incoming().createdAt == resource.data.createdAt;
+          && validDonor(incoming()) && incoming().createdAt == resource.data.createdAt
+          && keepsCooldown(resource.data, incoming());
       allow delete: if false;
     }
 
@@ -89,6 +104,13 @@ service cloud.firestore {
     function hasAccepted(requestId) {
       let matchPath = /databases/$(database)/documents/matches/$(requestId + '_' + uid());
       return signedIn() && exists(matchPath) && get(matchPath).data.response == 'ACCEPTED';
+    }
+    // SEC-REVIEW-003 F-19: an accepted donor needs the family's number while they can still
+    // help — the request is open, or just filled and they may be on their way. Once it is
+    // cancelled or has expired, the number is no longer theirs to keep reading.
+    function stillReachable(requestId) {
+      return get(/databases/$(database)/documents/requests/$(requestId)).data.status
+          in ['OPEN', 'FULFILLED'];
     }
 
     match /requests/{requestId} {
@@ -112,7 +134,9 @@ service cloud.firestore {
 
       // RequestViews' requesterContact: the creator, and a donor who accepted — nobody else.
       match /private/contact {
-        allow read: if isCreatorOf(requestId) || hasAccepted(requestId) || isAdmin();
+        allow read: if isCreatorOf(requestId)
+            || (hasAccepted(requestId) && stillReachable(requestId))
+            || isAdmin();
         // Written by createRequest in the same batch as the request (ADR 0010).
         allow create: if false;
         allow update, delete: if false;

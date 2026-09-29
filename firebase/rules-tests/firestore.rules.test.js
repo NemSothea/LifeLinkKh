@@ -146,6 +146,15 @@ describe('users', () => {
     await assertFails(setDoc(doc(as('u1'), 'users/u1'), user({ hospitalId: HOSPITAL })));
   });
 
+  // SEC-REVIEW-003 F-18: an update, not only a create, and a list query as a stranger.
+  test('you cannot update someone else\'s user doc, or list user docs', async () => {
+    await seed((db) => setDoc(doc(db, 'users/u1'), {
+      language: 'en', role: 'DONOR', createdAt: Timestamp.now(), updatedAt: Timestamp.now(),
+    }));
+    await assertFails(updateDoc(doc(as('u2'), 'users/u1'), { language: 'km', updatedAt: serverTimestamp() }));
+    await assertFails(getDocs(collection(as('u2'), 'users')));
+  });
+
   test('you cannot write someone else\'s user doc', async () => {
     await assertFails(setDoc(doc(as('u2'), 'users/u1'), user()));
   });
@@ -168,6 +177,21 @@ describe('donors', () => {
     await assertFails(setDoc(doc(as('u2'), 'donors/u1'), donor()));
   });
 
+  // SEC-REVIEW-003 F-18.
+  test('an update of someone else\'s profile is refused, and nobody lists profiles', async () => {
+    await seed((db) => setDoc(doc(db, 'donors/u1'), donor({ createdAt: Timestamp.now() })));
+    await assertFails(updateDoc(doc(as('u2'), 'donors/u1'), { isAvailable: false, updatedAt: serverTimestamp() }));
+    await assertFails(getDocs(collection(as('u2'), 'donors')));
+    await assertFails(getDocs(collection(anon(), 'donors')));
+  });
+
+  // SEC-REVIEW-003 F-12: about a metre is what matching needs; a district code is short.
+  test('a geohash finer than ten characters, or an overlong district code, is refused', async () => {
+    await assertFails(setDoc(doc(as('u1'), 'donors/u1'),
+      donor({ lat: 11.5806, lng: 104.9165, geohash: 'w649gkjvgs12' })));
+    await assertFails(setDoc(doc(as('u1'), 'donors/u1'), donor({ districtCode: 'x'.repeat(17) })));
+  });
+
   test('values the database used to CHECK are still refused', async () => {
     await assertFails(setDoc(doc(as('u1'), 'donors/u1'), donor({ bloodType: 'C+' })));
     await assertFails(setDoc(doc(as('u1'), 'donors/u1'), donor({ districtCode: '9999' })));
@@ -188,6 +212,51 @@ describe('donors', () => {
   test('a last-donation date in the future is refused', async () => {
     const future = Timestamp.fromMillis(Date.now() + 7 * 86_400_000);
     await assertFails(setDoc(doc(as('u1'), 'donors/u1'), donor({ lastDonationDate: future })));
+  });
+
+  // SEC-REVIEW-003 F-04: matching reads lastDonationDate and sex, so the donor cannot reset them.
+  describe('the cooldown a confirmed donation set', () => {
+    const DAY = 86_400_000;
+    const lastDonation = Timestamp.fromMillis(Date.now() - 30 * DAY);
+    const stored = (overrides = {}) => donor({
+      lastDonationDate: lastDonation, sex: 'F', createdAt: Timestamp.fromMillis(Date.now() - 90 * DAY),
+      ...overrides,
+    });
+    const edit = () => seed((db) => setDoc(doc(db, 'donors/u1'), stored()));
+
+    test('an edit that keeps both goes through', async () => {
+      await edit();
+      await assertSucceeds(updateDoc(doc(as('u1'), 'donors/u1'), { isAvailable: false, updatedAt: serverTimestamp() }));
+    });
+
+    test('the last donation cannot be cleared or moved earlier', async () => {
+      await edit();
+      await assertFails(updateDoc(doc(as('u1'), 'donors/u1'), { lastDonationDate: null, updatedAt: serverTimestamp() }));
+      await assertFails(updateDoc(doc(as('u1'), 'donors/u1'), {
+        lastDonationDate: Timestamp.fromMillis(lastDonation.toMillis() - 40 * DAY), updatedAt: serverTimestamp(),
+      }));
+    });
+
+    test('it may move later, and a few hours earlier (a phone\'s midnight is not Phnom Penh\'s)', async () => {
+      await edit();
+      await assertSucceeds(updateDoc(doc(as('u1'), 'donors/u1'), {
+        lastDonationDate: Timestamp.fromMillis(lastDonation.toMillis() - 7 * 3_600_000), updatedAt: serverTimestamp(),
+      }));
+      await assertSucceeds(updateDoc(doc(as('u1'), 'donors/u1'), {
+        lastDonationDate: Timestamp.fromMillis(Date.now() - DAY), updatedAt: serverTimestamp(),
+      }));
+    });
+
+    test('sex, once given, stays — F to M would shorten the interval', async () => {
+      await edit();
+      await assertFails(updateDoc(doc(as('u1'), 'donors/u1'), { sex: 'M', updatedAt: serverTimestamp() }));
+      await assertFails(updateDoc(doc(as('u1'), 'donors/u1'), { sex: null, updatedAt: serverTimestamp() }));
+    });
+
+    test('a profile with no sex yet may give one', async () => {
+      await seed((db) => setDoc(doc(db, 'donors/u1'), stored({ sex: null })));
+      await assertSucceeds(updateDoc(doc(as('u1'), 'donors/u1'), { sex: 'M', updatedAt: serverTimestamp() }));
+    });
   });
 
   test('nobody but the donor and an admin reads a profile — not staff, not a requester', async () => {
@@ -301,6 +370,17 @@ describe('requester contact — RequestViews.requesterContact', () => {
   test('a donor who accepted does', async () => {
     await seedRequestWithMatch('req-1', 'd1', { response: 'ACCEPTED' });
     await assertSucceeds(getDoc(doc(as('d1'), 'requests/r1/private/contact')));
+  });
+
+  // SEC-REVIEW-003 F-19.
+  test('an accepted donor keeps it while the request is open or just filled, not after it closes', async () => {
+    for (const [status, readable] of [['FULFILLED', true], ['CANCELLED', false], ['EXPIRED', false]]) {
+      await env.clearFirestore();
+      await seedRequestWithMatch('req-1', 'd1', { status, response: 'ACCEPTED' });
+      const read = getDoc(doc(as('d1'), 'requests/r1/private/contact'));
+      await (readable ? assertSucceeds(read) : assertFails(read));
+      await assertSucceeds(getDoc(doc(as('req-1'), 'requests/r1/private/contact')));
+    }
   });
 
   test('staff, strangers and the signed-out board do not', async () => {
