@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../core/settings/onboarding_controller.dart';
 import '../core/widgets/route_not_found_screen.dart';
+import '../features/about/presentation/about_screen.dart';
 import '../features/account/presentation/delete_account_screen.dart';
 import '../features/auth/application/auth_providers.dart';
 import '../features/auth/presentation/sign_in_screen.dart';
@@ -58,6 +59,13 @@ GoRouter appRouter(AppRouterRef ref) {
             // never be shown a carousel on the way to the request.
             final seenIntro = ref.read(onboardingControllerProvider);
             if (!signedIn && !seenIntro) return atIntro ? null : IntroScreen.path;
+            // Open to everyone, signed in or not: About, and the intro reopened from "How
+            // it works". Both answer questions someone has *before* trusting the app with
+            // an account, so neither may sit behind the sign-in they are there to explain.
+            final atAbout = state.matchedLocation == AboutScreen.path;
+            final reviewingIntro =
+                atIntro && state.uri.queryParameters[IntroScreen.reviewParam] == '1';
+            if (atAbout || reviewingIntro) return null;
             // Seen it, or signed in: the intro is no longer a place this app can be.
             if (atIntro) return signedIn ? HomeScreen.path : SignInScreen.path;
 
@@ -68,7 +76,13 @@ GoRouter appRouter(AppRouterRef ref) {
         routes: [
             GoRoute(
                 path: IntroScreen.path,
-                builder: (context, state) => const IntroScreen(),
+                builder: (context, state) => IntroScreen(
+                    review: state.uri.queryParameters[IntroScreen.reviewParam] == '1',
+                ),
+            ),
+            GoRoute(
+                path: AboutScreen.path,
+                builder: (context, state) => const AboutScreen(),
             ),
             GoRoute(
                 path: SignInScreen.path,

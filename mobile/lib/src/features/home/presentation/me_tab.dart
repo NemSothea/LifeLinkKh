@@ -3,14 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
-import '../../../core/links/link_providers.dart';
 import '../../../core/settings/locale_controller.dart';
+import '../../about/application/about_providers.dart';
+import '../../about/presentation/about_screen.dart';
 import '../../account/presentation/delete_account_screen.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../donation/presentation/donation_guide_screen.dart';
 import '../../donor/presentation/donor_profile_screen.dart';
 import '../../request/presentation/request_form_screen.dart';
-import '../../update/application/app_update_providers.dart';
 
 /// The third tab of every shell — `GLOBAL-home-dashboard` prototype: "profile edit,
 /// language toggle, and sign-out. Not a settings labyrinth — three items." Plus, since
@@ -29,9 +29,7 @@ class MeTab extends ConsumerWidget {
         final l10n = AppLocalizations.of(context)!;
         final user = ref.watch(authControllerProvider).valueOrNull?.user;
         final theme = Theme.of(context);
-        // From the launch's one `config/app` read — no read of its own. Absent until the
-        // release script has set it, and the row with it.
-        final privacyUrl = ref.watch(appConfigProvider).valueOrNull?.privacyUrl;
+        final version = ref.watch(appVersionProvider).valueOrNull;
 
         return Scaffold(
             appBar: AppBar(title: Text(l10n.dashboardTabMe)),
@@ -105,19 +103,20 @@ class MeTab extends ConsumerWidget {
                         const SizedBox(height: 16),
                         const _LanguageCard(),
                         const SizedBox(height: 16),
-                        if (privacyUrl != null) ...[
-                            Card(
-                                margin: EdgeInsets.zero,
-                                child: ListTile(
-                                    key: const Key('me-privacy-policy'),
-                                    leading: const Icon(Icons.privacy_tip_outlined),
-                                    title: Text(l10n.privacyPolicy),
-                                    trailing: const Icon(Icons.open_in_new),
-                                    onTap: () => ref.read(linkOpenerProvider).open(privacyUrl),
-                                ),
+                        // One row, not three: How it works, the privacy policy, who made the
+                        // app and its version all live behind it on About — this tab stays
+                        // the short list the prototype asks for.
+                        Card(
+                            margin: EdgeInsets.zero,
+                            child: ListTile(
+                                key: const Key('me-about'),
+                                leading: const Icon(Icons.info_outline),
+                                title: Text(l10n.aboutHelpCta),
+                                trailing: const Icon(Icons.chevron_right),
+                                onTap: () => context.push(AboutScreen.path),
                             ),
-                            const SizedBox(height: 16),
-                        ],
+                        ),
+                        const SizedBox(height: 16),
                         Card(
                             margin: EdgeInsets.zero,
                             child: ListTile(
@@ -147,6 +146,17 @@ class MeTab extends ConsumerWidget {
                                 onTap: () => context.push(DeleteAccountScreen.path),
                             ),
                         ),
+                        if (version != null) ...[
+                            const SizedBox(height: 24),
+                            Text(
+                                l10n.appVersionLabel(version.version, version.build),
+                                key: const Key('me-version'),
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                            ),
+                        ],
                     ],
                 ),
             ),

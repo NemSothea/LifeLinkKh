@@ -1131,5 +1131,85 @@
     "reportAlreadySent": "You have already reported this request.",
     "@reportAlreadySent": {
         "description": "Report refused: one per donor per request"
+    },
+    "signInHowItWorks": "How it works",
+    "@signInHowItWorks": {
+        "description": "Sign-in footer link: reopens the intro slides without resetting onboarding"
+    },
+    "signInPrivacy": "Privacy",
+    "@signInPrivacy": {
+        "description": "Sign-in footer link: opens the privacy policy in the browser. Short on purpose, the footer is narrow"
+    },
+    "aboutHelpCta": "About & help",
+    "@aboutHelpCta": {
+        "description": "Sign-in footer link and Me tab row: opens the About screen (who made the app, questions, version)"
+    },
+    "aboutTitle": "About LifeLink",
+    "@aboutTitle": {
+        "description": "About screen app bar title"
+    },
+    "aboutPurpose": "LifeLink connects patients and families who need blood with nearby voluntary donors whose blood type matches.",
+    "@aboutPurpose": {
+        "description": "About screen: one-line statement of what the app is for"
+    },
+    "aboutMadeByTitle": "Who made LifeLink",
+    "@aboutMadeByTitle": {
+        "description": "About screen section heading"
+    },
+    "aboutMadeBy": "Group 2, Cross-Platform Mobile App Development course.",
+    "@aboutMadeBy": {
+        "description": "About screen: the team credit. Course name kept in English in both languages"
+    },
+    "aboutFaqTitle": "Questions",
+    "@aboutFaqTitle": {
+        "description": "About screen section heading above the FAQ"
+    },
+    "faqAlertQ": "Who gets alerted about a request?",
+    "@faqAlertQ": {
+        "description": "FAQ question; the answer is introAlertBody"
+    },
+    "faqEligibleQ": "How often can I donate?",
+    "@faqEligibleQ": {
+        "description": "FAQ question; the answer is introEligibleBody"
+    },
+    "faqLocationQ": "Who can see my location?",
+    "@faqLocationQ": {
+        "description": "FAQ question; the answer is donorLocationPrivacy"
+    },
+    "faqMoneyQ": "Does it cost money?",
+    "@faqMoneyQ": {
+        "description": "FAQ question; the answer is moneyNotice"
+    },
+    "faqDeleteQ": "How do I delete my account?",
+    "@faqDeleteQ": {
+        "description": "FAQ question"
+    },
+    "faqDeleteA": "Open the “{tab}” tab and tap “{action}”.",
+    "@faqDeleteA": {
+        "description": "FAQ answer. tab = dashboardTabMe, action = accountDeleteCta, so the answer names the labels the user will actually see",
+        "placeholders": {
+            "tab": {
+                "type": "String"
+            },
+            "action": {
+                "type": "String"
+            }
+        }
+    },
+    "appVersionLabel": "Version {version} (build {build})",
+    "@appVersionLabel": {
+        "description": "About screen and Me tab: the installed version name and build number",
+        "placeholders": {
+            "version": {
+                "type": "String"
+            },
+            "build": {
+                "type": "String"
+            }
+        }
+    },
+    "introDone": "Done",
+    "@introDone": {
+        "description": "Intro carousel, last slide, when reopened from How it works: closes it and goes back"
     }
 }

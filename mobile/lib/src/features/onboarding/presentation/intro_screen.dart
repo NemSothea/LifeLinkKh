@@ -20,9 +20,19 @@ import '../../auth/presentation/sign_in_screen.dart';
 /// 03:00 must never meet a carousel on the way. `OnboardingController.complete()` runs on
 /// both paths — skipping is a legitimate way to finish, not an escape from it.
 class IntroScreen extends ConsumerStatefulWidget {
-    const IntroScreen({super.key});
+    const IntroScreen({this.review = false, super.key});
 
     static const String path = '/intro';
+
+    /// `?review=1`: the intro reopened from "How it works" on sign-in or the Me tab.
+    static const String reviewParam = 'review';
+
+    /// Where "How it works" goes — pushed, so back returns to whoever opened it.
+    static const String reviewLocation = '$path?$reviewParam=1';
+
+    /// Reopened on purpose rather than shown on first launch: finishing goes back to
+    /// the caller and leaves the onboarding flag alone.
+    final bool review;
 
     @override
     ConsumerState<IntroScreen> createState() => _IntroScreenState();
@@ -42,6 +52,16 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
     /// under sign-in on the back stack, or the system back button re-enters a screen the
     /// donor has already dismissed.
     Future<void> _finish() async {
+        if (widget.review) {
+            if (context.canPop()) {
+                context.pop();
+            } else {
+                // Opened as a deep link with nothing under it. The redirect sends a
+                // signed-in user on from sign-in to home.
+                context.go(SignInScreen.path);
+            }
+            return;
+        }
         await ref.read(onboardingControllerProvider.notifier).complete();
         if (mounted) context.go(SignInScreen.path);
     }
@@ -129,7 +149,11 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                                 child: FilledButton(
                                     key: const Key('intro-next'),
                                     onPressed: () => _next(slides.length),
-                                    child: Text(isLast ? l10n.introStart : l10n.introNext),
+                                    child: Text(
+                                        isLast
+                                            ? (widget.review ? l10n.introDone : l10n.introStart)
+                                            : l10n.introNext,
+                                    ),
                                 ),
                             ),
                         ),

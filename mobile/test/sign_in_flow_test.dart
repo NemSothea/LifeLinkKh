@@ -10,6 +10,7 @@ import 'package:lifelink_kh/src/features/auth/domain/auth_session.dart';
 import 'package:lifelink_kh/src/features/auth/domain/google_credentials.dart';
 import 'package:lifelink_kh/src/features/auth/domain/reauthentication.dart';
 import 'package:lifelink_kh/src/features/auth/domain/session_store.dart';
+import 'package:lifelink_kh/src/features/home/presentation/me_tab.dart';
 import 'package:lifelink_kh/src/features/notify/application/push_providers.dart';
 
 import 'support/auth_fakes.dart';
@@ -96,10 +97,18 @@ void main() {
     }
 
     // Sign-out lives on the dashboard's "Me" tab (GLOBAL-home-dashboard prototype),
-    // not on the Home tab a fresh sign-in lands on.
+    // not on the Home tab a fresh sign-in lands on — and below the fold of the 800x600
+    // test surface since About & help joined it.
     Future<void> goToMeTab(WidgetTester tester) async {
         await tester.tap(find.byKey(const Key('dashboard-tab-me')));
         await tester.pumpAndSettle();
+        await tester.scrollUntilVisible(
+            find.byKey(const Key('sign-out')),
+            200,
+            scrollable: find
+                .descendant(of: find.byType(MeTab), matching: find.byType(Scrollable))
+                .first,
+        );
     }
 
     testWidgets('a fresh install lands on sign-in, not home', (tester) async {

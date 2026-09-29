@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifelink_kh/l10n/app_localizations.dart';
 import 'package:lifelink_kh/src/app.dart';
+import 'package:lifelink_kh/src/core/config/env.dart';
 import 'package:lifelink_kh/src/core/error/result.dart';
 import 'package:lifelink_kh/src/core/links/link_opener.dart';
 import 'package:lifelink_kh/src/core/links/link_providers.dart';
@@ -323,26 +324,48 @@ void main() {
             await tester.pumpAndSettle();
         }
 
-        testWidgets('opens the policy in the browser when the config names one',
-            (tester) async {
-            final links = _RecordingLinkOpener();
-            await openMeTab(tester, AppConfig(privacyUrl: _privacy), links);
-
-            final row = find.byKey(const Key('me-privacy-policy'));
+        // The policy lives on About now (Me → About & help), next to how the app works
+        // and who made it, rather than as a row of its own on Me.
+        Future<void> tapPrivacy(WidgetTester tester) async {
+            final about = find.byKey(const Key('me-about'));
             await tester.scrollUntilVisible(
-                row,
+                about,
                 200,
                 scrollable: find
                     .descendant(of: find.byType(MeTab), matching: find.byType(Scrollable))
                     .first,
             );
+            await tester.tap(about);
+            await tester.pumpAndSettle();
+            final row = find.byKey(const Key('about-privacy-policy'));
+            await tester.scrollUntilVisible(
+                row,
+                200,
+                scrollable: find.byType(Scrollable).last,
+            );
+            await tester.ensureVisible(row);
+            await tester.pumpAndSettle();
             await tester.tap(row);
+        }
+
+        testWidgets('opens the policy in the browser when the config names one',
+            (tester) async {
+            final links = _RecordingLinkOpener();
+            await openMeTab(tester, AppConfig(privacyUrl: _privacy), links);
+
+            await tapPrivacy(tester);
             expect(links.opened, [_privacy]);
         });
 
-        testWidgets('is absent without a privacyUrl', (tester) async {
-            await openMeTab(tester, AppConfig.none, _RecordingLinkOpener());
-            expect(find.byKey(const Key('me-privacy-policy')), findsNothing);
+        // Never hidden any more: a policy nobody can find is no promise. Without a
+        // configured URL it is the portal's own page, in the app's language — `en`, the
+        // locale `openMeTab` boots in.
+        testWidgets("falls back to the portal's page without a privacyUrl", (tester) async {
+            final links = _RecordingLinkOpener();
+            await openMeTab(tester, AppConfig.none, links);
+
+            await tapPrivacy(tester);
+            expect(links.opened, [Uri.parse('${Env.defaultPortalUrl}/en/privacy')]);
         });
     });
 }

@@ -14,6 +14,7 @@ import 'package:lifelink_kh/src/features/donation/domain/donation_repository.dar
 import 'package:lifelink_kh/src/features/donor/application/donor_providers.dart';
 import 'package:lifelink_kh/src/features/donor/domain/donor_repository.dart';
 import 'package:lifelink_kh/src/features/home/presentation/home_screen.dart';
+import 'package:lifelink_kh/src/features/home/presentation/me_tab.dart';
 import 'package:lifelink_kh/src/features/match/application/match_providers.dart';
 import 'package:lifelink_kh/src/features/match/domain/match.dart';
 import 'package:lifelink_kh/src/features/match/domain/match_repository.dart';
@@ -174,6 +175,14 @@ void main() {
         expect(find.byKey(const Key('me-donor-profile')), findsOneWidget);
         expect(find.byKey(const Key('me-request-blood')), findsOneWidget);
         expect(find.byKey(const Key('me-donation-guide')), findsOneWidget);
+        expect(find.byKey(const Key('me-about')), findsOneWidget);
+        await tester.scrollUntilVisible(
+            find.byKey(const Key('sign-out')),
+            200,
+            scrollable: find
+                .descendant(of: find.byType(MeTab), matching: find.byType(Scrollable))
+                .first,
+        );
         expect(find.byKey(const Key('sign-out')), findsOneWidget);
     });
 
@@ -200,6 +209,13 @@ void main() {
 
         expect(find.byKey(const Key('me-donor-profile')), findsOneWidget);
         expect(find.byKey(const Key('me-request-blood')), findsOneWidget);
+        await tester.scrollUntilVisible(
+            find.byKey(const Key('sign-out')),
+            200,
+            scrollable: find
+                .descendant(of: find.byType(MeTab), matching: find.byType(Scrollable))
+                .first,
+        );
         expect(find.byKey(const Key('sign-out')), findsOneWidget);
     });
 }

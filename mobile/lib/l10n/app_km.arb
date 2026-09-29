@@ -263,5 +263,21 @@
     "reportSending": "កំពុងផ្ញើ…",
     "reportSent": "សូមអរគុណ។ អ្នកគ្រប់គ្រងនឹងពិនិត្យមើល។",
     "reportFailed": "មិនអាចផ្ញើរបាយការណ៍បានទេ។ សូមព្យាយាមម្តងទៀត។",
-    "reportAlreadySent": "អ្នកបានរាយការណ៍ការស្នើសុំនេះរួចហើយ។"
+    "reportAlreadySent": "អ្នកបានរាយការណ៍ការស្នើសុំនេះរួចហើយ។",
+    "signInHowItWorks": "របៀបដំណើរការ",
+    "signInPrivacy": "ឯកជនភាព",
+    "aboutHelpCta": "អំពី និងជំនួយ",
+    "aboutTitle": "អំពី LifeLink",
+    "aboutPurpose": "LifeLink ភ្ជាប់អ្នកជំងឺ និងក្រុមគ្រួសារដែលត្រូវការឈាម ជាមួយអ្នកបរិច្ចាគស្ម័គ្រចិត្តនៅក្បែរ ដែលមានក្រុមឈាមត្រូវគ្នា។",
+    "aboutMadeByTitle": "អ្នកបង្កើត LifeLink",
+    "aboutMadeBy": "ក្រុមទី ២ នៃមុខវិជ្ជា Cross-Platform Mobile App Development។",
+    "aboutFaqTitle": "សំណួរ",
+    "faqAlertQ": "តើនរណាទទួលបានការជូនដំណឹងអំពីការស្នើសុំ?",
+    "faqEligibleQ": "តើខ្ញុំអាចបរិច្ចាគបានញឹកញាប់ប៉ុណ្ណា?",
+    "faqLocationQ": "តើនរណាអាចមើលឃើញទីតាំងរបស់ខ្ញុំ?",
+    "faqMoneyQ": "តើត្រូវចំណាយប្រាក់ទេ?",
+    "faqDeleteQ": "តើខ្ញុំលុបគណនីរបស់ខ្ញុំដោយរបៀបណា?",
+    "faqDeleteA": "បើកផ្ទាំង «{tab}» ហើយចុច «{action}»។",
+    "appVersionLabel": "កំណែ {version} (build {build})",
+    "introDone": "រួចរាល់"
 }

@@ -129,8 +129,10 @@ void main() {
 
         // The tab bar is the check, not the card: it proves the whole tree rebuilt,
         // not just the control that was tapped.
+        // "About & help" rather than "Sign out": the latter is below the fold of the
+        // test surface now, and a row the tap did not touch proves the same thing.
         expect(find.text('Language'), findsOneWidget);
-        expect(find.text('Sign out'), findsOneWidget);
+        expect(find.text('About & help'), findsOneWidget);
         expect(store.read(), const Locale('en'));
     });
 

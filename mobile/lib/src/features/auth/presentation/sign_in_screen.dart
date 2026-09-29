@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/widgets/brand_backdrop.dart';
+import '../../../core/links/link_providers.dart';
 import '../../../core/widgets/brand_badge.dart';
+import '../../about/application/about_providers.dart';
+import '../../about/presentation/about_screen.dart';
+import '../../onboarding/presentation/intro_screen.dart';
 import '../application/auth_providers.dart';
 import 'auth_failure_message.dart';
 
@@ -239,6 +244,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                                 ),
                                             ),
                                         ),
+                                        const SizedBox(height: 12),
+                                        const _TrustFooter(),
                                     ],
                                 ),
                             ),
@@ -246,6 +253,63 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     ),
                 ),
             ),
+        );
+    }
+}
+
+/// What someone checks before trusting an app with an account: how it works, what it
+/// does with their data, who is behind it, and which version this is. Links rather than
+/// content, because this screen does not scroll — each one opens a screen or the
+/// browser, and the panel only grows by one row of links and one line of text.
+///
+/// A `Wrap`, not a `Row`: in Khmer the three labels are wider than a 360 px phone.
+class _TrustFooter extends ConsumerWidget {
+    const _TrustFooter();
+
+    @override
+    Widget build(BuildContext context, WidgetRef ref) {
+        final l10n = AppLocalizations.of(context)!;
+        final theme = Theme.of(context);
+        final version = ref.watch(appVersionProvider).valueOrNull;
+        const linkStyle = ButtonStyle(visualDensity: VisualDensity.compact);
+
+        return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+                Wrap(
+                    alignment: WrapAlignment.center,
+                    children: [
+                        TextButton(
+                            key: const Key('sign-in-how-it-works'),
+                            style: linkStyle,
+                            onPressed: () => context.push(IntroScreen.reviewLocation),
+                            child: Text(l10n.signInHowItWorks),
+                        ),
+                        TextButton(
+                            key: const Key('sign-in-privacy'),
+                            style: linkStyle,
+                            onPressed: () => ref
+                                .read(linkOpenerProvider)
+                                .open(ref.read(privacyUriProvider)),
+                            child: Text(l10n.signInPrivacy),
+                        ),
+                        TextButton(
+                            key: const Key('sign-in-about'),
+                            style: linkStyle,
+                            onPressed: () => context.push(AboutScreen.path),
+                            child: Text(l10n.aboutHelpCta),
+                        ),
+                    ],
+                ),
+                if (version != null)
+                    Text(
+                        'v${version.version} (${version.build})',
+                        key: const Key('sign-in-version'),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                    ),
+            ],
         );
     }
 }
