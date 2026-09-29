@@ -2,6 +2,19 @@
 
 Every new/changed FR gets an entry. What + Why are mandatory.
 
+## 2026-09-29 — DEC-019 phase 1: guidance that matches how blood works in Cambodia
+- **What:** Research report [`research/2026-09-cambodia-donation-reality.md`](research/2026-09-cambodia-donation-reality.md)
+  and [DEC-019](../decisions.md). The app gains a "How getting blood works" guide for families
+  (any blood type can replace at the blood bank, blood is free by policy, never pay, no direct
+  relative transfusion), linked from the request form, request detail and a no-donors-yet card.
+  Money warnings on the request form and the match screen; a "checked by a LifeLink admin" badge
+  for donors. The donation guide adds 45 kg, 350 ml, the NBTC's location, when to wait before
+  donating, and a cooldown line that says the centre may ask for 3–4 months. The website gets the
+  same family guide at `/{locale}/getting-blood` and loses its "56 days" claim. No rule changed.
+  **Why:** the app told families nothing about replacement donation, which is about three-quarters
+  of Cambodian supply, and told donors a US interval. The rule change is phase 2, after the NBTC
+  confirms it ([checklist](research/nbtc-confirmation-checklist.md)).
+
 ## 2026-09-25 — `FR-NOTIFY-003`: push the requester when a donor accepts
 - **What:** New brief [`BRIEF-NOTIFY-001`](briefs/BRIEF-NOTIFY-001-requester-acceptance-push.md)
   promoted to [`FR-NOTIFY-003`](features/FR-NOTIFY-003-requester-acceptance-push.md). Each

@@ -771,3 +771,44 @@ to every client. The portal holds one credential for this, `FIREBASE_SERVICE_ACC
   post → approve → push → accept on two phones; then delete the six old Functions and switch the
   plan to Spark (`production-checklist.md` Parts A, B and D).
 
+
+## DEC-019 — Guidance follows Cambodian practice; the cooldown waits for the NBTC
+
+**Date:** 2026-09-29 · **Raised by:** Nem Sothea (Tech Lead / PO) · **Status:** accepted for the
+guidance (phase 1); **pending NBTC confirmation** for the eligibility rule (phase 2) ·
+**Evidence:** [`po/research/2026-09-cambodia-donation-reality.md`](po/research/2026-09-cambodia-donation-reality.md)
+
+### Context
+The research report checked the app against how blood donation actually works in Cambodia. Three
+findings change what the app says:
+
+1. **The cooldown is the US rule.** The app clears every donor after 56 days (`FR-DONOR-002`,
+   PRD FR-03). Cambodian practice as reported is 3 months for men and 4 months for women, which
+   agrees with WHO's 12 and 16 weeks. No primary NBTC document was found online.
+2. **About three-quarters of Cambodian blood is replacement donation.** A family brings relatives
+   of *any* blood type to the blood bank, and the bank issues the patient's type from tested
+   stock. The app never says this, so a family whose relatives are the "wrong" type thinks they
+   cannot help.
+3. **Paid donors and brokers are documented**, and national policy says blood is free to the
+   patient, with only a service fee allowed. The app never says "never pay".
+
+### Decision
+- **Phase 1, now (copy and trust, no rule change):** the app and the website explain how getting
+  blood works for families (any type can replace, free by policy, never pay a broker, do not
+  arrange a close relative's blood straight to the patient). Both say LifeLink never asks for
+  money. Donors see that a request was checked by an admin. The donation guide gains the 45 kg
+  minimum, the 350 ml standard unit, the NBTC's location, when to wait before donating, and a
+  cooldown line that stops promising 56 days. The 56-day rule itself is **not** changed.
+- **Phase 2, after the NBTC call:** replace the 56-day rule with intervals by sex, in the app
+  (`eligibility.dart`) and on the server (`matching.js`, `confirm-donation.js`), through a PRD and
+  `FR-DONOR-002` amendment. Storing sex is new sensitive data: the privacy page changes with it.
+- **Not doing:** family-to-family blood swap matching. It solves nothing replacement at the
+  blood bank does not, and it recreates the stranger-to-stranger deals where brokers hide.
+
+### Consequences
+- Phase 1 copy is informational and says the blood centre decides. It still needs a native Khmer
+  check and the NBTC answers in `po/research/nbtc-confirmation-checklist.md` before a public launch.
+- Until phase 2, the app and the centre can disagree about when a donor may give again. The
+  guide now says so plainly rather than hiding it.
+- Admin review hours (DEC-015 asked for them to be published) are still unset. That is Sothea's
+  decision; the copy says an admin checks every request, not how fast.
