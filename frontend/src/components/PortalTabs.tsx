@@ -1,14 +1,14 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { LayoutDashboard, ListChecks } from 'lucide-react';
+import { LayoutDashboard, ListChecks, Smartphone } from 'lucide-react';
 
-/** Requests | Dashboard, for the admin. Two plain links, so each view keeps its own URL. */
+/** Requests | Dashboard | App version, for the admin. Two plain links, so each view keeps its own URL. */
 export default async function PortalTabs({
     locale,
     active,
 }: {
     locale: string;
-    active: 'requests' | 'dashboard';
+    active: 'requests' | 'dashboard' | 'appVersion';
 }) {
     const t = await getTranslations('dashboard');
     const tabs = [
@@ -18,6 +18,12 @@ export default async function PortalTabs({
             href: `/${locale}/portal/dashboard`,
             label: t('tabDashboard'),
             icon: LayoutDashboard,
+        },
+        {
+            key: 'appVersion',
+            href: `/${locale}/portal/app-version`,
+            label: t('tabAppVersion'),
+            icon: Smartphone,
         },
     ] as const;
     return (

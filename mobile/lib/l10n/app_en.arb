@@ -896,6 +896,10 @@
     "@updateOpenFailed": {
         "description": "Shown above the download link when no browser opened it"
     },
+    "updateWhatsNew": "What's new",
+    "@updateWhatsNew": {
+        "description": "Heading and toggle for the release notes in the update notice"
+    },
     "privacyPolicy": "Privacy policy",
     "@privacyPolicy": {
         "description": "Me tab row opening the privacy policy page in the browser"

@@ -118,6 +118,35 @@ void main() {
         });
     });
 
+    group('release notes', () {
+        test('ride along on both kinds of update', () {
+            const notes = ReleaseNotes(en: 'Faster alerts.');
+            final config = AppConfig(
+                minVersionCode: 3,
+                latestVersionCode: 5,
+                downloadUrl: _download,
+                releaseNotes: notes,
+            );
+            expect(
+                (appUpdateFor(installedBuild: 2, config: config) as UpdateRequired).releaseNotes,
+                notes,
+            );
+            expect(
+                (appUpdateFor(installedBuild: 3, config: config) as UpdateAvailable).releaseNotes,
+                notes,
+            );
+        });
+
+        test('each language falls back to the other; both blank is none', () {
+            final both = ReleaseNotes.of(en: 'Faster alerts.', km: 'លឿនជាងមុន។')!;
+            expect(both.forLanguage('km'), 'លឿនជាងមុន។');
+            expect(both.forLanguage('en'), 'Faster alerts.');
+            expect(ReleaseNotes.of(en: 'Faster alerts.')!.forLanguage('km'), 'Faster alerts.');
+            expect(ReleaseNotes.of(km: 'លឿនជាងមុន។')!.forLanguage('en'), 'លឿនជាងមុន។');
+            expect(ReleaseNotes.of(en: '  ', km: null), isNull);
+        });
+    });
+
     group('appConfigFrom', () {
         test('reads a complete document', () {
             expect(
@@ -127,6 +156,8 @@ void main() {
                     'latestVersionName': ' 1.0.3 ',
                     'downloadUrl': 'https://lifelink.example/km/download',
                     'privacyUrl': 'https://lifelink.example/km/privacy',
+                    'releaseNotesEn': ' Faster alerts. ',
+                    'releaseNotesKm': 'លឿនជាងមុន។',
                 }),
                 AppConfig(
                     minVersionCode: 2,
@@ -134,6 +165,7 @@ void main() {
                     latestVersionName: '1.0.3',
                     downloadUrl: _download,
                     privacyUrl: Uri.parse('https://lifelink.example/km/privacy'),
+                    releaseNotes: const ReleaseNotes(en: 'Faster alerts.', km: 'លឿនជាងមុន។'),
                 ),
             );
         });
@@ -145,12 +177,14 @@ void main() {
                 'latestVersionName': 7,
                 'downloadUrl': 'intent://evil#Intent;end',
                 'privacyUrl': 'file:///sdcard/x',
+                'releaseNotesEn': 42,
             });
             expect(config.minVersionCode, 2);
             expect(config.latestVersionCode, isNull);
             expect(config.latestVersionName, isNull);
             expect(config.downloadUrl, isNull);
             expect(config.privacyUrl, isNull);
+            expect(config.releaseNotes, isNull);
         });
 
         test('an empty document is no information', () {
@@ -209,6 +243,18 @@ void main() {
             await c.read(appUpdateControllerProvider.future);
             await c.read(appConfigProvider.future);
             expect(repository.fetches, 1);
+        });
+
+        test('invalidating the config re-reads it, and a raised minimum blocks', () async {
+            final repository = _FakeAppConfigRepository(Success(_config(min: 1, latest: 5)));
+            final c = container(repository: repository, installed: _FakeInstalledVersion(3));
+            expect(await c.read(appUpdateControllerProvider.future), isA<UpdateAvailable>());
+
+            repository.result = Success(_config(min: 5, latest: 5));
+            c.invalidate(appConfigProvider);
+
+            expect(await c.read(appUpdateControllerProvider.future), isA<UpdateRequired>());
+            expect(repository.fetches, 2);
         });
     });
 

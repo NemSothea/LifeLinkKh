@@ -28,12 +28,16 @@ final Uri _download = Uri.parse('https://lifelink.example/km/download');
 final Uri _privacy = Uri.parse('https://lifelink.example/km/privacy');
 
 final class _FakeAppConfigRepository implements AppConfigRepository {
-    const _FakeAppConfigRepository(this.config);
+    _FakeAppConfigRepository(this.config);
 
-    final AppConfig config;
+    AppConfig config;
+    int fetches = 0;
 
     @override
-    Future<Result<AppConfig>> fetch() async => Success(config);
+    Future<Result<AppConfig>> fetch() async {
+        fetches++;
+        return Success(config);
+    }
 }
 
 final class _FakeInstalledVersion implements InstalledVersion {
@@ -63,9 +67,11 @@ List<Override> _updateOverrides({
     required LinkOpener links,
     int installed = 3,
     UpdateDismissalStore? dismissals,
+    _FakeAppConfigRepository? repository,
 }) =>
     [
-        appConfigRepositoryProvider.overrideWithValue(_FakeAppConfigRepository(config)),
+        appConfigRepositoryProvider
+            .overrideWithValue(repository ?? _FakeAppConfigRepository(config)),
         installedVersionProvider.overrideWithValue(_FakeInstalledVersion(installed)),
         updateDismissalStoreProvider
             .overrideWithValue(dismissals ?? InMemoryUpdateDismissalStore()),
@@ -81,6 +87,9 @@ void main() {
         required LinkOpener links,
         UpdateDismissalStore? dismissals,
         VoidCallback? onBehindTapped,
+        _FakeAppConfigRepository? repository,
+        DateTime Function()? clock,
+        Locale locale = const Locale('en'),
     }) async {
         await tester.pumpWidget(
             ProviderScope(
@@ -88,9 +97,10 @@ void main() {
                     config: config,
                     links: links,
                     dismissals: dismissals,
+                    repository: repository,
                 ),
                 child: MaterialApp(
-                    locale: const Locale('en'),
+                    locale: locale,
                     localizationsDelegates: const [
                         AppLocalizations.delegate,
                         GlobalMaterialLocalizations.delegate,
@@ -98,7 +108,9 @@ void main() {
                         GlobalCupertinoLocalizations.delegate,
                     ],
                     supportedLocales: LocaleController.supported,
-                    builder: (context, child) => UpdateGate(child: child!),
+                    builder: (context, child) => clock == null
+                        ? UpdateGate(child: child!)
+                        : UpdateGate(clock: clock, child: child!),
                     home: Scaffold(
                         body: Center(
                             child: ElevatedButton(
@@ -185,6 +197,89 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('update-available')), findsNothing);
         expect(dismissals.dismissedVersionCode(), 5);
+    });
+
+    testWidgets('the wall shows the release notes in the app language', (tester) async {
+        await pumpGate(
+            tester,
+            config: AppConfig(
+                minVersionCode: 4,
+                downloadUrl: _download,
+                releaseNotes: const ReleaseNotes(en: 'Fixes the alert sound.', km: 'កែសំឡេង។'),
+            ),
+            links: _RecordingLinkOpener(),
+            locale: const Locale('km'),
+        );
+        expect(find.byKey(const Key('update-required-notes')), findsOneWidget);
+        expect(find.text('កែសំឡេង។'), findsOneWidget);
+        expect(find.text('Fixes the alert sound.'), findsNothing);
+    });
+
+    testWidgets('the strip folds its release notes until tapped', (tester) async {
+        await pumpGate(
+            tester,
+            config: AppConfig(
+                latestVersionCode: 5,
+                latestVersionName: '1.0.3',
+                downloadUrl: _download,
+                releaseNotes: const ReleaseNotes(en: 'Fixes the alert sound.'),
+            ),
+            links: _RecordingLinkOpener(),
+        );
+        expect(find.text('Fixes the alert sound.'), findsNothing);
+
+        await tester.tap(find.byKey(const Key('update-whats-new')));
+        await tester.pumpAndSettle();
+        expect(find.text('Fixes the alert sound.'), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('update-whats-new')));
+        await tester.pumpAndSettle();
+        expect(find.text('Fixes the alert sound.'), findsNothing);
+    });
+
+    testWidgets('a minimum raised while the app was in the background walls it off on resume',
+        (tester) async {
+        var now = DateTime(2026, 9, 29, 9);
+        final repository = _FakeAppConfigRepository(
+            AppConfig(minVersionCode: 1, latestVersionCode: 3, downloadUrl: _download),
+        );
+        await pumpGate(
+            tester,
+            config: AppConfig.none,
+            links: _RecordingLinkOpener(),
+            repository: repository,
+            clock: () => now,
+        );
+        expect(find.byKey(const Key('update-required')), findsNothing);
+        expect(repository.fetches, 1);
+
+        Future<void> backgroundAndResume() async {
+            for (final state in [
+                AppLifecycleState.inactive,
+                AppLifecycleState.hidden,
+                AppLifecycleState.paused,
+                AppLifecycleState.hidden,
+                AppLifecycleState.inactive,
+                AppLifecycleState.resumed,
+            ]) {
+                tester.binding.handleAppLifecycleStateChanged(state);
+            }
+            await tester.pumpAndSettle();
+        }
+
+        // The admin raises the minimum on the portal.
+        repository.config = AppConfig(minVersionCode: 4, latestVersionCode: 4, downloadUrl: _download);
+
+        // Back within the minute: no read, nothing changes yet.
+        now = now.add(const Duration(seconds: 30));
+        await backgroundAndResume();
+        expect(repository.fetches, 1);
+        expect(find.byKey(const Key('update-required')), findsNothing);
+
+        now = now.add(const Duration(minutes: 1));
+        await backgroundAndResume();
+        expect(repository.fetches, 2);
+        expect(find.byKey(const Key('update-required')), findsOneWidget);
     });
 
     testWidgets('an up-to-date build shows nothing', (tester) async {

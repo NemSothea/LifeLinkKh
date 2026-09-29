@@ -205,5 +205,6 @@
     "updateRequiredBody": "កំណែ LifeLink នេះលែងដំណើរការហើយ។ សូមដំឡើងកំណែថ្មី ដើម្បីបន្តទទួលការស្នើសុំឈាម។",
     "updateNewVersion": "កំណែថ្មី៖ {version}",
     "updateOpenFailed": "មិនអាចបើកកម្មវិធីរុករកបានទេ។ សូមបើកតំណនេះដើម្បីទាញយក៖",
+    "updateWhatsNew": "អ្វីដែលថ្មី",
     "privacyPolicy": "គោលការណ៍ឯកជនភាព"
 }

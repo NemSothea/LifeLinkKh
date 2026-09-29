@@ -29,21 +29,24 @@ final class UpdateAvailable extends AppUpdate {
         required this.versionCode,
         required this.downloadUrl,
         this.versionName,
+        this.releaseNotes,
     });
 
     final int versionCode;
     final String? versionName;
     final Uri downloadUrl;
+    final ReleaseNotes? releaseNotes;
 
     @override
     bool operator ==(Object other) =>
         other is UpdateAvailable &&
         other.versionCode == versionCode &&
         other.versionName == versionName &&
-        other.downloadUrl == downloadUrl;
+        other.downloadUrl == downloadUrl &&
+        other.releaseNotes == releaseNotes;
 
     @override
-    int get hashCode => Object.hash(versionCode, versionName, downloadUrl);
+    int get hashCode => Object.hash(versionCode, versionName, downloadUrl, releaseNotes);
 
     @override
     String toString() => 'UpdateAvailable($versionCode "$versionName", $downloadUrl)';
@@ -52,20 +55,22 @@ final class UpdateAvailable extends AppUpdate {
 /// This build is below `minVersionCode`: nothing else in the app is reachable until the
 /// user installs a newer one. Never dismissable.
 final class UpdateRequired extends AppUpdate {
-    const UpdateRequired({required this.downloadUrl, this.versionName});
+    const UpdateRequired({required this.downloadUrl, this.versionName, this.releaseNotes});
 
     /// The newest version's name — what the user will be installing — when known.
     final String? versionName;
     final Uri downloadUrl;
+    final ReleaseNotes? releaseNotes;
 
     @override
     bool operator ==(Object other) =>
         other is UpdateRequired &&
         other.versionName == versionName &&
-        other.downloadUrl == downloadUrl;
+        other.downloadUrl == downloadUrl &&
+        other.releaseNotes == releaseNotes;
 
     @override
-    int get hashCode => Object.hash(versionName, downloadUrl);
+    int get hashCode => Object.hash(versionName, downloadUrl, releaseNotes);
 
     @override
     String toString() => 'UpdateRequired("$versionName", $downloadUrl)';
@@ -86,7 +91,11 @@ AppUpdate appUpdateFor({
 
     final min = config.minVersionCode;
     if (min != null && installedBuild < min) {
-        return UpdateRequired(versionName: config.latestVersionName, downloadUrl: download);
+        return UpdateRequired(
+            versionName: config.latestVersionName,
+            downloadUrl: download,
+            releaseNotes: config.releaseNotes,
+        );
     }
 
     final latest = config.latestVersionCode;
@@ -95,6 +104,7 @@ AppUpdate appUpdateFor({
             versionCode: latest,
             versionName: config.latestVersionName,
             downloadUrl: download,
+            releaseNotes: config.releaseNotes,
         );
     }
     return const UpToDate();

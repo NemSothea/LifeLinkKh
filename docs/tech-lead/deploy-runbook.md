@@ -48,19 +48,21 @@ the day that decision changes.
    --title "LifeLink <name>"` — keep the asset name `lifelink-kh.apk`, since the page's default
    link is `…/releases/latest/download/lifelink-kh.apk` (the repository is public, so it works
    without a GitHub login).
-9. **Tell installed apps:** `cd firebase && npm run release -- --version-code <N> --version-name
+9. **Tell installed apps:** on the portal, **App version** tab (admin only): version name, build
+   number, minimum build, download link, and optional "what's new" in English and Khmer — then
+   **Publish**. Raising the minimum asks for confirmation first. Or from a terminal:
+   `cd firebase && npm run release -- --version-code <N> --version-name
    <name> --download-url https://<portal>/km/download --privacy-url https://<portal>/km/privacy
    --project lifelinkkh`. Only after step 8: from this moment every installed app offers the
    update. Add `--min <N>` only when older builds must stop working (a broken release, a rules
-   change they cannot follow); they then show "Update required" and nothing else.
+   change they cannot follow); they then show "Update required" and nothing else. Apps re-read
+   `config/app` at launch and whenever they return to the foreground (at most once a minute), so
+   a raised minimum reaches a phone left open in the background too. Both paths write the same
+   document; the portal goes through its own `setAppConfig` function (ADR 0010), so it is live
+   as soon as the portal is deployed — nothing to deploy on Firebase.
 
 Costs nothing: the company store and GitHub Releases are free to LifeLink, and `config/app` is
-one Firestore read per app start.
-
-**iPhone:** not in Path A yet. An IPA signed with the company's Apple *Enterprise* certificate may
-only go to K.O.S.I.G.N employees — putting it where the public installs it, even on the company
-store, breaks Apple's Enterprise licence and risks the certificate every company app depends on.
-Internal-only iOS builds are a separate step, decided with the account's owner.
+one Firestore read per app start or resume.
 
 ---
 

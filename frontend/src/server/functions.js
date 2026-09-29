@@ -11,6 +11,7 @@ import { createRequest } from './create-request.js';
 import { deleteAccount } from './delete-account.js';
 import { respondToMatch } from './respond-to-match.js';
 import { reviewRequest } from './review-request.js';
+import { setAppConfig } from './app-config.js';
 
 /**
  * @typedef {object} Context
@@ -31,6 +32,7 @@ export const FUNCTIONS = Object.freeze({
     // The portal admin.
     reviewRequest,
     confirmDonation,
+    setAppConfig,
 });
 
 export const FUNCTION_NAMES = Object.freeze(Object.keys(FUNCTIONS));

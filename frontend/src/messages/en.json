@@ -306,7 +306,8 @@
         "colTarget": "Target",
         "colShare": "Share",
         "colRequests": "Requests",
-        "colDonors": "Donors"
+        "colDonors": "Donors",
+        "tabAppVersion": "App version"
     },
     "notifications": {
         "title": "Notifications",
@@ -348,5 +349,41 @@
         "sourceLink": "Source code on GitHub",
         "contactHeading": "Questions or help",
         "contactBody": "Email us — we answer in Khmer or English."
+    },
+    "appVersion": {
+        "title": "App version",
+        "intro": "Tell every installed app about a new build — and, when an old one must stop running, make it update.",
+        "unreachable": "Could not read the current app version. Try again in a moment.",
+        "currentNone": "Nothing published yet — installed apps show no update notice.",
+        "currentLive": "Live: {name} (build {code}). Builds below {min} must update.",
+        "updatedAt": "Last changed {when}",
+        "versionNameLabel": "Version name",
+        "versionNameHint": "What users see, e.g. 1.0.2.",
+        "versionCodeLabel": "Build number",
+        "versionCodeHint": "The +N in pubspec.yaml's version.",
+        "minCodeLabel": "Minimum build",
+        "minCodeHint": "Older builds are blocked until they update.",
+        "minToLatestCta": "Require this build for everyone",
+        "downloadUrlLabel": "Download link",
+        "downloadUrlHint": "The portal's download page or a direct APK link. Upload the APK first.",
+        "privacyUrlLabel": "Privacy policy link (optional)",
+        "notesEnLabel": "What's new (English, optional)",
+        "notesKmLabel": "What's new (Khmer, optional)",
+        "notesHint": "Shown in the app's update notice.",
+        "submitCta": "Publish",
+        "submitting": "Publishing…",
+        "confirmTitle": "Block older builds?",
+        "confirmBody": "Every phone running a build below {min} will be locked out of LifeLink until it installs the new version — including donors in the middle of a request. Continue only if the old build must stop working.",
+        "confirmCta": "Publish and block",
+        "cancelCta": "Cancel",
+        "saved": "Published. Apps pick it up the next time they open or come back to the foreground.",
+        "badVersionCode": "Build numbers are whole numbers of 1 or more.",
+        "minAboveLatest": "The minimum build cannot be above the newest build — nobody would have anything to update to.",
+        "badVersionName": "Enter a version name of at most 32 characters.",
+        "badDownloadUrl": "The download link must be an https:// web address.",
+        "badPrivacyUrl": "The privacy link must be an https:// web address.",
+        "notesTooLong": "Keep each release note to 500 characters.",
+        "failed": "Could not publish. Check the links are https:// and try again.",
+        "noteUploadFirst": "Publish only after the APK is uploaded: the moment this is saved, every installed app points its users at the download link."
     }
 }

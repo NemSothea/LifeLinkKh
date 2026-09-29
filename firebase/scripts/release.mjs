@@ -5,7 +5,11 @@
 //   npm run release -- --version-code 3 --version-name 1.0.2 \
 //       --download-url https://<portal>/km/download --privacy-url https://<portal>/km/privacy
 //   npm run release -- --version-code 3 --version-name 1.0.2 --min 3 ...   # force everyone to update
+//   … --notes-en "Faster alerts" --notes-km "…"                           # shown in the update notice
 //   … --project lifelinkkh                                                  # the REAL project
+//
+// The admin portal's "App version" page (the portal's setAppConfig function) writes the same document with
+// the same checks; this script is for a release cut from a terminal.
 //
 // Run it AFTER the APK is uploaded: the moment this is written, every installed app points its
 // users at the download link. `--min` is for a build that must not keep running (a broken release,
@@ -24,6 +28,8 @@ const versionName = arg('--version-name');
 const minArg = arg('--min');
 const downloadUrl = arg('--download-url');
 const privacyUrl = arg('--privacy-url');
+const notesEn = arg('--notes-en');
+const notesKm = arg('--notes-km');
 
 const fail = (message) => {
   console.error(message);
@@ -55,6 +61,8 @@ await ref.set({
   minVersionCode,
   ...(downloadUrl ? { downloadUrl } : {}),
   ...(privacyUrl ? { privacyUrl } : {}),
+  ...(notesEn ? { releaseNotesEn: notesEn.trim() } : {}),
+  ...(notesKm ? { releaseNotesKm: notesKm.trim() } : {}),
   updatedAt: FieldValue.serverTimestamp(),
 }, { merge: true });
 

@@ -5,8 +5,9 @@ import '../../../core/error/result.dart';
 import '../domain/app_config.dart';
 import '../domain/app_config_repository.dart';
 
-/// `config/app` on Firestore — public, readable signed out, written only by the
-/// operator's release script (`firebase/`), never by a client.
+/// `config/app` on Firestore — public, readable signed out, written only by the admin
+/// portal's `setAppConfig` function or the operator's release script (`firebase/`),
+/// never by the app.
 ///
 /// Parsing is forgiving field by field: a value of the wrong type is dropped, not fatal.
 /// The document is hand-maintained, and one typo in `latestVersionName` must not also
@@ -44,6 +45,8 @@ AppConfig appConfigFrom(Map<String, Object?> data) {
         return null;
     }
 
+    String? text(String key) => data[key] is String ? data[key] as String : null;
+
     final name = data['latestVersionName'];
     return AppConfig(
         minVersionCode: versionCode('minVersionCode'),
@@ -51,5 +54,6 @@ AppConfig appConfigFrom(Map<String, Object?> data) {
         latestVersionName: name is String && name.trim().isNotEmpty ? name.trim() : null,
         downloadUrl: webLinkFrom(data['downloadUrl']),
         privacyUrl: webLinkFrom(data['privacyUrl']),
+        releaseNotes: ReleaseNotes.of(en: text('releaseNotesEn'), km: text('releaseNotesKm')),
     );
 }
