@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/settings/onboarding_controller.dart';
+import '../../../core/widgets/brand_backdrop.dart';
 import '../../auth/presentation/sign_in_screen.dart';
 
 /// The first thing a new install shows, and the only screen in the app that exists to
@@ -83,7 +84,8 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
         final isLast = _index == slides.length - 1;
 
         return Scaffold(
-            body: SafeArea(
+            body: BrandBackdrop(
+                child: SafeArea(
                 child: Column(
                     children: [
                         Align(
@@ -134,6 +136,7 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                     ],
                 ),
             ),
+            ),
         );
     }
 }
@@ -154,13 +157,27 @@ class _Slide extends StatelessWidget {
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                    // The same radial red and glow as BrandBadge, so the three slides and
+                    // the sign-in mark after them read as one family.
                     Container(
                         padding: const EdgeInsets.all(28),
                         decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer,
                             shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                                colors: [
+                                    theme.colorScheme.primary,
+                                    Color.lerp(theme.colorScheme.primary, Colors.black, 0.25)!,
+                                ],
+                            ),
+                            boxShadow: [
+                                BoxShadow(
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.30),
+                                    blurRadius: 28,
+                                    spreadRadius: 2,
+                                ),
+                            ],
                         ),
-                        child: Icon(icon, size: 56, color: theme.colorScheme.onPrimaryContainer),
+                        child: Icon(icon, size: 56, color: theme.colorScheme.onPrimary),
                     ),
                     const SizedBox(height: 32),
                     Text(

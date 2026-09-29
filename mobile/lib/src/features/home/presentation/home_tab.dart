@@ -94,6 +94,8 @@ class HomeTab extends ConsumerWidget {
                                 AsyncValue(hasValue: true, value: final DonorProfile loaded) =>
                                     EligibilityCard(
                                         eligibility: loaded.eligibility,
+                                        subtitle: '${loaded.bloodType.wireValue} · '
+                                            '${loaded.districtLabel(Localizations.localeOf(context).languageCode)}',
                                         heroTag: EligibilityCard.sharedHeroTag,
                                         onTap: () => context.push(DonorProfileScreen.path),
                                     ),
@@ -123,12 +125,11 @@ class HomeTab extends ConsumerWidget {
                                 onPressed: () => context.push(RequestFormScreen.path),
                             ),
                             if (hasDonorProfile) ...[
-                                const SizedBox(height: 24),
-                                Text(
-                                    l10n.homeNearbyRequestsHeading,
-                                    style: Theme.of(context).textTheme.titleMedium,
+                                const SizedBox(height: AppTokens.space32),
+                                _SectionHeader(
+                                    icon: Icons.near_me_outlined,
+                                    title: l10n.homeNearbyRequestsHeading,
                                 ),
-                                const SizedBox(height: 8),
                                 switch (matches) {
                                     // Covered by `hasDonorProfile` above — kept only as a
                                     // defensive fallback if the two calls ever disagree.
@@ -157,7 +158,7 @@ class HomeTab extends ConsumerWidget {
                             // unprompted actually has. Before it existed, the common case
                             // for this screen was a status banner and blank space.
                             ..._myRequests(context, ref, l10n, myRequests),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: AppTokens.space32),
                             _BoardSection(alerted: matches.valueOrNull ?? const []),
                         ]),
                     ),
@@ -208,9 +209,8 @@ class HomeTab extends ConsumerWidget {
             return const [];
         }
         return [
-            const SizedBox(height: 24),
-            Text(l10n.myRequestsCta, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTokens.space32),
+            _SectionHeader(icon: Icons.assignment_outlined, title: l10n.myRequestsCta),
             Column(
                 key: const Key('home-my-request-list'),
                 children: [for (final request in list) _RequestTile(request: request)],
@@ -219,18 +219,35 @@ class HomeTab extends ConsumerWidget {
     }
 
     Widget _becomeADonor(BuildContext context, AppLocalizations l10n) {
+        final scheme = Theme.of(context).colorScheme;
+        // Tonal, not filled: "Request blood" below is the one primary action on Home,
+        // and two filled red buttons stacked leave nobody sure which one is for them.
         return Card(
+            color: scheme.surfaceContainerHigh,
             child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
+                padding: const EdgeInsets.all(AppTokens.space16),
+                child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                        Text(l10n.donorProfileCta),
-                        const SizedBox(height: 12),
-                        FilledButton(
-                            key: const Key('donor-home-start-setup'),
-                            onPressed: () => context.push(DonorSetupScreen.path),
-                            child: Text(l10n.donorSetupTitle),
+                        CircleAvatar(
+                            backgroundColor: scheme.primaryContainer,
+                            foregroundColor: scheme.onPrimaryContainer,
+                            child: const Icon(Icons.volunteer_activism_outlined),
+                        ),
+                        const SizedBox(width: AppTokens.space16),
+                        Expanded(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                    Text(l10n.donorProfileCta),
+                                    const SizedBox(height: AppTokens.space12),
+                                    FilledButton.tonal(
+                                        key: const Key('donor-home-start-setup'),
+                                        onPressed: () => context.push(DonorSetupScreen.path),
+                                        child: Text(l10n.donorSetupTitle),
+                                    ),
+                                ],
+                            ),
                         ),
                     ],
                 ),
@@ -272,23 +289,10 @@ class HomeTab extends ConsumerWidget {
             }
             // Nothing below it either — then this card is the screen, and it should look
             // like something rather than a stray line.
-            return Card(
-                key: const Key('donor-home-matches-empty'),
-                margin: EdgeInsets.zero,
-                child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
-                    child: Column(
-                        children: [
-                            Icon(Icons.check_circle_outline, size: 36, color: scheme.primary),
-                            const SizedBox(height: 12),
-                            Text(
-                                l10n.inboxEmpty,
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                        ],
-                    ),
-                ),
+            return _EmptyState(
+                cardKey: const Key('donor-home-matches-empty'),
+                icon: Icons.notifications_none,
+                message: l10n.inboxEmpty,
             );
         }
 
@@ -507,15 +511,11 @@ class _BoardSection extends ConsumerWidget {
         return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                Text(l10n.homeBoardHeading, style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 4),
-                Text(
-                    l10n.homeBoardSubheading,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                _SectionHeader(
+                    icon: Icons.local_hospital_outlined,
+                    title: l10n.homeBoardHeading,
+                    subtitle: l10n.homeBoardSubheading,
                 ),
-                const SizedBox(height: 8),
                 switch (board) {
                     AsyncValue(hasError: true, :final error) => RetryableFailure(
                         key: const Key('donor-home-board-failed'),
@@ -536,15 +536,10 @@ class _BoardSection extends ConsumerWidget {
 
     Widget _boardList(BuildContext context, AppLocalizations l10n, List<BloodRequest> requests) {
         if (requests.isEmpty) {
-            return Padding(
-                key: const Key('donor-home-board-empty'),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(
-                    l10n.homeBoardEmpty,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                ),
+            return _EmptyState(
+                cardKey: const Key('donor-home-board-empty'),
+                icon: Icons.favorite_border,
+                message: l10n.homeBoardEmpty,
             );
         }
         // Most urgent first, then newest. The server returns newest-first, which buries a
@@ -785,6 +780,108 @@ class _FadeSlideIn extends StatelessWidget {
             builder: (context, t, child) => Opacity(
                 opacity: t,
                 child: FractionalTranslation(translation: Offset(0, 0.06 * (1 - t)), child: child),
+            ),
+        );
+    }
+}
+
+/// One heading style for every list on Home: an icon in a tinted circle, the title, and
+/// an optional muted line under it. Before this, each section styled its own heading
+/// and the board's subheading was the only one with a second line.
+class _SectionHeader extends StatelessWidget {
+    const _SectionHeader({required this.icon, required this.title, this.subtitle});
+
+    final IconData icon;
+    final String title;
+    final String? subtitle;
+
+    @override
+    Widget build(BuildContext context) {
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
+        return Padding(
+            padding: const EdgeInsets.only(bottom: AppTokens.space12),
+            child: Row(
+                crossAxisAlignment:
+                    subtitle == null ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+                children: [
+                    DecoratedBox(
+                        decoration: BoxDecoration(
+                            color: scheme.primaryContainer,
+                            shape: BoxShape.circle,
+                        ),
+                        child: Padding(
+                            padding: const EdgeInsets.all(AppTokens.space8),
+                            child: Icon(icon, size: 18, color: scheme.onPrimaryContainer),
+                        ),
+                    ),
+                    const SizedBox(width: AppTokens.space12),
+                    Expanded(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                                Semantics(
+                                    header: true,
+                                    child: Text(
+                                        title,
+                                        style: theme.textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                        ),
+                                    ),
+                                ),
+                                if (subtitle != null)
+                                    Text(
+                                        subtitle!,
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                            color: scheme.onSurfaceVariant,
+                                        ),
+                                    ),
+                            ],
+                        ),
+                    ),
+                ],
+            ),
+        );
+    }
+}
+
+/// A list with nothing in it, said with an icon and one line rather than a bare string
+/// — a bare string under a heading reads like the rest failed to load.
+class _EmptyState extends StatelessWidget {
+    const _EmptyState({required this.icon, required this.message, this.cardKey});
+
+    final IconData icon;
+    final String message;
+
+    /// On the Card itself, so a test can still tell the empty state is a card.
+    final Key? cardKey;
+
+    @override
+    Widget build(BuildContext context) {
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
+        return Card(
+            key: cardKey,
+            margin: EdgeInsets.zero,
+            color: scheme.surfaceContainerLow,
+            child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: AppTokens.space24,
+                    horizontal: AppTokens.space16,
+                ),
+                child: Column(
+                    children: [
+                        Icon(icon, size: 32, color: scheme.onSurfaceVariant),
+                        const SizedBox(height: AppTokens.space12),
+                        Text(
+                            message,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                            ),
+                        ),
+                    ],
+                ),
             ),
         );
     }

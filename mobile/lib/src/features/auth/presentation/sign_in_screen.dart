@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/widgets/brand_backdrop.dart';
 import '../../../core/widgets/brand_badge.dart';
 import '../application/auth_providers.dart';
 import 'auth_failure_message.dart';
@@ -69,7 +70,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         final bottomInset = MediaQuery.of(context).padding.bottom;
 
         return Scaffold(
-            body: SafeArea(
+            body: BrandBackdrop(
+                child: SafeArea(
                 bottom: false,
                 // Not wrapped in a scroll view: `Expanded` below needs the bounded height
                 // `SafeArea`/`Scaffold` already provide, and a scroll view would hand it
@@ -243,6 +245,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         ],
                     ),
                 ),
+            ),
         );
     }
 }

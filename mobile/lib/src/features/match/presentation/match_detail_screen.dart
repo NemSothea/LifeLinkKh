@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/error/result.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/time/relative_time.dart';
 import '../../request/domain/blood_request.dart';
 import '../../request/presentation/urgency_badge.dart';
@@ -43,11 +44,13 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
     bool _respondFailed = false;
 
     Future<void> _respond(MatchResponseType response) async {
-        // A firmer tick for yes than for no: accepting is the commitment.
-        await (response == MatchResponseType.accepted
-            ? HapticFeedback.mediumImpact()
-            : HapticFeedback.selectionClick());
-        if (!mounted) return;
+        // A firmer tick for yes than for no: accepting is the commitment. Not awaited —
+        // the buzz is feedback, and the answer must not wait on the platform channel.
+        if (response == MatchResponseType.accepted) {
+            HapticFeedback.mediumImpact();
+        } else {
+            HapticFeedback.selectionClick();
+        }
         setState(() {
             _isResponding = true;
             _respondFailed = false;
@@ -173,7 +176,7 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
                             ),
                         ),
                     if (match.isPending) _pendingBadge(context, l10n),
-                    if (match.response == null) ..._respondActions(l10n),
+                    if (match.response == null) ..._respondActions(l10n, match),
                     if (match.response == MatchResponseType.accepted)
                         _acceptedResult(context, l10n, request),
                     if (match.response == MatchResponseType.declined)
@@ -219,7 +222,21 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
         );
     }
 
-    List<Widget> _respondActions(AppLocalizations l10n) => [
+    /// Accept and decline each ask once more, in a sheet that repeats what is being
+    /// answered. A tap on a notification lands here in a hurry, and an accidental
+    /// accept sends a family a donor's promise that nobody made.
+    Future<void> _confirm(MatchResponseType response, Match match) async {
+        final confirmed = await showModalBottomSheet<bool>(
+            context: context,
+            showDragHandle: true,
+            useSafeArea: true,
+            isScrollControlled: true,
+            builder: (sheetContext) => _RespondSheet(match: match, response: response),
+        );
+        if (confirmed == true && mounted) await _respond(response);
+    }
+
+    List<Widget> _respondActions(AppLocalizations l10n, Match match) => [
         if (_respondFailed)
             Padding(
                 padding: const EdgeInsets.only(bottom: 16),
@@ -235,7 +252,7 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
                         key: const Key('match-decline'),
                         onPressed: _isResponding
                             ? null
-                            : () => _respond(MatchResponseType.declined),
+                            : () => _confirm(MatchResponseType.declined, match),
                         child: Text(l10n.matchDeclineCta),
                     ),
                 ),
@@ -244,9 +261,10 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
                     flex: 2,
                     child: FilledButton(
                         key: const Key('match-accept'),
+                        style: _acceptStyle(context),
                         onPressed: _isResponding
                             ? null
-                            : () => _respond(MatchResponseType.accepted),
+                            : () => _confirm(MatchResponseType.accepted, match),
                         child: Text(l10n.matchAcceptCta),
                     ),
                 ),
@@ -290,6 +308,120 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
                     ),
                 ],
             ],
+        );
+    }
+}
+
+/// Green, per `NOTIFY-donor-alert` screen 2: accepting is the good outcome, and the
+/// app's red already means "blood needed".
+ButtonStyle _acceptStyle(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return FilledButton.styleFrom(
+        backgroundColor: tokens.onSuccess,
+        foregroundColor: tokens.success,
+    );
+}
+
+/// The confirm step: what is being answered, then the answer, then a way out.
+class _RespondSheet extends StatelessWidget {
+    const _RespondSheet({required this.match, required this.response});
+
+    final Match match;
+    final MatchResponseType response;
+
+    @override
+    Widget build(BuildContext context) {
+        final l10n = AppLocalizations.of(context)!;
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
+        final request = match.request;
+        final accepting = response == MatchResponseType.accepted;
+        final distance = request.distanceKm;
+
+        return Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppTokens.space24,
+                0,
+                AppTokens.space24,
+                AppTokens.space24,
+            ),
+            child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                    Row(
+                        children: [
+                            CircleAvatar(
+                                radius: 28,
+                                backgroundColor: scheme.primary,
+                                foregroundColor: scheme.onPrimary,
+                                child: Text(
+                                    request.patientBloodType.wireValue,
+                                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                                ),
+                            ),
+                            const SizedBox(width: AppTokens.space16),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                        Text(
+                                            request.hospitalName,
+                                            style: theme.textTheme.titleMedium?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                            ),
+                                        ),
+                                        const SizedBox(height: AppTokens.space4),
+                                        Wrap(
+                                            spacing: AppTokens.space8,
+                                            runSpacing: AppTokens.space4,
+                                            crossAxisAlignment: WrapCrossAlignment.center,
+                                            children: [
+                                                UrgencyBadge(urgency: request.urgency),
+                                                if (distance != null)
+                                                    Text('~$distance km', style: theme.textTheme.bodySmall),
+                                                Text(
+                                                    formatRelativeTime(context, request.createdAt),
+                                                    style: theme.textTheme.bodySmall?.copyWith(
+                                                        color: scheme.onSurfaceVariant,
+                                                    ),
+                                                ),
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                            ),
+                        ],
+                    ),
+                    const SizedBox(height: AppTokens.space16),
+                    Text(
+                        l10n.inboxYourBloodTypeCompatible(match.myBloodType.wireValue),
+                        style: theme.textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: AppTokens.space24),
+                    if (accepting)
+                        FilledButton.icon(
+                            key: const Key('match-accept-confirm'),
+                            style: _acceptStyle(context),
+                            onPressed: () => Navigator.of(context).pop(true),
+                            icon: const Icon(Icons.check),
+                            label: Text(l10n.matchAcceptCta),
+                        )
+                    else
+                        FilledButton.tonalIcon(
+                            key: const Key('match-decline-confirm'),
+                            onPressed: () => Navigator.of(context).pop(true),
+                            icon: const Icon(Icons.close),
+                            label: Text(l10n.matchDeclineCta),
+                        ),
+                    const SizedBox(height: AppTokens.space8),
+                    TextButton(
+                        key: const Key('match-respond-cancel'),
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+                    ),
+                ],
+            ),
         );
     }
 }

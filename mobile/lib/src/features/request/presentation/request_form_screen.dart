@@ -75,8 +75,7 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
             ),
         );
         if (confirmed != true || !mounted) return;
-        await HapticFeedback.mediumImpact();
-        if (!mounted) return;
+        HapticFeedback.mediumImpact();
 
         setState(() {
             _isSending = true;

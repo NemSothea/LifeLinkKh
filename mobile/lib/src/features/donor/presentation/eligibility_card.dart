@@ -20,12 +20,22 @@ import '../domain/eligibility.dart';
 /// like it. The waiting state stays calm and neutral on purpose: a countdown is not an
 /// alert.
 class EligibilityCard extends StatelessWidget {
-    const EligibilityCard({required this.eligibility, this.onTap, this.heroTag, super.key});
+    const EligibilityCard({
+        required this.eligibility,
+        this.subtitle,
+        this.onTap,
+        this.heroTag,
+        super.key,
+    });
 
     /// The one tag Home and the donor profile share, so the card flies between them.
     static const Object sharedHeroTag = 'eligibility-card-hero';
 
     final Eligibility eligibility;
+
+    /// A second line under the answer — Home shows the donor's blood type and district
+    /// here (`GLOBAL-home-dashboard`: "O− · Toul Kork"), so the card says who it is about.
+    final String? subtitle;
 
     /// Makes the whole card a button (Home opens the profile with it). Null on the
     /// profile screen itself, where the card is the destination, not a way there.
@@ -84,12 +94,30 @@ class EligibilityCard extends StatelessWidget {
                         ),
                         const SizedBox(width: AppTokens.space16),
                         Expanded(
-                            child: Text(
-                                message,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: isEligible ? tokens.onEligible : scheme.onSurface,
-                                    fontWeight: FontWeight.w700,
-                                ),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                    Text(
+                                        message,
+                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                            color: isEligible ? tokens.onEligible : scheme.onSurface,
+                                            fontWeight: FontWeight.w700,
+                                        ),
+                                    ),
+                                    if (subtitle != null) ...[
+                                        const SizedBox(height: AppTokens.space4),
+                                        Text(
+                                            subtitle!,
+                                            key: const Key('eligibility-card-subtitle'),
+                                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                color: (isEligible
+                                                        ? tokens.onEligible
+                                                        : tokens.onCooldown)
+                                                    .withValues(alpha: 0.9),
+                                            ),
+                                        ),
+                                    ],
+                                ],
                             ),
                         ),
                         if (onTap != null)
