@@ -279,5 +279,8 @@
     "faqDeleteQ": "តើខ្ញុំលុបគណនីរបស់ខ្ញុំដោយរបៀបណា?",
     "faqDeleteA": "បើកផ្ទាំង «{tab}» ហើយចុច «{action}»។",
     "appVersionLabel": "កំណែ {version} (build {build})",
-    "introDone": "រួចរាល់"
+    "introDone": "រួចរាល់",
+    "aboutContactTitle": "ទំនាក់ទំនង",
+    "aboutContactBody": "សំណួរ ច្បាប់ចម្លងទិន្នន័យរបស់អ្នក ឬការស្នើសុំលុប៖",
+    "aboutContactCopied": "បានចម្លងអាសយដ្ឋានអ៊ីមែល។"
 }

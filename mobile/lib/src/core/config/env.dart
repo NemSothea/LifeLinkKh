@@ -42,6 +42,13 @@ class Env {
 
     static const String defaultPortalUrl = 'https://lifelinkkh.vercel.app';
 
+    /// Where About sends questions, data-copy and deletion requests — the same inbox the
+    /// portal's privacy page names (its `SUPPORT_EMAIL`), so both clients give one address.
+    static const String supportEmail = String.fromEnvironment(
+        'SUPPORT_EMAIL',
+        defaultValue: 'nemsothea13@gmail.com',
+    );
+
     static String get portalUrl => portalUrlFrom(_portalUrl, allowHttp: kDebugMode);
 
     /// `raw` if the app may send an ID token there, else [defaultPortalUrl].

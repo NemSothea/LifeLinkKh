@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/config/env.dart';
 import '../../../core/links/link_providers.dart';
 import '../../../core/widgets/brand_badge.dart';
 import '../../onboarding/presentation/intro_screen.dart';
@@ -15,8 +17,8 @@ import '../application/about_providers.dart';
 /// Reachable signed out (the sign-in footer) as well as from the Me tab: the questions
 /// matter most *before* someone has handed over a Google account. Every FAQ answer is a
 /// string the app already shows somewhere else, so this screen makes no promise the rest
-/// of the app does not already make. No contact line: an address nobody answers costs
-/// more trust than it earns.
+/// of the app does not already make. The contact address is the one the portal's
+/// privacy page gives, so the app and the web never name two different inboxes.
 class AboutScreen extends ConsumerWidget {
     const AboutScreen({super.key});
 
@@ -100,6 +102,21 @@ class AboutScreen extends ConsumerWidget {
                                 ],
                             ),
                         ),
+                        const SizedBox(height: 24),
+                        _SectionTitle(l10n.aboutContactTitle),
+                        Card(
+                            margin: EdgeInsets.zero,
+                            child: ListTile(
+                                key: const Key('about-contact'),
+                                leading: const Icon(Icons.mail_outline),
+                                title: Text(l10n.aboutContactBody),
+                                subtitle: Text(
+                                    Env.supportEmail,
+                                    style: TextStyle(color: theme.colorScheme.primary),
+                                ),
+                                onTap: () => _email(context, ref, l10n),
+                            ),
+                        ),
                         const SizedBox(height: 16),
                         Card(
                             margin: EdgeInsets.zero,
@@ -142,6 +159,18 @@ class AboutScreen extends ConsumerWidget {
             ),
         );
     }
+}
+
+/// Opens the mail app on the support address. A phone with no mail app — an emulator,
+/// often — gets the address on the clipboard instead, so the tap is never a dead end.
+Future<void> _email(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final opened = await ref
+        .read(linkOpenerProvider)
+        .open(Uri(scheme: 'mailto', path: Env.supportEmail));
+    if (opened) return;
+    await Clipboard.setData(const ClipboardData(text: Env.supportEmail));
+    messenger.showSnackBar(SnackBar(content: Text(l10n.aboutContactCopied)));
 }
 
 class _SectionTitle extends StatelessWidget {

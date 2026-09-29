@@ -1211,5 +1211,17 @@
     "introDone": "Done",
     "@introDone": {
         "description": "Intro carousel, last slide, when reopened from How it works: closes it and goes back"
+    },
+    "aboutContactTitle": "Contact",
+    "@aboutContactTitle": {
+        "description": "About screen section heading. Same wording as the portal's privacy page (privacy.contactHeading)"
+    },
+    "aboutContactBody": "Questions, a copy of your data, or a deletion request:",
+    "@aboutContactBody": {
+        "description": "About screen, above the support email. Same wording as the portal's privacy page (privacy.contactBody)"
+    },
+    "aboutContactCopied": "Email address copied.",
+    "@aboutContactCopied": {
+        "description": "Snackbar when no mail app could open the address, so it was copied instead"
     }
 }

@@ -183,6 +183,21 @@ void main() {
             expect(deleteAnswer, findsOneWidget);
         });
 
+        testWidgets('the contact row opens a mail to the privacy page\'s address',
+            (tester) async {
+            await pumpApp(tester, locale: const Locale('en'));
+            await tester.tap(find.byKey(const Key('sign-in-about')));
+            await tester.pumpAndSettle();
+
+            final contact = find.byKey(const Key('about-contact'));
+            await _bring(tester, contact);
+            expect(find.text(Env.supportEmail), findsOneWidget);
+            await tester.tap(contact);
+            await tester.pump();
+
+            expect(links.opened, [Uri(scheme: 'mailto', path: Env.supportEmail)]);
+        });
+
         testWidgets('is reachable from the Me tab when signed in', (tester) async {
             await pumpApp(tester, signedIn: true);
 
