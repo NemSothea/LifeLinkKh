@@ -36,3 +36,14 @@ export const FUNCTIONS = Object.freeze({
 });
 
 export const FUNCTION_NAMES = Object.freeze(Object.keys(FUNCTIONS));
+
+/**
+ * The handler for a wire name, or undefined. Own properties only: `FUNCTIONS[name]` alone also
+ * finds what every object inherits, so `POST /api/functions/constructor` ran `Object(ctx)` and
+ * tried to send back the context with the Admin app in it (SEC-REVIEW-003 F-01).
+ *
+ * @param {string} name
+ */
+export function functionNamed(name) {
+    return Object.hasOwn(FUNCTIONS, name) ? FUNCTIONS[name] : undefined;
+}

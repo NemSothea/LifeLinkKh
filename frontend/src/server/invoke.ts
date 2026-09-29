@@ -1,6 +1,6 @@
 import 'server-only';
 import { serverAuth, serverDb, serverMessaging } from './firebase-admin';
-import { FUNCTIONS } from './functions.js';
+import { functionNamed } from './functions.js';
 import { HttpsError } from './https-error.js';
 
 /**
@@ -20,7 +20,7 @@ export async function invoke(
     data: unknown,
     token: string | null,
 ): Promise<Invocation> {
-    const handler = FUNCTIONS[name as keyof typeof FUNCTIONS];
+    const handler = functionNamed(name);
     if (!handler)
         return { ok: false, error: new HttpsError('not-found', `No function named ${name}.`) };
 
