@@ -15,7 +15,7 @@ import {
     type PendingRequest,
     type PortalRequest,
 } from '@/lib/api/portal';
-import { IconAlertTriangle, IconInbox, IconLogIn } from '@/components/icons';
+import { IconAlertTriangle, IconDroplet, IconInbox, IconLogIn } from '@/components/icons';
 import PendingReviewList from './pending-review-list';
 import RequestList, { type RequestViewModel } from './request-list';
 import PageHeader from '@/components/PageHeader';
@@ -136,6 +136,20 @@ export default async function PortalPage({
                     )}
                 </div>
             </PageHeader>
+
+            {/* DEC-019: a visitor reading the board is a family or a would-be donor. Both need
+                to hear "never pay", and where to learn how getting blood actually works. */}
+            {isAdmin ? null : (
+                <div
+                    data-testid="board-guidance"
+                    className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200"
+                >
+                    <p className="min-w-0 flex-1">{t('moneyNotice')}</p>
+                    <PillLink href={`/${locale}/getting-blood`} icon={<IconDroplet />}>
+                        {t('guideLink')}
+                    </PillLink>
+                </div>
+            )}
 
             {result.ok ? (
                 <div className="mb-6 flex flex-wrap items-center justify-end gap-x-6 gap-y-2">

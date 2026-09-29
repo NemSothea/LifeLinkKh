@@ -15,7 +15,9 @@
         "downloadCardTitle": "Get the app",
         "downloadCardBody": "Free for Android. Register as a donor, or ask for blood for your family.",
         "copyright": "© {year} LifeLink KH. All rights reserved.",
-        "metaDescription": "LifeLink KH is a free app that connects voluntary blood donors in Phnom Penh with families who urgently need blood."
+        "metaDescription": "LifeLink KH is a free app that connects voluntary blood donors in Phnom Penh with families who urgently need blood.",
+        "guideCardTitle": "How getting blood works",
+        "guideCardBody": "Any blood type in the family can help, blood is free, and what to know before you donate."
     },
     "signIn": {
         "title": "Admin sign-in",
@@ -114,7 +116,9 @@
         "showingLabel": "Showing {from}–{to} of {total}",
         "previousPage": "Previous page",
         "nextPage": "Next page",
-        "goToPage": "Page {page}"
+        "goToPage": "Page {page}",
+        "guideLink": "How getting blood works",
+        "moneyNotice": "LifeLink never asks for money. Never pay or accept payment for blood: by national policy, it is free."
     },
     "admin": {
         "staffRoleAdmin": "Admin",
@@ -328,16 +332,17 @@
             },
             {
                 "title": "Matching donors get an alert",
-                "body": "Donors with a compatible blood type, near the hospital, and at least 56 days since their last donation get a notification on their phone."
+                "body": "Donors with a compatible blood type, near the hospital, who have not donated recently get a notification on their phone."
             },
             {
                 "title": "A donor gives blood at the hospital",
-                "body": "A donor who accepts sees the family's phone number and donates at the hospital or blood center. The app reminds them when they can donate again."
+                "body": "A donor who accepts sees the family's phone number and donates at the hospital or blood center."
             }
         ],
         "safetyHeading": "Stay safe",
         "safety": [
             "LifeLink is free. It never asks donors or families for money — if anyone asks you to pay, do not.",
+            "By national policy, blood is free to the patient. Never pay anyone for blood or for a donor.",
             "Give blood only at a hospital or blood center.",
             "Download the app only from this website.",
             "The app's reminders are not medical advice. The hospital decides whether you can donate."
@@ -385,5 +390,64 @@
         "notesTooLong": "Keep each release note to 500 characters.",
         "failed": "Could not publish. Check the links are https:// and try again.",
         "noteUploadFirst": "Publish only after the APK is uploaded: the moment this is saved, every installed app points its users at the download link."
+    },
+    "gettingBlood": {
+        "title": "How getting blood works",
+        "subtitle": "For families of patients, and for donors, in Cambodia",
+        "intro": "In Cambodia, most blood for patients comes from relatives and friends who donate. Here is what families and donors need to know.",
+        "sections": [
+            {
+                "heading": "Any blood type can help",
+                "items": [
+                    "Relatives and friends can donate at the hospital's blood bank or at the National Blood Transfusion Center, whatever their blood type.",
+                    "Their blood goes into the tested stock, and the blood bank gives the patient the type they need.",
+                    "Ask the hospital's blood bank how many donors they need from your family."
+                ]
+            },
+            {
+                "heading": "Blood is free",
+                "items": [
+                    "By national policy, blood is free to the patient. The hospital may charge a fee for testing and processing. Ask the hospital how much.",
+                    "Never pay anyone for blood or for a donor. If someone offers to sell you blood, tell the hospital.",
+                    "LifeLink never asks for money, from families or from donors."
+                ]
+            },
+            {
+                "heading": "Blood from close relatives",
+                "items": [
+                    "Do not arrange for a parent's, child's or sibling's blood to go straight to the patient. Let them donate to the blood bank. The hospital decides how blood from relatives is used."
+                ]
+            },
+            {
+                "heading": "Before you donate",
+                "items": [
+                    "You need to weigh at least 45 kg and usually be 18 to 60 years old.",
+                    "Have a meal or snack in the 4 hours before, and drink plenty of water.",
+                    "A standard donation in Cambodia is 350 ml. The whole visit is usually under an hour."
+                ]
+            },
+            {
+                "heading": "Wait before donating if you…",
+                "items": [
+                    "had a fever or felt ill in the last 2 weeks",
+                    "took antibiotics in the last 2 weeks",
+                    "had dengue or malaria in the last 6 months",
+                    "got a tattoo, piercing or acupuncture in the last 12 months",
+                    "are pregnant or breastfeeding, or gave birth in the last 6 months",
+                    "had surgery or received blood in the last 12 months",
+                    "Staff at the centre make the final check. If you are not sure, ask them before you donate."
+                ]
+            },
+            {
+                "heading": "Where to donate",
+                "items": [
+                    "National Blood Transfusion Center (NBTC): St 271, next to Khmer-Soviet Friendship Hospital, Phnom Penh. Walk-ins welcome.",
+                    "Hospital blood banks and mobile blood drives also collect blood. Watch the Cambodia Blood Service page for dates.",
+                    "After a donation, the centre may ask you to wait 3 months (men) or 4 months (women) before the next one. Follow what the centre tells you."
+                ]
+            }
+        ],
+        "source": "Based on Cambodia's national blood policy and WHO guidance. The hospital's blood bank and the NBTC have the final word on their own rules.",
+        "backHome": "Back to home"
     }
 }

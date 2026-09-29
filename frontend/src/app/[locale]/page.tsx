@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import LegalLinks from '@/components/LegalLinks';
-import { CodeXml, Download, Mail, Phone } from 'lucide-react';
+import { BookOpen, CodeXml, Download, Mail, Phone } from 'lucide-react';
 import { IconArrowRight, IconInbox, IconShield, IconUsers } from '@/components/icons';
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,15 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     title={t('portalCardTitle')}
                     body={t('portalCardBody')}
                     index={1}
+                />
+                {/* DEC-019: how families actually get blood, and what a donor checks first. */}
+                <EntryCard
+                    href={`/${locale}/getting-blood`}
+                    testId="home-guide-link"
+                    icon={<BookOpen className="size-6" aria-hidden="true" />}
+                    title={t('guideCardTitle')}
+                    body={t('guideCardBody')}
+                    index={2}
                 />
             </div>
 
