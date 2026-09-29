@@ -26,6 +26,9 @@ void main() {
         credentials: credentials,
         facebookCredentials: facebookCredentials,
         clearPushRegistration: () async => events.add('fcm-cleared'),
+        clearLocalData: () async => events.add(
+            credentials.signedOut ? 'local-cleared-after-sign-out' : 'local-cleared-too-early',
+        ),
     );
 
     setUp(() {
@@ -138,7 +141,8 @@ void main() {
 
             // Clearing `fcmToken` needs the Firebase user the rules check. Reverse the order
             // and a signed-out phone keeps receiving urgent-request alerts (ADR 0007 §5).
-            expect(events, ['fcm-cleared']);
+            // Local data goes last: terminating Firestore first would refuse that write.
+            expect(events, ['fcm-cleared', 'local-cleared-after-sign-out']);
             expect(await store.read(), isNull);
             expect(credentials.signedOut, isTrue);
         });
@@ -151,6 +155,40 @@ void main() {
                 credentials: credentials,
                 facebookCredentials: facebookCredentials,
                 clearPushRegistration: () async => throw Exception('offline'),
+            );
+
+            await service.signOut();
+
+            expect(await store.read(), isNull);
+            expect(credentials.signedOut, isTrue);
+        });
+
+        test('clears this phone\'s local data (SEC-REVIEW-003 F-07)', () async {
+            await store.write(_session('jwt-1'));
+
+            await serviceUnder().signOut();
+
+            expect(events, contains('local-cleared-after-sign-out'));
+        });
+
+        test('clears local data even when the Firebase sign-out throws', () async {
+            await store.write(_session('jwt-1'));
+            credentials.throwOnSignOut = true;
+
+            await expectLater(serviceUnder().signOut(), throwsException);
+
+            expect(events, ['fcm-cleared', 'local-cleared-too-early']);
+            expect(await store.read(), isNull);
+        });
+
+        test('signs out anyway when clearing local data fails', () async {
+            await store.write(_session('jwt-1'));
+            final service = AuthService(
+                repository: repository,
+                sessionStore: store,
+                credentials: credentials,
+                facebookCredentials: facebookCredentials,
+                clearLocalData: () async => throw Exception('disk full'),
             );
 
             await service.signOut();
@@ -256,6 +294,7 @@ final class _FakeGoogleCredentials implements GoogleCredentials {
     String? uid = _uid;
     bool throwOnSignIn = false;
     bool throwOnCurrentUid = false;
+    bool throwOnSignOut = false;
     int signInCalls = 0;
     bool signedOut = false;
 
@@ -273,7 +312,10 @@ final class _FakeGoogleCredentials implements GoogleCredentials {
     }
 
     @override
-    Future<void> signOut() async => signedOut = true;
+    Future<void> signOut() async {
+        if (throwOnSignOut) throw Exception('platform channel died');
+        signedOut = true;
+    }
 
     // Sign-out-and-restore tests never re-authenticate; the account deletion tests
     // (account_deletion_service_test.dart) have their own fakes.

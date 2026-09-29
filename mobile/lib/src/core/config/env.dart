@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Build-time configuration. Nothing here is committed with a value, and nothing is
 /// required: a plain `flutter run` talks to the real `lifelinkkh` Firebase project, whose
 /// config the platform files (`google-services.json`, `GoogleService-Info.plist`) carry.
@@ -35,10 +37,27 @@ class Env {
     /// default; a local `next dev` for a demo against the emulators.
     static const String _portalUrl = String.fromEnvironment(
         'PORTAL_URL',
-        defaultValue: 'https://lifelinkkh.vercel.app',
+        defaultValue: defaultPortalUrl,
     );
 
-    static String get portalUrl => _portalUrl.isEmpty ? 'https://lifelinkkh.vercel.app' : _portalUrl;
+    static const String defaultPortalUrl = 'https://lifelinkkh.vercel.app';
+
+    static String get portalUrl => portalUrlFrom(_portalUrl, allowHttp: kDebugMode);
+
+    /// `raw` if the app may send an ID token there, else [defaultPortalUrl].
+    ///
+    /// `http://` only in a debug build (SEC-REVIEW-003 F-15): the demo's
+    /// `flutter run --dart-define=PORTAL_URL=http://10.0.2.2:3000` has no TLS to offer, but
+    /// a release build posting a bearer token in clear text would hand it to anyone on the
+    /// café Wi-Fi. A release built with an http URL talks to the deployed portal instead —
+    /// a wrong server is a visible bug, a leaked token is not.
+    @visibleForTesting
+    static String portalUrlFrom(String raw, {required bool allowHttp}) {
+        final uri = Uri.tryParse(raw.trim());
+        if (uri == null || uri.host.isEmpty) return defaultPortalUrl;
+        if (uri.isScheme('https') || (allowHttp && uri.isScheme('http'))) return raw.trim();
+        return defaultPortalUrl;
+    }
 
     static ({String host, int port})? _hostPort(String value) {
         final parts = value.split(':');

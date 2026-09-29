@@ -23,11 +23,13 @@ final class AuthService {
         required GoogleCredentials credentials,
         required FacebookCredentials facebookCredentials,
         Future<void> Function()? clearPushRegistration,
+        Future<void> Function()? clearLocalData,
     })  : _repository = repository,
           _sessionStore = sessionStore,
           _credentials = credentials,
           _facebookCredentials = facebookCredentials,
-          _clearPushRegistration = clearPushRegistration;
+          _clearPushRegistration = clearPushRegistration,
+          _clearLocalData = clearLocalData;
 
     final AuthRepository _repository;
     final SessionStore _sessionStore;
@@ -37,6 +39,11 @@ final class AuthService {
     /// Clears `users/{uid}.fcmToken`, injected as a callback rather than as a repository
     /// so this feature does not import the notify feature's domain.
     final Future<void> Function()? _clearPushRegistration;
+
+    /// Drops what this phone cached for the user — the Drift tables, the Firestore
+    /// offline cache, the FCM token (`LocalDataEraser`, SEC-REVIEW-003 F-07). A callback
+    /// for the same reason as [_clearPushRegistration].
+    final Future<void> Function()? _clearLocalData;
 
     /// Interactive sign-in, for the sign-in screen.
     ///
@@ -133,6 +140,10 @@ final class AuthService {
     /// Push registration is cleared **first**, while the Firebase user whose rules allow
     /// the write is still signed in. Signing out first would leave the device registered
     /// for urgent-request alerts with no way left to unregister it.
+    ///
+    /// Local data goes **last**, and even when the Firebase sign-out throws: clearing the
+    /// Firestore cache terminates the instance, which the push-token write above still
+    /// needed.
     Future<void> signOut() async {
         try {
             await _clearPushRegistration?.call();
@@ -142,7 +153,19 @@ final class AuthService {
             // should no longer get.
         }
         await _sessionStore.clear();
-        await _credentials.signOut();
+        try {
+            await _credentials.signOut();
+        } finally {
+            await _eraseLocalData();
+        }
+    }
+
+    Future<void> _eraseLocalData() async {
+        try {
+            await _clearLocalData?.call();
+        } on Object catch (_) {
+            // `LocalDataEraser` does not throw; a sign-out does not depend on that.
+        }
     }
 
     Future<Result<AuthSession?>> _store(AuthSession session) async {

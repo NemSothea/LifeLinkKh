@@ -73,6 +73,17 @@ class AppDatabase extends _$AppDatabase {
         // docs/mobile/local-db-and-sync.md.
         onUpgrade: (Migrator m, int from, int to) async {},
     );
+
+    /// Every row of every table, for sign-out and account deletion (SEC-REVIEW-003 F-07).
+    ///
+    /// `allTables` rather than a list: everything here is the signed-in donor's own data,
+    /// and the next person on a shared phone must not inherit their answers or replay
+    /// their queue. A table added later is covered without anyone remembering to add it.
+    Future<void> deleteAllRows() => transaction(() async {
+        for (final table in allTables) {
+            await delete(table).go();
+        }
+    });
 }
 
 LazyDatabase _openConnection() => LazyDatabase(() async {

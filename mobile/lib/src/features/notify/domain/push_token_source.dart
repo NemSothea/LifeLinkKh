@@ -17,4 +17,10 @@ abstract interface class PushTokenSource {
     /// no user action. A rotation that is not re-registered is a donor who has silently
     /// stopped receiving urgent-request alerts.
     Stream<String> tokenRefreshes();
+
+    /// Invalidates this device's token with FCM, at sign-out and account deletion
+    /// (SEC-REVIEW-003 F-20). Clearing `users/{uid}.fcmToken` stops our pushes; this stops
+    /// the token itself working for anyone who copied it. Never throws: a sign-out must
+    /// finish even with no Play Services or no network.
+    Future<void> deleteToken();
 }

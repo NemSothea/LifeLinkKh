@@ -192,6 +192,32 @@ void main() {
         });
     });
 
+    group('webLinkFrom (SEC-REVIEW-003 F-15)', () {
+        test('https is a link in every build', () {
+            expect(webLinkFrom('https://lifelink.example/km/download'), _download);
+            expect(webLinkFrom(' https://lifelink.example/km/download ', allowHttp: true), _download);
+        });
+
+        test('http is refused unless the build allows it', () {
+            // The release default: a clear-text download link is an APK anyone on the
+            // network can swap.
+            expect(webLinkFrom('http://10.0.2.2:3000/km/download'), isNull);
+            expect(
+                webLinkFrom('http://10.0.2.2:3000/km/download', allowHttp: true),
+                Uri.parse('http://10.0.2.2:3000/km/download'),
+            );
+        });
+
+        test('anything else is never a link, debug or not', () {
+            for (final allowHttp in [false, true]) {
+                expect(webLinkFrom('intent://evil#Intent;end', allowHttp: allowHttp), isNull);
+                expect(webLinkFrom('file:///sdcard/x', allowHttp: allowHttp), isNull);
+                expect(webLinkFrom('https://', allowHttp: allowHttp), isNull);
+                expect(webLinkFrom(42, allowHttp: allowHttp), isNull);
+            }
+        });
+    });
+
     group('AppUpdateController', () {
         ProviderContainer container({
             required _FakeAppConfigRepository repository,

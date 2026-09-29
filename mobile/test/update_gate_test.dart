@@ -312,6 +312,7 @@ void main() {
                             .overrideWithValue(FakeFacebookCredentials()),
                         fcmTokenRepositoryProvider.overrideWithValue(FakeFcmTokenRepository()),
                         pushTokenSourceProvider.overrideWithValue(pushTokens),
+                        fakeLocalDataEraser(),
                         ..._updateOverrides(config: config, links: links),
                     ],
                     child: const LifeLinkApp(),

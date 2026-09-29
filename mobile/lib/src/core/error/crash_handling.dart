@@ -13,8 +13,10 @@ import '../widgets/screen_failure.dart';
 ///   Debug keeps the red box, because a developer needs the stack trace, not reassurance.
 /// - **A framework error** (layout, painting, a gesture callback). Logged through
 ///   [FlutterError.presentError], same as the default, so it still reaches `adb logcat`.
-/// - **An uncaught async error** (a `Future` nobody awaited). Logged, and marked handled
-///   so it does not take the isolate down.
+/// - **An uncaught async error** (a `Future` nobody awaited). Logged in debug only — a
+///   release log is readable by anything with `adb logcat`, and an error message can carry
+///   a document path or a phone number (SEC-REVIEW-003 F-20). Marked handled either way, so
+///   it does not take the isolate down.
 ///
 /// Nothing is sent anywhere. There is no crash-reporting service in this build — adding
 /// one is a dependency and a privacy decision, not a default.
@@ -24,7 +26,7 @@ void installCrashHandlers() {
     };
 
     PlatformDispatcher.instance.onError = (error, stack) {
-        debugPrint('Uncaught async error: $error\n$stack');
+        if (kDebugMode) debugPrint('Uncaught async error: $error\n$stack');
         return true;
     };
 

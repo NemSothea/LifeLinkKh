@@ -45,6 +45,7 @@ void main() {
                     facebookCredentialsProvider.overrideWithValue(FakeFacebookCredentials()),
                     fcmTokenRepositoryProvider.overrideWithValue(fcm),
                     pushTokenSourceProvider.overrideWithValue(pushTokens),
+                    fakeLocalDataEraser(),
                     accountRepositoryProvider.overrideWithValue(accounts),
                 ],
                 child: const LifeLinkApp(),
@@ -110,6 +111,8 @@ void main() {
         // users/{uid} is already gone: clearing the push token there would be a refused
         // write, which is why deletion does not go through signOut().
         expect(fcm.clearCount, 0);
+        // The device's own token still goes (SEC-REVIEW-003 F-20).
+        expect(pushTokens.deleteCount, 1);
     });
 
     testWidgets('dismissing the re-authentication returns to the Me tab', (tester) async {

@@ -31,4 +31,14 @@ final class FirebasePushTokenSource implements PushTokenSource {
 
     @override
     Stream<String> tokenRefreshes() => _messaging.onTokenRefresh;
+
+    @override
+    Future<void> deleteToken() async {
+        try {
+            await _messaging.deleteToken();
+        } on Object catch (_) {
+            // Same devices as `currentToken`. The server-side copy is already cleared, so
+            // nothing we send reaches this token anyway.
+        }
+    }
 }

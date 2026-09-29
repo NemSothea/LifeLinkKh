@@ -1,10 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lifelink_kh/src/core/database/app_database.dart';
 import 'package:lifelink_kh/src/core/error/failure.dart';
 import 'package:lifelink_kh/src/core/error/result.dart';
 import 'package:lifelink_kh/src/core/location/location_service.dart';
 import 'package:lifelink_kh/src/features/account/domain/account_deletion.dart';
 import 'package:lifelink_kh/src/features/account/domain/account_repository.dart';
+import 'package:lifelink_kh/src/features/auth/application/auth_providers.dart';
+import 'package:lifelink_kh/src/features/auth/application/local_data_eraser.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_repository.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_session.dart';
 import 'package:lifelink_kh/src/features/auth/domain/auth_user.dart';
@@ -20,6 +24,7 @@ import 'package:lifelink_kh/src/features/donor/domain/donor_profile.dart';
 import 'package:lifelink_kh/src/features/donor/domain/donor_profile_draft.dart';
 import 'package:lifelink_kh/src/features/donor/domain/donor_repository.dart';
 import 'package:lifelink_kh/src/features/donor/domain/eligibility.dart';
+import 'package:lifelink_kh/src/features/notify/application/push_providers.dart';
 import 'package:lifelink_kh/src/features/notify/domain/push_token_source.dart';
 
 /// Fakes at every seam the M3 auth flow crosses, so a widget test drives the real
@@ -181,6 +186,7 @@ final class FakeFcmTokenRepository implements FcmTokenRepository {
 final class FakePushTokenSource implements PushTokenSource {
     String? token = 'fcm-token-1';
     bool permissionGranted = true;
+    int deleteCount = 0;
     final StreamController<String> refreshes = StreamController<String>.broadcast();
 
     @override
@@ -191,7 +197,23 @@ final class FakePushTokenSource implements PushTokenSource {
 
     @override
     Stream<String> tokenRefreshes() => refreshes.stream;
+
+    @override
+    Future<void> deleteToken() async => deleteCount++;
 }
+
+/// `localDataEraserProvider` without a phone: an in-memory database, the test's own
+/// [PushTokenSource], and no Firestore. Any flow that signs out or deletes an account
+/// needs it — the real one opens a SQLite file through `path_provider`.
+Override fakeLocalDataEraser() => localDataEraserProvider.overrideWith((ref) {
+    final database = AppDatabase.memory();
+    ref.onDispose(database.close);
+    return LocalDataEraser(
+        database: database,
+        pushTokens: ref.watch(pushTokenSourceProvider),
+        clearFirestoreCache: () async {},
+    );
+});
 
 /// A donor profile with a live cooldown, so eligibility rendering has both numbers to show.
 DonorProfile testProfile({

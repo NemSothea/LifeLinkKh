@@ -31,6 +31,7 @@ void main() {
                 facebookCredentialsProvider.overrideWithValue(FakeFacebookCredentials()),
                 fcmTokenRepositoryProvider.overrideWithValue(fcm),
                 pushTokenSourceProvider.overrideWithValue(pushTokens),
+                fakeLocalDataEraser(),
             ],
         );
         addTearDown(container.dispose);

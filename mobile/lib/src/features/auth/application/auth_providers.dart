@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/config/env.dart';
+import '../../../core/database/database_providers.dart';
 import '../../notify/application/push_providers.dart';
 import '../../../core/firebase/firestore_providers.dart';
 import '../data/firebase_auth_repository.dart';
@@ -14,6 +15,7 @@ import '../domain/google_credentials.dart';
 import '../domain/session_store.dart';
 import '../../../core/error/result.dart';
 import 'auth_service.dart';
+import 'local_data_eraser.dart';
 
 part 'auth_providers.g.dart';
 
@@ -48,6 +50,28 @@ AuthService authService(AuthServiceRef ref) => AuthService(
     clearPushRegistration: () async {
         await ref.read(fcmTokenRepositoryProvider).clear();
     },
+    clearLocalData: () => ref.read(localDataEraserProvider).erase(),
+);
+
+/// What sign-out and account deletion clear on the phone (SEC-REVIEW-003 F-07, F-20).
+/// A plain `Provider`, not generated, so no `build_runner` run is needed for it.
+///
+/// `terminate()` is safe to call here: the Dart `FirebaseFirestore.instance` stays the
+/// same object, and the plugin drops its native instance on terminate and builds a fresh
+/// one — with the same settings, emulator host included — on the next call. So the
+/// `firestoreProvider` every repository watched keeps working for the next sign-in, and
+/// nothing needs invalidating. No repository holds a `snapshots()` listener that
+/// terminate would silently end; every read is a one-shot `get()`.
+final localDataEraserProvider = Provider<LocalDataEraser>(
+    (ref) => LocalDataEraser(
+        database: ref.watch(appDatabaseProvider),
+        pushTokens: ref.watch(pushTokenSourceProvider),
+        clearFirestoreCache: () async {
+            final firestore = ref.read(firestoreProvider);
+            await firestore.terminate();
+            await firestore.clearPersistence();
+        },
+    ),
 );
 
 /// The session, as the UI sees it. `AsyncNotifier` per Week 5 — loading, data, and error

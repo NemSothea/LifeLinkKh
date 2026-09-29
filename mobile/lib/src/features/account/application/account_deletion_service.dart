@@ -30,15 +30,22 @@ final class AccountDeletionService {
         required SessionStore sessionStore,
         required GoogleCredentials credentials,
         required FacebookCredentials facebookCredentials,
+        Future<void> Function()? clearLocalData,
     })  : _repository = repository,
           _sessionStore = sessionStore,
           _credentials = credentials,
-          _facebookCredentials = facebookCredentials;
+          _facebookCredentials = facebookCredentials,
+          _clearLocalData = clearLocalData;
 
     final AccountRepository _repository;
     final SessionStore _sessionStore;
     final GoogleCredentials _credentials;
     final FacebookCredentials _facebookCredentials;
+
+    /// The same `LocalDataEraser` sign-out runs (SEC-REVIEW-003 F-07): Drift tables,
+    /// Firestore offline cache, FCM token. A deleted account's cached answers and
+    /// requester phone numbers must not outlive it on the phone.
+    final Future<void> Function()? _clearLocalData;
 
     /// `ForbiddenFailure.code` for a re-authentication that picked another account.
     static const String differentAccount = 'REAUTH_DIFFERENT_ACCOUNT';
@@ -94,7 +101,7 @@ final class AccountDeletionService {
         };
     }
 
-    /// `AuthService.signOut` minus its first step. Clearing the push token writes
+    /// `AuthService.signOut` minus its first step, local data still last. Clearing the push token writes
     /// `users/{uid}`, which the Function has already deleted — the rules would refuse the
     /// write, and there is no token left server-side to clear anyway.
     Future<void> _endSession() async {
@@ -105,6 +112,12 @@ final class AccountDeletionService {
             // The account is gone either way. A Firebase user object the SDK still holds
             // for a deleted uid cannot read or write anything, and the stored session
             // that routes to Home is already cleared.
+        }
+        try {
+            await _clearLocalData?.call();
+        } on Object catch (_) {
+            // Same as the sign-out above: the account is gone, and this must not undo that
+            // by surfacing as a failed deletion.
         }
     }
 }

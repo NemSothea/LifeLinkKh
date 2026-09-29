@@ -86,6 +86,7 @@ void main() {
                     facebookCredentialsProvider.overrideWithValue(facebookCredentials),
                     fcmTokenRepositoryProvider.overrideWithValue(fcm),
                     pushTokenSourceProvider.overrideWithValue(pushTokens),
+                    fakeLocalDataEraser(),
                 ],
                 child: const LifeLinkApp(),
             ),
@@ -125,6 +126,7 @@ void main() {
                     facebookCredentialsProvider.overrideWithValue(facebookCredentials),
                     fcmTokenRepositoryProvider.overrideWithValue(fcm),
                     pushTokenSourceProvider.overrideWithValue(pushTokens),
+                    fakeLocalDataEraser(),
                 ],
                 child: const LifeLinkApp(),
             ),
@@ -155,6 +157,7 @@ void main() {
                     facebookCredentialsProvider.overrideWithValue(facebookCredentials),
                     fcmTokenRepositoryProvider.overrideWithValue(fcm),
                     pushTokenSourceProvider.overrideWithValue(pushTokens),
+                    fakeLocalDataEraser(),
                 ],
                 child: const LifeLinkApp(),
             ),
@@ -331,5 +334,7 @@ void main() {
         // DELETE /auth/fcm-token, or the phone keeps receiving urgent-request alerts for
         // someone who signed out (ADR 0007 §5).
         expect(fcm.clearCount, 1);
+        // And the token itself, on the device (SEC-REVIEW-003 F-20).
+        expect(pushTokens.deleteCount, 1);
     });
 }

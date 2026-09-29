@@ -16,13 +16,16 @@ void main() {
     late FakeSessionStore store;
     late FakeGoogleCredentials google;
     late FakeFacebookCredentials facebook;
+    late int localClears;
 
-    AccountDeletionService serviceUnder() => AccountDeletionService(
-        repository: repository,
-        sessionStore: store,
-        credentials: google,
-        facebookCredentials: facebook,
-    );
+    AccountDeletionService serviceUnder({Future<void> Function()? clearLocalData}) =>
+        AccountDeletionService(
+            repository: repository,
+            sessionStore: store,
+            credentials: google,
+            facebookCredentials: facebook,
+            clearLocalData: clearLocalData ?? () async => localClears++,
+        );
 
     const recentSignIn = Failed<AccountDeletion>(
         ForbiddenFailure(code: AccountRepository.recentSignInRequired),
@@ -31,6 +34,7 @@ void main() {
     void expectNothingChangedLocally() {
         expect(store.stored, isNotNull, reason: 'the account still exists; so must the session');
         expect(google.signedOut, isFalse);
+        expect(localClears, 0, reason: 'the account still exists; so does its local data');
     }
 
     setUp(() {
@@ -38,6 +42,7 @@ void main() {
         store = FakeSessionStore(testSession());
         google = FakeGoogleCredentials();
         facebook = FakeFacebookCredentials();
+        localClears = 0;
     });
 
     test('success re-authenticates first, then clears the session and signs out', () async {
@@ -48,6 +53,24 @@ void main() {
         expect(repository.calls, 1);
         expect(store.stored, isNull);
         expect(google.signedOut, isTrue);
+        expect(localClears, 1, reason: 'SEC-REVIEW-003 F-07: nothing of it stays on the phone');
+    });
+
+    test('local data is cleared only after the Firebase sign-out', () async {
+        final order = <String>[];
+        await serviceUnder(
+            clearLocalData: () async => order.add(google.signedOut ? 'after' : 'before'),
+        ).deleteAccount();
+
+        expect(order, ['after']);
+    });
+
+    test('a local clear that fails is still a successful deletion', () async {
+        final result = await serviceUnder(clearLocalData: () async => throw Exception('disk'))
+            .deleteAccount();
+
+        expect(result.valueOrNull, FakeAccountRepository.deletion);
+        expect(store.stored, isNull);
     });
 
     test('a Facebook user is re-authenticated with Facebook, not Google', () async {

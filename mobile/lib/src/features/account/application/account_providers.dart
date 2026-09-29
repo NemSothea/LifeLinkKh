@@ -19,4 +19,5 @@ AccountDeletionService accountDeletionService(AccountDeletionServiceRef ref) =>
         sessionStore: ref.watch(sessionStoreProvider),
         credentials: ref.watch(googleCredentialsProvider),
         facebookCredentials: ref.watch(facebookCredentialsProvider),
+        clearLocalData: () => ref.read(localDataEraserProvider).erase(),
     );

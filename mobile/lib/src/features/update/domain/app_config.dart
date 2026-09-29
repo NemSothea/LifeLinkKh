@@ -96,13 +96,15 @@ final class ReleaseNotes {
 
 /// `raw` as a link the app is willing to hand to a browser, or `null`.
 ///
-/// Only `http`/`https` with a host. The document is written by an operator script, but
-/// it is still data from the network, and an `intent:` or `file:` URI passed to
-/// `launchUrl` would do something other than open a page. `http` stays allowed for the
-/// local demo, where the portal is served from a laptop without TLS.
-Uri? webLinkFrom(Object? raw) {
+/// Only `https` with a host. The document is written by an operator script, but it is
+/// still data from the network, and an `intent:` or `file:` URI passed to `launchUrl`
+/// would do something other than open a page. `http` only when [allowHttp] — the data
+/// layer passes `kDebugMode`, for the local demo whose portal is a laptop without TLS
+/// (SEC-REVIEW-003 F-15). A release build never opens a download link in clear text,
+/// where anyone on the network could swap the APK.
+Uri? webLinkFrom(Object? raw, {bool allowHttp = false}) {
     if (raw is! String) return null;
     final uri = Uri.tryParse(raw.trim());
     if (uri == null || uri.host.isEmpty) return null;
-    return uri.isScheme('https') || uri.isScheme('http') ? uri : null;
+    return uri.isScheme('https') || (allowHttp && uri.isScheme('http')) ? uri : null;
 }

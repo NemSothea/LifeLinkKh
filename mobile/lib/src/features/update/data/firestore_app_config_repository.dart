@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../core/error/firestore_failure_mapper.dart';
 import '../../../core/error/result.dart';
@@ -52,8 +53,8 @@ AppConfig appConfigFrom(Map<String, Object?> data) {
         minVersionCode: versionCode('minVersionCode'),
         latestVersionCode: versionCode('latestVersionCode'),
         latestVersionName: name is String && name.trim().isNotEmpty ? name.trim() : null,
-        downloadUrl: webLinkFrom(data['downloadUrl']),
-        privacyUrl: webLinkFrom(data['privacyUrl']),
+        downloadUrl: webLinkFrom(data['downloadUrl'], allowHttp: kDebugMode),
+        privacyUrl: webLinkFrom(data['privacyUrl'], allowHttp: kDebugMode),
         releaseNotes: ReleaseNotes.of(en: text('releaseNotesEn'), km: text('releaseNotesKm')),
     );
 }
