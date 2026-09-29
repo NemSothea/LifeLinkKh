@@ -1,6 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
+import { CONFIRMED_COOKIE } from '@/lib/api/session';
 import { redirect } from 'next/navigation';
 import { confirmDonation, reviewRequest } from '@/lib/api/portal';
 
@@ -38,11 +40,17 @@ export async function confirmDonationAction(formData: FormData) {
     // just confirmed would still show its "confirm" button until the cache's
     // default staleTime passed on its own.
     revalidatePath(`/${locale}/portal`);
-    redirect(
-        result.ok
-            ? `/${locale}/portal?confirmed=${encodeURIComponent(donorName)}`
-            : `/${locale}/portal?confirmError=1`,
-    );
+    if (!result.ok) redirect(`/${locale}/portal?confirmError=1`);
+    // The name for the success line rides in a cookie, not the URL (SEC-REVIEW-003 F-17): a
+    // query string lands in browser history and in Vercel's request log.
+    (await cookies()).set(CONFIRMED_COOKIE, donorName, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: `/${locale}/portal`,
+        maxAge: 60,
+    });
+    redirect(`/${locale}/portal?confirmed=1`);
 }
 
 /**

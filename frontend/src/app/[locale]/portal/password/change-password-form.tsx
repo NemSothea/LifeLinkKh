@@ -16,6 +16,7 @@ type Copy = {
     changed: string;
     failedWrongCurrent: string;
     failedTooShort: string;
+    failedCommon: string;
     failedMismatch: string;
     failedUnchanged: string;
     failed: string;
@@ -28,6 +29,7 @@ export default function ChangePasswordForm({ copy }: { copy: Copy }) {
         changed: copy.changed,
         wrongCurrent: copy.failedWrongCurrent,
         tooShort: copy.failedTooShort,
+        common: copy.failedCommon,
         mismatch: copy.failedMismatch,
         unchanged: copy.failedUnchanged,
         failed: copy.failed,
@@ -81,7 +83,7 @@ function Field({
                 type="password"
                 name={name}
                 required
-                minLength={8}
+                minLength={12}
                 autoComplete={autoComplete}
                 data-testid={`password-${name}`}
             />

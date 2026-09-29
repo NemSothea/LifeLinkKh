@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { changePassword } from '@/lib/api/portal-auth';
+import { isCommonPassword, MIN_PASSWORD_LENGTH } from '@/server/password-policy';
 import { portalUsername, SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from '@/lib/api/session';
 
 /**
@@ -12,7 +13,7 @@ import { portalUsername, SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from '@/lib/a
  * more useful than one generic message.
  */
 export type ChangePasswordResult =
-    'changed' | 'wrongCurrent' | 'tooShort' | 'mismatch' | 'unchanged' | 'failed';
+    'changed' | 'wrongCurrent' | 'tooShort' | 'common' | 'mismatch' | 'unchanged' | 'failed';
 
 export async function changePasswordAction(
     _previous: ChangePasswordResult | null | undefined,
@@ -28,7 +29,8 @@ export async function changePasswordAction(
     // Checked here rather than only server-side: a mistyped confirmation is the most common way
     // this goes wrong, and it needs no round trip to catch.
     if (next !== confirm) return 'mismatch';
-    if (next.length < 8) return 'tooShort';
+    if (next.length < MIN_PASSWORD_LENGTH) return 'tooShort';
+    if (isCommonPassword(next)) return 'common';
 
     if (next === current) return 'unchanged';
 

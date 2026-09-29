@@ -3,7 +3,8 @@
 // access: an admin exists because this ran. Same three rules PortalPasswordBootstrap followed:
 //
 //   - An unset password sets nothing. No default, no generated password printed anywhere.
-//   - A password shorter than 12 characters is refused.
+//   - A password shorter than 12 characters, or one of the 3000 most common, is refused.
+//   - Against the real project the username must be given; soborey is the emulator default only.
 //   - An account that already exists keeps its password (it may have been changed in the portal)
 //     unless --reset-passwords is passed. Its claim and record are always put right.
 //
@@ -21,6 +22,7 @@ import { applicationDefault, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { portalEmail } from '../../frontend/src/server/portal-accounts.js';
+import COMMON_PASSWORDS from '../../frontend/src/server/common-passwords.json' with { type: 'json' };
 
 const projectFlag = process.argv.indexOf('--project');
 const projectId = projectFlag > -1 ? process.argv[projectFlag + 1] : 'demo-lifelink';
@@ -68,7 +70,13 @@ if (googleEmail) {
   process.exit(0);
 }
 
-// PORTAL_ADMIN_USERNAME / PORTAL_ADMIN_NAME pick another admin; soborey stays the default.
+// PORTAL_ADMIN_USERNAME / PORTAL_ADMIN_NAME pick another admin; soborey stays the default on
+// the emulators. Against the real project the username must be given (SEC-REVIEW-003 F-16):
+// a default that is in this public repo is the first name anyone would try.
+if (real && !process.env.PORTAL_ADMIN_USERNAME) {
+  console.error('PORTAL_ADMIN_USERNAME is required against the real project; there is no default there.');
+  process.exit(1);
+}
 const username = process.env.PORTAL_ADMIN_USERNAME ?? 'soborey';
 if (!/^[a-z0-9][a-z0-9._-]{2,31}$/.test(username)) {
   console.error(`PORTAL_ADMIN_USERNAME "${username}" must be 3-32 lowercase letters, digits, ".", "_" or "-".`);
@@ -87,6 +95,11 @@ if (!password) {
 }
 if (password.length < MIN_LENGTH) {
   console.error(`PORTAL_ADMIN_PASSWORD is shorter than ${MIN_LENGTH} characters and was REFUSED.`);
+  process.exit(1);
+}
+// The portal's change-password page refuses these too (SEC-REVIEW-003 F-14).
+if (COMMON_PASSWORDS.includes(password.toLowerCase())) {
+  console.error('PORTAL_ADMIN_PASSWORD is one of the most common passwords and was REFUSED.');
   process.exit(1);
 }
 

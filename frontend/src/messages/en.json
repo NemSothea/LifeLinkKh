@@ -51,7 +51,8 @@
         "submitting": "Changing…",
         "changed": "Password changed.",
         "failedWrongCurrent": "That is not your current password.",
-        "failedTooShort": "Use at least 8 characters.",
+        "failedTooShort": "Use at least 12 characters.",
+        "failedCommon": "That password is on the list of the most common ones. Choose another.",
         "failedMismatch": "The two new passwords do not match.",
         "failedUnchanged": "The new password must be different from the current one.",
         "failed": "Could not change the password.",
@@ -132,7 +133,7 @@
     },
     "admin": {
         "staffRoleAdmin": "Admin",
-        "passwordHint": "at least 8 characters"
+        "passwordHint": "at least 12 characters"
     },
     "deleteAccount": {
         "title": "Delete your LifeLink account",

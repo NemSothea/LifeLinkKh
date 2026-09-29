@@ -50,6 +50,7 @@ export default async function ChangePasswordPage({
                     changed: t('changed'),
                     failedWrongCurrent: t('failedWrongCurrent'),
                     failedTooShort: t('failedTooShort'),
+                    failedCommon: t('failedCommon'),
                     failedMismatch: t('failedMismatch'),
                     failedUnchanged: t('failedUnchanged'),
                     failed: t('failed'),

@@ -5,7 +5,12 @@ import AutoRefresh from '@/components/AutoRefresh';
 import HealthStatus from '@/components/HealthStatus';
 import { getHealth } from '@/lib/api/health';
 import EmptyState from '@/components/EmptyState';
-import { hasPortalSession, portalDisplayName, portalRole } from '@/lib/api/session';
+import {
+    confirmedDonorName,
+    hasPortalSession,
+    portalDisplayName,
+    portalRole,
+} from '@/lib/api/session';
 import AccountMenu from '@/components/AccountMenu';
 import { listPublicRequests } from '@/lib/api/board';
 import {
@@ -54,6 +59,8 @@ export default async function PortalPage({
     const { locale } = await params;
     const { confirmError, confirmed, reviewed, reviewError } = await searchParams;
     const t = await getTranslations('portal');
+    // `?confirmed=1` only says a confirmation just happened; the name is in a cookie (F-17).
+    const confirmedName = confirmed ? await confirmedDonorName() : null;
     const isAdmin = await hasPortalSession();
     const [role, displayName] = isAdmin
         ? await Promise.all([portalRole(), portalDisplayName()])
@@ -178,9 +185,9 @@ export default async function PortalPage({
                 </div>
             ) : null}
 
-            {confirmed ? (
+            {confirmedName ? (
                 <Notice tone="success" testId="confirm-donation-success" className="mb-6">
-                    {t('confirmSuccess', { name: confirmed })}
+                    {t('confirmSuccess', { name: confirmedName })}
                 </Notice>
             ) : null}
 

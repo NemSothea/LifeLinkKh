@@ -31,6 +31,17 @@ export const SESSION_COOKIE =
  */
 export const SESSION_MAX_AGE_SECONDS = 3600;
 
+/**
+ * The confirmed donor's name for the portal's "Donation confirmed" line — a minute-long cookie
+ * scoped to the portal page, because a `?confirmed=<name>` query string lands in browser
+ * history and in the host's request log (SEC-REVIEW-003 F-17).
+ */
+export const CONFIRMED_COOKIE = 'lifelink_portal_confirmed';
+
+export async function confirmedDonorName(): Promise<string | null> {
+    return (await cookies()).get(CONFIRMED_COOKIE)?.value || null;
+}
+
 export async function portalToken(): Promise<string | null> {
     return (await cookies()).get(SESSION_COOKIE)?.value ?? null;
 }
