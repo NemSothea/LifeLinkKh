@@ -20,6 +20,7 @@ import {
     listFulfilledRequests,
     listOpenRequests,
     listPendingRequests,
+    listReports,
     reviewRequest,
 } from './portal';
 
@@ -265,3 +266,53 @@ describe('listPendingRequests (DEC-015)', () => {
         expect(byId.get('p1')).toMatchObject({ contactName: null, contactPhone: null });
     });
 });
+
+describe('listReports (DEC-019)', () => {
+    const reportTables = {
+        requests: [request('r1')],
+        reports: [
+            {
+                id: 'r1_d1',
+                fields: {
+                    requestId: 'r1',
+                    reporterUid: 'd1',
+                    reason: 'MONEY',
+                    note: 'Asked me for $50',
+                    createdAt: '2026-09-26T04:00:00Z',
+                },
+            },
+            {
+                id: 'gone_d2',
+                fields: {
+                    requestId: 'gone',
+                    reporterUid: 'd2',
+                    reason: 'FAKE',
+                    note: null,
+                    createdAt: '2026-09-26T03:00:00Z',
+                },
+            },
+        ],
+    };
+
+    it('reads reports as the admin, with the request they are about, and never the reporter', async () => {
+        cookieStore.value = admin;
+        const calls = fakeFirebase(reportTables);
+
+        const result = await listReports();
+
+        expect(result.ok).toBe(true);
+        const byId = new Map(result.ok ? result.data.map((r) => [r.id, r]) : []);
+        expect(byId.get('r1_d1')).toEqual({
+            id: 'r1_d1',
+            requestId: 'r1',
+            reason: 'MONEY',
+            note: 'Asked me for $50',
+            createdAt: '2026-09-26T04:00:00Z',
+            request: { patientBloodType: 'AB+', hospitalName: 'Calmette Hospital', status: 'OPEN' },
+        });
+        expect(byId.get('gone_d2')?.request).toBeNull();
+        expect(JSON.stringify(result)).not.toContain('reporterUid');
+        expect(calls.every((c) => c.token === admin)).toBe(true);
+    });
+});
+

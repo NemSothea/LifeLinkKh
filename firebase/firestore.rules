@@ -135,6 +135,27 @@ service cloud.firestore {
       allow update: if false;
     }
 
+    // ── reports/{requestId_reporterUid} ─────────────────────────────────────────────────────────
+    // DEC-019: a donor who was alerted to a request can flag it (asked for money, looked fake,
+    // harassment). One report per donor per request: the id is the donor's match id, so a
+    // second report is an update, and updates are refused. Only the admin reads them.
+    function reportReasons() { return ['MONEY', 'FAKE', 'HARASSMENT', 'OTHER']; }
+    match /reports/{reportId} {
+      allow read: if isAdmin();
+      allow create: if signedIn()
+          && incoming().keys().hasOnly(['requestId', 'reporterUid', 'reason', 'note', 'createdAt'])
+          && incoming().keys().hasAll(['requestId', 'reporterUid', 'reason', 'note', 'createdAt'])
+          && incoming().requestId is string
+          && reportId == incoming().requestId + '_' + uid()
+          && incoming().reporterUid == uid()
+          && incoming().reason in reportReasons()
+          && (incoming().note == null
+              || (incoming().note is string && incoming().note.size() <= 500))
+          && incoming().createdAt == request.time
+          && exists(/databases/$(database)/documents/matches/$(reportId));
+      allow update, delete: if false;
+    }
+
     // ── donations/{donationId} ──────────────────────────────────────────────────────────────────
     match /donations/{donationId} {
       allow read: if (signedIn() && resource.data.donorUid == uid()) || isAdmin();

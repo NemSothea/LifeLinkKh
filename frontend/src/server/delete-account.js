@@ -79,14 +79,18 @@ export async function deleteAccountData({ db, auth, uid, log = console }) {
         if (withdrawn) acceptancesWithdrawn += 1;
     }
 
-    // 3. Everything else that names them: matches on their requests, donations they gave.
-    const [asRequester, donations] = await Promise.all([
+    // 3. Everything else that names them: matches on their requests, donations they gave, and
+    //    reports they filed (DEC-019). A report keeps its reason, so the count of "asked for
+    //    money" stays true, but loses who filed it and the note in their own words.
+    const [asRequester, donations, reports] = await Promise.all([
         db.collection('matches').where('requesterUid', '==', uid).get(),
         db.collection('donations').where('donorUid', '==', uid).get(),
+        db.collection('reports').where('reporterUid', '==', uid).get(),
     ]);
     await commitInChunks(db, [
         ...asRequester.docs.map((d) => (b) => b.update(d.ref, { requesterUid: null })),
         ...donations.docs.map((d) => (b) => b.update(d.ref, { donorUid: null })),
+        ...reports.docs.map((d) => (b) => b.update(d.ref, { reporterUid: null, note: null })),
         (b) => b.delete(db.doc(`donors/${uid}`)),
         (b) => b.delete(db.doc(`users/${uid}`)),
     ]);
@@ -97,7 +101,8 @@ export async function deleteAccountData({ db, auth, uid, log = console }) {
         if (error.code !== 'auth/user-not-found') throw error;
     });
 
-    const recordsAnonymised = ownRequests.size + asDonor.size + asRequester.size + donations.size;
+    const recordsAnonymised =
+        ownRequests.size + asDonor.size + asRequester.size + donations.size + reports.size;
     // The uid only: this line is the audit trail, and a name in it would defeat the deletion.
     log.info(
         `account deleted uid=${uid} requestsClosed=${requestsClosed} withdrawn=${acceptancesWithdrawn} anonymised=${recordsAnonymised}`,

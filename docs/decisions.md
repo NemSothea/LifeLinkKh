@@ -829,4 +829,13 @@ cleared people 4–9 weeks early, so the safe move was to change the rule now.
   on both sides; rules test for the field.
 - **Consequence:** every existing donor without a sex on file now waits 120 days. A man who
   wants the 90-day interval must add his sex in the profile.
+- **Self-check before Accept:** the accept sheet lists the deferrals a donor can check at home
+  (WHO 2012). Ticking one shows a warning; Accept is never disabled, and nothing ticked is stored.
+- **Report a request:** a donor alerted to a request can report it once (asked for money, looks
+  fake, harassment, other, with an optional note of up to 500 characters) as
+  `reports/{requestId}_{uid}`. Only the admin reads reports, on the portal. Account deletion keeps
+  the reason and removes the reporter and the note (DEC-016).
+- **Deploy:** `firestore.rules` changed (donor `sex`, `reports`). The real `lifelinkkh` project
+  keeps the old rules until they are deployed; until then a new APK's donor save with `sex` and
+  every report are refused there.
 

@@ -429,3 +429,38 @@ describe('config/app — the release channel for the sideloaded APK', () => {
   });
 });
 
+describe('reports (DEC-019)', () => {
+  const report = (uid, extra = {}) => ({
+    requestId: 'r1',
+    reporterUid: uid,
+    reason: 'MONEY',
+    note: 'Asked me for $50',
+    createdAt: serverTimestamp(),
+    ...extra,
+  });
+
+  test('an alerted donor reports the request once; only the admin reads it', async () => {
+    await seedRequestWithMatch('family', 'd1');
+    await assertSucceeds(setDoc(doc(as('d1'), 'reports/r1_d1'), report('d1')));
+    // A second report is an update of the same id, and is refused.
+    await assertFails(setDoc(doc(as('d1'), 'reports/r1_d1'), report('d1', { reason: 'FAKE' })));
+    await assertFails(getDoc(doc(as('d1'), 'reports/r1_d1')));
+    await assertFails(getDoc(doc(as('family'), 'reports/r1_d1')));
+    await assertSucceeds(getDoc(doc(admin(), 'reports/r1_d1')));
+  });
+
+  test('nobody reports a request they were not alerted to, or as someone else', async () => {
+    await seedRequestWithMatch('family', 'd1');
+    await assertFails(setDoc(doc(as('d2'), 'reports/r1_d2'), report('d2')));
+    await assertFails(setDoc(doc(as('d2'), 'reports/r1_d1'), report('d1')));
+    await assertFails(setDoc(doc(anon(), 'reports/r1_d1'), report('d1')));
+  });
+
+  test('only the known reasons, and a note of at most 500 characters', async () => {
+    await seedRequestWithMatch('family', 'd1');
+    await assertFails(setDoc(doc(as('d1'), 'reports/r1_d1'), report('d1', { reason: 'SPAM' })));
+    await assertFails(setDoc(doc(as('d1'), 'reports/r1_d1'), report('d1', { note: 'x'.repeat(501) })));
+    await assertSucceeds(setDoc(doc(as('d1'), 'reports/r1_d1'), report('d1', { note: null })));
+  });
+});
+

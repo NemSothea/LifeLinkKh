@@ -12,6 +12,8 @@ import {
     listFulfilledRequests,
     listOpenRequests,
     listPendingRequests,
+    listReports,
+    type RequestReport,
     type PendingRequest,
     type PortalRequest,
 } from '@/lib/api/portal';
@@ -66,9 +68,21 @@ export default async function PortalPage({
     // the write handle — and no "recently fulfilled" section, which is a record of staff
     // work rather than a call for help.
     // DEC-015: the review queue is the admin's first job, so it is read with the rest.
-    const [result, fulfilledResult, pendingResult] = isAdmin
-        ? await Promise.all([listOpenRequests(), listFulfilledRequests(), listPendingRequests()])
-        : [await listPublicRequests(), { ok: false } as const, { ok: false } as const];
+    const [result, fulfilledResult, pendingResult, reportsResult] = isAdmin
+        ? await Promise.all([
+              listOpenRequests(),
+              listFulfilledRequests(),
+              listPendingRequests(),
+              listReports(),
+          ])
+        : [
+              await listPublicRequests(),
+              { ok: false } as const,
+              { ok: false } as const,
+              { ok: false } as const,
+          ];
+    // DEC-019: donors' reports, read with the review queue because acting on them is review work.
+    const reports: RequestReport[] = reportsResult.ok ? reportsResult.data : [];
     const health = isAdmin ? await getHealth() : null;
     const fulfilled = fulfilledResult.ok ? fulfilledResult.data : [];
     const pending: PendingRequest[] = pendingResult.ok ? pendingResult.data : [];
@@ -186,6 +200,55 @@ export default async function PortalPage({
                 <Notice tone="error" testId="review-error" className="mb-6">
                     {reviewError === 'gone' ? t('reviewGone') : t('reviewFailed')}
                 </Notice>
+            ) : null}
+
+            {reports.length > 0 ? (
+                <section
+                    data-testid="portal-reports"
+                    className="mb-8 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100"
+                >
+                    <h2 className="flex items-center gap-2 text-lg font-semibold">
+                        <IconAlertTriangle className="h-5 w-5 shrink-0" />
+                        {t('reportsHeading')}
+                        <span className="rounded-full bg-amber-200/70 px-2 text-sm tabular-nums dark:bg-amber-900/60">
+                            {reports.length}
+                        </span>
+                    </h2>
+                    <p className="mt-1 mb-4 text-sm opacity-85">{t('reportsHint')}</p>
+                    <ul className="flex flex-col gap-3">
+                        {reports.map((report) => (
+                            <li
+                                key={report.id}
+                                className="rounded-xl border border-amber-200 bg-white/70 p-3 text-sm dark:border-amber-900 dark:bg-black/20"
+                            >
+                                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                                    <strong>
+                                        {t(`reportReason.${report.reason}` as 'reportReason.OTHER')}
+                                    </strong>
+                                    <time
+                                        dateTime={report.createdAt}
+                                        className="text-xs opacity-75 tabular-nums"
+                                    >
+                                        {report.createdAt
+                                            ? new Date(report.createdAt).toLocaleString(
+                                                  locale === 'km' ? 'km-KH' : 'en-GB',
+                                                  { timeZone: 'Asia/Phnom_Penh' },
+                                              )
+                                            : ''}
+                                    </time>
+                                </div>
+                                <p className="mt-1 opacity-85">
+                                    {report.request
+                                        ? `${report.request.patientBloodType} · ${report.request.hospitalName ?? report.requestId} · ${report.request.status}`
+                                        : t('reportRequestGone')}
+                                </p>
+                                <p className="mt-1 italic opacity-85">
+                                    {report.note ?? t('reportNoNote')}
+                                </p>
+                            </li>
+                        ))}
+                    </ul>
+                </section>
             ) : null}
 
             {pending.length > 0 ? (

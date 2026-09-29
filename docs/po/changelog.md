@@ -2,6 +2,16 @@
 
 Every new/changed FR gets an entry. What + Why are mandatory.
 
+## 2026-09-29 — DEC-019 phase 2: pre-donation self-check and "Report this request"
+- **What:** The accept sheet asks "does any of these apply to you?" (under 45 kg, recent fever,
+  antibiotics, dengue or malaria, tattoo, pregnancy or breastfeeding, surgery or transfusion) and
+  warns if any is ticked, without blocking Accept. Match detail gains a flag action: a donor
+  reports the request to the admin, once, with a reason and an optional note. The admin portal
+  lists reports above the review queue.
+  **Why:** the research found donors travel and get deferred for things they could have checked
+  at home, and nothing let a donor flag a request that asked for money
+  ([research](research/2026-09-cambodia-donation-reality.md) §5–7).
+
 ## 2026-09-29 — DEC-019 phase 2: the cooldown is 90 days for men, 120 for women
 - **What:** `FR-DONOR-002` and PRD FR-03 amended. The app and the portal's matching count 90 days
   for men and 120 for women (120 when sex is not given) instead of 56 for everyone. New optional

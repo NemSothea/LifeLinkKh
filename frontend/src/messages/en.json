@@ -118,7 +118,17 @@
         "nextPage": "Next page",
         "goToPage": "Page {page}",
         "guideLink": "How getting blood works",
-        "moneyNotice": "LifeLink never asks for money. Never pay or accept payment for blood: by national policy, it is free."
+        "moneyNotice": "LifeLink never asks for money. Never pay or accept payment for blood: by national policy, it is free.",
+        "reportsHeading": "Reports from donors",
+        "reportsHint": "A donor flagged these requests. Check them, and reject or cancel any that ask for money or look fake.",
+        "reportNoNote": "No note",
+        "reportRequestGone": "Request no longer exists",
+        "reportReason": {
+            "MONEY": "Asked for money or offered to pay",
+            "FAKE": "Looks fake",
+            "HARASSMENT": "Harassment or threats",
+            "OTHER": "Something else"
+        }
     },
     "admin": {
         "staffRoleAdmin": "Admin",
@@ -160,7 +170,8 @@
                     "If you post a request for blood: the patient's blood type, how many units, how urgent, the hospital, and the contact name and phone number you enter for donors to call.",
                     "When you answer a request: whether you accepted or declined, when, and your distance from the hospital.",
                     "When a donation is confirmed by our admin: the date, the hospital and the request it answered.",
-                    "A notification token, so your phone can receive alerts. We do not collect your contacts, photos, messages or your location in the background, and there is no advertising or analytics tracking."
+                    "A notification token, so your phone can receive alerts. We do not collect your contacts, photos, messages or your location in the background, and there is no advertising or analytics tracking.",
+                    "If you report a request: the reason you chose and any note you write. Only our admin sees it, and the family is not told who sent it. If you delete your account, your account and note are removed from the report; the reason is kept."
                 ]
             },
             {

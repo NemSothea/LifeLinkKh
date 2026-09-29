@@ -128,6 +128,22 @@ beforeEach(async () => {
 });
 
 describe('deleteAccount', () => {
+    test('a report they filed keeps its reason but loses who filed it and the note (DEC-019)', async () => {
+        await db.doc('reports/theirs-open_sothea').set({
+            requestId: 'theirs-open',
+            reporterUid: 'sothea',
+            reason: 'MONEY',
+            note: 'Asked me for $50',
+        });
+        await del();
+        expect((await db.doc('reports/theirs-open_sothea').get()).data()).toEqual({
+            requestId: 'theirs-open',
+            reporterUid: null,
+            reason: 'MONEY',
+            note: null,
+        });
+    });
+
     test('personal data is gone: profile, push token, phone numbers, board name, sign-in', async () => {
         await del();
         expect((await db.doc('users/sothea').get()).exists).toBe(false);

@@ -219,3 +219,55 @@ export async function reviewRequest(
         await requirePortalToken(),
     );
 }
+
+/** A donor's report about a request they were alerted to (DEC-019). */
+export type RequestReport = {
+    id: string;
+    requestId: string;
+    reason: string;
+    note: string | null;
+    createdAt: string;
+    /** From the request, when it still exists: enough to find it on the board. */
+    request: { patientBloodType: string; hospitalName: string | null; status: string } | null;
+};
+
+/** Newest first. The reporter's uid is never read into the page: the admin needs the what, not the who. */
+export async function listReports(): Promise<ApiResult<RequestReport[]>> {
+    const token = await requirePortalToken();
+    const reports = await firestoreQuery(
+        {
+            collection: 'reports',
+            orderBy: { field: 'createdAt', direction: 'DESCENDING' },
+            limit: 50,
+        },
+        token,
+    );
+    if (!reports.ok) return reports;
+    const rows = await Promise.all(
+        reports.data.map(async (doc): Promise<RequestReport> => {
+            const requestId = String(doc.data.requestId ?? '');
+            const requestDoc = requestId
+                ? await firestoreGet(`requests/${requestId}`, token)
+                : null;
+            const request =
+                requestDoc && requestDoc.ok && requestDoc.data
+                    ? requestFields(requestDoc.data)
+                    : null;
+            return {
+                id: doc.id,
+                requestId,
+                reason: String(doc.data.reason ?? 'OTHER'),
+                note: (doc.data.note as string | null | undefined) ?? null,
+                createdAt: String(doc.data.createdAt ?? ''),
+                request: request
+                    ? {
+                          patientBloodType: request.patientBloodType,
+                          hospitalName: request.hospital?.name ?? null,
+                          status: request.status,
+                      }
+                    : null,
+            };
+        }),
+    );
+    return { ok: true, data: rows };
+}

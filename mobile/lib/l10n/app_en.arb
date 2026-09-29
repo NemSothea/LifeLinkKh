@@ -1079,5 +1079,57 @@
     "matchCheckWarning": "You may be turned away at the centre. Check with the centre before you go. If you cannot donate, decline instead.",
     "@matchCheckWarning": {
         "description": "Accept sheet: shown when any self-check line is ticked; never blocks accepting"
+    },
+    "reportCta": "Report this request",
+    "@reportCta": {
+        "description": "Match screen action: flag a request to the admin (DEC-019)"
+    },
+    "reportTitle": "Report this request",
+    "@reportTitle": {
+        "description": "Report sheet title"
+    },
+    "reportBody": "Only the LifeLink admin sees your report. The family is not told who sent it.",
+    "@reportBody": {
+        "description": "Report sheet: who sees it"
+    },
+    "reportReasonMoney": "They asked for money or offered to pay",
+    "@reportReasonMoney": {
+        "description": "Report reason"
+    },
+    "reportReasonFake": "The request looks fake",
+    "@reportReasonFake": {
+        "description": "Report reason"
+    },
+    "reportReasonHarassment": "I was harassed or threatened",
+    "@reportReasonHarassment": {
+        "description": "Report reason"
+    },
+    "reportReasonOther": "Something else",
+    "@reportReasonOther": {
+        "description": "Report reason"
+    },
+    "reportNoteLabel": "What happened? (optional)",
+    "@reportNoteLabel": {
+        "description": "Report sheet note field"
+    },
+    "reportSendCta": "Send report",
+    "@reportSendCta": {
+        "description": "Report sheet button"
+    },
+    "reportSending": "Sending…",
+    "@reportSending": {
+        "description": "Report sheet button while sending"
+    },
+    "reportSent": "Thank you. An admin will look at it.",
+    "@reportSent": {
+        "description": "Snackbar after a report is sent"
+    },
+    "reportFailed": "Could not send the report. Try again.",
+    "@reportFailed": {
+        "description": "Report failed"
+    },
+    "reportAlreadySent": "You have already reported this request.",
+    "@reportAlreadySent": {
+        "description": "Report refused: one per donor per request"
     }
 }

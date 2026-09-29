@@ -15,6 +15,7 @@ import '../application/match_providers.dart';
 import '../domain/match.dart';
 import '../domain/match_response_type.dart';
 import '../../../core/widgets/money_notice.dart';
+import '../../report/presentation/report_request_sheet.dart';
 
 /// A single match — request detail, then accept/decline, then (on accept) the
 /// requester's contact. `NOTIFY-donor-alert` screen 2 and 3 in the prototype.
@@ -45,6 +46,14 @@ class MatchDetailScreen extends ConsumerStatefulWidget {
 class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
     bool _isResponding = false;
     Failure? _respondFailure;
+
+    Future<void> _report(String requestId) async {
+        final l10n = AppLocalizations.of(context)!;
+        final sent = await showReportRequestSheet(context, requestId: requestId);
+        if (sent == true && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.reportSent)));
+        }
+    }
 
     Future<void> _respond(MatchResponseType response) async {
         // A firmer tick for yes than for no: accepting is the commitment. Not awaited —
@@ -86,7 +95,19 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
         }
 
         return Scaffold(
-            appBar: AppBar(title: Text(l10n.inboxTitle)),
+            appBar: AppBar(
+                title: Text(l10n.inboxTitle),
+                actions: [
+                    // DEC-019: asked for money, a fake request, harassment. To the admin only.
+                    if (match != null)
+                        IconButton(
+                            key: const Key('match-report'),
+                            tooltip: l10n.reportCta,
+                            icon: const Icon(Icons.outlined_flag),
+                            onPressed: () => _report(match!.request.id),
+                        ),
+                ],
+            ),
             body: SafeArea(
                 // Opened from a tapped notification on a cold start, the inbox is still
                 // loading — that used to render "could not load" for the first second.

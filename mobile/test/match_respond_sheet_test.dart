@@ -164,4 +164,14 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('match-self-check')), findsNothing);
     });
+
+    testWidgets('a donor can report the request from the match screen', (tester) async {
+        final repository = _FakeMatchRepository();
+        await tester.pumpWidget(_wrap(repository));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('match-report')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('report-sheet')), findsOneWidget);
+    });
 }
+
