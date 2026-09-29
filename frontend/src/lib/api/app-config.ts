@@ -17,10 +17,6 @@ export type AppConfig = {
     updatedAt: string | null;
 };
 
-/** The same caps `setAppConfig` enforces, so the form stops at them instead of the server. */
-export const VERSION_NAME_MAX = 32;
-export const NOTES_MAX = 500;
-
 export async function getAppConfig(): Promise<ApiResult<AppConfig>> {
     const result = await firestoreGet('config/app', await requirePortalToken());
     if (!result.ok) return result;

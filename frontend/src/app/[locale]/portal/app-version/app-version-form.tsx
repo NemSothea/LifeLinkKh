@@ -18,7 +18,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import type { AppConfig } from '@/lib/api/app-config';
-import { NOTES_MAX, VERSION_NAME_MAX } from '@/lib/api/app-config';
+import { NOTES_MAX, VERSION_NAME_MAX } from '@/lib/app-config-limits';
 import { saveAppVersionAction, type AppVersionResult } from './actions';
 
 type Copy = {

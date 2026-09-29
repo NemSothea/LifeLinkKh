@@ -1,7 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { NOTES_MAX, setAppConfig, VERSION_NAME_MAX } from '@/lib/api/app-config';
+import { setAppConfig } from '@/lib/api/app-config';
+import { NOTES_MAX, VERSION_NAME_MAX } from '@/lib/app-config-limits';
 import { portalRole } from '@/lib/api/session';
 
 /**
