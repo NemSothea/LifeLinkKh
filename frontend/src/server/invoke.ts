@@ -43,7 +43,12 @@ export async function invoke(
 }
 
 /**
- * `{uid, token}` for a valid, unexpired Firebase ID token; null for none. A bad token is not
+ * `{uid, token}` for a valid, unexpired, unrevoked Firebase ID token; null for none.
+ *
+ * `checkRevoked` (SEC-REVIEW-003 F-05): a token stays cryptographically valid for its hour
+ * after the account is deleted, disabled or signed out of the portal. Without the check a
+ * copied token could still post a request under a deleted uid. It costs one Auth lookup per
+ * call, which an app that makes three kinds of call can afford. A bad token is not
  * an error here — every handler refuses a null caller with its own code (`unauthenticated`
  * for the app's, `permission-denied` for the admin's), the same as a callable without auth.
  */
@@ -52,7 +57,7 @@ async function verify(
 ): Promise<{ uid: string; token: Record<string, unknown> } | null> {
     if (!token) return null;
     try {
-        const decoded = await serverAuth().verifyIdToken(token);
+        const decoded = await serverAuth().verifyIdToken(token, true);
         return { uid: decoded.uid, token: decoded as unknown as Record<string, unknown> };
     } catch {
         return null;

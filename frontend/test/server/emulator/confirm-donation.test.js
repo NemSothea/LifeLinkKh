@@ -56,15 +56,13 @@ beforeEach(async () => {
         { method: 'DELETE' },
     );
     await db.doc('admins/admin-1').set({ displayName: 'Soborey', username: 'soborey' });
-    await db
-        .doc('requests/r1')
-        .set({
-            createdBy: 'family',
-            hospitalId: 'calmette',
-            unitsNeeded: 2,
-            status: 'OPEN',
-            acceptedCount: 1,
-        });
+    await db.doc('requests/r1').set({
+        createdBy: 'family',
+        hospitalId: 'calmette',
+        unitsNeeded: 2,
+        status: 'OPEN',
+        acceptedCount: 1,
+    });
     await acceptedMatch('d1', 'Nem Sothea');
 });
 

@@ -3,6 +3,7 @@
 // not-found. The one test of the route's shape lives with it.
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { deleteApp, initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
 process.env.FIRESTORE_EMULATOR_HOST ??= '127.0.0.1:8081';
@@ -12,13 +13,19 @@ const PROJECT = 'demo-lifelink';
 
 // After the env is set: the module initialises the Admin SDK from it on first use.
 const { invoke } = await import('../../../src/server/invoke.ts');
-const { POST } = await import('../../../src/app/api/functions/[name]/route.ts');
+const { POST, PUT } = await import('../../../src/app/api/functions/[name]/route.ts');
 
 let app;
 let db;
 
-/** A real, emulator-issued ID token for a fresh user — what the app sends. */
+/** A real, emulator-issued ID token for a fresh user who finished sign-up — what the app sends. */
 async function signUp(email) {
+    const user = await signUpOnly(email);
+    await db.doc(`users/${user.uid}`).set({ language: 'km', role: 'REQUESTER' });
+    return user;
+}
+
+async function signUpOnly(email) {
     const res = await fetch(
         `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=any`,
         {
@@ -76,6 +83,17 @@ describe('invoke', () => {
         expect((await db.collection('requests').get()).size).toBe(0);
     });
 
+    // SEC-REVIEW-003 F-05: sign-out and deletion revoke; a copied token must stop working.
+    test('a revoked token is no caller', async () => {
+        const { uid, token } = await signUp('family@example.com');
+        // Revocation compares whole seconds with the token's auth_time: revoke a second later.
+        await new Promise((resolve) => setTimeout(resolve, 1100));
+        await getAuth(app).revokeRefreshTokens(uid);
+        const outcome = await invoke('createRequest', draft, token);
+        expect(outcome.ok).toBe(false);
+        expect(outcome.error.code).toBe('unauthenticated');
+    });
+
     test('an unknown function is not-found; an admin function refuses a donor', async () => {
         const { token } = await signUp('donor@example.com');
         expect((await invoke('nope', {}, token)).error.code).toBe('not-found');
@@ -120,5 +138,21 @@ describe('POST /api/functions/{name}', () => {
         });
         expect((await post('createRequest', { data: draft }, null)).status).toBe(401);
         expect((await post('createRequest', '{not json', token)).status).toBe(400);
+    });
+
+    // SEC-REVIEW-003 F-21.
+    test('an oversized body is 413; JSON names its charset; other methods get the error shape', async () => {
+        const { token } = await signUp('family@example.com');
+        const big = { data: { ...draft, contactName: 'x'.repeat(20_000) } };
+        expect((await post('createRequest', big, token)).status).toBe(413);
+
+        const ok = await post('createRequest', { data: draft }, token);
+        expect(ok.headers.get('content-type')).toBe('application/json; charset=utf-8');
+
+        const put = await PUT(new Request('http://portal.test/api/functions/createRequest'), {
+            params: Promise.resolve({ name: 'createRequest' }),
+        });
+        expect(put.status).toBe(405);
+        expect((await put.json()).error.status).toBe('METHOD_NOT_ALLOWED');
     });
 });

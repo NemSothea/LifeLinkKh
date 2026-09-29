@@ -65,14 +65,12 @@ describe('reviewRequest', () => {
         await db
             .doc('hospitals/calmette')
             .set({ name: 'Calmette Hospital', districtCode: '1202', lat: 11.58, lng: 104.92 });
-        await db
-            .doc('donors/sothea')
-            .set({
-                bloodType: 'O-',
-                isAvailable: true,
-                lastDonationDate: null,
-                districtCode: '1201',
-            });
+        await db.doc('donors/sothea').set({
+            bloodType: 'O-',
+            isAvailable: true,
+            lastDonationDate: null,
+            districtCode: '1201',
+        });
         await db
             .doc('users/sothea')
             .set({ language: 'en', role: 'DONOR', fcmToken: 'donor-token' });

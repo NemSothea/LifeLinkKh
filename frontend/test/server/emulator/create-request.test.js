@@ -45,6 +45,7 @@ beforeEach(async () => {
         { method: 'DELETE' },
     );
     await db.doc('hospitals/calmette').set({ name: 'Calmette Hospital', districtCode: '1202' });
+    await db.doc('users/family').set({ language: 'km', role: 'REQUESTER' });
 });
 
 describe('createRequest', () => {
@@ -72,6 +73,12 @@ describe('createRequest', () => {
 
     test('validNewRequest(), line for line', async () => {
         await refused(create({ hospitalId: '' }), 'invalid-argument', 'INVALID_REQUEST');
+        // SEC-REVIEW-003 F-10: a path, not an id.
+        await refused(
+            create({ hospitalId: 'calmette/private/x' }),
+            'invalid-argument',
+            'INVALID_REQUEST',
+        );
         await refused(create({ patientBloodType: 'X+' }), 'invalid-argument', 'INVALID_REQUEST');
         await refused(create({ unitsNeeded: 0 }), 'invalid-argument', 'INVALID_REQUEST');
         await refused(create({ unitsNeeded: 21 }), 'invalid-argument', 'INVALID_REQUEST');
@@ -99,6 +106,15 @@ describe('createRequest', () => {
         await refused(create(), 'resource-exhausted', 'RATE_LIMITED');
         expect((await db.collection('requests').get()).size).toBe(5);
         // Another family is not held back by this one.
+        await db.doc('users/other').set({ language: 'km', role: 'REQUESTER' });
         await create({}, { uid: 'other', token: {} });
+    });
+
+    // SEC-REVIEW-003 F-05: a token issued before deleteAccount is refused by invoke's
+    // checkRevoked; with no profile left, createRequest refuses as well.
+    test('a caller with no user profile — deleted, or never signed up — posts nothing', async () => {
+        await db.doc('users/family').delete();
+        await refused(create(), 'failed-precondition', 'NO_PROFILE');
+        expect((await db.collection('requests').get()).size).toBe(0);
     });
 });

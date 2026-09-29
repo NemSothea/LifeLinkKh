@@ -7,6 +7,7 @@ import type { ApiResult } from '@/lib/api/client';
 import { routing, type Locale } from '@/i18n/routing';
 import { passwordSignInEnabled } from '@/lib/api/sign-in-options';
 import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from '@/lib/api/session';
+import { serverAuth } from '@/server/firebase-admin';
 
 /**
  * Sign in, and put the session where page script cannot reach it.
@@ -111,15 +112,31 @@ async function startSession(
 }
 
 /**
- * Sign out. Unlike the mobile app there is no FCM token to clear — a browser receives no
- * push — so this is the whole of it: drop the cookie, land on the sign-in page.
+ * Sign out: revoke the account's tokens, drop the cookie, land on the sign-in page. Unlike the
+ * mobile app there is no FCM token to clear — a browser receives no push.
  *
- * The ID token itself stays valid until it expires, bounded by the same one hour. Access does
- * not: the rules check `admins/{uid}` on every read, so a revoked account is refused at once.
+ * SEC-REVIEW-003 F-05: deleting the cookie alone left a copied ID token working for the rest of
+ * its hour. Revoking makes the portal functions refuse it at once (`checkRevoked`) and stops it
+ * being refreshed. Firestore reads over REST do not check revocation, so those stay possible
+ * until the token expires — bounded by the same hour, and by `admins/{uid}` on every read.
+ * It signs this admin out of every browser, which is what "sign out" should mean for them.
  */
 export async function signOutAction(formData: FormData) {
     const locale = formData.get('locale');
     const store = await cookies();
+    const token = store.get(SESSION_COOKIE)?.value;
+    if (token) {
+        try {
+            const { uid } = await serverAuth().verifyIdToken(token);
+            await serverAuth().revokeRefreshTokens(uid);
+        } catch (error) {
+            // An expired or forged cookie has nothing to revoke; a failure to reach Auth must
+            // not keep anyone signed in. Firebase's code only — never the token.
+            const code = (error as { code?: unknown })?.code;
+            if (code !== 'auth/id-token-expired' && code !== 'auth/argument-error')
+                console.warn(`sign-out could not revoke tokens: ${String(code ?? error)}`);
+        }
+    }
     store.delete(SESSION_COOKIE);
     store.delete(`${SESSION_COOKIE}_name`);
     redirect(`/${knownLocale(locale)}/sign-in`);

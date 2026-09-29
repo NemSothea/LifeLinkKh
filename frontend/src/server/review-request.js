@@ -7,6 +7,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { HttpsError } from './https-error.js';
 import { handleRequestApproved, notifyRequester } from './request-lifecycle.js';
 import { isAdmin } from './portal-accounts.js';
+import { docId } from './ids.js';
 
 export const REASON_MAX = 200;
 
@@ -21,9 +22,7 @@ export async function reviewRequest({ db, messaging, caller, data, log = console
     if (!(await isAdmin(db, caller))) throw new HttpsError('permission-denied', 'Admins only.');
 
     const { requestId, decision } = data ?? {};
-    if (typeof requestId !== 'string' || requestId === '') {
-        throw new HttpsError('invalid-argument', 'requestId is required.');
-    }
+    docId(requestId, 'requestId');
     if (decision !== 'APPROVE' && decision !== 'REJECT') {
         throw new HttpsError('invalid-argument', 'decision is APPROVE or REJECT.');
     }

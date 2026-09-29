@@ -7,6 +7,7 @@
 import { FieldValue } from 'firebase-admin/firestore';
 import { HttpsError } from './https-error.js';
 import { buildMessage, sendAll } from './push.js';
+import { docId } from './ids.js';
 
 /**
  * The donor's answer. What the rules said, as refusals the app can name:
@@ -24,9 +25,7 @@ import { buildMessage, sendAll } from './push.js';
 export async function respondToMatch({ db, messaging, caller, data, log = console }) {
     if (!caller?.uid) throw new HttpsError('unauthenticated', 'Sign in first.');
     const { matchId, response } = data ?? {};
-    if (typeof matchId !== 'string' || matchId === '') {
-        throw new HttpsError('invalid-argument', 'matchId is required.');
-    }
+    docId(matchId, 'matchId');
     if (response !== 'ACCEPTED' && response !== 'DECLINED') {
         throw new HttpsError('invalid-argument', 'response is ACCEPTED or DECLINED.');
     }

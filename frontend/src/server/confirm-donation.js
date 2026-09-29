@@ -7,7 +7,7 @@ import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { HttpsError } from './https-error.js';
 import { isAdmin } from './portal-accounts.js';
 import { cooldownDaysFor } from './matching.js';
-
+import { docId } from './ids.js';
 
 /** Today's date in Phnom Penh, as YYYY-MM-DD — the portal's date picker speaks this calendar. */
 export function phnomPenhToday(now = new Date()) {
@@ -39,14 +39,8 @@ export async function confirmDonation({ db, caller, data, now = new Date(), log 
         throw new HttpsError('permission-denied', 'Admins only.');
     }
     const { requestId, matchId, donatedOn } = data ?? {};
-    if (
-        typeof requestId !== 'string' ||
-        typeof matchId !== 'string' ||
-        requestId === '' ||
-        matchId === ''
-    ) {
-        throw new HttpsError('invalid-argument', 'requestId and matchId are required.');
-    }
+    docId(requestId, 'requestId');
+    docId(matchId, 'matchId');
     if (
         typeof donatedOn !== 'string' ||
         !/^\d{4}-\d{2}-\d{2}$/.test(donatedOn) ||

@@ -62,15 +62,13 @@ beforeEach(async () => {
     await db
         .doc('users/sothea')
         .set({ displayName: 'Nem Sothea', language: 'km', role: 'DONOR', fcmToken: 'tok' });
-    await db
-        .doc('donors/sothea')
-        .set({
-            fullName: 'Nem Sothea',
-            bloodType: 'O-',
-            districtCode: '1202',
-            lat: 11.57,
-            lng: 104.91,
-        });
+    await db.doc('donors/sothea').set({
+        fullName: 'Nem Sothea',
+        bloodType: 'O-',
+        districtCode: '1202',
+        lat: 11.57,
+        lng: 104.91,
+    });
 
     // As a requester: one open, one pending, one fulfilled — each with a phone number.
     for (const [id, status] of [
@@ -83,48 +81,40 @@ beforeEach(async () => {
             .doc(`requests/${id}/private/contact`)
             .set({ contactName: 'Nem Sothea', contactPhone: '+85512345678' });
     }
-    await db
-        .doc('matches/mine-open_dara')
-        .set({
-            requestId: 'mine-open',
-            donorUid: 'dara',
-            requesterUid: 'sothea',
-            response: 'ACCEPTED',
-        });
+    await db.doc('matches/mine-open_dara').set({
+        requestId: 'mine-open',
+        donorUid: 'dara',
+        requesterUid: 'sothea',
+        response: 'ACCEPTED',
+    });
 
     // As a donor: accepted on someone's OPEN request, and on a FULFILLED one they gave blood to.
     await db.doc('requests/theirs-open').set(request('family', 'OPEN'));
     await db
         .doc('requests/theirs-open/acceptedDonors/sothea')
         .set({ displayName: 'Nem Sothea', bloodType: 'O-' });
-    await db
-        .doc('matches/theirs-open_sothea')
-        .set({
-            requestId: 'theirs-open',
-            donorUid: 'sothea',
-            requesterUid: 'family',
-            response: 'ACCEPTED',
-        });
+    await db.doc('matches/theirs-open_sothea').set({
+        requestId: 'theirs-open',
+        donorUid: 'sothea',
+        requesterUid: 'family',
+        response: 'ACCEPTED',
+    });
     await db.doc('requests/theirs-done').set(request('family', 'FULFILLED'));
     await db
         .doc('requests/theirs-done/acceptedDonors/sothea')
         .set({ displayName: 'Nem Sothea', bloodType: 'O-' });
-    await db
-        .doc('matches/theirs-done_sothea')
-        .set({
-            requestId: 'theirs-done',
-            donorUid: 'sothea',
-            requesterUid: 'family',
-            response: 'ACCEPTED',
-        });
-    await db
-        .doc('donations/theirs-done_sothea')
-        .set({
-            donorUid: 'sothea',
-            hospitalId: 'calmette',
-            requestId: 'theirs-done',
-            confirmedBy: 'admin-1',
-        });
+    await db.doc('matches/theirs-done_sothea').set({
+        requestId: 'theirs-done',
+        donorUid: 'sothea',
+        requesterUid: 'family',
+        response: 'ACCEPTED',
+    });
+    await db.doc('donations/theirs-done_sothea').set({
+        donorUid: 'sothea',
+        hospitalId: 'calmette',
+        requestId: 'theirs-done',
+        confirmedBy: 'admin-1',
+    });
 });
 
 describe('deleteAccount', () => {

@@ -13,8 +13,16 @@ import { cookies } from 'next/headers';
  * steal the session — which is exactly what `localStorage` would give away. Every call
  * that uses it runs on the Next server (Server Components and Server Actions); the value
  * never reaches the browser at all.
+ *
+ * **`__Host-` in production** (SEC-REVIEW-003 F-13). The browser then keeps the cookie only if
+ * it is Secure, `path=/` and has no Domain, so neither a subdomain nor a plain-HTTP page can
+ * plant or overwrite it. Localhost serves plain HTTP, where a Secure cookie is not sent, so the
+ * prefix waits for production — the same switch as `secure` where the cookie is set.
  */
-export const SESSION_COOKIE = 'lifelink_portal_session';
+export const SESSION_COOKIE =
+    process.env.NODE_ENV === 'production'
+        ? '__Host-lifelink_portal_session'
+        : 'lifelink_portal_session';
 
 /**
  * One hour, matching a Firebase ID token's own expiry. Deliberately not longer: the cookie

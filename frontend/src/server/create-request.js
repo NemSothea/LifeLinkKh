@@ -6,6 +6,7 @@
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { HttpsError } from './https-error.js';
 import { COMPATIBLE_DONORS, REQUEST_RATE_LIMIT } from './matching.js';
+import { isDocId } from './ids.js';
 
 const BLOOD_TYPES = Object.keys(COMPATIBLE_DONORS);
 const URGENCIES = ['CRITICAL', 'URGENT', 'ROUTINE'];
@@ -30,7 +31,7 @@ export async function createRequest({ db, caller, data, now = new Date(), log = 
         data ?? {};
 
     // validNewRequest() in firestore.rules, line for line.
-    if (typeof hospitalId !== 'string' || hospitalId === '') invalid('hospitalId is required.');
+    if (!isDocId(hospitalId)) invalid('hospitalId is required.');
     if (!BLOOD_TYPES.includes(patientBloodType)) invalid('patientBloodType is a blood type.');
     if (!Number.isInteger(unitsNeeded) || unitsNeeded < 1 || unitsNeeded > 20)
         invalid('unitsNeeded is 1–20.');
@@ -40,7 +41,17 @@ export async function createRequest({ db, caller, data, now = new Date(), log = 
     if (typeof contactPhone !== 'string' || !PHONE.test(contactPhone))
         invalid('contactPhone is a +855 number.');
 
-    const hospital = (await db.doc(`hospitals/${hospitalId}`).get()).data();
+    // SEC-REVIEW-003 F-05: a token issued before deleteAccount is refused by invoke's
+    // checkRevoked; this is the second lock — no profile, no request in its name.
+    const [user, hospitalSnap] = await Promise.all([
+        db.doc(`users/${caller.uid}`).get(),
+        db.doc(`hospitals/${hospitalId}`).get(),
+    ]);
+    if (!user.exists)
+        throw new HttpsError('failed-precondition', 'Finish signing up first.', {
+            code: 'NO_PROFILE',
+        });
+    const hospital = hospitalSnap.data();
     if (!hospital)
         throw new HttpsError('not-found', 'No such hospital.', { code: 'HOSPITAL_NOT_FOUND' });
 
