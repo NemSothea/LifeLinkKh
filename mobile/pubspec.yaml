@@ -78,6 +78,7 @@ dependencies:
   # Opens the download page and the privacy policy in the phone's browser — always
   # externally, so a sideload download goes through the browser's own installer flow.
   url_launcher: ^6.3.2
+  skeletonizer: ^3.0.0
 
 dev_dependencies:
   flutter_test:

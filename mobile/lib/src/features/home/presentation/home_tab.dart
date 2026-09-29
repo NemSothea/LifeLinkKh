@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/error/failure.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/time/relative_time.dart';
 import '../../../core/widgets/retryable_failure.dart';
 import '../../donation/presentation/donation_guide_screen.dart';
 import '../../donor/application/donor_providers.dart';
 import '../../donor/domain/donor_profile.dart';
+import '../../donor/presentation/donor_profile_screen.dart';
 import '../../donor/presentation/donor_setup_screen.dart';
 import '../../donor/presentation/eligibility_card.dart';
 import '../../match/application/match_providers.dart';
@@ -82,17 +85,18 @@ class HomeTab extends ConsumerWidget {
                         // tab is the common case, not the edge case.
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.all(16),
+                        // A skeleton in the shape of the real tab, not a centred spinner:
+                        // the donor sees where the answer will land before it does.
                         children: loading
-                            ? const [
-                                SizedBox(height: 48),
-                                Center(
-                                    child: CircularProgressIndicator(key: Key('home-loading')),
-                                ),
-                            ]
-                            : [
+                            ? const [_HomeSkeleton(key: Key('home-loading'))]
+                            : _staggered(context, [
                             switch (profile) {
                                 AsyncValue(hasValue: true, value: final DonorProfile loaded) =>
-                                    EligibilityCard(eligibility: loaded.eligibility),
+                                    EligibilityCard(
+                                        eligibility: loaded.eligibility,
+                                        heroTag: EligibilityCard.sharedHeroTag,
+                                        onTap: () => context.push(DonorProfileScreen.path),
+                                    ),
                                 AsyncValue(hasValue: true) => _becomeADonor(context, l10n),
                                 _ => const SizedBox.shrink(),
                             },
@@ -155,11 +159,27 @@ class HomeTab extends ConsumerWidget {
                             ..._myRequests(context, ref, l10n, myRequests),
                             const SizedBox(height: 24),
                             _BoardSection(alerted: matches.valueOrNull ?? const []),
-                        ],
+                        ]),
                     ),
                 ),
             ),
         );
+    }
+
+    /// Fades each section in, a beat after the one above it, the first time the tab
+    /// has something to show. Off under the platform's reduce-motion setting.
+    ///
+    /// Built on [TweenAnimationBuilder] rather than flutter_animate: that package
+    /// schedules a `Future.delayed` on every mount, even at zero delay, and every widget
+    /// test that ends right after Home renders then fails on a pending timer. The stagger
+    /// here is an [Interval] inside one controller's timeline, so there is no timer.
+    /// Capped at the eighth child so a long list does not keep the bottom invisible.
+    List<Widget> _staggered(BuildContext context, List<Widget> children) {
+        if (MediaQuery.disableAnimationsOf(context)) return children;
+        return [
+            for (var i = 0; i < children.length; i++)
+                _FadeSlideIn(delay: Duration(milliseconds: 40 * (i < 8 ? i : 8)), child: children[i]),
+        ];
     }
 
     /// Your own requests, and only when you have some. An empty "your requests" card under
@@ -680,6 +700,91 @@ class _RequestTile extends StatelessWidget {
                 isThreeLine: true,
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(RequestDetailScreen.routeFor(request.id)),
+            ),
+        );
+    }
+}
+
+/// First-load placeholder in the shape of the loaded tab: an eligibility card, the
+/// request button, and two request rows. The strings are never read — Skeletonizer
+/// paints every glyph as a grey bar — and the whole thing is hidden from screen
+/// readers, which would otherwise announce a hospital that does not exist.
+class _HomeSkeleton extends StatelessWidget {
+    const _HomeSkeleton({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        final reduceMotion = MediaQuery.disableAnimationsOf(context);
+        return ExcludeSemantics(
+            child: Skeletonizer(
+                effect: reduceMotion
+                    ? SolidColorEffect(
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    )
+                    : null,
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                        const Card(
+                            child: ListTile(
+                                contentPadding: EdgeInsets.all(AppTokens.space16),
+                                leading: Icon(Icons.check_circle_outline, size: 32),
+                                title: Text('You can donate now, placeholder'),
+                            ),
+                        ),
+                        const SizedBox(height: AppTokens.space24),
+                        FilledButton.icon(
+                            onPressed: () {},
+                            style: FilledButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: AppTokens.space24),
+                            ),
+                            icon: const Icon(Icons.bloodtype),
+                            label: const Text('Request blood'),
+                        ),
+                        const SizedBox(height: AppTokens.space24),
+                        const Text('Requests near you'),
+                        const SizedBox(height: AppTokens.space8),
+                        for (var i = 0; i < 2; i++)
+                            const Card(
+                                margin: EdgeInsets.only(bottom: 10),
+                                child: ListTile(
+                                    leading: CircleAvatar(child: Text('O+')),
+                                    title: Text('Calmette Hospital'),
+                                    subtitle: Text('Critical · ~2.5 km · 14 min ago'),
+                                ),
+                            ),
+                    ],
+                ),
+            ),
+        );
+    }
+}
+
+/// Fades and lifts [child] into place once, [delay] after it first mounts. Rebuilds
+/// with a new child do not replay it: the tween never changes after the first build.
+class _FadeSlideIn extends StatelessWidget {
+    const _FadeSlideIn({required this.delay, required this.child});
+
+    static const Duration _duration = Duration(milliseconds: 260);
+
+    final Duration delay;
+    final Widget child;
+
+    @override
+    Widget build(BuildContext context) {
+        final total = delay + _duration;
+        return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: 1),
+            duration: total,
+            curve: Interval(
+                delay.inMicroseconds / total.inMicroseconds,
+                1,
+                curve: Curves.easeOutCubic,
+            ),
+            child: child,
+            builder: (context, t, child) => Opacity(
+                opacity: t,
+                child: FractionalTranslation(translation: Offset(0, 0.06 * (1 - t)), child: child),
             ),
         );
     }

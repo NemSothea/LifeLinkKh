@@ -43,6 +43,11 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
     bool _respondFailed = false;
 
     Future<void> _respond(MatchResponseType response) async {
+        // A firmer tick for yes than for no: accepting is the commitment.
+        await (response == MatchResponseType.accepted
+            ? HapticFeedback.mediumImpact()
+            : HapticFeedback.selectionClick());
+        if (!mounted) return;
         setState(() {
             _isResponding = true;
             _respondFailed = false;

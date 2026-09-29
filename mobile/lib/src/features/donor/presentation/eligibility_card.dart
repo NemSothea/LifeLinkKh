@@ -20,9 +20,19 @@ import '../domain/eligibility.dart';
 /// like it. The waiting state stays calm and neutral on purpose: a countdown is not an
 /// alert.
 class EligibilityCard extends StatelessWidget {
-    const EligibilityCard({required this.eligibility, super.key});
+    const EligibilityCard({required this.eligibility, this.onTap, this.heroTag, super.key});
+
+    /// The one tag Home and the donor profile share, so the card flies between them.
+    static const Object sharedHeroTag = 'eligibility-card-hero';
 
     final Eligibility eligibility;
+
+    /// Makes the whole card a button (Home opens the profile with it). Null on the
+    /// profile screen itself, where the card is the destination, not a way there.
+    final VoidCallback? onTap;
+
+    /// Wraps the card in a [Hero]. Only one widget per route may carry a given tag.
+    final Object? heroTag;
 
     @override
     Widget build(BuildContext context) {
@@ -46,10 +56,14 @@ class EligibilityCard extends StatelessWidget {
             );
         }
 
-        return Card(
+        final card = Card(
             key: const Key('eligibility-card'),
             clipBehavior: Clip.antiAlias,
-            child: Container(
+            // Ink, not Container: the tap ripple is painted on the Card's Material, and a
+            // Container's decoration would sit on top of it and hide it.
+            child: InkWell(
+                onTap: onTap,
+                child: Ink(
                 decoration: BoxDecoration(
                     gradient: isEligible
                         ? LinearGradient(
@@ -69,7 +83,7 @@ class EligibilityCard extends StatelessWidget {
                             color: isEligible ? tokens.onEligible : tokens.onCooldown,
                         ),
                         const SizedBox(width: AppTokens.space16),
-                        Flexible(
+                        Expanded(
                             child: Text(
                                 message,
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -78,9 +92,18 @@ class EligibilityCard extends StatelessWidget {
                                 ),
                             ),
                         ),
+                        if (onTap != null)
+                            Icon(
+                                Icons.chevron_right,
+                                color: isEligible ? tokens.onEligible : tokens.onCooldown,
+                            ),
                     ],
+                ),
                 ),
             ),
         );
+
+        final tag = heroTag;
+        return tag == null ? card : Hero(tag: tag, child: card);
     }
 }

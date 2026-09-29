@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -154,6 +155,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                                 onPressed: inFlight
                                                     ? null
                                                     : () {
+                                                        HapticFeedback.selectionClick();
                                                         setState(
                                                             () => _pending =
                                                                 _PendingProvider.google,
@@ -208,6 +210,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                                 onPressed: inFlight
                                                     ? null
                                                     : () {
+                                                        HapticFeedback.selectionClick();
                                                         setState(
                                                             () => _pending =
                                                                 _PendingProvider.facebook,

@@ -65,7 +65,10 @@ class DonorProfileScreen extends ConsumerWidget {
         return ListView(
             padding: const EdgeInsets.all(24),
             children: [
-                EligibilityCard(eligibility: profile.eligibility),
+                EligibilityCard(
+                    eligibility: profile.eligibility,
+                    heroTag: EligibilityCard.sharedHeroTag,
+                ),
                 const SizedBox(height: 12),
                 Card(
                     margin: EdgeInsets.zero,

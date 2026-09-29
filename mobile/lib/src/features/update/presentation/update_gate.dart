@@ -162,8 +162,9 @@ class _UpdateAvailableStripState extends ConsumerState<_UpdateAvailableStrip> {
                                         child: InkWell(
                                             key: const Key('update-whats-new'),
                                             onTap: () => setState(() => _expanded = !_expanded),
-                                            child: Padding(
-                                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                            // 48dp minimum tap target; the row was ~36.
+                                            child: ConstrainedBox(
+                                                constraints: const BoxConstraints(minHeight: 48),
                                                 child: Row(
                                                     children: [
                                                         Flexible(child: message),

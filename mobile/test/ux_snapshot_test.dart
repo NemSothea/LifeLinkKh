@@ -173,7 +173,8 @@ void main() {
         // Not pumpAndSettle: the CRITICAL badge on the nearby request pulses forever by
         // design (see UrgencyBadge), which pumpAndSettle waits on indefinitely.
         await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
+        // Past Home's staggered fade-in (last section starts at 320ms, runs 260ms).
+        await tester.pump(const Duration(milliseconds: 700));
         await expectLater(
             find.byType(MaterialApp),
             matchesGoldenFile('goldens/donor_home.png'),
@@ -254,7 +255,8 @@ void main() {
         );
         // Not pumpAndSettle — same reason as the donor Home tab above.
         await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
+        // Past Home's staggered fade-in (last section starts at 320ms, runs 260ms).
+        await tester.pump(const Duration(milliseconds: 700));
         await expectLater(
             find.byType(MaterialApp),
             matchesGoldenFile('goldens/home_requester_session.png'),
