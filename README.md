@@ -64,20 +64,34 @@ portal's real handlers, so the numbers agree with each other the way live traffi
 ## The donor app
 
 Flutter, on the donor's phone. This is where a blood emergency actually reaches a human being.
-Screenshots from a real Android phone (Samsung, Android 15) and a real iPhone on the showcase
-data; the app is the same on both.
+One codebase, built for both platforms; every screenshot below is from a real phone on the
+showcase data, signed in as a donor in Doun Penh.
+
+### Android
+
+A Samsung Galaxy Z Flip3 on Android 15 — the platform the app ships on (signed APK from the portal).
 
 | | | |
 |---|---|---|
-| ![The intro, first slide](docs/assets/screens/mobile-intro-km.png) | ![Donor home](docs/assets/screens/mobile-home-km.png) | ![An alert](docs/assets/screens/mobile-alert-km.png) |
-| **First launch explains itself.** Three slides — one donation reaching three patients, who gets alerted, the 56-day rule — skippable from the first one and never shown twice. | **Eligible, four requests nearby.** The two critical ones first, each with the blood type needed, the distance and how long ago it was posted. A request that has been fulfilled or cancelled drops off the list. | **One alert.** Checked by an admin before it went out, how many units, which hospital and how far — and Accept or Decline. Accepting reveals the family's number. |
-| ![Donation history](docs/assets/screens/mobile-history-km.png) | ![Donor profile](docs/assets/screens/mobile-profile-km.png) | ![The Me tab](docs/assets/screens/mobile-me-km.png) |
-| **History and the cooldown.** Every confirmed donation, how many patients it could have helped, and whether the donor can give again yet. | **Profile.** Blood type, district and last donation; the switch that stops alerts without deleting anything. | **Me.** A generated avatar, the language switch that flips the whole app, sign-out and account deletion. |
-| ![Choosing an avatar](docs/assets/screens/mobile-avatar-km.png) | ![Home in English](docs/assets/screens/mobile-home-en.png) | ![Home in dark mode](docs/assets/screens/mobile-home-dark-km.png) |
-| **Khmer-style avatars.** Drawn on the phone, no network: a checked krama or a silk sbai with a rumdul in the hair, Angkor behind — thousands of combinations, picked and kept per user. | **English, one tap later.** Every string ships in Khmer and English. | **Dark mode**, on a neutral charcoal rather than a red-tinted brown, so the red stays the loudest thing on screen. |
+| ![Sign-in](docs/assets/screens/mobile-signin-km.png) | ![The intro, first slide](docs/assets/screens/mobile-intro-km.png) | ![Donor home](docs/assets/screens/mobile-home-km.png) |
+| **Sign-in.** One tap with Google or Facebook — no password to remember in an emergency. | **First launch explains itself.** Three slides — one donation reaching three patients, who gets alerted, the 56-day rule — skippable from the first one and never shown twice. | **Eligible, four requests nearby.** The two critical ones first, each with the blood type needed, the distance and how long ago it was posted. A request that has been fulfilled or cancelled drops off the list. |
+| ![An alert](docs/assets/screens/mobile-alert-km.png) | ![Donation history](docs/assets/screens/mobile-history-km.png) | ![Donor profile](docs/assets/screens/mobile-profile-km.png) |
+| **One alert.** Checked by an admin before it went out, how many units, which hospital and how far — and Accept or Decline. Accepting reveals the family's number. | **History and the cooldown.** Every confirmed donation, how many patients it could have helped, and whether the donor can give again yet. | **Profile.** Blood type, district and last donation; the switch that stops alerts without deleting anything. |
+| ![The Me tab](docs/assets/screens/mobile-me-km.png) | ![Choosing an avatar](docs/assets/screens/mobile-avatar-km.png) | ![Home in English](docs/assets/screens/mobile-home-en.png) |
+| **Me.** A generated avatar, the language switch that flips the whole app, sign-out and account deletion. | **Khmer-style avatars.** Drawn on the phone, no network: a checked krama or a silk sbai with a rumdul in the hair, Angkor behind — thousands of combinations, picked and kept per user. | **English, one tap later.** Every string ships in Khmer and English. |
+| ![Home in dark mode](docs/assets/screens/mobile-home-dark-km.png) | | |
+| **Dark mode**, on a neutral charcoal rather than a red-tinted brown, so the red stays the loudest thing on screen. | | |
 
-<p align="center"><img src="docs/assets/screens/ios-me-km.png" width="260" alt="The Me tab on an iPhone"><br>
-<sub><b>The same app on an iPhone</b> — one Flutter codebase, built for iOS as a device build (DEC-006).</sub></p>
+### iOS
+
+An iPhone on iOS 26, as a device build (DEC-006 — no App Store). Same screens, same data.
+
+| | | |
+|---|---|---|
+| ![The intro on iPhone](docs/assets/screens/ios-intro-km.png) | ![An alert on iPhone](docs/assets/screens/ios-alert-km.png) | ![The Me tab on iPhone](docs/assets/screens/ios-me-km.png) |
+| **The intro**, on first launch. | **One alert**, with Accept and Decline. | **Me**, with the generated avatar. |
+| ![Choosing an avatar on iPhone](docs/assets/screens/ios-avatar-km.png) | ![Home in English on iPhone](docs/assets/screens/ios-home-en.png) | ![Signing out on iPhone](docs/assets/screens/ios-signing-out-km.png) |
+| **The avatar picker.** | **Home in English.** | **Signing out** — a spinner and "Signing out…" while it clears the phone. |
 
 ---
 
