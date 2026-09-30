@@ -33,7 +33,7 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.45594180154-qbf1rtgvev2uh32ik9pngh70ali75tnn</string>
+				<string>com.googleusercontent.apps.45594180154-82akd3fovej45ucvc5c8961fl9gu6nf7</string>
 			</array>
 		</dict>
 	</array>
@@ -42,7 +42,7 @@
 	<key>FacebookAppID</key>
 	<string>1538785524224504</string>
 	<key>FacebookClientToken</key>
-	<string></string>
+	<string>6a1541909074d63d8549814d97dd416c</string>
 	<key>FacebookDisplayName</key>
 	<string>LifeLink KH</string>
 	<key>FacebookAutoLogAppEventsEnabled</key>

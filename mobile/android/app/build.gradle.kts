@@ -22,7 +22,7 @@ if (hasReleaseSigning) {
 }
 
 android {
-    namespace = "com.kosign.lifelinkkh"
+    namespace = "com.kosigndemo.lifelinkkh"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -33,7 +33,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.kosign.lifelinkkh"
+        applicationId = "com.kosigndemo.lifelinkkh"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // Pinned rather than inherited: firebase_auth requires API 23, and a Flutter SDK

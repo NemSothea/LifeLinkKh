@@ -13,8 +13,10 @@
 
     <string name="facebook_app_id">1538785524224504</string>
     <string name="fb_login_protocol_scheme">fb1538785524224504</string>
-    <!-- From the Meta App dashboard: Settings -> Advanced -> Client Token. Not
-         set yet — Facebook login works without it in Development mode with
-         registered test users; fill this in before requesting App Review. -->
-    <string name="facebook_client_token"></string>
+    <!-- From the Meta App dashboard: App settings -> Advanced -> Security -> Client
+         token. Required: since Facebook SDK v13 an empty token makes the SDK refuse to
+         initialise, flutter_facebook_auth then fails to register, and every tap on
+         "Continue with Facebook" is a MissingPluginException. Client configuration,
+         like the App ID — it ships inside every APK. -->
+    <string name="facebook_client_token">6a1541909074d63d8549814d97dd416c</string>
 </resources>

@@ -49,7 +49,7 @@ Everything runs from the branch `feat/firebase-backend`. It is not merged into `
   - **Google** enabled. This is the app's sign-in.
   - **Email/Password** enabled. This is the portal admin's sign-in. Leave "Email link" off.
   - **Email enumeration protection** on (the default for new projects).
-- [ ] **Android app registered** with package `com.kosign.lifelinkkh`, and `google-services.json` in
+- [ ] **Android app registered** with package `com.kosigndemo.lifelinkkh`, and `google-services.json` in
   `mobile/android/app/` (already true for development). The release SHA-1s come in
   [`deploy-runbook.md`](deploy-runbook.md) Step 4 and Part E below.
 

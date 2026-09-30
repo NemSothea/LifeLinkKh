@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_initializing_formals — the fields are private and Dart
 // forbids a named parameter that starts with an underscore, so the lint's fix does not
 // compile here.
+import 'package:flutter/foundation.dart';
+
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../domain/auth_repository.dart';
@@ -80,9 +82,12 @@ final class AuthService {
         final String? idToken;
         try {
             idToken = await obtainIdToken();
-        } on Object catch (_) {
+        } on Object catch (error) {
             // A platform-channel failure from the Google/Facebook/Firebase plugin. Not a
-            // domain failure and not something a message from us can explain.
+            // domain failure and not something a message from us can explain — but the
+            // developer needs the cause, which is otherwise lost here (a Meta console
+            // misconfiguration and a rejected Firebase credential look identical).
+            if (kDebugMode) debugPrint('$failureMessage: $error');
             return Failed(UnknownFailure(message: failureMessage));
         }
         if (idToken == null) return const Success(null);

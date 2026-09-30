@@ -39,6 +39,10 @@ dependencies:
   # FR-AUTH-004: Facebook login dialog only — Firebase Auth handles the federated
   # provider server-side, same as Google, so no extra backend dependency.
   flutter_facebook_auth: ^7.1.1
+  # SHA-256 of the Limited Login nonce. On iOS the Facebook SDK returns an OIDC ID token
+  # whose `nonce` claim is whatever we hashed; Firebase checks it against the raw value.
+  # Already in the lock as a transitive dependency — pinned here because we now call it.
+  crypto: ^3.0.7
   firebase_messaging: ^16.5.0
   # ADR 0009: Firestore is the database. Donor profile, districts and donation history
   # read and write it directly; firebase/firestore.rules decides what each user may touch.

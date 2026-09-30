@@ -45,6 +45,65 @@
             {
               "client_id": "45594180154-nr4unhfv72fe4hve2oepevgva0rdmtrg.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "45594180154-82akd3fovej45ucvc5c8961fl9gu6nf7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.kosigndemo.lifelinkkh"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:45594180154:android:5236e2ceb6760fe9169303",
+        "android_client_info": {
+          "package_name": "com.kosigndemo.lifelinkkh"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "45594180154-3qa4i4iv4tjcsem1oc792ve1cujjq9kc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kosigndemo.lifelinkkh",
+            "certificate_hash": "931ed16e190d3810ce5b834f6126c0b09c080fbc"
+          }
+        },
+        {
+          "client_id": "45594180154-h2t3k1080v86igpenpa3ov9k8peiv7ct.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kosigndemo.lifelinkkh",
+            "certificate_hash": "5b0f5ae6ef9625b02f3744ea24b8a30c2b42d1fc"
+          }
+        },
+        {
+          "client_id": "45594180154-nr4unhfv72fe4hve2oepevgva0rdmtrg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnwxZYFQB-aPuUHfVyEX7H5PhiG1hCRik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "45594180154-nr4unhfv72fe4hve2oepevgva0rdmtrg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "45594180154-82akd3fovej45ucvc5c8961fl9gu6nf7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.kosigndemo.lifelinkkh"
+              }
             }
           ]
         }
