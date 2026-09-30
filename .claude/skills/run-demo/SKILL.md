@@ -1,7 +1,7 @@
 ---
 name: run-demo
-description: Stand up the LifeLink KH demo on this machine — Firebase emulators (Firestore + Auth), fresh seed and demo data, the admin portal in a browser (it also serves the app's functions, ADR 0010), and the Flutter app on emulator / USB phone / iOS simulator pointed at the local emulator and portal. Use when the user says "run the demo", "start the emulators", "open the portal", "run mobile", "prep for defense", or "reset demo data".
-argument-hint: "[all | stack | reset | portal | mobile [emulator|usb|ios] | check | stop]"
+description: Stand up the LifeLink KH demo on this machine — Firebase emulators (Firestore + Auth), fresh seed and demo data, the admin portal in a browser (it also serves the app's functions, ADR 0010), and the Flutter app on emulator / USB phone / iOS simulator / real iPhone pointed at the local emulator and portal. Use when the user says "run the demo", "start the emulators", "open the portal", "run mobile", "prep for defense", or "reset demo data".
+argument-hint: "[all | stack | reset | portal | mobile [emulator|usb|ios|iphone] | check | stop]"
 ---
 
 # Run the LifeLink demo
@@ -81,6 +81,7 @@ FIRESTORE_EMULATOR_HOST=127.0.0.1:8081 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:909
 bash scripts/demo-mobile.sh emulator --firestore-emulator   # donor — Android AVD, boots it, cycles airplane mode
 bash scripts/demo-mobile.sh usb --firestore-emulator        # physical Android on a cable (adb reverse tcp:8081)
 bash scripts/demo-mobile.sh ios --firestore-emulator        # simulator — no push, never the donor
+bash scripts/demo-mobile.sh iphone --firestore-emulator     # real iPhone (optional name/UDID) — no push, never the donor
 ```
 
 Run it with `run_in_background: true` — `flutter run` stays attached. Tell the user it is
@@ -90,6 +91,10 @@ Sign-in is real Google Sign-In even on the emulator stack, so the device needs i
 Rules the golden path depends on:
 - **Two Google accounts, one role each.** A donor never matches their own request.
 - **Donor on Android** (emulator with Play image, or USB phone). iOS Simulator has no APNs.
+- **Real iPhone** reaches the Mac by LAN IP, not a tunnel: same Wi-Fi, and the Firestore emulator
+  started with `cd firebase && npm run emulators:app:lan` (binds 0.0.0.0) instead of `emulators:app`.
+  Override the IP with `LAN_IP=…`. First launch: trust the developer profile on the phone and allow
+  Local Network access. Personal team has no APNs — requester or browsing only.
 - Pinned values: donor district **Doun Penh**, last donation **blank**; request at **Calmette**,
   patient **AB+**, urgency **CRITICAL** (runbook §4 table). Do not improvise the patient type.
 

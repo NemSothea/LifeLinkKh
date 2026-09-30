@@ -137,6 +137,7 @@ bash scripts/demo-mobile.sh                         # Android emulator — boots
 bash scripts/demo-mobile.sh emulator <avd>          # naming the AVD
 bash scripts/demo-mobile.sh usb                     # physical Android on a cable
 bash scripts/demo-mobile.sh ios                     # booted iOS simulator — no push, never the donor
+bash scripts/demo-mobile.sh iphone [name]           # real iPhone by LAN IP — needs emulators:app:lan; no push, never the donor
 # add --firestore-emulator to any of them for the emulator stack
 ```
 

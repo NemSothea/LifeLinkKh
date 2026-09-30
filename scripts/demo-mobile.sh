@@ -5,12 +5,14 @@
 #   bash scripts/demo-mobile.sh emulator [avd]  # same, naming the AVD (default Medium_Phone_API_36.0)
 #   bash scripts/demo-mobile.sh usb             # physical Android on a cable
 #   bash scripts/demo-mobile.sh ios             # booted iOS simulator (no push — never the donor)
+#   bash scripts/demo-mobile.sh iphone [name]   # real iPhone, cable or Wi-Fi (no push — never the donor)
 #
 # Add --firestore-emulator (anywhere) to read and write the local Firestore emulator started by
 # `npm run emulators:app` in firebase/, instead of the real lifelinkkh project. The emulator's
 # address differs per device — 10.0.2.2 is the Android emulator's alias for this Mac, a cabled
-# phone reaches it only through `adb reverse`, the simulator shares the Mac's loopback — and a
-# wrong one looks exactly like an empty database. Picking it is what this script is for.
+# phone reaches it only through `adb reverse`, the simulator shares the Mac's loopback, a real
+# iPhone has no `adb reverse` and needs the Mac's LAN IP — and a wrong one looks exactly like an
+# empty database. Picking it is what this script is for.
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -87,8 +89,52 @@ case "$target" in
         firestore="127.0.0.1:8081"
         portal="http://127.0.0.1:3000"
         ;;
+    iphone)
+        # A real iPhone has no `adb reverse`, so it reaches this Mac by its LAN IP — the phone and
+        # the Mac must be on the same Wi-Fi. The Firestore emulator binds 127.0.0.1 by default,
+        # so it must be started with `npm run emulators:app:lan` (host 0.0.0.0); `next dev`
+        # already listens on every interface. Signing uses the Xcode team in the project
+        # (DEC-006: device build, no App Store). Flutter's device id, not devicectl's.
+        want="${args[1]:-}"
+        device=$(flutter devices --machine 2>/dev/null | WANT="$want" python3 -c '
+import json, os, sys
+want = os.environ["WANT"]
+for d in json.load(sys.stdin):
+    if d.get("targetPlatform") == "ios" and not d.get("emulator"):
+        if not want or want in (d["id"], d["name"]):
+            print(d["id"]); break
+' || true)
+        if [ -z "$device" ]; then
+            echo "❌ no real iPhone found${want:+ named \"$want\"}. Unlock it, cable in (or same Wi-Fi after pairing"
+            echo "   in Xcode → Window → Devices), trust this Mac, and turn on Developer Mode"
+            echo "   (Settings → Privacy & Security). Check with: flutter devices"
+            exit 1
+        fi
+        echo "📱 iPhone: $device"
+        echo "⚠️  a free/personal team has no APNs — this phone never receives a push."
+        echo "   Fine for the requester or browsing; never the donor."
+        echo "   First launch: trust the developer on the phone (Settings → General → VPN & Device Management)."
+        if $use_emulator; then
+            host_ip="${LAN_IP:-$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)}"
+            if [ -z "$host_ip" ]; then
+                echo "❌ could not find this Mac's LAN IP. Set it: LAN_IP=192.168.x.y bash scripts/demo-mobile.sh iphone ..."
+                exit 1
+            fi
+            if ! curl -fsS --max-time 3 "http://$host_ip:8081/" >/dev/null 2>&1; then
+                echo "❌ Firestore emulator not reachable at $host_ip:8081 — it only listens on 127.0.0.1."
+                echo "   Restart it in firebase/ with: npm run emulators:app:lan"
+                exit 1
+            fi
+            if ! curl -s -o /dev/null --max-time 5 "http://$host_ip:3000/"; then
+                echo "⚠️  portal not answering at $host_ip:3000 — start it in frontend/: npm run dev"
+            fi
+            echo "   The first run asks for Local Network access — allow it, or every read looks empty."
+        fi
+        firestore="${host_ip:-}:8081"
+        portal="http://${host_ip:-}:3000"
+        ;;
     *)
-        echo "usage: bash scripts/demo-mobile.sh [emulator [avd] | usb | ios] [--firestore-emulator]"
+        echo "usage: bash scripts/demo-mobile.sh [emulator [avd] | usb | ios | iphone [name]] [--firestore-emulator]"
         exit 2
         ;;
 esac

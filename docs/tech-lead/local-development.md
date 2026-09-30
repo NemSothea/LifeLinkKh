@@ -103,6 +103,7 @@ an alert and deleting an account go through it.
 bash scripts/demo-mobile.sh --firestore-emulator            # Android emulator (boots the AVD)
 bash scripts/demo-mobile.sh usb --firestore-emulator        # cabled phone, adds adb reverse tcp:8081 + tcp:3000
 bash scripts/demo-mobile.sh ios --firestore-emulator        # booted simulator — no push
+bash scripts/demo-mobile.sh iphone --firestore-emulator     # real iPhone by LAN IP — start emulators:app:lan, same Wi-Fi; no push
 ```
 
 By hand: `cd mobile && flutter run --dart-define=FIRESTORE_EMULATOR=10.0.2.2:8081
