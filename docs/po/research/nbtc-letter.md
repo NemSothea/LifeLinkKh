@@ -1,6 +1,8 @@
 # Letter to the NBTC (DEC-019, phase 0)
 
 **Owner:** Sothea. **Status:** draft, 2026-09-30 — needs a native Khmer check before sending.
+The privacy-and-security paragraph and the date-of-birth note describe work that is **planned, not
+built** (profile editing, MASVS check). Send only once they are true, or cut them.
 **Send:** print, sign and hand in at the NBTC (St 271, next to Khmer-Soviet Friendship Hospital);
 send the same text to the "Cambodia Blood Service" Facebook page. Attach 2–3 app screenshots.
 Sign it first. Record answers in [`nbtc-confirmation-checklist.md`](nbtc-confirmation-checklist.md).
@@ -27,11 +29,18 @@ LifeLink KH ជាកម្មវិធីឥតគិតថ្លៃ គ្ម�
 
 កម្មវិធីនេះណែនាំអ្នកបរិច្ចាគឱ្យទៅបរិច្ចាគតែនៅមជ្ឈមណ្ឌលជាតិផ្តល់ឈាម ឬផ្នែកផ្តល់ឈាមនៃមន្ទីរពេទ្យប៉ុណ្ណោះ ហើយតែងតែបញ្ជាក់ថា បុគ្គលិកមជ្ឈមណ្ឌលជាអ្នកសម្រេចចុងក្រោយ។
 
+យើងបង្កើតកម្មវិធីនេះដោយស្ម័គ្រចិត្ត មិនមែនដើម្បីរកប្រាក់ចំណេញទេ។ បំណងរបស់យើងគឺចង់ជួយអ្នកជំងឺ និងក្រុមគ្រួសារ ពេលពួកគេត្រូវការឈាមជាបន្ទាន់ ហើយចង់ឱ្យសហគមន៍អ្នកបរិច្ចាគឈាមនៅកម្ពុជា រីកចម្រើនជាមួយគ្នា។ ថ្ងៃណាមួយ យើងក៏សង្ឃឹមថាអាចចែករំលែកបទពិសោធន៍នេះ ដល់ប្រជាជននៅប្រទេសផ្សេងទៀតផងដែរ។ យើងមិនស្នើសុំថវិកា ឬការឧបត្ថម្ភណាមួយឡើយ គឺសុំតែការណែនាំ ដើម្បីឱ្យព័ត៌មានក្នុងកម្មវិធីត្រឹមត្រូវ និងមានសុវត្ថិភាពសម្រាប់អ្នកបរិច្ចាគ។
+
+**របៀបដែលយើងការពារព័ត៌មានអ្នកប្រើ៖**
+- ទីតាំងពិតប្រាកដរបស់អ្នកបរិច្ចាគ មិនត្រូវបានបង្ហាញដល់អ្នកប្រើផ្សេងទៀតឡើយ។ លេខទូរស័ព្ទរបស់ក្រុមគ្រួសារ បង្ហាញតែដល់អ្នកបរិច្ចាគដែលបានយល់ព្រមជួយសំណើនោះប៉ុណ្ណោះ។
+- អ្នកប្រើអាចកែប្រែព័ត៌មានផ្ទាល់ខ្លួន (ដូចជាលេខទូរស័ព្ទ និងថ្ងៃខែឆ្នាំកំណើត) បានគ្រប់ពេល ហើយអាចលុបគណនី និងព័ត៌មានផ្ទាល់ខ្លួនចេញពីកម្មវិធីបាន។
+- ការតភ្ជាប់ទាំងអស់ត្រូវបានអ៊ិនគ្រីប។ ក្រុមយើងបានពិនិត្យកម្មវិធី និងគេហទំព័រដោយខ្លួនឯង តាមស្តង់ដារអន្តរជាតិ OWASP ASVS 5.0 កម្រិតទី ១ និងពិនិត្យកម្មវិធីទូរស័ព្ទតាមស្តង់ដារ OWASP MASVS។ នេះជាការវាយតម្លៃដោយខ្លួនឯង មិនមែនជាវិញ្ញាបនបត្រទេ ហើយយើងអាចផ្តល់របាយការណ៍ជូន ប្រសិនបើលោកប្រធានត្រូវការ។
+
 ព័ត៌មានវេជ្ជសាស្ត្រក្នុងកម្មវិធី យើងយកពីអង្គការសុខភាពពិភពលោក (WHO) និងសេចក្តីថ្លែងរបស់មជ្ឈមណ្ឌលក្នុងសារព័ត៌មាន ប៉ុន្តែមិនទាន់បានបញ្ជាក់ពីមជ្ឈមណ្ឌលផ្ទាល់ទេ។ ដូច្នេះ ខ្ញុំបាទសូមគោរពស្នើសុំ៖
 
 1. **បញ្ជាក់ព័ត៌មានមួយចំនួន៖**
    - រយៈពេលរង់ចាំរវាងការបរិច្ចាគឈាមម្តងៗ សម្រាប់បុរស និងស្ត្រី (យើងប្រើ ៣ ខែ និង ៤ ខែ គឺ ៩០ និង ១២០ ថ្ងៃ)។ តើត្រូវរាប់ជាថ្ងៃ ឬជាខែ?
-   - អាយុ និងទម្ងន់អប្បបរមា (យើងប្រើ ១៨ ដល់ ៦០ ឆ្នាំ និង ៤៥ គីឡូក្រាម) និងកម្រិតអេម៉ូក្លូប៊ីន។
+   - អាយុ និងទម្ងន់អប្បបរមា (យើងប្រើ ១៨ ដល់ ៦០ ឆ្នាំ និង ៤៥ គីឡូក្រាម) និងកម្រិតអេម៉ូក្លូប៊ីន។ អ្នកបរិច្ចាគនឹងបញ្ចូលថ្ងៃខែឆ្នាំកំណើត ដើម្បីឱ្យកម្មវិធីអនុវត្តកម្រិតអាយុដែលមជ្ឈមណ្ឌលបញ្ជាក់។
    - ម៉ោងធ្វើការសម្រាប់អ្នកបរិច្ចាគ និងឯកសារដែលត្រូវយកមក (អត្តសញ្ញាណប័ណ្ណ?)។
 2. **ពិនិត្យអត្ថបទណែនាំ** សម្រាប់អ្នកបរិច្ចាគ និងក្រុមគ្រួសារ ក្នុងកម្មវិធី ថាត្រឹមត្រូវ ឬត្រូវកែតម្រូវត្រង់ណា។
 3. **(បើអាចធ្វើបាន)** ផ្តល់ឈ្មោះអ្នកទំនាក់ទំនងម្នាក់ ឬកាលវិភាគយុទ្ធនាការបរិច្ចាគឈាម ដើម្បីឱ្យយើងជូនដំណឹងដល់អ្នកបរិច្ចាគ។
@@ -68,11 +77,18 @@ LifeLink KH is free, shows no ads and never sells its users' information. It hel
 
 The app sends donors only to the NBTC or a hospital blood bank, and always says that the centre's staff make the final decision.
 
+We built LifeLink as volunteers, not for profit. We want to help patients and their families when they need blood urgently, and to help Cambodia's donor community grow together — and one day to share what we learn with people in other countries too. We are not asking for funding or sponsorship, only for guidance, so that what the app tells donors is correct and safe.
+
+**How we protect users' information:**
+- A donor's exact location is never shown to other users. A family's phone number is shown only to a donor who has accepted that family's request.
+- Users can correct their details (such as phone number and date of birth) at any time, and can delete their account and personal data from within the app.
+- All connections are encrypted. We reviewed the app and web portal ourselves against the international OWASP Application Security Verification Standard (ASVS 5.0, Level 1), and the mobile app against OWASP MASVS. This is a self-assessment, not a certification; we can share the report if you wish.
+
 The medical facts in the app come from the WHO and from statements by the NBTC reported in the press, but they have not been confirmed by the NBTC itself. I would therefore respectfully ask:
 
 1. **To confirm a few facts:**
    - The minimum time between whole-blood donations for men and for women (we use 3 and 4 months, as 90 and 120 days). Should it be counted in days or in months?
-   - The age range and minimum weight (we use 18 to 60 years and 45 kg), and the haemoglobin threshold.
+   - The age range and minimum weight (we use 18 to 60 years and 45 kg), and the haemoglobin threshold. Donors will enter their date of birth so the app can apply the age range you confirm.
    - Opening hours for donors, and what a donor must bring (ID card?).
 2. **To review the guide text** for donors and families in the app, and tell us what to correct.
 3. **If possible,** a contact person or the dates of blood drives, so we can tell donors about them.
