@@ -145,7 +145,7 @@ flutter_launcher_icons:
 #   dart run flutter_native_splash:create
 flutter_native_splash:
   color: "#FFF8F7"          # AppTheme.light colorScheme.surface
-  color_dark: "#1A1110"     # AppTheme.dark colorScheme.surface
+  color_dark: "#141213"     # AppTheme.darkSurface
   image: assets/branding/splash.png
   image_dark: assets/branding/splash-dark.png
 
@@ -157,7 +157,7 @@ flutter_native_splash:
     image_dark: assets/branding/icon-adaptive-foreground.png
     icon_background_color_dark: "#D15353"
     color: "#FFF8F7"
-    color_dark: "#1A1110"
+    color_dark: "#141213"
 
   android: true
   ios: true

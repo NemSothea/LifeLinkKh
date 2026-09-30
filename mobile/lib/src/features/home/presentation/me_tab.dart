@@ -8,6 +8,9 @@ import '../../about/application/about_providers.dart';
 import '../../about/presentation/about_screen.dart';
 import '../../account/presentation/delete_account_screen.dart';
 import '../../auth/application/auth_providers.dart';
+import '../../avatar/application/avatar_providers.dart';
+import '../../avatar/presentation/avatar_picker_sheet.dart';
+import '../../avatar/presentation/profile_avatar.dart';
 import '../../donation/presentation/donation_guide_screen.dart';
 import '../../donor/presentation/donor_profile_screen.dart';
 import '../../request/presentation/request_form_screen.dart';
@@ -38,18 +41,11 @@ class MeTab extends ConsumerWidget {
                     padding: const EdgeInsets.all(16),
                     children: [
                         // A Google account without a name is valid (AuthUser.displayName's
-                        // own doc comment) — an empty name shows the icon alone rather than
+                        // own doc comment) — an empty name shows the avatar alone rather than
                         // an empty header line.
                         Row(
                             children: [
-                                CircleAvatar(
-                                    radius: 28,
-                                    backgroundColor: theme.colorScheme.primaryContainer,
-                                    child: Icon(
-                                        Icons.person_outline,
-                                        color: theme.colorScheme.onPrimaryContainer,
-                                    ),
-                                ),
+                                _AvatarButton(fallbackColor: theme.colorScheme.primaryContainer),
                                 if (user != null && user.displayName.isNotEmpty) ...[
                                     const SizedBox(width: 16),
                                     Expanded(
@@ -157,6 +153,63 @@ class MeTab extends ConsumerWidget {
                                 ),
                             ),
                         ],
+                    ],
+                ),
+            ),
+        );
+    }
+}
+
+/// The user's generated avatar, with a pencil badge that says it can be changed. Tapping
+/// it opens the picker; a pick replaces it on the spot.
+class _AvatarButton extends ConsumerWidget {
+    const _AvatarButton({required this.fallbackColor});
+
+    /// Only painted for the instant before a session exists, which the Me tab never
+    /// really shows — but a blank hole would be worse than a plain disc.
+    final Color fallbackColor;
+
+    static const double _radius = 32;
+
+    @override
+    Widget build(BuildContext context, WidgetRef ref) {
+        final l10n = AppLocalizations.of(context)!;
+        final scheme = Theme.of(context).colorScheme;
+        final spec = ref.watch(avatarControllerProvider);
+        if (spec == null) {
+            return CircleAvatar(radius: _radius, backgroundColor: fallbackColor);
+        }
+
+        return Semantics(
+            button: true,
+            label: l10n.avatarChangeLabel,
+            excludeSemantics: true,
+            child: InkWell(
+                key: const Key('me-avatar'),
+                customBorder: const CircleBorder(),
+                onTap: () async {
+                    final picked = await showAvatarPicker(context, spec);
+                    if (picked != null) {
+                        await ref.read(avatarControllerProvider.notifier).pick(picked);
+                    }
+                },
+                child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                        ProfileAvatar(spec: spec, radius: _radius),
+                        Positioned(
+                            right: -2,
+                            bottom: -2,
+                            child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                    color: scheme.primary,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: scheme.surface, width: 2),
+                                ),
+                                child: Icon(Icons.edit, size: 12, color: scheme.onPrimary),
+                            ),
+                        ),
                     ],
                 ),
             ),

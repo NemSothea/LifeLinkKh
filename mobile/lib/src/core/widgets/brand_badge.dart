@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// The app's one signature mark — blood is the subject, so the badge is a soft radial
-/// glow behind a solid droplet, not a flat icon sitting on blank space.
+/// The app's one signature mark — blood is the subject, so the badge is a solid red disc
+/// with a soft glow behind a white droplet, not a flat icon sitting on blank space.
 ///
 /// Shared, not private to the sign-in screen, because three things must draw the same
 /// mark: the sign-in screen, the cold-start splash inside Flutter, and the *native*
@@ -29,9 +29,9 @@ class BrandBadge extends StatelessWidget {
             height: size,
             decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: RadialGradient(
-                    colors: [color, Color.lerp(color, Colors.black, 0.25)!],
-                ),
+                // Flat, not a radial gradient: darkening the edge 25% toward black read
+                // as maroon on the launcher icon, and the icon is rendered from this mark.
+                color: color,
                 boxShadow: [
                     BoxShadow(
                         color: color.withValues(alpha: 0.35),

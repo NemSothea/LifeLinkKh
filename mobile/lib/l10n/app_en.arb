@@ -1223,5 +1223,34 @@
     "aboutContactCopied": "Email address copied.",
     "@aboutContactCopied": {
         "description": "Snackbar when no mail app could open the address, so it was copied instead"
+    },
+    "avatarChangeLabel": "Change avatar",
+    "@avatarChangeLabel": {
+        "description": "Me tab: accessibility label on the profile avatar, which opens the picker"
+    },
+    "avatarPickerTitle": "Choose your avatar",
+    "@avatarPickerTitle": {
+        "description": "Title of the avatar picker sheet"
+    },
+    "avatarMale": "Male",
+    "@avatarMale": {
+        "description": "Avatar picker: male faces"
+    },
+    "avatarFemale": "Female",
+    "@avatarFemale": {
+        "description": "Avatar picker: female faces"
+    },
+    "avatarShuffle": "Show other faces",
+    "@avatarShuffle": {
+        "description": "Avatar picker: deals a new grid of random faces"
+    },
+    "avatarOptionLabel": "Avatar {index}",
+    "@avatarOptionLabel": {
+        "description": "Avatar picker: accessibility label of one face",
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
     }
 }

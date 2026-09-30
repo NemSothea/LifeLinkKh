@@ -32,14 +32,16 @@ class AppTheme {
 
     static ThemeData _themeFor(Brightness brightness) {
         final rawScheme = ColorScheme.fromSeed(seedColor: _seed, brightness: brightness);
-        final scheme = rawScheme.copyWith(
+        var scheme = rawScheme.copyWith(
             primary: brightness == Brightness.light ? _primaryLight : _primaryDark,
             onPrimary: Colors.white,
         );
+        if (brightness == Brightness.dark) scheme = _neutralDarkSurfaces(scheme);
         final base = ThemeData(brightness: brightness, useMaterial3: true);
 
         return base.copyWith(
             colorScheme: scheme,
+            scaffoldBackgroundColor: scheme.surface,
             extensions: [AppTokens.fromScheme(scheme, brightness)],
             textTheme: _textTheme(base.textTheme),
             pageTransitionsTheme: PageTransitionsTheme(
@@ -90,6 +92,33 @@ class AppTheme {
             ),
         );
     }
+
+    /// Dark surface. `fromSeed` tints every dark surface with the seed's hue, and on a red
+    /// seed that is a brown-maroon (`#1A1110`) under every screen — muddy, and it eats the
+    /// contrast of the red that is meant to be the one loud thing. A near-neutral charcoal
+    /// instead, with a trace of warmth so it does not read as cold blue-grey. Also the
+    /// native splash's `color_dark` in `pubspec.yaml` — change both together.
+    static const Color darkSurface = Color(0xFF141213);
+
+    /// The whole surface ladder, not only `surface`: cards, sheets and the navigation bar
+    /// sit on the container steps, and leaving those seed-tinted would put maroon cards on
+    /// a charcoal page. Each step is a small, even lift so elevation still reads.
+    static ColorScheme _neutralDarkSurfaces(ColorScheme scheme) => scheme.copyWith(
+        surface: darkSurface,
+        surfaceDim: darkSurface,
+        surfaceBright: const Color(0xFF3A3738),
+        surfaceContainerLowest: const Color(0xFF0F0D0E),
+        surfaceContainerLow: const Color(0xFF1C1A1B),
+        surfaceContainer: const Color(0xFF211F20),
+        surfaceContainerHigh: const Color(0xFF2B292A),
+        surfaceContainerHighest: const Color(0xFF363334),
+        onSurface: const Color(0xFFECE7E7),
+        onSurfaceVariant: const Color(0xFFC8C2C2),
+        outline: const Color(0xFF928B8B),
+        outlineVariant: const Color(0xFF484344),
+        inverseSurface: const Color(0xFFECE7E7),
+        onInverseSurface: const Color(0xFF2B292A),
+    );
 
     /// Inter for Latin, falling back to Kantumruy Pro for the script Inter has no glyphs
     /// for. Both are humanist sans designs at a similar x-height, so a string mixing

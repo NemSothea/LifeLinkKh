@@ -16,6 +16,8 @@ import 'src/core/settings/onboarding_controller.dart';
 import 'src/core/settings/preferences_locale_store.dart';
 import 'src/core/settings/preferences_onboarding_store.dart';
 import 'src/features/notify/application/push_providers.dart';
+import 'src/features/avatar/application/avatar_providers.dart';
+import 'src/features/avatar/data/preferences_avatar_store.dart';
 import 'src/features/notify/application/push_session_sync.dart';
 import 'src/features/notify/data/firebase_push_arrivals.dart';
 import 'src/features/update/application/app_update_providers.dart';
@@ -84,6 +86,8 @@ Future<void> main() async {
             updateDismissalStoreProvider.overrideWithValue(
                 PreferencesUpdateDismissalStore(preferences),
             ),
+            // The avatar the user picked on the Me tab.
+            avatarStoreProvider.overrideWithValue(PreferencesAvatarStore(preferences)),
         ],
     );
 

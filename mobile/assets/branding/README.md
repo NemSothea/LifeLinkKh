@@ -14,12 +14,14 @@ toolchain to produce one fails on the machine that does not have it.
 | `icon-adaptive-background.png` | Android adaptive background: the gradient, no droplet |
 | `splash.png` / `splash-dark.png` | Native launch screen art (Android ≤11, iOS), light and dark. Rendered from `BrandBadge` — see "Launch screen" below |
 | `play-store-512.png` | The 512×512 the Play Console store listing asks for. Not consumed by any build — upload it by hand at deploy-runbook step 7 |
+| `play-feature-graphic.png` | The 1024×500 feature graphic the Play Console store listing asks for. Opaque RGB (the Console refuses alpha). Upload by hand, like the 512 |
 
 ## Where the mark comes from
 
-`Icons.bloodtype` (codepoint `0xe0e3`) in white, on the radial gradient `_BrandBadge`
-draws in `sign_in_screen.dart`: `AppTheme._seed` (`0xFFC62828`) to
-`Color.lerp(seed, black, 0.25)`.
+`Icons.bloodtype` (codepoint `0xe0e3`) in white, on flat `AppTheme._seed` (`0xFFC62828`)
+— the same solid red `BrandBadge` draws. It used to be a radial gradient to
+`Color.lerp(seed, black, 0.25)`, which read as maroon on a launcher; flattened
+2026-09-30 by recolouring the existing art (white mark kept, background replaced).
 
 Rendered from the same `MaterialIcons-Regular.otf` the app itself ships, so the
 launcher icon and the sign-in badge are one mark rather than two drawings that drift.
@@ -67,6 +69,20 @@ dart run flutter_native_splash:create        # writes android/ and ios/ resource
   default) and reindents the whole file. Revert that file; nothing in it is needed.
 - The splash is **held past the first frame** (`main.dart` → `FlutterNativeSplash.preserve`)
   until `LifeLinkApp` sees the session restore resolve, with a 4 s backstop.
+
+## Share banners
+
+`play-feature-graphic.png` here and the portal's `frontend/src/app/opengraph-image.png`
+(1200×630, the link preview on Facebook and Telegram) are one layout, rendered from real
+widgets so the Khmer is shaped properly and the three donors are the app's own avatars:
+
+```bash
+cd mobile
+flutter test tool/render_share_art.dart
+python3 -c "from PIL import Image; p='assets/branding/play-feature-graphic.png'; Image.open(p).convert('RGB').save(p)"
+```
+
+The second line drops the alpha channel the renderer writes, which the Play Console refuses.
 
 ## Constraints worth not rediscovering
 

@@ -282,5 +282,11 @@
     "introDone": "រួចរាល់",
     "aboutContactTitle": "ទំនាក់ទំនង",
     "aboutContactBody": "សំណួរ ច្បាប់ចម្លងទិន្នន័យរបស់អ្នក ឬការស្នើសុំលុប៖",
-    "aboutContactCopied": "បានចម្លងអាសយដ្ឋានអ៊ីមែល។"
+    "aboutContactCopied": "បានចម្លងអាសយដ្ឋានអ៊ីមែល។",
+    "avatarChangeLabel": "ប្ដូររូបតំណាង",
+    "avatarPickerTitle": "ជ្រើសរើសរូបតំណាងរបស់អ្នក",
+    "avatarMale": "ប្រុស",
+    "avatarFemale": "ស្រី",
+    "avatarShuffle": "បង្ហាញមុខផ្សេងទៀត",
+    "avatarOptionLabel": "រូបតំណាងទី {index}"
 }
