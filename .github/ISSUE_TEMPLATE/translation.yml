@@ -1,0 +1,32 @@
+name: 🔤 Translation / ការបកប្រែ
+description: A Khmer or English string is wrong, unnatural or missing. / ពាក្យខ្មែរ ឬអង់គ្លេសខុស មិនធម្មជាតិ ឬខ្វះ។
+labels: ["translation-km"]
+body:
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where? / នៅកន្លែងណា?
+      options:
+        - App / កម្មវិធី
+        - Website / គេហទំព័រ
+        - Docs / ឯកសារ
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current text / អត្ថបទបច្ចុប្បន្ន
+      description: Copy it exactly, or add a screenshot. / ចម្លងឲ្យដូចបេះបិទ ឬភ្ជាប់រូបថតអេក្រង់។
+    validations:
+      required: true
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested text / អត្ថបទដែលស្នើ
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why? / ហេតុអ្វី?
+      description: e.g. wrong meaning, too formal, spelling. / ឧ. អត្ថន័យខុស ផ្លូវការពេក អក្ខរាវិរុទ្ធ។

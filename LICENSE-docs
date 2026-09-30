@@ -1,0 +1,16 @@
+Documentation, handbook, screenshots and images
+Copyright 2026 LifeLink KH contributors
+
+Everything under docs/ (including docs/assets/ and the handbook in docs/book/),
+and the prose of README.md, is licensed under the Creative Commons Attribution
+4.0 International License (CC BY 4.0), unless a file says otherwise.
+
+You may share and adapt this material for any purpose, including commercially,
+as long as you give appropriate credit ("LifeLink KH contributors"), link to the
+license, and indicate if changes were made.
+
+Full legal code: https://creativecommons.org/licenses/by/4.0/legalcode
+Summary:         https://creativecommons.org/licenses/by/4.0/
+
+Source code anywhere in this repository, including code blocks in the docs,
+is licensed under the Apache License, Version 2.0 (see LICENSE).

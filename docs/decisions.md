@@ -839,3 +839,34 @@ cleared people 4–9 weeks early, so the safe move was to change the rule now.
   keeps the old rules until they are deployed; until then a new APK's donor save with `sex` and
   every report are refused there.
 
+
+
+## DEC-020 — Code under Apache-2.0, docs and images under CC BY 4.0
+
+**Date:** 2026-09-30 · **Raised by:** Nem Sothea (Tech Lead) · **Status:** accepted ·
+**Evidence:** [`tech-lead/community-launch-audit.md`](tech-lead/community-launch-audit.md)
+
+### Context
+`NemSothea/LifeLinkKh` is already public, but it has no license. With no license the default is
+all rights reserved: anyone can read the code, but nobody may legally reuse it, fork it or send a
+change. The community launch (`.claude/skills/community-launch/`) needs outside contributors, so a
+license has to come first. The options weighed were MIT, Apache-2.0 and AGPL-3.0.
+
+### Decision
+- **Code** (`frontend/`, `mobile/`, `firebase/`, `scripts/`, CI): **Apache-2.0**. It is as
+  permissive as MIT and adds an explicit patent grant, which NGOs, hospitals and universities
+  tend to prefer. AGPL was rejected because its service clause would deter exactly the partners
+  (a hospital hosting its own portal) the project wants.
+- **Docs, the book, screenshots and images** (`docs/`, `README.md` prose, `docs/assets/`):
+  **CC BY 4.0**.
+- **Copyright holder:** "LifeLink KH contributors".
+- Contributions are accepted under the same terms (inbound = outbound, Apache-2.0 section 5).
+  There is no CLA and no DCO sign-off, to keep a first contribution simple.
+
+### Consequences
+- Phase 1 adds `LICENSE` (Apache-2.0 text), a `NOTICE` file, and a `LICENSE-docs` pointer to
+  CC BY 4.0. The README states the split.
+- Third-party assets keep their own licenses: Kantumruy Pro and Inter are under the SIL OFL.
+  `NOTICE` lists them.
+- Anyone, including a commercial company, may fork the code into a closed product. The team
+  accepts that in exchange for easier adoption.

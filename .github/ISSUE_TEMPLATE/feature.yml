@@ -1,0 +1,28 @@
+name: 💡 Feature idea / សំណើមុខងារថ្មី
+description: Suggest something new or an improvement. / ស្នើមុខងារថ្មី ឬការកែលម្អ។
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve? / តើវាដោះស្រាយបញ្ហាអ្វី?
+      description: Who has this problem — donor, family, admin, hospital? / នរណាជួបបញ្ហានេះ — អ្នកបរិច្ចាគ គ្រួសារ អ្នកគ្រប់គ្រង មន្ទីរពេទ្យ?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea / គំនិតរបស់អ្នក
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Other options you considered / ជម្រើសផ្សេងទៀតដែលអ្នកបានគិត
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you submit / មុនពេលបញ្ជូន
+      options:
+        - label: I checked docs/scope.md — this is not already deferred for a stated reason. / ខ្ញុំបានពិនិត្យ docs/scope.md រួចហើយ។
+        - label: Medical content (if any) follows Cambodian practice / the NBTC, with a source. / ព័ត៌មានវេជ្ជសាស្ត្រ (បើមាន) មានប្រភពច្បាស់លាស់។

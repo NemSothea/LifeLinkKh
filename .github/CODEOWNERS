@@ -1,12 +1,18 @@
-# Forward signal + role ownership (fill real GitHub handles)
-docs/po/**            @TBD-fullstack @TBD-techlead
-docs/fullstack/**     @TBD-fullstack
-docs/tech-lead/**     @TBD-techlead
-docs/security/**      @TBD-techlead
-backend/**            @TBD-backend
-frontend/**           @TBD-frontend
-mobile/**             @TBD-mobile
-docs/qa/**            @TBD-qa
-docs/devops/**        @TBD-devops
-infra/**              @TBD-devops
-.github/workflows/**  @TBD-devops
+# Who reviews what. GitHub requests these reviewers on every PR automatically.
+# Areas follow docs/team.md (R2 write scopes). Only the Tech Lead's handle is known so far, and
+# the Tech Lead reviews every PR (CLAUDE.md §5). Add each area owner's handle next to
+# @NemSothea as they share it; never add a guessed handle, because GitHub ignores the whole line.
+
+*                     @NemSothea
+
+mobile/**             @NemSothea
+docs/mobile/**        @NemSothea
+frontend/**           @NemSothea
+firebase/**           @NemSothea
+docs/fullstack/**     @NemSothea
+docs/po/**            @NemSothea
+docs/qa/**            @NemSothea
+docs/tech-lead/**     @NemSothea
+docs/security/**      @NemSothea
+.github/**            @NemSothea
+scripts/**            @NemSothea

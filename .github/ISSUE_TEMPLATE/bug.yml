@@ -1,0 +1,56 @@
+name: 🐞 Bug report / រាយការណ៍បញ្ហា
+description: Something in the app or website does not work. / មានអ្វីមួយមិនដំណើរការ។
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not include personal data** — no real names, phone numbers, blood types or locations of real people, in text or screenshots.
+        **កុំដាក់ព័ត៌មានផ្ទាល់ខ្លួន** — ឈ្មោះ លេខទូរស័ព្ទ ក្រុមឈាម ឬទីតាំងរបស់មនុស្សពិត ទាំងក្នុងអត្ថបទ និងរូបថត។
+        Security problem? Use [private reporting](https://github.com/NemSothea/LifeLinkKh/security/advisories/new) instead.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where? / នៅកន្លែងណា?
+      options:
+        - Android app / កម្មវិធី Android
+        - iOS app / កម្មវិធី iOS
+        - Website — public pages / គេហទំព័រ — ទំព័រសាធារណៈ
+        - Website — admin portal / គេហទំព័រ — ផ្នែកអ្នកគ្រប់គ្រង
+        - Not sure / មិនប្រាកដ
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / តើមានបញ្ហាអ្វីកើតឡើង?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect? / តើអ្នករំពឹងថានឹងមានអ្វីកើតឡើង?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / ជំហានដើម្បីធ្វើឲ្យបញ្ហាកើតឡើងម្តងទៀត
+      placeholder: |
+        1.
+        2.
+        3.
+  - type: input
+    id: version
+    attributes:
+      label: App version, phone model, Android/iOS version / កំណែកម្មវិធី ម៉ូដែលទូរស័ព្ទ កំណែ Android/iOS
+      placeholder: "e.g. 1.0.0, Samsung A15, Android 14"
+  - type: dropdown
+    id: language
+    attributes:
+      label: App language / ភាសាកម្មវិធី
+      options: ["ខ្មែរ", "English"]
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots (no personal data) / រូបថតអេក្រង់ (គ្មានព័ត៌មានផ្ទាល់ខ្លួន)

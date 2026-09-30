@@ -16,6 +16,9 @@ alerted.
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore_·_Auth_·_FCM-FFCA28?logo=firebase&logoColor=black)
 ![Next.js](https://img.shields.io/badge/Next.js-App_Router-000000?logo=nextdotjs&logoColor=white)
 ![Khmer + English](https://img.shields.io/badge/i18n-ខ្មែរ_%2B_English-C8102E)
+![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)
+
+[Contribute · ចូលរួម](#contribute--ចូលរួម) · [Security](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
 </div>
 
@@ -338,7 +341,7 @@ writing, including the ones we rejected and the ones we got wrong and reversed.
 
 | Start here | What it holds |
 |---|---|
-| [`docs/decisions.md`](docs/decisions.md) | Every decision (DEC-001…017) with the reasoning, the alternatives, and what each one cost |
+| [`docs/decisions.md`](docs/decisions.md) | Every decision (DEC-001…020) with the reasoning, the alternatives, and what each one cost |
 | [`docs/scope.md`](docs/scope.md) | **19 features requested, 8 built, 8 deferred — and why each cut was made.** The answer to "why isn't feature X in your app" |
 | [`docs/tech-lead/adr/`](docs/tech-lead/adr/) | 9 ADRs: Google Sign-In over phone OTP, location precision, the ABO/Rh table, session lifetime, why microservices was raised and rejected, and why Firebase replaced Spring Boot + PostgreSQL |
 | [`docs/security/`](docs/security/) | Threat models and security reviews, ASVS Level 1 baseline |
@@ -376,6 +379,28 @@ A skipped test is not a pass. The rules and Functions emulator tests need Java 2
 
 ---
 
+## Contribute · ចូលរួម
+
+LifeLink KH is an open community project, and help from Cambodia and anywhere else is welcome:
+code, Khmer translation, testing on real phones, or a blood-bank worker telling us what we got wrong.
+
+LifeLink KH ជាគម្រោងសហគមន៍បើកចំហ។ យើងស្វាគមន៍ការចូលរួមគ្រប់ទម្រង់ ចាប់ពីកូដ ការបកប្រែជាភាសាខ្មែរ
+ការសាកល្បងលើទូរស័ព្ទ រហូតដល់មតិយោបល់ពីបុគ្គលិកធនាគារឈាម។ `[km-review]`
+
+| | |
+|---|---|
+| How to contribute | [`CONTRIBUTING.md`](CONTRIBUTING.md) · [ភាសាខ្មែរ](CONTRIBUTING.km.md) |
+| First issues | [`good first issue`](https://github.com/NemSothea/LifeLinkKh/labels/good%20first%20issue) · [`translation-km`](https://github.com/NemSothea/LifeLinkKh/labels/translation-km) |
+| Code of Conduct | [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) |
+| How decisions are made | [`GOVERNANCE.md`](GOVERNANCE.md) · channels: [`docs/community/channels.md`](docs/community/channels.md) · translating: [`docs/community/translating.md`](docs/community/translating.md) |
+| Questions and ideas | [GitHub Discussions](https://github.com/NemSothea/LifeLinkKh/discussions) |
+| Security problems | [`SECURITY.md`](SECURITY.md): report privately, never in a public issue |
+| Community | Telegram `[TELEGRAM_LINK]` · Facebook `[FB_PAGE]` |
+
+> **Medical disclaimer · ការបដិសេធផ្នែកវេជ្ជសាស្ត្រ:** LifeLink KH helps connect donors and patients.
+> It does not replace the National Blood Transfusion Center or medical advice. ·
+> LifeLink KH ជួយភ្ជាប់អ្នកបរិច្ចាគឈាម និងអ្នកជំងឺ។ វាមិនជំនួសមជ្ឈមណ្ឌលជាតិផ្តល់ឈាម ឬដំបូន្មានវេជ្ជសាស្ត្រឡើយ។
+
 ## Repository layout
 
 ```
@@ -387,7 +412,25 @@ scripts/            verify-all.sh, demo-mobile.sh, build-release-apk.sh
 .capybara/          Multi-role framework state
 ```
 
-## Final defense
+## History
+
+LifeLink KH started as a student team project: **Group 2**, Cross-Platform Mobile Application
+Development (16 weeks, Asia Euro University). It is now open to the community. The course
+milestone table lives in [`CLAUDE.md`](CLAUDE.md) §4 and nowhere else, because a second copy
+would go stale.
+
+| Name | Role |
+|---|---|
+| Nem Sothea | Tech Lead / Mobile (Flutter) · also PO, Security |
+| Moeun Nithvaraman | Backend / Database (Firestore rules, Functions) |
+| Suon Pisey | Frontend (Next.js) |
+| Sourn SAVOURN | PO |
+| Oun Sreynich | QA |
+
+Write scopes and role overlays: [`docs/team.md`](docs/team.md). Team members onboard with
+[`ONBOARDING.md`](ONBOARDING.md); outside contributors start at [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+### Final defense (course)
 
 The slides and everything needed to run the live demo behind them:
 
@@ -404,24 +447,10 @@ The slides and everything needed to run the live demo behind them:
 The portal admin's password is not in this repository — it is whatever `PORTAL_ADMIN_PASSWORD`
 held when `npm run seed:admin` ran, or sign in with the admin's Google account ([`docs/demo-runbook.md`](docs/demo-runbook.md) §9).
 
-## Project context
-
-Built by **Group 2** for Cross-Platform Mobile Application Development (16 weeks, Asia Euro
-University). The milestone table lives in [`CLAUDE.md`](CLAUDE.md) §4 and nowhere else — a second
-copy would go stale.
-
-| Name | Role |
-|---|---|
-| Nem Sothea | Tech Lead / Mobile (Flutter) · also PO, Security |
-| Moeun Nithvaraman | Backend / Database (Firestore rules, Functions) |
-| Suon Pisey | Frontend (Next.js) |
-| Sourn SAVOURN | PO |
-| Oun Sreynich | QA |
-
-Write scopes and role overlays: [`docs/team.md`](docs/team.md). New contributors start at
-[`ONBOARDING.md`](ONBOARDING.md).
-
 ## License
 
-Course project. Not licensed for production use, and **not safe for real donor data** until the
-debts above are closed.
+Code is licensed under [Apache-2.0](LICENSE); documentation, screenshots and images under
+[CC BY 4.0](LICENSE-docs); bundled fonts under the SIL OFL ([`NOTICE`](NOTICE)). See DEC-020.
+
+**Not yet safe for real donor data** until the debts in "Before you deploy this anywhere" above
+are closed.

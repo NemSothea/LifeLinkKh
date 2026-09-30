@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Security problem / បញ្ហាសុវត្ថិភាព
+    url: https://github.com/NemSothea/LifeLinkKh/security/advisories/new
+    about: Report privately — never in a public issue. / សូមរាយការណ៍ដោយសម្ងាត់ កុំបើក issue សាធារណៈ។
+  - name: 🩸 Urgent blood need / ត្រូវការឈាមបន្ទាន់
+    url: https://lifelinkkh.vercel.app/km/getting-blood
+    about: GitHub is for the software. For a real emergency, contact the hospital or the National Blood Transfusion Center. / GitHub សម្រាប់តែកម្មវិធី។ ករណីបន្ទាន់ សូមទាក់ទងមន្ទីរពេទ្យ ឬមជ្ឈមណ្ឌលជាតិផ្តល់ឈាម។

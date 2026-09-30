@@ -1,0 +1,11 @@
+64e4835ab5ae03f2e609d8862b71edb249199fb4:mobile/android/app/google-services.json:gcp-api-key:91
+1f0f5011ceb6909ec3d08eb5932909968f1061aa:frontend/src/server/common-passwords.json:generic-api-key:1
+1f0f5011ceb6909ec3d08eb5932909968f1061aa:frontend/src/server/common-passwords.json:generic-api-key:1
+a57b83c695ed7a10b02bec03ecd7e5fdb8356a68:mobile/ios/Podfile.lock:generic-api-key:216
+a57b83c695ed7a10b02bec03ecd7e5fdb8356a68:mobile/ios/Podfile.lock:generic-api-key:224
+a57b83c695ed7a10b02bec03ecd7e5fdb8356a68:mobile/ios/Podfile.lock:generic-api-key:229
+a57b83c695ed7a10b02bec03ecd7e5fdb8356a68:mobile/ios/Podfile.lock:generic-api-key:236
+a57b83c695ed7a10b02bec03ecd7e5fdb8356a68:mobile/ios/Podfile.lock:generic-api-key:243
+8890756e164654ca71c2c720d904e4837042c138:mobile/android/app/google-services.json:gcp-api-key:31
+55003c606dc8c0a782e0111bb05c21cdd8c6639d:backend/src/test/java/kh/lifelink/api/auth/JwtServiceTest.java:generic-api-key:14
+55003c606dc8c0a782e0111bb05c21cdd8c6639d:backend/src/test/resources/application-test.yml:generic-api-key:12
