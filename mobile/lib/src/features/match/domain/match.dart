@@ -1,5 +1,6 @@
 import '../../donor/domain/blood_type.dart';
 import '../../request/domain/blood_request.dart';
+import '../../request/domain/request_status.dart';
 import 'match_response_type.dart';
 
 /// One entry in a donor's alert inbox — `GET /matches/me`.
@@ -35,6 +36,12 @@ final class Match {
     /// Set when a queued answer was refused on arrival — the request had already
     /// closed. Server-wins, stated rather than swallowed.
     final String? rejectedReason;
+
+    /// Unanswered, and the request still wants donors. An alert whose request has since
+    /// been fulfilled or cancelled has nothing left to answer: listing it as a live call to
+    /// action — a CRITICAL red row with Accept on it — asks a donor to set off for a patient
+    /// who no longer needs them.
+    bool get awaitsAnswer => response == null && request.status == RequestStatus.open;
 
     /// Null when the push was never sent — no FCM token, or a send that failed. The
     /// match is still real; that is the reason this inbox exists rather than relying

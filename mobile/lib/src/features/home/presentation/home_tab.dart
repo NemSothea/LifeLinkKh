@@ -301,7 +301,9 @@ class HomeTab extends ConsumerWidget {
             );
         }
 
-        final unanswered = [for (final m in matches) if (m.response == null) m]..sort(_byTriage);
+        // Unanswered alerts on a request that has since closed are dropped, not listed:
+        // there is nothing to answer and, never having answered, nothing to keep a receipt of.
+        final unanswered = [for (final m in matches) if (m.awaitsAnswer) m]..sort(_byTriage);
         final answered = [for (final m in matches) if (m.response != null) m]
             ..sort((a, b) => b.request.createdAt.compareTo(a.request.createdAt));
 
@@ -870,23 +872,28 @@ class _EmptyState extends StatelessWidget {
             key: cardKey,
             margin: EdgeInsets.zero,
             color: scheme.surfaceContainerLow,
-            child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    vertical: AppTokens.space24,
-                    horizontal: AppTokens.space16,
-                ),
-                child: Column(
-                    children: [
-                        Icon(icon, size: 32, color: scheme.onSurfaceVariant),
-                        const SizedBox(height: AppTokens.space12),
-                        Text(
-                            message,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                                color: scheme.onSurfaceVariant,
+            // Full width, like every other card in the list. Without it the card shrinks to
+            // its message, and a short Khmer line left the card two-thirds wide.
+            child: SizedBox(
+                width: double.infinity,
+                child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: AppTokens.space24,
+                        horizontal: AppTokens.space16,
+                    ),
+                    child: Column(
+                        children: [
+                            Icon(icon, size: 32, color: scheme.onSurfaceVariant),
+                            const SizedBox(height: AppTokens.space12),
+                            Text(
+                                message,
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                ),
                             ),
-                        ),
-                    ],
+                        ],
+                    ),
                 ),
             ),
         );

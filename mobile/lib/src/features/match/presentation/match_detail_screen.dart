@@ -226,7 +226,10 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
                             ),
                         ),
                     if (match.isPending) _pendingBadge(context, l10n),
-                    if (match.response == null) ..._respondActions(l10n, match),
+                    if (match.awaitsAnswer) ..._respondActions(l10n, match),
+                    // Opened from an old push or a deep link after the request closed.
+                    if (match.response == null && !match.awaitsAnswer && !match.isPending)
+                        Text(l10n.matchRequestClosed, key: const Key('match-request-closed')),
                     if (match.response == MatchResponseType.accepted)
                         _acceptedResult(context, l10n, request),
                     if (match.response == MatchResponseType.declined)

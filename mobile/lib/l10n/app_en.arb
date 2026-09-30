@@ -1256,5 +1256,9 @@
     "signingOut": "Signing out…",
     "@signingOut": {
         "description": "Me tab: the sign-out row while sign-out is in progress, next to a spinner"
+    },
+    "matchRequestClosed": "This request no longer needs donors. Thank you for looking.",
+    "@matchRequestClosed": {
+        "description": "Alert detail: shown instead of Accept/Decline when the request was fulfilled or cancelled before the donor answered"
     }
 }

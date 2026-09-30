@@ -289,5 +289,6 @@
     "avatarFemale": "ស្រី",
     "avatarShuffle": "បង្ហាញមុខផ្សេងទៀត",
     "avatarOptionLabel": "រូបតំណាងទី {index}",
-    "signingOut": "កំពុងចេញពីគណនី…"
+    "signingOut": "កំពុងចេញពីគណនី…",
+    "matchRequestClosed": "សំណើនេះលែងត្រូវការអ្នកបរិច្ចាគទៀតហើយ។ សូមអរគុណដែលបានពិនិត្យមើល។"
 }

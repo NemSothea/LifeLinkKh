@@ -50,11 +50,20 @@ class AppTheme {
                     TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
                 },
             ),
-            cardTheme: const CardThemeData(
-                elevation: 0,
+            // A hairline edge and a soft shadow, so a card reads as lifted off the page in
+            // both themes. Material 3's tonal elevation alone does not: the tint is a shade
+            // of the page colour, and on the light surface the cards all but vanished into
+            // it. The tint is switched off so the shadow does the lifting, not a colour shift.
+            cardTheme: CardThemeData(
+                elevation: 2,
+                shadowColor: Colors.black.withValues(
+                    alpha: brightness == Brightness.light ? 0.10 : 0.45,
+                ),
+                surfaceTintColor: Colors.transparent,
                 margin: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(18)),
+                    borderRadius: const BorderRadius.all(Radius.circular(18)),
+                    side: BorderSide(color: scheme.outlineVariant, width: 0.5),
                 ),
             ),
             navigationBarTheme: NavigationBarThemeData(
