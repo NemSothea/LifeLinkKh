@@ -18,7 +18,7 @@ alerted.
 ![Khmer + English](https://img.shields.io/badge/i18n-ខ្មែរ_%2B_English-C8102E)
 ![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)
 
-[Contribute · ចូលរួម](#contribute--ចូលរួម) · [Security](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
+[Handbook · សៀវភៅណែនាំ](https://nemsothea.github.io/LifeLinkKh/) · [Contribute · ចូលរួម](#contribute--ចូលរួម) · [Security](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
 </div>
 
@@ -389,6 +389,7 @@ LifeLink KH ជាគម្រោងសហគមន៍បើកចំហ។ យ�
 
 | | |
 |---|---|
+| Handbook (user guides, FAQ, architecture) | [nemsothea.github.io/LifeLinkKh](https://nemsothea.github.io/LifeLinkKh/) · [English](https://nemsothea.github.io/LifeLinkKh/en/) |
 | How to contribute | [`CONTRIBUTING.md`](CONTRIBUTING.md) · [ភាសាខ្មែរ](CONTRIBUTING.km.md) |
 | First issues | [`good first issue`](https://github.com/NemSothea/LifeLinkKh/labels/good%20first%20issue) · [`translation-km`](https://github.com/NemSothea/LifeLinkKh/labels/translation-km) |
 | Code of Conduct | [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) |
