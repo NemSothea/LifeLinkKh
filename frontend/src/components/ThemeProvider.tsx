@@ -15,6 +15,11 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
+            // next-themes renders an inline <script> that sets the theme class before paint.
+            // The server copy is the one that runs; on the client React 19 warns about any
+            // script it renders, so there it is marked inert JSON. The tag already has
+            // suppressHydrationWarning, so the differing `type` does not trip hydration.
+            scriptProps={typeof window === 'undefined' ? undefined : { type: 'application/json' }}
         >
             {children}
         </NextThemesProvider>
