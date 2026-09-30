@@ -19,6 +19,7 @@ import '../features/match/presentation/match_detail_screen.dart';
 import '../features/request/presentation/blood_guide_screen.dart';
 import '../features/request/presentation/request_detail_screen.dart';
 import '../features/request/presentation/request_form_screen.dart';
+import '../features/notify/presentation/notifications_screen.dart';
 
 part 'app_router.g.dart';
 
@@ -118,6 +119,11 @@ GoRouter appRouter(AppRouterRef ref) {
                 builder: (context, state) => const BloodGuideScreen(),
             ),
             // M4 — FR-REQUEST-001/002, FR-MATCH-001, FR-NOTIFY-001.
+            // The bell's inbox. Behind the redirect: it is one person's pushes.
+            GoRoute(
+                path: NotificationsScreen.path,
+                builder: (context, state) => const NotificationsScreen(),
+            ),
             GoRoute(
                 path: RequestFormScreen.path,
                 builder: (context, state) => const RequestFormScreen(),

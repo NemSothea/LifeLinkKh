@@ -1260,5 +1260,38 @@
     "matchRequestClosed": "This request no longer needs donors. Thank you for looking.",
     "@matchRequestClosed": {
         "description": "Alert detail: shown instead of Accept/Decline when the request was fulfilled or cancelled before the donor answered"
+    },
+    "notificationsTitle": "Notifications",
+    "@notificationsTitle": {
+        "description": "Title of the notifications screen opened from the bell on Home"
+    },
+    "notificationsBellTooltip": "Notifications",
+    "@notificationsBellTooltip": {
+        "description": "Tooltip and screen-reader label for the bell icon on Home"
+    },
+    "notificationsUnreadLabel": "{count, plural, =1{1 unread notification} other{{count} unread notifications}}",
+    "@notificationsUnreadLabel": {
+        "description": "Screen-reader label for the bell when it has a badge",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "notificationsEmptyTitle": "No notifications yet",
+    "@notificationsEmptyTitle": {
+        "description": "Notifications screen with nothing in it: heading"
+    },
+    "notificationsEmptyBody": "Urgent requests near you, and news about requests you post, will appear here.",
+    "@notificationsEmptyBody": {
+        "description": "Notifications screen with nothing in it: explanation"
+    },
+    "notificationsLoadFailed": "Couldn't load notifications. Pull down to try again.",
+    "@notificationsLoadFailed": {
+        "description": "Notifications screen when the inbox could not be read"
+    },
+    "splashLoading": "Loading…",
+    "@splashLoading": {
+        "description": "Screen-reader label for the spinner on the launch screen while the saved sign-in is restored"
     }
 }

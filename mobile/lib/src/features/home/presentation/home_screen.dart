@@ -5,6 +5,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../donation/presentation/donation_history_screen.dart';
 import 'home_tab.dart';
 import 'me_tab.dart';
+import '../../notify/application/inbox_providers.dart';
 
 /// Root shell for a signed-in session. `GLOBAL-home-dashboard` prototype: one shell, one
 /// tab set — Home, History, Me — for every account the app can hold.
@@ -34,6 +35,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     @override
     Widget build(BuildContext context) {
         final l10n = AppLocalizations.of(context)!;
+        final unread = ref.watch(unreadNotificationCountProvider);
         // One shell for everyone. The tab set used to branch on `users.role == REQUESTER`,
         // a value nothing in the product ever assigns — see HomeTab's own note. The branch
         // therefore had exactly one live arm and hid the requester's screen from the people
@@ -49,7 +51,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 destinations: [
                     NavigationDestination(
                         key: const Key('dashboard-tab-home'),
-                        icon: const Icon(Icons.home_outlined),
+                        // The bell's count again, for the person on another tab: news
+                        // they have not read is waiting on Home.
+                        icon: Badge(
+                            isLabelVisible: unread > 0,
+                            child: const Icon(Icons.home_outlined),
+                        ),
                         selectedIcon: const Icon(Icons.home),
                         label: l10n.dashboardTabHome,
                     ),

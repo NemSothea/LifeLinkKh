@@ -19,4 +19,8 @@
          "Continue with Facebook" is a MissingPluginException. Client configuration,
          like the App ID — it ships inside every APK. -->
     <string name="facebook_client_token">6a1541909074d63d8549814d97dd416c</string>
+    <!-- The notification channel's name and description in system Settings (MainActivity.kt).
+         Android reads them in the device language when the channel is created. -->
+    <string name="notification_channel_name">Blood requests and updates</string>
+    <string name="notification_channel_description">Urgent requests for your blood type, and news about requests you posted</string>
 </resources>

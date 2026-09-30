@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,6 +11,7 @@ import 'src/core/config/env.dart';
 import 'src/core/error/crash_handling.dart';
 import 'src/core/firebase/firestore_providers.dart';
 import 'src/core/settings/locale_controller.dart';
+import 'src/core/widgets/launch_splash.dart';
 import 'src/core/settings/onboarding_controller.dart';
 import 'src/core/settings/preferences_locale_store.dart';
 import 'src/core/settings/preferences_onboarding_store.dart';
@@ -19,7 +19,9 @@ import 'src/features/notify/application/push_providers.dart';
 import 'src/features/avatar/application/avatar_providers.dart';
 import 'src/features/avatar/data/preferences_avatar_store.dart';
 import 'src/features/notify/application/push_session_sync.dart';
+import 'src/features/notify/application/inbox_providers.dart';
 import 'src/features/notify/data/firebase_push_arrivals.dart';
+import 'src/features/notify/data/firestore_notification_inbox_repository.dart';
 import 'src/features/update/application/app_update_providers.dart';
 import 'src/features/update/data/firestore_app_config_repository.dart';
 import 'src/features/update/data/preferences_update_dismissal_store.dart';
@@ -38,17 +40,15 @@ Future<void> main() async {
     // First, so an error anywhere below — Firebase init included — is caught by it.
     installCrashHandlers();
 
-    // Keeps the native launch screen up past the first frame, until `LifeLinkApp` sees
-    // the session restore resolve — otherwise a signed-in donor watches the splash hand
-    // off to Flutter's own badge and then to Home, three screens for one launch.
-    // The timer is the backstop: a keystore read that never returns must not leave the
-    // app stuck behind a picture. Past it, `SignInScreen`'s in-Flutter badge takes over,
-    // which is the same mark on the same colour.
-    FlutterNativeSplash.preserve(widgetsBinding: binding);
-    Timer(const Duration(seconds: 4), FlutterNativeSplash.remove);
+    // The splash, drawn before anything is awaited. Everything below — Firebase, the
+    // preferences file — runs before the real app can be built, and until this existed
+    // the whole of it sat behind the native launch screen: a still picture with no sign
+    // of life. The real app replaces this tree below, and its first screen is the same
+    // `LaunchSplash` until the session is restored, so the spinner never jumps.
+    runApp(const LaunchSplashApp());
 
-    // Awaited before `runApp`: `FirebaseAuth.instance` is touched by the first provider
-    // read, and reaching it before this completes throws.
+    // Awaited before the real app: `FirebaseAuth.instance` is touched by the first
+    // provider read, and reaching it before this completes throws.
     await Firebase.initializeApp();
 
     // ADR 0009: point Firestore at a local emulator when FIRESTORE_EMULATOR is set. Before
@@ -85,6 +85,11 @@ Future<void> main() async {
             // "Later" on a new-version notice, kept across restarts.
             updateDismissalStoreProvider.overrideWithValue(
                 PreferencesUpdateDismissalStore(preferences),
+            ),
+            // The bell's inbox. Default always empty, so no widget test that builds
+            // Home opens a Firestore listener.
+            notificationInboxRepositoryProvider.overrideWith(
+                (ref) => FirestoreNotificationInboxRepository(ref.watch(firestoreProvider)),
             ),
             // The avatar the user picked on the Me tab.
             avatarStoreProvider.overrideWithValue(PreferencesAvatarStore(preferences)),

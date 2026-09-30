@@ -4,4 +4,8 @@
      as-is in Khmer copy. -->
 <resources>
     <string name="app_name">ជីវិត</string>
+    <!-- The notification channel's name and description in system Settings (MainActivity.kt).
+         Android reads them in the device language when the channel is created. -->
+    <string name="notification_channel_name">សំណើឈាម និងព័ត៌មានថ្មី</string>
+    <string name="notification_channel_description">សំណើបន្ទាន់សម្រាប់ប្រភេទឈាមរបស់អ្នក និងព័ត៌មានអំពីសំណើដែលអ្នកបានដាក់</string>
 </resources>

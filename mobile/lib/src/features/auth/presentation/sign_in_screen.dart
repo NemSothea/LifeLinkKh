@@ -7,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/widgets/brand_backdrop.dart';
 import '../../../core/links/link_providers.dart';
 import '../../../core/widgets/brand_badge.dart';
+import '../../../core/widgets/launch_splash.dart';
 import '../../about/application/about_providers.dart';
 import '../../about/presentation/about_screen.dart';
 import '../../onboarding/presentation/intro_screen.dart';
@@ -51,12 +52,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         // is `isLoading` with no previous value — the same shape the router's own redirect
         // (`app_router.dart`) checks for "still reading the keystore". Rendering the normal
         // button row here would show both providers as "Signing in..." before anything was
-        // tapped, for every cold start. A neutral splash instead — gone the instant restore
-        // resolves, whichever way.
-        if (auth.isLoading && !auth.hasValue) {
-            return Scaffold(
-                body: Center(child: BrandBadge(color: theme.colorScheme.primary)),
-            );
+        // tapped, for every cold start. The launch splash instead — gone the instant
+        // restore resolves, whichever way.
+        //
+        // Signed in, too: that is this screen on its way out. The router has already sent
+        // the user to Home, and without this the page rebuilt as the full sign-in form for
+        // the length of the transition — a flash of buttons on every cold start.
+        if ((auth.isLoading && !auth.hasValue) || auth.valueOrNull != null) {
+            return const LaunchSplash();
         }
 
         // `isLoading` rather than a `when`: a re-sign-in after a failure keeps the previous

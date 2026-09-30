@@ -18,6 +18,7 @@ import '../../match/application/match_providers.dart';
 import '../../match/domain/match.dart';
 import '../../match/domain/match_response_type.dart';
 import '../../match/presentation/match_detail_screen.dart';
+import '../../notify/presentation/notification_bell.dart';
 import '../../request/application/request_providers.dart';
 import '../../request/domain/blood_request.dart';
 import '../../request/domain/request_status.dart';
@@ -72,7 +73,10 @@ class HomeTab extends ConsumerWidget {
             firstLoad(board);
 
         return Scaffold(
-            appBar: AppBar(title: Text(l10n.appTitle)),
+            appBar: AppBar(
+                title: Text(l10n.appTitle),
+                actions: const [NotificationBell(), SizedBox(width: 4)],
+            ),
             body: SafeArea(
                 child: RefreshIndicator(
                     onRefresh: () => Future.wait([

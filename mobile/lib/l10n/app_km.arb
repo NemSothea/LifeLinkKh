@@ -290,5 +290,12 @@
     "avatarShuffle": "បង្ហាញមុខផ្សេងទៀត",
     "avatarOptionLabel": "រូបតំណាងទី {index}",
     "signingOut": "កំពុងចេញពីគណនី…",
-    "matchRequestClosed": "សំណើនេះលែងត្រូវការអ្នកបរិច្ចាគទៀតហើយ។ សូមអរគុណដែលបានពិនិត្យមើល។"
+    "matchRequestClosed": "សំណើនេះលែងត្រូវការអ្នកបរិច្ចាគទៀតហើយ។ សូមអរគុណដែលបានពិនិត្យមើល។",
+    "notificationsTitle": "ការជូនដំណឹង",
+    "notificationsBellTooltip": "ការជូនដំណឹង",
+    "notificationsUnreadLabel": "{count, plural, other{ការជូនដំណឹងមិនទាន់អាន {count}}}",
+    "notificationsEmptyTitle": "មិនទាន់មានការជូនដំណឹងទេ",
+    "notificationsEmptyBody": "សំណើបន្ទាន់នៅក្បែរអ្នក និងព័ត៌មានអំពីសំណើដែលអ្នកដាក់ នឹងបង្ហាញនៅទីនេះ។",
+    "notificationsLoadFailed": "មិនអាចផ្ទុកការជូនដំណឹងបានទេ។ សូមអូសចុះដើម្បីព្យាយាមម្ដងទៀត។",
+    "splashLoading": "កំពុងផ្ទុក…"
 }
