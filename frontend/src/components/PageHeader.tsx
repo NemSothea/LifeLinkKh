@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import SiteControls from '@/components/SiteControls';
-import { IconDroplet } from '@/components/icons';
+import { IconBrandMark } from '@/components/icons';
 import NotificationBell from '@/components/NotificationBell';
 import type { AdminNotification } from '@/lib/notifications';
 
@@ -37,8 +37,8 @@ export default function PageHeader({
                     href={`/${locale}`}
                     className="flex min-h-11 min-w-11 items-center gap-2.5 rounded-xl focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                 >
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-                        <IconDroplet className="h-5 w-5" />
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                        <IconBrandMark className="h-6 w-6" />
                     </span>
                     <span
                         className={`text-sm font-semibold tracking-wide whitespace-nowrap text-brand uppercase ${notifications ? 'hidden min-[420px]:inline' : ''}`}

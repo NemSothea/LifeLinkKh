@@ -13,6 +13,19 @@ export function IconDroplet({ className }: IconProps) {
     );
 }
 
+/**
+ * The LifeLink KH mark: Material's `bloodtype` glyph (a droplet with ± cut out), the same
+ * one the app draws on its launcher icon, sign-in badge and splash. Traced from the
+ * `MaterialIcons-Regular.otf` Flutter ships, so the portal and the app show one mark.
+ */
+export function IconBrandMark({ className }: IconProps) {
+    return (
+        <svg viewBox="0 0 24 24" fill="currentColor" fillRule="evenodd" className={className} aria-hidden="true">
+            <path d="M12 2.02C6.66 6.56 3.98 10.5 3.98 13.78C3.98 18.8 7.78 21.98 12 21.98C16.22 21.98 20.02 18.8 20.02 13.78C20.02 10.5 17.34 6.56 12 2.02ZM15 18H9V15.98H15V18ZM15 12.98H12.98V15H11.02V12.98H9V11.02H11.02V9H12.98V11.02H15V12.98Z" />
+        </svg>
+    );
+}
+
 export function IconBuilding({ className }: IconProps) {
     return (
         <svg
