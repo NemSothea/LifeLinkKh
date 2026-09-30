@@ -1252,5 +1252,9 @@
                 "type": "int"
             }
         }
+    },
+    "signingOut": "Signing out…",
+    "@signingOut": {
+        "description": "Me tab: the sign-out row while sign-out is in progress, next to a spinner"
     }
 }

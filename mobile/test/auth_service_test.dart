@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifelink_kh/src/core/error/failure.dart';
 import 'package:lifelink_kh/src/core/error/result.dart';
@@ -158,6 +160,27 @@ void main() {
             );
 
             await service.signOut();
+
+            expect(await store.read(), isNull);
+            expect(credentials.signedOut, isTrue);
+        });
+
+        test('signs out when clearing the push token never answers (offline)', () async {
+            await store.write(_session('jwt-1'));
+            // A Firestore write resolves only on the server's acknowledgement; offline, it
+            // never does. Sign-out used to wait on it forever.
+            final never = Completer<void>();
+            final service = AuthService(
+                repository: repository,
+                sessionStore: store,
+                credentials: credentials,
+                facebookCredentials: facebookCredentials,
+                clearPushRegistration: () => never.future,
+            );
+
+            await service.signOut().timeout(
+                AuthService.networkStepTimeout + const Duration(seconds: 2),
+            );
 
             expect(await store.read(), isNull);
             expect(credentials.signedOut, isTrue);

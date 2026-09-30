@@ -30,130 +30,149 @@ class MeTab extends ConsumerWidget {
     @override
     Widget build(BuildContext context, WidgetRef ref) {
         final l10n = AppLocalizations.of(context)!;
-        final user = ref.watch(authControllerProvider).valueOrNull?.user;
+        final auth = ref.watch(authControllerProvider);
+        final user = auth.valueOrNull?.user;
+        // On this tab the session already exists, so a loading auth state can only be the
+        // sign-out in flight. It takes a few network steps; without this the tap looked
+        // like it had done nothing until the sign-in screen appeared.
+        final signingOut = auth.isLoading;
         final theme = Theme.of(context);
         final version = ref.watch(appVersionProvider).valueOrNull;
 
         return Scaffold(
             appBar: AppBar(title: Text(l10n.dashboardTabMe)),
             body: SafeArea(
-                child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                        // A Google account without a name is valid (AuthUser.displayName's
-                        // own doc comment) — an empty name shows the avatar alone rather than
-                        // an empty header line.
-                        Row(
-                            children: [
-                                _AvatarButton(fallbackColor: theme.colorScheme.primaryContainer),
-                                if (user != null && user.displayName.isNotEmpty) ...[
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                        child: Text(
-                                            user.displayName,
-                                            style: theme.textTheme.titleLarge,
-                                            overflow: TextOverflow.ellipsis,
-                                        ),
-                                    ),
-                                ],
-                            ],
-                        ),
-                        const SizedBox(height: 24),
-                        // No role gate. The same dead branch that hid the requester's Home
-                        // hid these two rows from nobody — every real account is DONOR — and
-                        // would have hidden "donor profile" from the one person who needs it
-                        // if the role had ever been assigned.
-                        Card(
-                                margin: EdgeInsets.zero,
-                                child: Column(
-                                    children: [
-                                        ListTile(
-                                            key: const Key('me-donor-profile'),
-                                            leading: const Icon(Icons.badge_outlined),
-                                            title: Text(l10n.donorProfileTitle),
-                                            trailing: const Icon(Icons.chevron_right),
-                                            onTap: () => context.push(DonorProfileScreen.path),
-                                        ),
-                                        const Divider(height: 1),
-                                        // Duplicated from Home's own button on purpose: Home is
-                                        // where someone in a hurry looks, Me is where someone
-                                        // hunting through settings looks.
-                                        ListTile(
-                                            key: const Key('me-request-blood'),
-                                            leading: const Icon(Icons.bloodtype_outlined),
-                                            title: Text(l10n.requestNewCta),
-                                            trailing: const Icon(Icons.chevron_right),
-                                            onTap: () => context.push(RequestFormScreen.path),
-                                        ),
-                                        const Divider(height: 1),
-                                        ListTile(
-                                            key: const Key('me-donation-guide'),
-                                            leading: const Icon(Icons.volunteer_activism_outlined),
-                                            title: Text(l10n.donateGuideCta),
-                                            trailing: const Icon(Icons.chevron_right),
-                                            onTap: () => context.push(DonationGuideScreen.path),
+                // Nothing else on the tab is tappable mid-sign-out: opening the profile or
+                // the delete flow now would race the session being torn down underneath it.
+                child: AbsorbPointer(
+                    absorbing: signingOut,
+                    child: ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: [
+                            // A Google account without a name is valid (AuthUser.displayName's
+                            // own doc comment) — an empty name shows the avatar alone rather than
+                            // an empty header line.
+                            Row(
+                                children: [
+                                    _AvatarButton(fallbackColor: theme.colorScheme.primaryContainer),
+                                    if (user != null && user.displayName.isNotEmpty) ...[
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                            child: Text(
+                                                user.displayName,
+                                                style: theme.textTheme.titleLarge,
+                                                overflow: TextOverflow.ellipsis,
+                                            ),
                                         ),
                                     ],
-                                ),
+                                ],
                             ),
-                        const SizedBox(height: 16),
-                        const _LanguageCard(),
-                        const SizedBox(height: 16),
-                        // One row, not three: How it works, the privacy policy, who made the
-                        // app and its version all live behind it on About — this tab stays
-                        // the short list the prototype asks for.
-                        Card(
-                            margin: EdgeInsets.zero,
-                            child: ListTile(
-                                key: const Key('me-about'),
-                                leading: const Icon(Icons.info_outline),
-                                title: Text(l10n.aboutHelpCta),
-                                trailing: const Icon(Icons.chevron_right),
-                                onTap: () => context.push(AboutScreen.path),
-                            ),
-                        ),
-                        const SizedBox(height: 16),
-                        Card(
-                            margin: EdgeInsets.zero,
-                            child: ListTile(
-                                key: const Key('sign-out'),
-                                leading: const Icon(Icons.logout),
-                                title: Text(l10n.signOut),
-                                onTap: () =>
-                                    ref.read(authControllerProvider.notifier).signOut(),
-                            ),
-                        ),
-                        // DEC-016. Last, apart, and in the error colour: the one action on
-                        // this tab that cannot be taken back must not sit where a thumb
-                        // reaching for sign-out lands. It only opens the confirmation screen.
-                        const SizedBox(height: 32),
-                        Card(
-                            margin: EdgeInsets.zero,
-                            child: ListTile(
-                                key: const Key('me-delete-account'),
-                                leading: Icon(
-                                    Icons.delete_forever_outlined,
-                                    color: theme.colorScheme.error,
-                                ),
-                                title: Text(
-                                    l10n.accountDeleteCta,
-                                    style: TextStyle(color: theme.colorScheme.error),
-                                ),
-                                onTap: () => context.push(DeleteAccountScreen.path),
-                            ),
-                        ),
-                        if (version != null) ...[
                             const SizedBox(height: 24),
-                            Text(
-                                l10n.appVersionLabel(version.version, version.build),
-                                key: const Key('me-version'),
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
+                            // No role gate. The same dead branch that hid the requester's Home
+                            // hid these two rows from nobody — every real account is DONOR — and
+                            // would have hidden "donor profile" from the one person who needs it
+                            // if the role had ever been assigned.
+                            Card(
+                                    margin: EdgeInsets.zero,
+                                    child: Column(
+                                        children: [
+                                            ListTile(
+                                                key: const Key('me-donor-profile'),
+                                                leading: const Icon(Icons.badge_outlined),
+                                                title: Text(l10n.donorProfileTitle),
+                                                trailing: const Icon(Icons.chevron_right),
+                                                onTap: () => context.push(DonorProfileScreen.path),
+                                            ),
+                                            const Divider(height: 1),
+                                            // Duplicated from Home's own button on purpose: Home is
+                                            // where someone in a hurry looks, Me is where someone
+                                            // hunting through settings looks.
+                                            ListTile(
+                                                key: const Key('me-request-blood'),
+                                                leading: const Icon(Icons.bloodtype_outlined),
+                                                title: Text(l10n.requestNewCta),
+                                                trailing: const Icon(Icons.chevron_right),
+                                                onTap: () => context.push(RequestFormScreen.path),
+                                            ),
+                                            const Divider(height: 1),
+                                            ListTile(
+                                                key: const Key('me-donation-guide'),
+                                                leading: const Icon(Icons.volunteer_activism_outlined),
+                                                title: Text(l10n.donateGuideCta),
+                                                trailing: const Icon(Icons.chevron_right),
+                                                onTap: () => context.push(DonationGuideScreen.path),
+                                            ),
+                                        ],
+                                    ),
+                                ),
+                            const SizedBox(height: 16),
+                            const _LanguageCard(),
+                            const SizedBox(height: 16),
+                            // One row, not three: How it works, the privacy policy, who made the
+                            // app and its version all live behind it on About — this tab stays
+                            // the short list the prototype asks for.
+                            Card(
+                                margin: EdgeInsets.zero,
+                                child: ListTile(
+                                    key: const Key('me-about'),
+                                    leading: const Icon(Icons.info_outline),
+                                    title: Text(l10n.aboutHelpCta),
+                                    trailing: const Icon(Icons.chevron_right),
+                                    onTap: () => context.push(AboutScreen.path),
                                 ),
                             ),
+                            const SizedBox(height: 16),
+                            Card(
+                                margin: EdgeInsets.zero,
+                                child: ListTile(
+                                    key: const Key('sign-out'),
+                                    leading: signingOut
+                                        ? const SizedBox.square(
+                                            dimension: 24,
+                                            child: Padding(
+                                                padding: EdgeInsets.all(2),
+                                                child: CircularProgressIndicator(strokeWidth: 2.5),
+                                            ),
+                                        )
+                                        : const Icon(Icons.logout),
+                                    title: Text(signingOut ? l10n.signingOut : l10n.signOut),
+                                    onTap: signingOut
+                                        ? null
+                                        : () => ref.read(authControllerProvider.notifier).signOut(),
+                                ),
+                            ),
+                            // DEC-016. Last, apart, and in the error colour: the one action on
+                            // this tab that cannot be taken back must not sit where a thumb
+                            // reaching for sign-out lands. It only opens the confirmation screen.
+                            const SizedBox(height: 32),
+                            Card(
+                                margin: EdgeInsets.zero,
+                                child: ListTile(
+                                    key: const Key('me-delete-account'),
+                                    leading: Icon(
+                                        Icons.delete_forever_outlined,
+                                        color: theme.colorScheme.error,
+                                    ),
+                                    title: Text(
+                                        l10n.accountDeleteCta,
+                                        style: TextStyle(color: theme.colorScheme.error),
+                                    ),
+                                    onTap: () => context.push(DeleteAccountScreen.path),
+                                ),
+                            ),
+                            if (version != null) ...[
+                                const SizedBox(height: 24),
+                                Text(
+                                    l10n.appVersionLabel(version.version, version.build),
+                                    key: const Key('me-version'),
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                ),
+                            ],
                         ],
-                    ],
+                    ),
                 ),
             ),
         );

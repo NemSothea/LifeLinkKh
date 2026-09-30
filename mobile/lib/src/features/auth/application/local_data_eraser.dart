@@ -34,7 +34,9 @@ final class LocalDataEraser {
 
     Future<void> erase() async {
         try {
-            await _pushTokens.deleteToken();
+            // Bounded like the push-registration clear in `AuthService.signOut`: deleting
+            // the token is a network call, and offline it would hold the whole sign-out.
+            await _pushTokens.deleteToken().timeout(const Duration(seconds: 4));
         } on Object catch (_) {
             // The contract says it does not throw; a sign-out does not bet on that.
         }

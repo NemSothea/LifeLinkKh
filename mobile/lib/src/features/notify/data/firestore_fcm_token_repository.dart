@@ -61,11 +61,16 @@ final class FirestoreFcmTokenRepository implements FcmTokenRepository {
         // Signed out already: there is no token of ours left to clear.
         if (uid == null) return const Success(null);
         try {
-            final ref = _db.collection('users').doc(uid);
-            if (!(await ref.get()).exists) return const Success(null);
-            await ref.update({'fcmToken': null, 'updatedAt': FieldValue.serverTimestamp()});
+            // Straight to the update, no existence read first: that read was a whole extra
+            // server round trip on every sign-out. A missing document fails the update with
+            // `not-found`, which means the same thing the read did — nothing to clear.
+            await _db
+                .collection('users')
+                .doc(uid)
+                .update({'fcmToken': null, 'updatedAt': FieldValue.serverTimestamp()});
             return const Success(null);
         } on FirebaseException catch (error) {
+            if (error.code == 'not-found') return const Success(null);
             return Failed(failureFromFirebase(error));
         }
     }

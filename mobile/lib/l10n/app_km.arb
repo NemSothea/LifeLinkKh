@@ -288,5 +288,6 @@
     "avatarMale": "ប្រុស",
     "avatarFemale": "ស្រី",
     "avatarShuffle": "បង្ហាញមុខផ្សេងទៀត",
-    "avatarOptionLabel": "រូបតំណាងទី {index}"
+    "avatarOptionLabel": "រូបតំណាងទី {index}",
+    "signingOut": "កំពុងចេញពីគណនី…"
 }

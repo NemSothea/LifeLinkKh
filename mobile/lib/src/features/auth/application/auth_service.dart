@@ -140,6 +140,11 @@ final class AuthService {
         return null;
     }
 
+    /// The most any one network step of sign-out may take. Past it the step is abandoned
+    /// and sign-out carries on: someone who tapped "Sign out" on a bad connection should
+    /// reach the sign-in screen in seconds, not wait on a server that is not answering.
+    static const Duration networkStepTimeout = Duration(seconds: 4);
+
     /// Signs out of everything, in the order that matters.
     ///
     /// Push registration is cleared **first**, while the Firebase user whose rules allow
@@ -151,7 +156,9 @@ final class AuthService {
     /// needed.
     Future<void> signOut() async {
         try {
-            await _clearPushRegistration?.call();
+            // Bounded: a Firestore write resolves only when the server acknowledges it, so
+            // on a dead connection this await never returns and sign-out hung with it.
+            await _clearPushRegistration?.call().timeout(networkStepTimeout);
         } on Object catch (_) {
             // Deliberately swallowed. A user who asked to sign out is signed out even if
             // the network is down; a stale token costs at most an alert this phone
