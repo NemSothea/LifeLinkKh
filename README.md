@@ -54,20 +54,30 @@ Public pages, no sign-in: the board, `/download` (the APK), `/privacy` (privacy 
 | | |
 |---|---|
 | ![The board, signed in](docs/assets/screens/portal-staff-km.png) | ![The dashboard](docs/assets/screens/portal-dashboard-km.png) |
-| **Signed in.** The review queue on top — requester, callback number, Approve / Reject — then the open requests. | **The dashboard.** PRD metrics against their targets, and the charts behind them. |
+| **Signed in.** Three requests waiting for review — requester, callback number, Approve / Reject — then the six open ones, each with how many donors were alerted and how many said yes. | **The dashboard.** The PRD metrics against their targets for the last 30 days, and the charts behind them: requests by day and outcome, blood-type demand against available donors, requests by hospital, donors by district. |
 
-*Captured from the emulators with the demo seed (`npm run seed:demo`), so the numbers are small.*
+*Captured from the Firebase emulators with the showcase seed (`npm run seed:showcase`): 24 donors
+across Phnom Penh and 15 requests over 30 days at all five hospitals — open, fulfilled, rejected,
+cancelled and waiting for review. Every alert, answer and confirmed donation in it went through the
+portal's real handlers, so the numbers agree with each other the way live traffic would leave them.*
 
 ## The donor app
 
 Flutter, on the donor's phone. This is where a blood emergency actually reaches a human being.
+Screenshots from a real Android phone (Samsung, Android 15) and a real iPhone on the showcase
+data; the app is the same on both.
 
-| | |
-|---|---|
-| ![The intro, first slide](docs/assets/screens/mobile-intro-km.png) | ![Donor home](docs/assets/screens/mobile-home-km.png) |
-| **First launch explains itself.** Three slides — one donation reaching three patients, who gets alerted, the 56-day rule — skippable from the first one and never shown twice. | **Eligible, one request nearby.** Blood type, distance and how long ago it was posted. |
-| ![Donation history](docs/assets/screens/mobile-history-km.png) | ![Donor profile](docs/assets/screens/mobile-profile-km.png) |
-| **History and the 56-day cooldown**, with the date eligibility returns. | **Profile**, and the language switch that flips the whole app. |
+| | | |
+|---|---|---|
+| ![The intro, first slide](docs/assets/screens/mobile-intro-km.png) | ![Donor home](docs/assets/screens/mobile-home-km.png) | ![An alert](docs/assets/screens/mobile-alert-km.png) |
+| **First launch explains itself.** Three slides — one donation reaching three patients, who gets alerted, the 56-day rule — skippable from the first one and never shown twice. | **Eligible, four requests nearby.** The two critical ones first, each with the blood type needed, the distance and how long ago it was posted. A request that has been fulfilled or cancelled drops off the list. | **One alert.** Checked by an admin before it went out, how many units, which hospital and how far — and Accept or Decline. Accepting reveals the family's number. |
+| ![Donation history](docs/assets/screens/mobile-history-km.png) | ![Donor profile](docs/assets/screens/mobile-profile-km.png) | ![The Me tab](docs/assets/screens/mobile-me-km.png) |
+| **History and the cooldown.** Every confirmed donation, how many patients it could have helped, and whether the donor can give again yet. | **Profile.** Blood type, district and last donation; the switch that stops alerts without deleting anything. | **Me.** A generated avatar, the language switch that flips the whole app, sign-out and account deletion. |
+| ![Choosing an avatar](docs/assets/screens/mobile-avatar-km.png) | ![Home in English](docs/assets/screens/mobile-home-en.png) | ![Home in dark mode](docs/assets/screens/mobile-home-dark-km.png) |
+| **Khmer-style avatars.** Drawn on the phone, no network: a checked krama or a silk sbai with a rumdul in the hair, Angkor behind — thousands of combinations, picked and kept per user. | **English, one tap later.** Every string ships in Khmer and English. | **Dark mode**, on a neutral charcoal rather than a red-tinted brown, so the red stays the loudest thing on screen. |
+
+<p align="center"><img src="docs/assets/screens/ios-me-km.png" width="260" alt="The Me tab on an iPhone"><br>
+<sub><b>The same app on an iPhone</b> — one Flutter codebase, built for iOS as a device build (DEC-006).</sub></p>
 
 ---
 
@@ -233,6 +243,8 @@ cd firebase
 npm run seed:app                                           # districts + hospitals
 PORTAL_ADMIN_PASSWORD='<12+ chars>' npm run seed:admin:app # portal admin, soborey
 npm run seed:demo                                          # demo donors + one matched request
+# or, for a city in use — 24 donors, 15 requests over 30 days (what the screenshots show):
+npm run seed:showcase                                      # add `-- --me <uid>` to give your own account alerts and a history
 
 cd ../frontend && npm install
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8081 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \

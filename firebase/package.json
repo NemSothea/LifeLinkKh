@@ -13,6 +13,7 @@
     "seed:admin": "node seed/admin.mjs",
     "seed:admin:app": "node seed/admin.mjs --project lifelinkkh --emulator",
     "seed:demo": "node seed/demo.mjs",
+    "seed:showcase": "node seed/showcase.mjs",
     "metrics": "node scripts/metrics.mjs",
     "delete-account": "node scripts/delete-account.mjs",
     "release": "node scripts/release.mjs"
