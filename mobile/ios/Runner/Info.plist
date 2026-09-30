@@ -45,6 +45,10 @@
 	<string></string>
 	<key>FacebookDisplayName</key>
 	<string>LifeLink KH</string>
+	<key>FacebookAutoLogAppEventsEnabled</key>
+	<false/>
+	<key>FacebookAdvertiserIDCollectionEnabled</key>
+	<false/>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>fbapi</string>
@@ -53,6 +57,8 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>LifeLink ប្រើទីតាំងរបស់អ្នកតែម្តង ពេលអ្នកចុច «ប្រើទីតាំងបច្ចុប្បន្ន» ដើម្បីរកសំណើត្រូវការឈាមនៅក្បែរ។ ទីតាំងត្រូវបានរក្សាទុកតែប្រហាក់ប្រហែល (ប្រហែល ១០០ ម៉ែត្រ) ហើយមិនបង្ហាញដល់អ្នកប្រើផ្សេងទៀតឡើយ។ LifeLink uses your location once, when you tap "Use my current location", to find blood requests near you. It is stored only approximately (about 100 m) and never shown to other users.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>LifeLink connects to the LifeLink server on your local network.</string>
 	<key>UIApplicationSceneManifest</key>

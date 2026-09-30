@@ -167,10 +167,10 @@ describe('donors', () => {
 
   test('with GPS all three coordinate fields are set', async () => {
     await assertSucceeds(setDoc(doc(as('u1'), 'donors/u1'),
-      donor({ lat: 11.5806, lng: 104.9165, geohash: 'w649gkjvgs' })));
+      donor({ lat: 11.581, lng: 104.917, geohash: 'w649gkj' })));
     await assertFails(setDoc(doc(as('u1'), 'donors/u1'),
-      donor({ lat: 11.5806, lng: 104.9165, geohash: null })));
-    await assertFails(setDoc(doc(as('u1'), 'donors/u1'), donor({ lat: 95, lng: 104.9, geohash: 'w649gkjvgs' })));
+      donor({ lat: 11.581, lng: 104.917, geohash: null })));
+    await assertFails(setDoc(doc(as('u1'), 'donors/u1'), donor({ lat: 95, lng: 104.9, geohash: 'w649gkj' })));
   });
 
   test('a profile for someone else is refused', async () => {
@@ -185,10 +185,13 @@ describe('donors', () => {
     await assertFails(getDocs(collection(anon(), 'donors')));
   });
 
-  // SEC-REVIEW-003 F-12: about a metre is what matching needs; a district code is short.
-  test('a geohash finer than ten characters, or an overlong district code, is refused', async () => {
+  // SEC-REVIEW-003 F-12, tightened by SEC-REVIEW-005 M-04: a ~150 m cell is what matching needs;
+  // the old 10-character (~1 m) geohash is refused too. A district code is short.
+  test('a geohash finer than seven characters, or an overlong district code, is refused', async () => {
     await assertFails(setDoc(doc(as('u1'), 'donors/u1'),
-      donor({ lat: 11.5806, lng: 104.9165, geohash: 'w649gkjvgs12' })));
+      donor({ lat: 11.581, lng: 104.917, geohash: 'w649gkjv' })));
+    await assertFails(setDoc(doc(as('u1'), 'donors/u1'),
+      donor({ lat: 11.5806, lng: 104.9165, geohash: 'w649gkjvgs' })));
     await assertFails(setDoc(doc(as('u1'), 'donors/u1'), donor({ districtCode: 'x'.repeat(17) })));
   });
 

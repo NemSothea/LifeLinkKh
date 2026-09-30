@@ -38,6 +38,16 @@ shapes were on the table:
 
 Neither is acceptable on its own. The framing was a false choice.
 
+> **AMENDED 2026-09-30 (SEC-REVIEW-005 M-04, OWASP MASVS PRIVACY-1).** A donor's own coordinates
+> are stored at **three decimals (~110 m)** with a **7-character geohash (~150 m cell)**, not the
+> ~1 m (`NUMERIC(8,5)`, 10-character geohash) below. The app stored raw, unrounded fixes — finer
+> than even this ADR allowed — and nothing in matching needs better than 0.5 km, the precision
+> distance is shown at. Rounding happens in the app on every save
+> (`mobile/lib/src/core/location/geohash.dart`, `roundDonorCoordinate`), kept coordinates
+> included, so an older profile is coarsened by its next edit; `firebase/firestore.rules` refuses
+> a geohash longer than 7. Profiles no one edits keep their old precision until a one-off
+> rounding script runs. Hospitals are unchanged: their locations are public.
+
 ## Decision
 
 Store both, at different precisions, and never return the precise one.

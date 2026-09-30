@@ -95,13 +95,36 @@ void main() {
             expect(profile.eligibility.isEligible, isTrue);
         });
 
-        test('GPS is stored with its geohash, for the matching Function', () async {
+        test('GPS is stored rounded to ~100 m with a 7-character geohash (SEC-REVIEW-005 M-04)', () async {
             await repository.saveProfile(
-                draft.copyWith(latitude: 11.5806, longitude: 104.9165),
+                draft.copyWith(latitude: 11.580649, longitude: 104.916512),
             );
             final stored = (await db.doc('donors/donor-1').get()).data()!;
-            expect(stored['lat'], 11.5806);
-            expect(stored['geohash'], encodeGeohash(11.5806, 104.9165));
+            expect(stored['lat'], 11.581);
+            expect(stored['lng'], 104.917);
+            expect(stored['geohash'], encodeGeohash(11.581, 104.917, precision: 7));
+            expect((stored['geohash'] as String).length, 7);
+        });
+
+        test('a profile saved before M-04 is coarsened by the next edit', () async {
+            await db.doc('donors/donor-1').set({
+                'fullName': 'Nem Sothea',
+                'bloodType': 'O+',
+                'districtCode': '1201',
+                'lastDonationDate': null,
+                'isAvailable': true,
+                'lat': 11.580649,
+                'lng': 104.916512,
+                'geohash': 'w649gkjvgs',
+                'createdAt': DateTime(2026, 9, 1),
+                'updatedAt': DateTime(2026, 9, 1),
+            });
+
+            await repository.saveProfile(draft);
+
+            final stored = (await db.doc('donors/donor-1').get()).data()!;
+            expect([stored['lat'], stored['lng']], [11.581, 104.917]);
+            expect(stored['geohash'], encodeGeohash(11.581, 104.917, precision: 7));
         });
 
         test('an edit that never touched location keeps the stored GPS (CR-MAPI-004)', () async {
@@ -118,7 +141,7 @@ void main() {
 
             final stored = (await db.doc('donors/donor-1').get()).data()!;
             expect(stored['districtCode'], '1204');
-            expect(stored['lat'], 11.5806);
+            expect(stored['lat'], 11.581);
             expect(stored['geohash'], isNotNull);
             // The rules refuse an update that re-stamps createdAt.
             expect(stored['createdAt'], createdAt);

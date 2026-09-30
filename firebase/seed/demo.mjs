@@ -30,7 +30,8 @@ const messaging = {
 };
 const quiet = { info() {}, warn() {} };
 const CALMETTE = '8c251b94-1968-481a-9b77-112b87790b00';
-const DOUN_PENH = { lat: 11.5725, lng: 104.9173 };
+// Stored the way the app stores a donor's fix: three decimals, a 7-character geohash (ADR 0003).
+const DOUN_PENH = { lat: 11.573, lng: 104.917 };
 
 for (const collection of ['requests', 'matches', 'donations']) {
   await db.recursiveDelete(db.collection(collection));
@@ -41,7 +42,7 @@ for (const [uid, name, sex] of [['demo-donor-a', 'Nem Sothea', 'M'], ['demo-dono
   await db.doc(`users/${uid}`).set({ displayName: name, language: 'km', role: 'DONOR', fcmToken: null, createdAt: now(), updatedAt: now() });
   await db.doc(`donors/${uid}`).set({
     fullName: name, bloodType: 'O-', districtCode: '1202', lastDonationDate: null, isAvailable: true, sex,
-    ...DOUN_PENH, geohash: geohashForLocation([DOUN_PENH.lat, DOUN_PENH.lng]), createdAt: now(), updatedAt: now(),
+    ...DOUN_PENH, geohash: geohashForLocation([DOUN_PENH.lat, DOUN_PENH.lng], 7), createdAt: now(), updatedAt: now(),
   });
 }
 await db.doc('users/demo-family').set({ displayName: 'Chea Srey', language: 'km', role: 'REQUESTER', fcmToken: null, createdAt: now(), updatedAt: now() });

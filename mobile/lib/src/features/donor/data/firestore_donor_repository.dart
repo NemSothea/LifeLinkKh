@@ -73,11 +73,17 @@ final class FirestoreDonorRepository implements DonorRepository {
 
             // CR-MAPI-004, kept: an edit that never touched location leaves stored GPS alone.
             final keepCoordinates = !draft.updateCoordinates && existing != null;
-            final lat = keepCoordinates ? existing['lat'] as num? : draft.latitude;
-            final lng = keepCoordinates ? existing['lng'] as num? : draft.longitude;
-            final geohash = keepCoordinates
-                ? existing['geohash'] as String?
-                : (lat != null && lng != null ? encodeGeohash(lat.toDouble(), lng.toDouble()) : null);
+            final rawLat = keepCoordinates ? existing['lat'] as num? : draft.latitude;
+            final rawLng = keepCoordinates ? existing['lng'] as num? : draft.longitude;
+            // Rounded on every save, kept coordinates included: a profile written before
+            // SEC-REVIEW-005 M-04 holds the raw fix and a 10-character geohash, which the rules
+            // now refuse, so the first edit after the update coarsens it too.
+            final hasFix = rawLat != null && rawLng != null;
+            final lat = hasFix ? roundDonorCoordinate(rawLat) : null;
+            final lng = hasFix ? roundDonorCoordinate(rawLng) : null;
+            final geohash = hasFix
+                ? encodeGeohash(lat!, lng!, precision: donorGeohashPrecision)
+                : null;
 
             await ref.set({
                 'fullName': draft.fullName.trim(),

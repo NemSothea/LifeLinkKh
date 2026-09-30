@@ -13,18 +13,22 @@ final class DeviceLocationService implements LocationService {
 
     @override
     Future<LocationFix?> currentFix() async {
-        if (!await Geolocator.isLocationServiceEnabled()) return null;
-
-        LocationPermission permission = await Geolocator.checkPermission();
-        if (permission == LocationPermission.denied) {
-            permission = await Geolocator.requestPermission();
-        }
-        if (permission == LocationPermission.denied ||
-            permission == LocationPermission.deniedForever) {
-            return null;
-        }
-
+        // One `try` around the permission calls too, not only the fix: iOS throws from
+        // `requestPermission()` when the Info.plist purpose string is missing, and a throw
+        // here left the setup screen's "use my current location" spinner running forever
+        // (SEC-REVIEW-005 M-01).
         try {
+            if (!await Geolocator.isLocationServiceEnabled()) return null;
+
+            LocationPermission permission = await Geolocator.checkPermission();
+            if (permission == LocationPermission.denied) {
+                permission = await Geolocator.requestPermission();
+            }
+            if (permission == LocationPermission.denied ||
+                permission == LocationPermission.deniedForever) {
+                return null;
+            }
+
             final position = await Geolocator.getCurrentPosition(
                 locationSettings: const LocationSettings(
                     accuracy: LocationAccuracy.medium,
@@ -32,9 +36,9 @@ final class DeviceLocationService implements LocationService {
                 ),
             );
             return (latitude: position.latitude, longitude: position.longitude);
-        } on Exception {
-            // Timeout, provider disabled mid-call, etc. Coordinates are optional; the profile
-            // must still be completable.
+        } on Object {
+            // Timeout, provider disabled mid-call, a platform-channel error, a missing purpose
+            // string. Coordinates are optional; the profile must still be completable.
             return null;
         }
     }

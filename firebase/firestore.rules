@@ -46,13 +46,14 @@ service cloud.firestore {
 
     // ── donors/{uid} ────────────────────────────────────────────────────────────────────────────
     function validCoordinates(d) {
-      // ADR 0003: declining GPS is allowed, so all three are null — or all three are set. Ten
-      // geohash characters is about a metre, what the app sends; more would be a finer point on
-      // a person's home than matching needs (SEC-REVIEW-003 F-12).
+      // ADR 0003: declining GPS is allowed, so all three are null — or all three are set. Seven
+      // geohash characters is a cell of about 150 m, what the app sends with coordinates rounded
+      // to three decimals; anything finer is a sharper point on a person's home than matching
+      // needs (SEC-REVIEW-003 F-12, tightened by SEC-REVIEW-005 M-04).
       return (d.lat == null && d.lng == null && d.geohash == null)
           || (d.lat is number && d.lat >= -90 && d.lat <= 90
               && d.lng is number && d.lng >= -180 && d.lng <= 180
-              && d.geohash is string && d.geohash.size() > 0 && d.geohash.size() <= 10);
+              && d.geohash is string && d.geohash.size() > 0 && d.geohash.size() <= 7);
     }
     function validDonor(d) {
       // `sex` (DEC-019) is allowed but not required: a profile saved before it existed, or by an
