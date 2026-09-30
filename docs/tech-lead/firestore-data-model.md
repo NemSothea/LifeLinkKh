@@ -28,6 +28,17 @@ Created by the app's first push registration, not at sign-in. Owner and admin re
 cannot promote itself by writing a field. `fcmToken` is private for the same reason it was: it can
 address a push to this person.
 
+### `users/{uid}/notifications/{id}` — new, the app's bell (2026-09-30)
+`type` (`REQUEST_ALERT`|`REQUEST_APPROVED`|`REQUEST_REJECTED`|`DONOR_ACCEPTED`) · `requestId` ·
+`title` · `body` · `createdAt` · `readAt` timestamp|null.
+Filed by the portal's server beside every push (`push.js` `fileInInbox`), whether or not the push is
+delivered — a phone with notifications off, or no token, still finds it under the bell. The text is
+the push's, in the recipient's language when it was sent. The id makes a redelivered event overwrite
+instead of duplicating: `{type}_{requestId}`, or `DONOR_ACCEPTED_{boardId}` for an acceptance (the
+public board's opaque id, so the requester's inbox names no donor). Only the owner reads it — not even
+an admin — and the owner's one write is stamping `readAt` once with the server clock; no client
+creates, rewords or deletes an entry. `deleteAccountData` deletes the whole subcollection.
+
 ### `donors/{uid}` — was `donor_profiles`
 `fullName` · `bloodType` (8 ABO/Rh values) · `districtCode` (must exist in `districts`) ·
 `lastDonationDate` timestamp|null (not in the future) · `isAvailable` bool ·

@@ -42,6 +42,20 @@ service cloud.firestore {
       allow update: if signedIn() && uid() == userId
           && validUser(incoming()) && incoming().createdAt == resource.data.createdAt;
       allow delete: if false;
+
+      // ── users/{uid}/notifications/{id} — the bell's inbox ─────────────────────────────────
+      // Filed only by the portal's server beside each push (push.js fileInInbox). The owner reads
+      // it and marks entries read — one field, stamped with the server's clock, never cleared.
+      // Nothing else: an entry is a record of a push that went out, so the owner cannot forge,
+      // reword or delete one. Not even an admin reads it.
+      match /notifications/{notificationId} {
+        allow read: if signedIn() && uid() == userId;
+        allow update: if signedIn() && uid() == userId
+            && resource.data.readAt == null
+            && changed().hasOnly(['readAt'])
+            && incoming().readAt == request.time;
+        allow create, delete: if false;
+      }
     }
 
     // ── donors/{uid} ────────────────────────────────────────────────────────────────────────────

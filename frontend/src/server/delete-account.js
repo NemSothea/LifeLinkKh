@@ -86,16 +86,19 @@ export async function deleteAccountData({ db, auth, uid, log = console }) {
 
     // 3. Everything else that names them: matches on their requests, donations they gave, and
     //    reports they filed (DEC-019). A report keeps its reason, so the count of "asked for
-    //    money" stays true, but loses who filed it and the note in their own words.
-    const [asRequester, donations, reports] = await Promise.all([
+    //    money" stays true, but loses who filed it and the note in their own words. Their
+    //    notification inbox goes entirely: deleting users/{uid} leaves its subcollection behind.
+    const [asRequester, donations, reports, inbox] = await Promise.all([
         db.collection('matches').where('requesterUid', '==', uid).get(),
         db.collection('donations').where('donorUid', '==', uid).get(),
         db.collection('reports').where('reporterUid', '==', uid).get(),
+        db.collection(`users/${uid}/notifications`).get(),
     ]);
     await commitInChunks(db, [
         ...asRequester.docs.map((d) => (b) => b.update(d.ref, { requesterUid: null })),
         ...donations.docs.map((d) => (b) => b.update(d.ref, { donorUid: null })),
         ...reports.docs.map((d) => (b) => b.update(d.ref, { reporterUid: null, note: null })),
+        ...inbox.docs.map((d) => (b) => b.delete(d.ref)),
         (b) => b.delete(db.doc(`donors/${uid}`)),
         (b) => b.delete(db.doc(`users/${uid}`)),
     ]);

@@ -63,6 +63,9 @@ beforeEach(async () => {
     await db
         .doc('users/sothea')
         .set({ displayName: 'Nem Sothea', language: 'km', role: 'DONOR', fcmToken: 'tok' });
+    await db
+        .doc('users/sothea/notifications/REQUEST_ALERT_theirs-open')
+        .set({ type: 'REQUEST_ALERT', requestId: 'theirs-open', title: 't', body: 'b' });
     await db.doc('donors/sothea').set({
         fullName: 'Nem Sothea',
         bloodType: 'O-',
@@ -155,6 +158,11 @@ describe('deleteAccount', () => {
             false,
         );
         await expect(auth.getUser('sothea')).rejects.toMatchObject({ code: 'auth/user-not-found' });
+    });
+
+    test('their notification inbox is deleted with them', async () => {
+        await deleteAccountData({ db, auth, uid: 'sothea', log: quiet });
+        expect((await db.collection('users/sothea/notifications').get()).size).toBe(0);
     });
 
     test('their live requests are closed; a finished one is kept with no creator', async () => {

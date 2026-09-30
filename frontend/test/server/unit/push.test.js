@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { buildMessage, sendAll } from '../../../src/server/push.js';
+import { ANDROID_CHANNEL_ID, buildMessage, inboxEntry, sendAll } from '../../../src/server/push.js';
 
 const args = {
     token: 't',
@@ -9,6 +9,15 @@ const args = {
 };
 
 describe('buildMessage', () => {
+    test('Android puts it on the high-importance channel, with sound', () => {
+        // Without the channel it lands on FCM's fallback, which files it silently in the tray.
+        expect(buildMessage('REQUEST_ALERT', { ...args, language: 'en' }).android).toEqual({
+            priority: 'high',
+            notification: { channelId: ANDROID_CHANNEL_ID, sound: 'default' },
+        });
+        expect(ANDROID_CHANNEL_ID).toBe('lifelink_urgent_requests');
+    });
+
     test("the backend's donor alert, in English", () => {
         const m = buildMessage('REQUEST_ALERT', { ...args, language: 'en' });
         expect(m.notification).toEqual({
@@ -71,5 +80,26 @@ describe('sendAll', () => {
             },
         };
         expect(await sendAll(messaging, [])).toEqual({ sent: [], dead: [] });
+    });
+});
+
+describe('inboxEntry', () => {
+    test('the same words as the push, unread, under the id it was given', () => {
+        const entry = inboxEntry('REQUEST_APPROVED', {
+            ...args,
+            id: 'REQUEST_APPROVED_r1',
+            language: 'en',
+            alerted: 0,
+        });
+        const push = buildMessage('REQUEST_APPROVED', { ...args, language: 'en', alerted: 0 });
+        expect(entry.id).toBe('REQUEST_APPROVED_r1');
+        expect(entry.data).toMatchObject({
+            type: 'REQUEST_APPROVED',
+            requestId: 'r1',
+            title: push.notification.title,
+            body: push.notification.body,
+            readAt: null,
+        });
+        expect(entry.data).not.toHaveProperty('token');
     });
 });

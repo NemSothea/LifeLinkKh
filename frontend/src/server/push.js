@@ -4,6 +4,8 @@
 // The data half is what makes a notification actionable: the app routes on `type` and
 // `requestId` (PushArrival), and a notification-only message gives it nothing to route on.
 
+import { FieldValue } from 'firebase-admin/firestore';
+
 const TEXT = {
     REQUEST_ALERT: {
         title: { en: 'Urgent blood request', km: 'សំណើឈាមបន្ទាន់' },
@@ -59,25 +61,87 @@ export const DEAD_TOKEN_CODES = new Set([
 ]);
 
 /**
- * One message per recipient; `language` anything but 'en' reads Khmer, same as the backend.
- * `alerted` matters to REQUEST_APPROVED only: zero picks the wording that says so.
+ * The Android channel every push lands on. The app creates it at launch with high importance
+ * (MainActivity.kt) — the importance is what makes Android pop the alert over whatever is on
+ * screen instead of filing it silently in the tray. The ids must match.
  */
-export function buildMessage(
-    type,
-    { token, language, requestId, patientBloodType, hospitalName, alerted },
-) {
+export const ANDROID_CHANNEL_ID = 'lifelink_urgent_requests';
+
+/**
+ * The title and body a recipient reads, in their language. `language` anything but 'en' reads
+ * Khmer, same as the backend. `alerted` matters to REQUEST_APPROVED only: zero picks the
+ * wording that says so.
+ */
+function render(type, { language, patientBloodType, hospitalName, alerted }) {
     const lang = language === 'en' ? 'en' : 'km';
     const text =
         TEXT[type === 'REQUEST_APPROVED' && alerted === 0 ? 'REQUEST_APPROVED_NO_DONORS' : type];
     return {
-        token,
-        notification: {
-            title: text.title[lang],
-            body: text.body[lang](patientBloodType, hospitalName),
-        },
-        data: { type, requestId },
-        android: { priority: 'high' },
+        title: text.title[lang],
+        body: text.body[lang](patientBloodType, hospitalName),
     };
+}
+
+/** One message per recipient. */
+export function buildMessage(
+    type,
+    { token, language, requestId, patientBloodType, hospitalName, alerted },
+) {
+    return {
+        token,
+        notification: render(type, { language, patientBloodType, hospitalName, alerted }),
+        data: { type, requestId },
+        android: {
+            priority: 'high',
+            notification: { channelId: ANDROID_CHANNEL_ID, sound: 'default' },
+        },
+    };
+}
+
+/**
+ * The inbox copy of a push: `users/{uid}/notifications/{id}`, what the app's bell lists. Written
+ * whether or not the push is delivered — a phone with notifications turned off, or no token at
+ * all, still finds it there. The text is the push's, in the language it was sent in.
+ *
+ * `id` makes a redelivered event overwrite rather than duplicate, so it names what happened
+ * once: the request for everything but an acceptance, which happens once per donor.
+ */
+export function inboxEntry(
+    type,
+    { id, language, requestId, patientBloodType, hospitalName, alerted },
+) {
+    return {
+        id,
+        data: {
+            type,
+            requestId,
+            ...render(type, { language, patientBloodType, hospitalName, alerted }),
+            createdAt: FieldValue.serverTimestamp(),
+            readAt: null,
+        },
+    };
+}
+
+/**
+ * Files the entries in each recipient's inbox. Never throws: the push and the status change are
+ * the facts, the inbox is a record of them, and losing it must not fail either.
+ *
+ * @param {import('firebase-admin/firestore').Firestore} db
+ * @param {Array<{uid: string, entry: {id: string, data: object}}>} incoming
+ */
+export async function fileInInbox(db, incoming, log = console) {
+    if (incoming.length === 0) return;
+    try {
+        for (let i = 0; i < incoming.length; i += 400) {
+            const batch = db.batch();
+            for (const { uid, entry } of incoming.slice(i, i + 400)) {
+                batch.set(db.doc(`users/${uid}/notifications/${entry.id}`), entry.data);
+            }
+            await batch.commit();
+        }
+    } catch (error) {
+        log.warn(`inbox write failed: ${error.code ?? 'unknown'}`);
+    }
 }
 
 /**

@@ -203,6 +203,39 @@ describe('onRequestApproved — matching', () => {
     });
 });
 
+describe('onRequestApproved — the inbox', () => {
+    test('every matched donor gets the alert under the bell, token or not', async () => {
+        await donor('sothea', { token: 'token-1', language: 'en' });
+        await donor('no-token');
+        await postRequest('r1');
+        await handle('r1');
+
+        const withToken = (
+            await db.doc('users/sothea/notifications/REQUEST_ALERT_r1').get()
+        ).data();
+        expect(withToken).toMatchObject({
+            type: 'REQUEST_ALERT',
+            requestId: 'r1',
+            title: 'Urgent blood request',
+            body: 'AB+ needed at Calmette Hospital',
+            readAt: null,
+        });
+        expect(withToken.createdAt).toBeInstanceOf(Timestamp);
+        const silent = (await db.doc('users/no-token/notifications/REQUEST_ALERT_r1').get()).data();
+        expect(silent.title).toBe('សំណើឈាមបន្ទាន់');
+    });
+
+    test('the requester gets the approval there too, and a redelivery files it once', async () => {
+        await db.doc('users/requester').set({ language: 'en', role: 'REQUESTER', fcmToken: null });
+        await postRequest('r1');
+        await handle('r1');
+        await handle('r1');
+        const inbox = await db.collection('users/requester/notifications').get();
+        expect(inbox.docs.map((d) => d.id)).toEqual(['REQUEST_APPROVED_r1']);
+        expect(inbox.docs[0].get('body')).toMatch(/no eligible donor is nearby/);
+    });
+});
+
 describe('onRequestCreated — intake (DEC-015)', () => {
     test('a new PENDING request gets its hospital name and alerts nobody', async () => {
         await donor('sothea', { token: 'token-1' });

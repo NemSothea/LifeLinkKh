@@ -126,10 +126,26 @@ describe('onMatchAnswered', () => {
         expect(sent).toHaveLength(1);
     });
 
+    test("the family's inbox gets one entry per acceptance, naming no donor", async () => {
+        await answer(unanswered, accepted);
+        await answer(unanswered, accepted);
+        const inbox = await db.collection('users/family/notifications').get();
+        expect(inbox.docs.map((d) => d.id)).toEqual([`DONOR_ACCEPTED_${boardId('r1', 'sothea')}`]);
+        expect(inbox.docs[0].data()).toMatchObject({
+            type: 'DONOR_ACCEPTED',
+            requestId: 'r1',
+            title: 'A donor accepted your request',
+            readAt: null,
+        });
+        expect(JSON.stringify(inbox.docs[0].data())).not.toContain('Sothea');
+    });
+
     test('a family with no token is fine — the acceptance still counts', async () => {
         await db.doc('users/family').update({ fcmToken: null });
         expect(await answer(unanswered, accepted)).toEqual({ outcome: 'accepted', pushed: 0 });
         expect((await db.doc('requests/r1').get()).get('acceptedCount')).toBe(1);
+        // No push, but the bell still has it.
+        expect((await db.collection('users/family/notifications').get()).size).toBe(1);
     });
 });
 

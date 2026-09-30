@@ -160,6 +160,51 @@ describe('users', () => {
   });
 });
 
+describe('users/{uid}/notifications — the bell', () => {
+  const entry = (overrides = {}) => ({
+    type: 'REQUEST_ALERT',
+    requestId: 'r1',
+    title: 'Urgent blood request',
+    body: 'AB+ needed at Calmette Hospital',
+    createdAt: Timestamp.now(),
+    readAt: null,
+    ...overrides,
+  });
+  const PATH = 'users/u1/notifications/REQUEST_ALERT_r1';
+
+  beforeEach(() => seed((db) => setDoc(doc(db, PATH), entry())));
+
+  test('the owner reads their own inbox, as a list and one by one', async () => {
+    await assertSucceeds(getDoc(doc(as('u1'), PATH)));
+    await assertSucceeds(getDocs(collection(as('u1'), 'users/u1/notifications')));
+  });
+
+  test('nobody else reads it — not another user, not an admin, not signed out', async () => {
+    await assertFails(getDoc(doc(as('u2'), PATH)));
+    await assertFails(getDocs(collection(as('u2'), 'users/u1/notifications')));
+    await assertFails(getDoc(doc(admin(), PATH)));
+    await assertFails(getDoc(doc(anon(), PATH)));
+  });
+
+  test('the owner marks it read with the server clock, and that is all', async () => {
+    await assertFails(updateDoc(doc(as('u1'), PATH), { readAt: Timestamp.fromMillis(0) }));
+    await assertFails(
+      updateDoc(doc(as('u1'), PATH), { readAt: serverTimestamp(), body: 'changed' }),
+    );
+    await assertFails(updateDoc(doc(as('u2'), PATH), { readAt: serverTimestamp() }));
+    await assertSucceeds(updateDoc(doc(as('u1'), PATH), { readAt: serverTimestamp() }));
+    // Read stays read: no un-reading, no second stamp.
+    await assertFails(updateDoc(doc(as('u1'), PATH), { readAt: null }));
+    await assertFails(updateDoc(doc(as('u1'), PATH), { readAt: serverTimestamp() }));
+  });
+
+  test('no client files or deletes an entry — only the server does', async () => {
+    await assertFails(setDoc(doc(as('u1'), 'users/u1/notifications/forged'), entry()));
+    await assertFails(setDoc(doc(admin(), 'users/u1/notifications/forged'), entry()));
+    await assertFails(deleteDoc(doc(as('u1'), PATH)));
+  });
+});
+
 describe('donors', () => {
   test('you register your own profile, without GPS (ADR 0003)', async () => {
     await assertSucceeds(setDoc(doc(as('u1'), 'donors/u1'), donor()));

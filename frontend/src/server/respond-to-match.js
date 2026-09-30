@@ -6,7 +6,7 @@
 // family (FR-NOTIFY-003).
 import { FieldValue } from 'firebase-admin/firestore';
 import { HttpsError } from './https-error.js';
-import { buildMessage, sendAll } from './push.js';
+import { buildMessage, fileInInbox, inboxEntry, sendAll } from './push.js';
 import { boardId } from './board-id.js';
 import { docId } from './ids.js';
 
@@ -146,30 +146,47 @@ export async function handleMatchAnswered({
     });
     if (!request) return { outcome: 'already-handled' };
 
-    // AcceptanceNotifier: the creator, if they have a token. A portal-created request or a
-    // requester who declined push has none, and that is not an error.
-    const requester = await db.doc(`users/${request.createdBy}`).get();
+    // AcceptanceNotifier: the creator. A portal-created request, or a creator who deleted
+    // their account, has nobody to tell.
+    const requester = request.createdBy ? await db.doc(`users/${request.createdBy}`).get() : null;
+    if (!requester?.exists) return { outcome: 'accepted', pushed: 0 };
+
+    const about = {
+        language: requester.get('language'),
+        requestId: after.requestId,
+        patientBloodType: request.patientBloodType,
+        hospitalName:
+            request.hospital?.name ??
+            (await db.doc(`hospitals/${request.hospitalId}`).get()).get('name') ??
+            '',
+    };
+    // One entry per acceptance, keyed on the board row's id — the same opaque id the public
+    // board already shows, so the requester's inbox names no donor either.
+    await fileInInbox(
+        db,
+        [
+            {
+                uid: request.createdBy,
+                entry: inboxEntry('DONOR_ACCEPTED', {
+                    ...about,
+                    id: `DONOR_ACCEPTED_${boardRef.id}`,
+                }),
+            },
+        ],
+        log,
+    );
+
+    // A requester who declined push has no token, and that is not an error.
     const token = requester.get('fcmToken');
     if (!token) {
         log.info(`requester of ${after.requestId} has no FCM token; acceptance not pushed`);
         return { outcome: 'accepted', pushed: 0 };
     }
-
-    const hospitalName =
-        request.hospital?.name ??
-        (await db.doc(`hospitals/${request.hospitalId}`).get()).get('name') ??
-        '';
     try {
         const { sent, dead } = await sendAll(messaging, [
             {
                 uid: request.createdBy,
-                message: buildMessage('DONOR_ACCEPTED', {
-                    token,
-                    language: requester.get('language'),
-                    requestId: after.requestId,
-                    patientBloodType: request.patientBloodType,
-                    hospitalName,
-                }),
+                message: buildMessage('DONOR_ACCEPTED', { ...about, token }),
             },
         ]);
         if (dead.length) await requester.ref.update({ fcmToken: null });

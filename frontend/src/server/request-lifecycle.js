@@ -16,7 +16,7 @@ import {
     phnomPenhDate,
     selectCandidates,
 } from './matching.js';
-import { buildMessage, sendAll } from './push.js';
+import { buildMessage, fileInInbox, inboxEntry, sendAll } from './push.js';
 
 /**
  * @param {object} deps
@@ -163,6 +163,25 @@ export async function handleRequestApproved({
             }),
         }));
 
+    // Every matched donor gets the inbox copy, token or not: a donor who turned
+    // notifications off still finds the alert under the bell.
+    await fileInInbox(
+        db,
+        users
+            .filter((u) => u.exists)
+            .map((u) => ({
+                uid: u.id,
+                entry: inboxEntry('REQUEST_ALERT', {
+                    id: `REQUEST_ALERT_${requestId}`,
+                    language: u.get('language'),
+                    requestId,
+                    patientBloodType: request.patientBloodType,
+                    hospitalName: hospital.name,
+                }),
+            })),
+        log,
+    );
+
     let sent = [];
     let dead = [];
     try {
@@ -220,22 +239,33 @@ export async function notifyRequester({
     alerted,
     log = console,
 }) {
+    // A portal-created request, or one whose creator deleted their account, has nobody to tell.
+    if (!request.createdBy) return 0;
     const requester = await db.doc(`users/${request.createdBy}`).get();
+    if (!requester.exists) return 0;
+    const about = {
+        language: requester.get('language'),
+        requestId,
+        patientBloodType: request.patientBloodType,
+        hospitalName: hospitalName ?? request.hospital?.name ?? '',
+        alerted,
+    };
+    // Approved and rejected are each decided once per request, so the type and request name it.
+    await fileInInbox(
+        db,
+        [
+            {
+                uid: request.createdBy,
+                entry: inboxEntry(type, { ...about, id: `${type}_${requestId}` }),
+            },
+        ],
+        log,
+    );
     const token = requester.get('fcmToken');
     if (!token) return 0;
     try {
         const { sent, dead } = await sendAll(messaging, [
-            {
-                uid: request.createdBy,
-                message: buildMessage(type, {
-                    token,
-                    language: requester.get('language'),
-                    requestId,
-                    patientBloodType: request.patientBloodType,
-                    hospitalName: hospitalName ?? request.hospital?.name ?? '',
-                    alerted,
-                }),
-            },
+            { uid: request.createdBy, message: buildMessage(type, { ...about, token }) },
         ]);
         if (dead.length) await requester.ref.update({ fcmToken: null });
         return sent.length;

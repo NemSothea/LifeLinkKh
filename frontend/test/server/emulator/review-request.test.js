@@ -132,6 +132,10 @@ describe('reviewRequest', () => {
             data: { type: 'REQUEST_REJECTED', requestId: 'r1' },
         });
         expect(JSON.stringify(sent[0].notification)).not.toContain('record');
+        // The inbox copy keeps the reason off the phone too — the request screen shows it.
+        const inbox = await db.collection('users/family/notifications').get();
+        expect(inbox.docs.map((d) => d.id)).toEqual(['REQUEST_REJECTED_r1']);
+        expect(JSON.stringify(inbox.docs[0].data())).not.toContain('record');
     });
 
     test('a request that is not PENDING cannot be reviewed — the second admin to click loses', async () => {
