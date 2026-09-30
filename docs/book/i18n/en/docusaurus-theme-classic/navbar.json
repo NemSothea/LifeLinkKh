@@ -1,0 +1,22 @@
+{
+  "title": {
+    "message": "LifeLink KH",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "LifeLink KH",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.សៀវភៅណែនាំ": {
+    "message": "Handbook",
+    "description": "Navbar item with label សៀវភៅណែនាំ"
+  },
+  "item.label.គេហទំព័រ": {
+    "message": "Portal",
+    "description": "Navbar item with label គេហទំព័រ"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

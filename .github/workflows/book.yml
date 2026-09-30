@@ -1,0 +1,64 @@
+# Owned by Tech Lead. The handbook (docs/book/, Docusaurus, Khmer + English) on GitHub Pages:
+# https://nemsothea.github.io/LifeLinkKh/
+#
+# A PR that touches the book only builds it — the build fails on any broken link. A push to the
+# default branch builds and deploys. docs/decisions.md and the ADRs are inputs too: the
+# "Decisions" chapter is generated from them on every build.
+name: book
+on:
+  push:
+    branches: [feat/firebase-backend]
+    paths:
+      - docs/book/**
+      - docs/decisions.md
+      - docs/tech-lead/adr/**
+      - .github/workflows/book.yml
+  pull_request:
+    paths:
+      - docs/book/**
+      - docs/decisions.md
+      - docs/tech-lead/adr/**
+      - .github/workflows/book.yml
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: book-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: docs/book/package-lock.json
+      # `npm install`, not `npm ci`: the lockfile is generated on macOS and omits Linux-only
+      # optional packages (same reason as ci.yml).
+      - working-directory: docs/book
+        run: npm install --no-audit --no-fund
+      - working-directory: docs/book
+        run: npm run build
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/book/build
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

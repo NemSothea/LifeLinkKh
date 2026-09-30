@@ -1,0 +1,7 @@
+node_modules/
+build/
+.docusaurus/
+.cache-loader/
+# Generated from ../decisions.md and ../tech-lead/adr/ by scripts/gen-decisions.mjs on every build.
+docs/decisions.md
+i18n/en/docusaurus-plugin-content-docs/current/decisions.md

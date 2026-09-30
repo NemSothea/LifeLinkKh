@@ -1,0 +1,28 @@
+/* Same brand red and the same Inter + Kantumruy Pro pairing as the app and the portal. */
+:root {
+    --ifm-color-primary: #c8102e;
+    --ifm-color-primary-dark: #b40e29;
+    --ifm-color-primary-darker: #aa0d27;
+    --ifm-color-primary-darkest: #8c0b20;
+    --ifm-color-primary-light: #dc1233;
+    --ifm-color-primary-lighter: #e51535;
+    --ifm-color-primary-lightest: #ee3553;
+    --ifm-font-family-base: 'Inter', 'Kantumruy Pro', system-ui, sans-serif;
+    --ifm-heading-font-family: 'Inter', 'Kantumruy Pro', system-ui, sans-serif;
+    --ifm-code-font-size: 95%;
+}
+
+[data-theme='dark'] {
+    --ifm-color-primary: #ff5c6f;
+    --ifm-color-primary-dark: #ff3e54;
+    --ifm-color-primary-darker: #ff2f47;
+    --ifm-color-primary-darkest: #f5001d;
+    --ifm-color-primary-light: #ff7a8a;
+    --ifm-color-primary-lighter: #ff8997;
+    --ifm-color-primary-lightest: #ffb6bf;
+}
+
+/* Khmer script needs more line height than Latin, or stacked vowels and subscripts collide. */
+html[lang='km'] body {
+    line-height: 1.85;
+}

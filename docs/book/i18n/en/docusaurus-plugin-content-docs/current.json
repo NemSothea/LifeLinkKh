@@ -1,0 +1,14 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.book.category.ការប្រើកម្មវិធី": {
+    "message": "Using the app",
+    "description": "The label for category 'ការប្រើកម្មវិធី' in sidebar 'book'"
+  },
+  "sidebar.book.category.ការអភិវឌ្ឍ LifeLink": {
+    "message": "Building LifeLink",
+    "description": "The label for category 'ការអភិវឌ្ឍ LifeLink' in sidebar 'book'"
+  }
+}

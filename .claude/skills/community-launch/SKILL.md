@@ -252,7 +252,8 @@ public board, with donor names) is indexed.
 built-in i18n with a `km` locale, versioned docs, free deploy to GitHub Pages via Actions.
 Adding it is a new dependency tree under `docs/book/` only — ask before `npx create-docusaurus`.
 
-**Table of contents** (`docs/book/docs/` en, `docs/book/i18n/km/...` km)
+**Table of contents** (`docs/book/docs/` = **km**, the default locale; `docs/book/i18n/en/docusaurus-plugin-content-docs/current/` = en).
+Chapter 7 is generated from `docs/decisions.md` + the ADRs by `docs/book/scripts/gen-decisions.mjs` on every build.
 1. What LifeLink KH is / LifeLink KH ជាអ្វី
 2. User guide — donors: register, alerts, accept/decline, history, 56-day eligibility
 3. User guide — requesters: post a request, admin review (DEC-015), when help is coming

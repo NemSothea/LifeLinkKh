@@ -1,0 +1,38 @@
+{
+  "link.title.LifeLink KH": {
+    "message": "LifeLink KH",
+    "description": "The title of the footer links column with title=LifeLink KH in the footer"
+  },
+  "link.title.សហគមន៍": {
+    "message": "Community",
+    "description": "The title of the footer links column with title=សហគមន៍ in the footer"
+  },
+  "link.item.label.គេហទំព័រ": {
+    "message": "Portal",
+    "description": "The label of footer link with label=គេហទំព័រ linking to https://lifelinkkh.vercel.app/km"
+  },
+  "link.item.label.ទាញយកកម្មវិធី": {
+    "message": "Download the app",
+    "description": "The label of footer link with label=ទាញយកកម្មវិធី linking to https://lifelinkkh.vercel.app/km/download"
+  },
+  "link.item.label.របៀបរកឈាមសម្រាប់អ្នកជំងឺ": {
+    "message": "How getting blood works",
+    "description": "The label of footer link with label=របៀបរកឈាមសម្រាប់អ្នកជំងឺ linking to https://lifelinkkh.vercel.app/km/getting-blood"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/NemSothea/LifeLinkKh"
+  },
+  "link.item.label.Discussions": {
+    "message": "Discussions",
+    "description": "The label of footer link with label=Discussions linking to https://github.com/NemSothea/LifeLinkKh/discussions"
+  },
+  "link.item.label.កិច្ចការសម្រាប់អ្នកថ្មី": {
+    "message": "Good first issues",
+    "description": "The label of footer link with label=កិច្ចការសម្រាប់អ្នកថ្មី linking to https://github.com/NemSothea/LifeLinkKh/labels/good%20first%20issue"
+  },
+  "copyright": {
+    "message": "LifeLink KH helps connect donors and patients. It does not replace the National Blood Transfusion Center or medical advice. · Text CC BY 4.0 · code Apache-2.0 — LifeLink KH contributors",
+    "description": "The footer copyright"
+  }
+}

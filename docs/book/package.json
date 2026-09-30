@@ -1,0 +1,37 @@
+{
+    "name": "lifelink-book",
+    "version": "0.0.0",
+    "private": true,
+    "description": "LifeLink KH handbook — Khmer and English. Docusaurus site published to GitHub Pages.",
+    "engines": {
+        "node": ">=22"
+    },
+    "scripts": {
+        "decisions": "node scripts/gen-decisions.mjs",
+        "start": "npm run decisions && docusaurus start",
+        "start:en": "npm run decisions && docusaurus start --locale en",
+        "build": "npm run decisions && docusaurus build",
+        "serve": "docusaurus serve",
+        "clear": "docusaurus clear",
+        "write-translations": "docusaurus write-translations --locale en"
+    },
+    "dependencies": {
+        "@docusaurus/core": "3.10.2",
+        "@docusaurus/preset-classic": "3.10.2",
+        "@mdx-js/react": "^3.1.0",
+        "clsx": "^2.1.1",
+        "prism-react-renderer": "^2.4.1",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0"
+    },
+    "devDependencies": {
+        "@docusaurus/module-type-aliases": "3.10.2",
+        "@docusaurus/tsconfig": "3.10.2",
+        "@docusaurus/types": "3.10.2",
+        "typescript": "~5.8.0"
+    },
+    "browserslist": {
+        "production": [">0.5%", "not dead", "not op_mini all"],
+        "development": ["last 3 chrome version", "last 3 firefox version", "last 5 safari version"]
+    }
+}
