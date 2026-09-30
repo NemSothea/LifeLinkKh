@@ -176,8 +176,8 @@ never hard-code `[DOMAIN]`.
 - [ ] `alternates`: `canonical` = own locale URL; `languages: { km, en, 'x-default': km URL }`.
 - [ ] `frontend/src/app/sitemap.ts` — public routes × both locales with `alternates.languages`;
       no `/portal`, `/sign-in`, `/api`. Request-board detail pages only if they carry no personal data.
-- [ ] `frontend/src/app/robots.ts` — allow `/`, disallow `/*/sign-in`, `/api/` and admin-only sub-pages
-      (`/*/portal/dashboard`, `/*/portal/password`, `/*/portal/app-version`);
+- [ ] `frontend/src/app/robots.ts` — allow `/`, disallow `/api/` only. **Never disallow a `noindex`
+      page**: a crawler refused the page never reads the tag and can still list the bare URL;
       point to the sitemap.
 - [ ] `robots: { index: false, follow: false }` in metadata for `/sign-in` and the admin-only `/portal/*`
       sub-pages (belt and braces with robots.ts).
@@ -187,9 +187,9 @@ never hard-code `[DOMAIN]`.
       `WebSite` (with `inLanguage` km/en), and on `/download` a `MobileApplication`
       (`operatingSystem: Android`, `applicationCategory: HealthApplication`, `offers.price: 0`,
       `downloadUrl` → GitHub Release). No `aggregateRating` — we have no real ratings.
-- [ ] Open Graph + Twitter per locale: `[locale]/opengraph-image.tsx` via `next/og`, loading the
-      Kantumruy Pro TTF so Khmer renders (not tofu boxes); `twitter:card summary_large_image`;
-      `og:locale` `km_KH` / `en_US`. Keep `opengraph-image.alt.txt` bilingual.
+- [ ] Open Graph + Twitter: `og:locale` `km_KH` / `en_US`, `twitter:card summary_large_image`. The
+      existing `app/opengraph-image.png` is bilingual with correct Khmer, so keep it, but **restate it in
+      every page's `openGraph.images`**: a page that sets `openGraph` drops the file-convention image.
 - [ ] Fonts: already self-hosted by `next/font` with `display: swap` — confirm Khmer subset is
       preloaded on Khmer pages and no layout shift on swap.
 - [ ] `<html lang>` already set per locale — keep it.
