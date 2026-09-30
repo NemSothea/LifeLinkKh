@@ -65,16 +65,31 @@ case "$target" in
             echo "❌ no physical Android device on adb. Cable in, USB debugging on, accept the prompt."
             exit 1
         fi
-        # With the emulator, the phone's own 127.0.0.1:8081 tunnels to this Mac's :8081, and
-        # :3000 to the local portal, whose functions the app calls (ADR 0010).
+        # The portal goes through `adb reverse`: the phone's own 127.0.0.1:3000 tunnels to this
+        # Mac's :3000, whose functions the app calls (ADR 0010).
+        #
+        # Firestore cannot. cloud_firestore on Android rewrites an emulator host of 127.0.0.1 or
+        # localhost to 10.0.2.2 — the Android *emulator's* alias for the host — and on a real
+        # phone 10.0.2.2 is nowhere: every read hangs and sign-in fails as "no connection"
+        # (found 2026-09-30). So a cabled phone reaches the Firestore emulator the way a real
+        # iPhone does, by this Mac's LAN IP, on the same Wi-Fi, with `npm run emulators:app:lan`.
         if $use_emulator; then
-            "$adb" -s "$device" reverse tcp:8081 tcp:8081 >/dev/null
+            host_ip="${LAN_IP:-$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)}"
+            if [ -z "$host_ip" ]; then
+                echo "❌ could not find this Mac's LAN IP. Set it: LAN_IP=192.168.x.y bash scripts/demo-mobile.sh usb ..."
+                exit 1
+            fi
+            if ! curl -fsS --max-time 3 "http://$host_ip:8081/" >/dev/null 2>&1; then
+                echo "❌ Firestore emulator not reachable at $host_ip:8081 — it only listens on 127.0.0.1."
+                echo "   Restart it in firebase/ with: npm run emulators:app:lan"
+                exit 1
+            fi
             "$adb" -s "$device" reverse tcp:3000 tcp:3000 >/dev/null
-            echo "📱 phone: $device (adb reverse tcp:8081, tcp:3000 → host)"
+            echo "📱 phone: $device (Firestore at $host_ip:8081, adb reverse tcp:3000 → portal)"
         else
             echo "📱 phone: $device"
         fi
-        firestore="127.0.0.1:8081"
+        firestore="${host_ip:-}:8081"
         portal="http://127.0.0.1:3000"
         ;;
     ios)

@@ -79,7 +79,7 @@ FIRESTORE_EMULATOR_HOST=127.0.0.1:8081 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:909
 
 ```bash
 bash scripts/demo-mobile.sh emulator --firestore-emulator   # donor — Android AVD, boots it, cycles airplane mode
-bash scripts/demo-mobile.sh usb --firestore-emulator        # physical Android on a cable (adb reverse tcp:8081)
+bash scripts/demo-mobile.sh usb --firestore-emulator        # physical Android on a cable — Firestore by LAN IP (emulators:app:lan), portal by adb reverse
 bash scripts/demo-mobile.sh ios --firestore-emulator        # simulator — no push, never the donor
 bash scripts/demo-mobile.sh iphone --firestore-emulator     # real iPhone (optional name/UDID) — no push, never the donor
 ```
