@@ -88,10 +88,12 @@ An iPhone on iOS 26, as a device build (DEC-006 — no App Store). Same screens,
 
 | | | |
 |---|---|---|
-| ![The intro on iPhone](docs/assets/screens/ios-intro-km.png) | ![An alert on iPhone](docs/assets/screens/ios-alert-km.png) | ![The Me tab on iPhone](docs/assets/screens/ios-me-km.png) |
-| **The intro**, on first launch. | **One alert**, with Accept and Decline. | **Me**, with the generated avatar. |
-| ![Choosing an avatar on iPhone](docs/assets/screens/ios-avatar-km.png) | ![Home in English on iPhone](docs/assets/screens/ios-home-en.png) | ![Signing out on iPhone](docs/assets/screens/ios-signing-out-km.png) |
-| **The avatar picker.** | **Home in English.** | **Signing out** — a spinner and "Signing out…" while it clears the phone. |
+| ![Sign-in on iPhone](docs/assets/screens/ios-signin-km.png) | ![The intro on iPhone](docs/assets/screens/ios-intro-km.png) | ![Home on iPhone](docs/assets/screens/ios-home-km.png) |
+| **Sign-in.** Google or Facebook — Facebook through Limited Login on iOS. | **The intro**, on first launch. | **Home**, eligible, four requests nearby. |
+| ![An alert on iPhone](docs/assets/screens/ios-alert-km.png) | ![History on iPhone](docs/assets/screens/ios-history-km.png) | ![Profile on iPhone](docs/assets/screens/ios-profile-km.png) |
+| **One alert**, with Accept and Decline. | **History and the cooldown.** | **Profile.** |
+| ![Me on iPhone](docs/assets/screens/ios-me-km.png) | ![Choosing an avatar on iPhone](docs/assets/screens/ios-avatar-km.png) | ![Home in English on iPhone](docs/assets/screens/ios-home-en.png) |
+| **Me**, with the generated avatar. | **The avatar picker**, female faces. | **Home in English.** |
 
 ---
 

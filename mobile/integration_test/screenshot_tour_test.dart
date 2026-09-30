@@ -17,7 +17,9 @@ import 'package:integration_test/integration_test.dart';
 import 'package:lifelink_kh/main.dart' as app;
 
 void main() {
-    IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+    // Real touches reach the app: the Google sign-in step is a person's, and the test binding
+    // swallows device taps by default.
+    IntegrationTestWidgetsFlutterBinding.ensureInitialized().shouldPropagateDevicePointerEvents = true;
 
     testWidgets('screenshot tour', (tester) async {
         // The app installs its own crash handlers; hand the test's back at the end.
@@ -58,16 +60,29 @@ void main() {
         );
 
         await app.main();
-        // A fresh install or a sign-out shows the intro first; skip past it.
-        await hold(6);
-        if (find.text('រំលង').evaluate().isNotEmpty) {
-            await tester.tap(find.text('រំលង'));
-            await tester.pump(const Duration(milliseconds: 600));
+        // Startup, whatever it lands on. Signed out: the intro, then the sign-in screen — each
+        // held for a picture — then a person signs in (Google cannot be driven from here)
+        // while this waits. Signed in: straight to Home.
+        final home = find.byKey(const Key('dashboard-tab-home'));
+        final skip = find.text('រំលង');
+        final signIn = find.byKey(const Key('sign-in-google'));
+        var heldSignIn = false;
+        final deadline = DateTime.now().add(const Duration(minutes: 4));
+        while (home.evaluate().isEmpty) {
+            if (DateTime.now().isAfter(deadline)) throw StateError('never reached Home');
+            if (skip.evaluate().isNotEmpty) {
+                await hold(4);
+                await tester.tap(skip);
+                await tester.pump(const Duration(milliseconds: 600));
+            } else if (signIn.evaluate().isNotEmpty && !heldSignIn) {
+                await hold(6);
+                heldSignIn = true;
+                // ignore: avoid_print
+                print('TOUR: sign in on the phone now');
+            }
+            await Future<void>.delayed(const Duration(milliseconds: 500));
+            await tester.pump();
         }
-        if (find.byKey(const Key('sign-in-google')).evaluate().isNotEmpty) {
-            throw StateError('Signed out — sign in on the phone once, then run the tour again.');
-        }
-        await waitFor(find.byKey(const Key('dashboard-tab-home')));
         await waitFor(alert); // Home is only worth a picture once the alerts are in
         await hold(3);
 
