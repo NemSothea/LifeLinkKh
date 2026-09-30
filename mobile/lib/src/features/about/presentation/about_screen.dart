@@ -69,6 +69,17 @@ class AboutScreen extends ConsumerWidget {
                                 color: theme.colorScheme.onSurfaceVariant,
                             ),
                         ),
+                        const SizedBox(height: 8),
+                        // DEC-019: the app never presents itself as the NBTC. Same words as
+                        // the portal footer.
+                        Text(
+                            l10n.aboutDisclaimer,
+                            key: const Key('about-disclaimer'),
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                        ),
                         const SizedBox(height: 24),
                         _SectionTitle(l10n.aboutMadeByTitle),
                         Card(

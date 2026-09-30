@@ -1152,6 +1152,10 @@
     "@aboutPurpose": {
         "description": "About screen: one-line statement of what the app is for"
     },
+    "aboutDisclaimer": "LifeLink KH helps connect donors and patients. It does not replace the National Blood Transfusion Center or medical advice.",
+    "@aboutDisclaimer": {
+        "description": "About screen, under the purpose line: medical disclaimer (DEC-019). Same text as the portal footer, app.disclaimer"
+    },
     "aboutMadeByTitle": "Who made LifeLink",
     "@aboutMadeByTitle": {
         "description": "About screen section heading"

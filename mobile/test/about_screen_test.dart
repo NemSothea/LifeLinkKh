@@ -160,6 +160,29 @@ void main() {
     });
 
     group('About screen', () {
+        for (final (locale, text) in [
+            (
+                'en',
+                'LifeLink KH helps connect donors and patients. It does not replace the '
+                    'National Blood Transfusion Center or medical advice.',
+            ),
+            (
+                'km',
+                'LifeLink KH ជួយភ្ជាប់អ្នកបរិច្ចាគឈាម និងអ្នកជំងឺ។ '
+                    'វាមិនជំនួសមជ្ឈមណ្ឌលជាតិផ្តល់ឈាម ឬដំបូន្មានវេជ្ជសាស្ត្រឡើយ។',
+            ),
+        ]) {
+            testWidgets('shows the medical disclaimer (DEC-019) — $locale', (tester) async {
+                await pumpApp(tester, locale: Locale(locale));
+                await tester.tap(find.byKey(const Key('sign-in-about')));
+                await tester.pumpAndSettle();
+
+                final disclaimer = find.byKey(const Key('about-disclaimer'));
+                expect(disclaimer, findsOneWidget);
+                expect(tester.widget<Text>(disclaimer).data, text);
+            });
+        }
+
         testWidgets('answers each question with a string the app already shows',
             (tester) async {
             await pumpApp(tester, locale: const Locale('en'));
