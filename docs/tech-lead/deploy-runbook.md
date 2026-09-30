@@ -20,10 +20,10 @@ Closes the gap named in `docs/risks.md` ("no deploy runbook exists") and `docs/s
 
 LifeLink is **not on the Play Store until it has 500 users**, so that users pay nothing and the
 team pays nothing. Android users open the portal's `/km/download` page and install a signed APK by
-hand. The file itself lives on the **K.O.S.I.G.N store** (`https://kosignstore.wecambodia.com/`)
-— `APK_DOWNLOAD_URL` on Vercel points the page's button at LifeLink's page there — or, if that
-variable is unset, on GitHub Releases. Everything below "Path B" is kept for
-the day that decision changes.
+hand. The file lives on **GitHub Releases** (`…/releases/latest/download/lifelink-kh.apk`, the
+page's default link), with `lifelink-kh.apk.sha256` next to it. The K.O.S.I.G.N store is no longer
+used (2026-09-30); `APK_DOWNLOAD_URL` stays unset on Vercel, and should only be set if the host
+changes again. Everything below "Path B" is kept for the day the Play Store decision changes.
 
 1. **Keystore, once, forever** — Step 1 below, with one difference that matters: **there is no
    Play App Signing to fall back on.** The keystore *is* the app's identity. Lose it, or its
@@ -33,6 +33,10 @@ the day that decision changes.
 2. **`key.properties`** — Step 2 below.
 3. **Register the key with Firebase** — Step 4 below, using the keystore's SHA-1 *and* SHA-256.
    Without it Google sign-in fails in the release APK with a generic error.
+   **Facebook sign-in needs the same key too:** add the release key hash to the Facebook app
+   (developers.facebook.com → the LifeLink app → Settings → Basic → Android → Key hashes).
+   `keytool -exportcert -alias lifelinkkh-upload -keystore ~/lifelinkkh-upload.jks | openssl sha1
+   -binary | openssl base64` prints it. Without it the release APK's Facebook button fails.
 4. **The real project is live** — Step 5 below (production checklist Parts A–C, and the portal on
    Vercel with its `/download` page).
 5. **Bump the version** in `mobile/pubspec.yaml` for every release: `version: 1.0.1+2`. The `+N`
@@ -42,12 +46,12 @@ the day that decision changes.
    file and certificate SHA-256.
 7. **Try it on a real phone** — install over an older build if you have one, sign in, open the
    Me tab.
-8. **Publish:** upload `dist/lifelink-kh.apk` to the K.O.S.I.G.N store as the new LifeLink
-   version. The first time, set `APK_DOWNLOAD_URL` on Vercel to LifeLink's page on the store and
-   redeploy the portal. *Fallback, no store:* `gh release create v<name> dist/lifelink-kh.apk
-   --title "LifeLink <name>"` — keep the asset name `lifelink-kh.apk`, since the page's default
-   link is `…/releases/latest/download/lifelink-kh.apk` (the repository is public, so it works
-   without a GitHub login).
+8. **Publish** on GitHub Releases, with release notes from
+   [`docs/community/release-notes-template.md`](../community/release-notes-template.md):
+   `gh release create v<name> dist/lifelink-kh.apk dist/lifelink-kh.apk.sha256 --title
+   "LifeLink <name>" --notes-file <notes.md>`. Keep both asset names: the page's button and its
+   "SHA-256 fingerprint" link are `…/releases/latest/download/lifelink-kh.apk` and `….sha256`.
+   The repository is public, so both work without a GitHub login.
 9. **Tell installed apps:** on the portal, **App version** tab (admin only): version name, build
    number, minimum build, download link, and optional "what's new" in English and Khmer — then
    **Publish**. Raising the minimum asks for confirmation first. Or from a terminal:
@@ -61,7 +65,7 @@ the day that decision changes.
    document; the portal goes through its own `setAppConfig` function (ADR 0010), so it is live
    as soon as the portal is deployed — nothing to deploy on Firebase.
 
-Costs nothing: the company store and GitHub Releases are free to LifeLink, and `config/app` is
+Costs nothing: GitHub Releases is free for a public repository, and `config/app` is
 one Firestore read per app start or resume.
 
 ---

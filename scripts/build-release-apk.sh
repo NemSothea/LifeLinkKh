@@ -44,7 +44,10 @@ mkdir -p dist
 cp mobile/build/app/outputs/flutter-apk/app-release.apk dist/lifelink-kh.apk
 echo
 echo "✅ dist/lifelink-kh.apk ($(du -h dist/lifelink-kh.apk | cut -f1))"
-echo "   file SHA-256: $(shasum -a 256 dist/lifelink-kh.apk | cut -d' ' -f1)"
+# Published next to the APK so anyone can check the download (the portal's /download links it).
+# `shasum -c` format, relative name, so `cd` to the download folder and run it there.
+(cd dist && shasum -a 256 lifelink-kh.apk > lifelink-kh.apk.sha256)
+echo "   file SHA-256: $(cut -d' ' -f1 dist/lifelink-kh.apk.sha256)  (dist/lifelink-kh.apk.sha256)"
 cert=$(keytool -printcert -jarfile dist/lifelink-kh.apk 2>/dev/null | sed -n 's/^[[:space:]]*SHA256: //p' | head -1)
 echo "   signing certificate SHA-256: ${cert:-<keytool could not read it>}"
 if keytool -printcert -jarfile dist/lifelink-kh.apk 2>/dev/null | grep -q "CN=Android Debug"; then
@@ -57,12 +60,12 @@ cat <<NEXT
 Next, in this order:
   1. Install dist/lifelink-kh.apk on a real phone and sign in with Google.
      (Sign-in fails → the release SHA-1 is not in Firebase: deploy-runbook Step 4.)
-  2. Upload it where users download it — one of:
-       • the K.O.S.I.G.N store: https://kosignstore.wecambodia.com/ (upload dist/lifelink-kh.apk
-         as LifeLink $name). Set APK_DOWNLOAD_URL on Vercel to LifeLink's page there, once.
-       • GitHub Releases, the fallback the download page uses when APK_DOWNLOAD_URL is unset —
-         the asset name must stay lifelink-kh.apk:
-           gh release create v$name dist/lifelink-kh.apk --title "LifeLink $name" --notes "…"
+  2. Publish it on GitHub Releases, where the portal's /download button points. Keep the asset
+     names exactly as they are — the page links …/releases/latest/download/lifelink-kh.apk
+     and its .sha256 file:
+       gh release create v$name dist/lifelink-kh.apk dist/lifelink-kh.apk.sha256 \
+           --title "LifeLink $name" --notes-file <notes.md>
+     Notes template, Khmer and English: docs/community/release-notes-template.md.
   3. Tell installed apps about it (after the upload, never before):
        cd firebase && npm run release -- --version-code $code --version-name $name \
            --download-url https://<portal>/km/download --project lifelinkkh

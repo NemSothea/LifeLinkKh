@@ -9,7 +9,7 @@ const sidebars: SidebarsConfig = {
             type: 'category',
             label: 'ការប្រើកម្មវិធី',
             collapsed: false,
-            items: ['donor-guide', 'requester-guide', 'faq'],
+            items: ['install', 'donor-guide', 'requester-guide', 'faq'],
         },
         {
             type: 'category',

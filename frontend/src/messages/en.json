@@ -263,7 +263,13 @@
         "updatesBody": "The app tells you when a new version is available. Come back to this page, download it again and install it over the old one — you stay signed in and keep your history.",
         "iphone": "iPhone: not available yet.",
         "backCta": "Back to LifeLink",
-        "metaDescription": "Download the free LifeLink KH app for Android. Register as a blood donor in Phnom Penh, or ask for blood for your family."
+        "metaDescription": "Download the free LifeLink KH app for Android. Register as a blood donor in Phnom Penh, or ask for blood for your family.",
+        "qrAlt": "QR code that opens this download page on your phone",
+        "qrBody": "On a computer? Scan this with your phone's camera to open this page there, then tap Download.",
+        "verifyHeading": "Check the file (optional)",
+        "verifyBody": "Every release publishes the SHA-256 fingerprint of the APK. If it matches the file you downloaded, the file is exactly the one we built.",
+        "verifyChecksumCta": "SHA-256 fingerprint",
+        "releaseNotesCta": "What's new in this version"
     },
     "dashboard": {
         "tabRequests": "Requests",
