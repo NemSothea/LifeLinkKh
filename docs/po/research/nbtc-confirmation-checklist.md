@@ -7,6 +7,7 @@ turns them into facts. Phase 2 of DEC-019 (the cooldown rule) waits on answers 1
 **Where:** NBTC, Yothapol Khemarak Phoumin Blvd (St 271, corner of St 187), next to
 Khmer-Soviet Friendship Hospital, Phnom Penh. Phone reported in 2016 as 092 998 000 /
 093 998 000 — check it is still current. Facebook: "Cambodia Blood Service".
+Letter to send first: [`nbtc-letter.md`](nbtc-letter.md).
 
 ## Ask the NBTC
 
