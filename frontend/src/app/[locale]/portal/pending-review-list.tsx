@@ -128,7 +128,7 @@ function PendingRow({
                             urgency={request.urgency}
                             label={copy.urgency[request.urgency] ?? request.urgency}
                         />
-                        <span className="text-foreground/75">{copy.unitsLabel[request.id]}</span>
+                        <span className="text-foreground">{copy.unitsLabel[request.id]}</span>
                         <RelativeTime
                             iso={request.createdAt}
                             className="text-muted-foreground tabular-nums"
@@ -141,7 +141,7 @@ function PendingRow({
                         </p>
                     ) : null}
                     {request.contactName || request.contactPhone ? (
-                        <p className="mt-1 text-foreground/75">
+                        <p className="mt-1 text-foreground">
                             {copy.contactLabel}: {request.contactName}
                         </p>
                     ) : null}

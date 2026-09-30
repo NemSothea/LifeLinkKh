@@ -71,7 +71,7 @@ export default async function SignInPage({ params }: { params: Promise<{ locale:
                 </div>
             ) : null}
 
-            <p className="mt-8 text-xs text-black/60 dark:text-white/60">{t('noSelfSignup')}</p>
+            <p className="mt-8 text-xs text-muted-foreground">{t('noSelfSignup')}</p>
             <div className="mt-4">
                 <LegalLinks locale={locale} />
             </div>

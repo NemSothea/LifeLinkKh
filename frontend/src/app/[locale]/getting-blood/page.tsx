@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import PillLink from '@/components/PillLink';
 import { IconArrowLeft } from '@/components/icons';
 import PageHeader from '@/components/PageHeader';
+import Highlight from '@/components/Highlight';
 
 /**
  * "How getting blood works" — DEC-019. Public, for families first and donors second.
@@ -28,7 +29,9 @@ export default async function GettingBloodPage({
         <main className="mx-auto max-w-2xl p-6 sm:p-10" data-testid="getting-blood">
             <PageHeader locale={locale} title={t('title')} subtitle={t('subtitle')} />
 
-            <p className="mb-8 text-base text-foreground/85">{t('intro')}</p>
+            <p className="mb-8 text-base text-foreground">
+                <Highlight text={t('intro')} />
+            </p>
 
             <div className="flex flex-col gap-4">
                 {sections.map((section) => (
@@ -37,9 +40,11 @@ export default async function GettingBloodPage({
                         className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm"
                     >
                         <h2 className="mb-3 text-lg font-semibold">{section.heading}</h2>
-                        <ul className="list-disc space-y-1.5 pl-5 text-sm text-foreground/85">
+                        <ul className="list-disc space-y-1.5 pl-5 text-sm text-foreground">
                             {section.items.map((item) => (
-                                <li key={item}>{item}</li>
+                                <li key={item}>
+                                    <Highlight text={item} />
+                                </li>
                             ))}
                         </ul>
                     </section>

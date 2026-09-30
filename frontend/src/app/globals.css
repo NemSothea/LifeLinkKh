@@ -27,7 +27,7 @@
     --secondary: #f4f4f5;
     --secondary-foreground: #18181b;
     --muted: #f4f4f5;
-    --muted-foreground: #52525b;
+    --muted-foreground: #3f3f46;
     --accent: #fdecec;
     --accent-foreground: #9f1d1d;
     --destructive: #b91c1c;
@@ -55,19 +55,19 @@
    WCAG AA's 4.5:1 for text, and this one clears it. Used for red text on dark. */
 .dark {
     --background: #0a0a0a;
-    --foreground: #ededed;
+    --foreground: #f4f4f5;
     --brand: #d15353;
 
     --card: #141414;
-    --card-foreground: #ededed;
+    --card-foreground: #f4f4f5;
     --popover: #141414;
-    --popover-foreground: #ededed;
+    --popover-foreground: #f4f4f5;
     --primary: #c62828;
     --primary-foreground: #ffffff;
     --secondary: #1f1f22;
-    --secondary-foreground: #ededed;
+    --secondary-foreground: #f4f4f5;
     --muted: #1f1f22;
-    --muted-foreground: #a1a1aa;
+    --muted-foreground: #c4c4cc;
     --accent: #2a1515;
     --accent-foreground: #f3b4b4;
     --destructive: #dc2626;
@@ -133,6 +133,9 @@ html:lang(km) {
 }
 html:lang(km) body {
     line-height: 1.7;
+    /* Kantumruy Pro's Khmer at 400 is hairline-thin and read as faint grey on both themes;
+       500 gives the strokes enough ink. Headings keep their own font-semibold/bold. */
+    font-weight: 500;
 }
 
 * {

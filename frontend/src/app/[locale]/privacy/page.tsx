@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import PillLink from '@/components/PillLink';
 import { IconArrowLeft, IconTrash } from '@/components/icons';
 import PageHeader from '@/components/PageHeader';
+import Highlight from '@/components/Highlight';
 import { SUPPORT_PHONE } from '@/lib/support';
 
 /**
@@ -27,20 +28,24 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
         <main className="mx-auto max-w-2xl p-6 sm:p-10">
             <PageHeader locale={locale} title={t('title')} subtitle={t('effective')} />
 
-            <p className="mb-8 text-sm text-black/80 dark:text-white/80">{t('intro')}</p>
+            <p className="mb-8 text-sm text-foreground">
+                <Highlight text={t('intro')} />
+            </p>
 
             {sections.map((section) => (
                 <section key={section.heading} className="mb-8">
                     <h2 className="mb-2 text-lg font-semibold">{section.heading}</h2>
                     {section.paragraphs?.map((p) => (
-                        <p key={p} className="mb-2 text-sm text-black/80 dark:text-white/80">
-                            {p}
+                        <p key={p} className="mb-2 text-sm text-foreground">
+                            <Highlight text={p} />
                         </p>
                     ))}
                     {section.items ? (
-                        <ul className="list-disc space-y-1 pl-5 text-sm text-black/80 dark:text-white/80">
+                        <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
                             {section.items.map((item) => (
-                                <li key={item}>{item}</li>
+                                <li key={item}>
+                                    <Highlight text={item} />
+                                </li>
                             ))}
                         </ul>
                     ) : null}
@@ -49,7 +54,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
 
             <section className="mb-8">
                 <h2 className="mb-2 text-lg font-semibold">{t('contactHeading')}</h2>
-                <p className="text-sm text-black/80 dark:text-white/80">{t('contactBody')}</p>
+                <p className="text-sm text-foreground">{t('contactBody')}</p>
                 {supportEmail ? (
                     <p className="mt-2 text-sm">
                         <a

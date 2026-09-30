@@ -38,7 +38,7 @@ export default function FulfilledList({
 
     return (
         <details data-testid="portal-fulfilled" className="group mt-10">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl text-sm font-semibold text-foreground/80 select-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl text-sm font-semibold text-foreground select-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
                 <ChevronDown
                     className="size-5 transition-transform duration-200 group-open:rotate-180"
                     aria-hidden="true"
@@ -69,7 +69,7 @@ export default function FulfilledList({
                                     <IconDroplet className="mr-0.5 -ml-0.5 h-3 w-3 opacity-70" />
                                     {row.patientBloodType}
                                 </span>
-                                <span className="text-foreground/75">{row.unitsLabel}</span>
+                                <span className="text-foreground">{row.unitsLabel}</span>
                                 {row.hospitalName ? (
                                     <span className="text-muted-foreground">
                                         {row.hospitalName}

@@ -37,7 +37,7 @@ export default async function DownloadPage({ params }: { params: Promise<{ local
         <main className="mx-auto max-w-2xl p-6 sm:p-10">
             <PageHeader locale={locale} title={t('title')} />
 
-            <p className="mb-6 text-sm text-foreground/85">{t('intro')}</p>
+            <p className="mb-6 text-sm text-foreground">{t('intro')}</p>
 
             <Button asChild size="lg" className="w-full rounded-2xl sm:w-auto">
                 <a href={apkUrl} data-testid="download-apk">

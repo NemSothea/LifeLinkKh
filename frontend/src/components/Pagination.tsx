@@ -74,7 +74,7 @@ export default function Pagination({
                         aria-label={t('previousPage')}
                         disabled={page === 1}
                         onClick={() => onChange(page - 1)}
-                        className={`${button} text-foreground/80 hover:bg-secondary`}
+                        className={`${button} text-foreground hover:bg-secondary`}
                     >
                         <ChevronLeft className="size-5" aria-hidden="true" />
                     </button>
@@ -98,7 +98,7 @@ export default function Pagination({
                                 className={`${button} ${
                                     n === page
                                         ? 'bg-primary text-primary-foreground'
-                                        : 'text-foreground/80 hover:bg-secondary'
+                                        : 'text-foreground hover:bg-secondary'
                                 }`}
                             >
                                 {n}
@@ -111,7 +111,7 @@ export default function Pagination({
                         aria-label={t('nextPage')}
                         disabled={page === totalPages}
                         onClick={() => onChange(page + 1)}
-                        className={`${button} text-foreground/80 hover:bg-secondary`}
+                        className={`${button} text-foreground hover:bg-secondary`}
                     >
                         <ChevronRight className="size-5" aria-hidden="true" />
                     </button>

@@ -62,7 +62,7 @@ export default function ThemeSwitcher() {
                 aria-expanded={open}
                 aria-label={`${t('theme')}: ${t(current.label)}`}
                 data-testid="theme-switcher-button"
-                className="flex size-11 items-center justify-center rounded-full border border-border bg-secondary/60 text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
+                className="flex size-11 items-center justify-center rounded-full border border-border bg-secondary/60 text-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
                 <CurrentIcon className="size-4" aria-hidden="true" />
             </button>
@@ -89,7 +89,7 @@ export default function ThemeSwitcher() {
                                 className={`flex min-h-11 w-full items-center gap-2 rounded-lg px-3 transition-colors ${
                                     active
                                         ? 'bg-brand/10 font-semibold text-brand'
-                                        : 'text-foreground/80 hover:bg-secondary hover:text-foreground'
+                                        : 'text-foreground hover:bg-secondary hover:text-foreground'
                                 }`}
                             >
                                 <Icon className="size-4" aria-hidden="true" />

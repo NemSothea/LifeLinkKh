@@ -50,7 +50,7 @@ export default function AccountMenuPopup({
 
     const initial = (displayName?.trim()[0] ?? '?').toUpperCase();
     const itemClass =
-        'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground';
+        'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-foreground transition-colors hover:bg-secondary hover:text-foreground';
 
     return (
         <div ref={rootRef} data-testid="account-menu" className="relative text-sm">

@@ -86,7 +86,7 @@ export default function NotificationBell({ items }: { items: AdminNotification[]
                 aria-expanded={open}
                 aria-label={t('open', { count: unseen })}
                 data-testid="notification-bell-button"
-                className="relative flex size-11 items-center justify-center rounded-full border border-border bg-secondary/60 text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
+                className="relative flex size-11 items-center justify-center rounded-full border border-border bg-secondary/60 text-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
                 <Bell className="size-5" aria-hidden="true" />
                 {unseen > 0 ? (

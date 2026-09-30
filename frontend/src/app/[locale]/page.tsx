@@ -107,7 +107,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     <IconUsers className="h-5 w-5 shrink-0 text-brand" />
                     {th('aboutHeading')}
                 </h2>
-                <p className="text-sm text-foreground/85">{th('aboutBody')}</p>
+                <p className="text-sm text-foreground">{th('aboutBody')}</p>
                 <p className="mt-3 text-sm text-muted-foreground">
                     <span className="font-medium text-foreground">{th('teamLabel')}:</span>{' '}
                     {th('team')}

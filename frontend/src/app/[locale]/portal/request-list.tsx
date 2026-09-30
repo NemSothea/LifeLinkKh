@@ -251,7 +251,7 @@ function progressStyle(request: RequestViewModel): string {
         return 'bg-emerald-600/10 text-emerald-700 dark:text-emerald-400';
     }
     if (request.acceptedCount > 0) {
-        return 'bg-black/[0.04] text-black/70 dark:bg-white/10 dark:text-white/70';
+        return 'bg-black/[0.04] text-muted-foreground dark:bg-white/10';
     }
     switch (request.urgency) {
         case 'CRITICAL':
@@ -259,7 +259,7 @@ function progressStyle(request: RequestViewModel): string {
         case 'URGENT':
             return 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300';
         default:
-            return 'bg-black/[0.04] text-black/70 dark:bg-white/10 dark:text-white/70';
+            return 'bg-black/[0.04] text-muted-foreground dark:bg-white/10';
     }
 }
 
@@ -302,7 +302,7 @@ function RequestRow({
                                 urgency={request.urgency}
                                 label={urgencyLabel(request.urgency, copy)}
                             />
-                            <span className="text-sm text-black/70 dark:text-white/70">
+                            <span className="text-sm text-muted-foreground">
                                 {request.unitsLabel}
                             </span>
                             {/* How old the request is, live. Staff triage on elapsed
@@ -310,11 +310,11 @@ function RequestRow({
                                 and rendered on none. */}
                             <RelativeTime
                                 iso={request.createdAt}
-                                className="text-sm text-black/65 tabular-nums dark:text-white/65"
+                                className="text-sm text-muted-foreground tabular-nums"
                             />
                         </div>
                         {request.hospital ? (
-                            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-black/80 dark:text-white/80">
+                            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-foreground">
                                 <IconBuilding className="h-4 w-4 text-black/40 dark:text-white/40" />
                                 {request.hospital.name}
                             </p>
@@ -357,7 +357,7 @@ function RequestRow({
                     {request.acceptedDonors.length === 0 ? (
                         <p
                             data-testid={`portal-request-${request.id}-no-donors`}
-                            className="text-sm text-black/65 dark:text-white/65"
+                            className="text-sm text-muted-foreground"
                         >
                             {copy.noAcceptedDonors}
                         </p>
@@ -375,7 +375,7 @@ function RequestRow({
                                         </span>
                                         <span className="text-sm">
                                             <span className="font-medium">{donor.displayName}</span>
-                                            <span className="text-black/65 dark:text-white/65">
+                                            <span className="text-muted-foreground">
                                                 {' · '}
                                                 {donor.bloodType}
                                                 {districtLabel(donor.districtName, locale)
@@ -386,7 +386,7 @@ function RequestRow({
                                                 and rendered for none. Staff coordinating
                                                 arrivals need to see who answered an hour
                                                 ago and still has not turned up. */}
-                                            <span className="block text-xs text-black/60 dark:text-white/60">
+                                            <span className="block text-xs text-muted-foreground">
                                                 {copy.acceptedAtLabel}{' '}
                                                 <RelativeTime iso={donor.respondedAt} />
                                             </span>

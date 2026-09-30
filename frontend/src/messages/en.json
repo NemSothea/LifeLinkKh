@@ -155,7 +155,7 @@
     "privacy": {
         "title": "Privacy policy",
         "effective": "Effective 29 September 2026",
-        "intro": "LifeLink KH connects people in Phnom Penh who urgently need blood with nearby voluntary donors. It is free, it shows no ads, and it never sells or rents your information. This page says exactly what LifeLink collects, who can see it, and how to delete it.",
+        "intro": "LifeLink KH connects people in Phnom Penh who urgently need blood with nearby voluntary donors. It is free, it shows no ads, and it **never sells or rents your information**. This page says exactly what LifeLink collects, who can see it, and how to delete it.",
         "sections": [
             {
                 "heading": "Who we are",
@@ -166,13 +166,13 @@
             {
                 "heading": "What we collect",
                 "items": [
-                    "Your account: the name and email address of the Google or Facebook account you sign in with, and your preferred language.",
-                    "If you register as a donor: your full name, blood type, district, the date you last gave blood (if you enter it), whether you are available to donate, your sex if you choose to give it (it sets how long you wait between donations), and — only if you allow it — your phone's location when you set up your donor profile.",
-                    "If you post a request for blood: the patient's blood type, how many units, how urgent, the hospital, and the contact name and phone number you enter for donors to call.",
-                    "When you answer a request: whether you accepted or declined, when, and your distance from the hospital.",
-                    "When a donation is confirmed by our admin: the date, the hospital and the request it answered.",
-                    "A notification token, so your phone can receive alerts. We do not collect your contacts, photos, messages or your location in the background, and there is no advertising or analytics tracking.",
-                    "If you report a request: the reason you chose and any note you write. Only our admin sees it, and the family is not told who sent it. If you delete your account, your account and note are removed from the report; the reason is kept."
+                    "**Your account:** the name and email address of the Google or Facebook account you sign in with, and your preferred language.",
+                    "**If you register as a donor:** your full name, blood type, district, the date you last gave blood (if you enter it), whether you are available to donate, your sex if you choose to give it (it sets how long you wait between donations), and — only if you allow it — your phone's location when you set up your donor profile.",
+                    "**If you post a request for blood:** the patient's blood type, how many units, how urgent, the hospital, and the contact name and phone number you enter for donors to call.",
+                    "**When you answer a request:** whether you accepted or declined, when, and your distance from the hospital.",
+                    "**When a donation is confirmed by our admin:** the date, the hospital and the request it answered.",
+                    "A notification token, so your phone can receive alerts. **We do not collect your contacts, photos, messages or your location in the background**, and there is no advertising or analytics tracking.",
+                    "**If you report a request:** the reason you chose and any note you write. **Only our admin sees it**, and the family is not told who sent it. If you delete your account, your account and note are removed from the report; the reason is kept."
                 ]
             },
             {
@@ -188,9 +188,9 @@
             {
                 "heading": "Who can see what",
                 "items": [
-                    "Anyone, without signing in, can see the public board: open requests (blood type, units, urgency, hospital, time) and, for each request, a shortened name (for example \"Nem S.\"), blood type and district of donors who accepted it. Requests waiting for review or rejected are not shown.",
+                    "**Anyone, without signing in,** can see the public board: open requests (blood type, units, urgency, hospital, time) and, for each request, a shortened name (for example \"Nem S.\"), blood type and district of donors who accepted it. Requests waiting for review or rejected are not shown.",
                     "A donor who accepts a request can see the requester's contact name and phone number, so they can arrange the donation. Apart from the requester and our admin, nobody else can.",
-                    "Your donor profile (blood type, sex, location, last donation) is visible only to you and our admin. Other users, including the families asking for blood, cannot see it. Matching reads it on our server.",
+                    "Your donor profile (blood type, sex, location, last donation) is **visible only to you and our admin**. Other users, including the families asking for blood, cannot see it. Matching reads it on our server.",
                     "Our admin can see everything above, to review requests, confirm donations and answer deletion requests.",
                     "Google (Firebase, sign-in, notifications), Facebook (if you sign in with it) and Vercel (the website) process data to provide their services to us. Their own privacy policies apply to what they do with it."
                 ]
@@ -204,14 +204,14 @@
             {
                 "heading": "How long we keep it, and deleting it",
                 "paragraphs": [
-                    "We keep your information while you have an account. You can delete your account at any time in the app: Me → Delete account. If you cannot use the app, see the deletion page linked below.",
-                    "Deleting your account removes your profile, blood type, location, notification token and the phone numbers on requests you posted, and your name from the public board. Your open requests are closed, and an acceptance on an open request is withdrawn. We keep records that a request was made, answered or a donation confirmed, with your name and account removed, so that statistics stay correct; these cannot be traced back to you. Deleted data can remain in our backups for up to 7 days before it is gone."
+                    "We keep your information while you have an account. You can delete your account at any time in the app: **Me → Delete account**. If you cannot use the app, see the deletion page linked below.",
+                    "Deleting your account removes your profile, blood type, location, notification token and the phone numbers on requests you posted, and your name from the public board. Your open requests are closed, and an acceptance on an open request is withdrawn. We keep records that a request was made, answered or a donation confirmed, with your name and account removed, so that statistics stay correct; these cannot be traced back to you. Deleted data can remain in our backups for **up to 7 days** before it is gone."
                 ]
             },
             {
                 "heading": "Your choices",
                 "items": [
-                    "Location is optional. You can register as a donor without it; you are then matched by district.",
+                    "**Location is optional.** You can register as a donor without it; you are then matched by district.",
                     "You can turn notifications off in your phone's settings, and mark yourself unavailable in the app at any time.",
                     "You can correct your profile in the app, and ask us for a copy of your information using the contact below."
                 ]
@@ -219,13 +219,13 @@
             {
                 "heading": "Safety",
                 "paragraphs": [
-                    "LifeLink never asks donors or families for money. Donate only at a hospital or blood center. LifeLink's count of days between donations is not medical advice; the hospital decides whether you can donate."
+                    "**LifeLink never asks donors or families for money.** **Donate only at a hospital or blood center.** LifeLink's count of days between donations is not medical advice; the hospital decides whether you can donate."
                 ]
             },
             {
                 "heading": "Age",
                 "paragraphs": [
-                    "LifeLink is for people aged 18 and over. We do not knowingly collect information from children. If you believe a child has created an account, contact us and we will delete it."
+                    "LifeLink is for people **aged 18 and over**. We do not knowingly collect information from children. If you believe a child has created an account, contact us and we will delete it."
                 ]
             },
             {
@@ -411,7 +411,7 @@
             {
                 "heading": "Any blood type can help",
                 "items": [
-                    "Relatives and friends can donate at the hospital's blood bank or at the National Blood Transfusion Center, whatever their blood type.",
+                    "Relatives and friends can donate at the hospital's blood bank or at the National Blood Transfusion Center, **whatever their blood type**.",
                     "Their blood goes into the tested stock, and the blood bank gives the patient the type they need.",
                     "Ask the hospital's blood bank how many donors they need from your family."
                 ]
@@ -419,43 +419,43 @@
             {
                 "heading": "Blood is free",
                 "items": [
-                    "By national policy, blood is free to the patient. The hospital may charge a fee for testing and processing. Ask the hospital how much.",
-                    "Never pay anyone for blood or for a donor. If someone offers to sell you blood, tell the hospital.",
-                    "LifeLink never asks for money, from families or from donors."
+                    "By national policy, **blood is free to the patient**. The hospital may charge a fee for testing and processing. Ask the hospital how much.",
+                    "**Never pay anyone for blood or for a donor.** If someone offers to sell you blood, tell the hospital.",
+                    "**LifeLink never asks for money**, from families or from donors."
                 ]
             },
             {
                 "heading": "Blood from close relatives",
                 "items": [
-                    "Do not arrange for a parent's, child's or sibling's blood to go straight to the patient. Let them donate to the blood bank. The hospital decides how blood from relatives is used."
+                    "**Do not arrange for a parent's, child's or sibling's blood to go straight to the patient.** Let them donate to the blood bank. The hospital decides how blood from relatives is used."
                 ]
             },
             {
                 "heading": "Before you donate",
                 "items": [
-                    "You need to weigh at least 45 kg and usually be 18 to 60 years old.",
-                    "Have a meal or snack in the 4 hours before, and drink plenty of water.",
+                    "You need to weigh **at least 45 kg** and usually be **18 to 60 years old**.",
+                    "Have a meal or snack in the **4 hours before**, and drink plenty of water.",
                     "A standard donation in Cambodia is 350 ml. The whole visit is usually under an hour."
                 ]
             },
             {
                 "heading": "Wait before donating if you…",
                 "items": [
-                    "had a fever or felt ill in the last 2 weeks",
-                    "took antibiotics in the last 2 weeks",
-                    "had dengue or malaria in the last 6 months",
-                    "got a tattoo, piercing or acupuncture in the last 12 months",
-                    "are pregnant or breastfeeding, or gave birth in the last 6 months",
-                    "had surgery or received blood in the last 12 months",
-                    "Staff at the centre make the final check. If you are not sure, ask them before you donate."
+                    "had a fever or felt ill in the **last 2 weeks**",
+                    "took antibiotics in the **last 2 weeks**",
+                    "had dengue or malaria in the **last 6 months**",
+                    "got a tattoo, piercing or acupuncture in the **last 12 months**",
+                    "are pregnant or breastfeeding, or gave birth in the **last 6 months**",
+                    "had surgery or received blood in the **last 12 months**",
+                    "Staff at the centre make the final check. **If you are not sure, ask them before you donate.**"
                 ]
             },
             {
                 "heading": "Where to donate",
                 "items": [
-                    "National Blood Transfusion Center (NBTC): St 271, next to Khmer-Soviet Friendship Hospital, Phnom Penh. Walk-ins welcome.",
+                    "**National Blood Transfusion Center (NBTC):** St 271, next to Khmer-Soviet Friendship Hospital, Phnom Penh. **Walk-ins welcome.**",
                     "Hospital blood banks and mobile blood drives also collect blood. Watch the Cambodia Blood Service page for dates.",
-                    "After a donation, wait 3 months (men) or 4 months (women) before the next one. LifeLink counts this for you; the centre makes the final check."
+                    "After a donation, wait **3 months (men) or 4 months (women)** before the next one. LifeLink counts this for you; the centre makes the final check."
                 ]
             }
         ],

@@ -50,7 +50,7 @@ export default function LanguageSwitcher() {
                 aria-expanded={open}
                 aria-label={`${t('language')}: ${LOCALE_LABEL[activeLocale]}`}
                 data-testid="language-switcher-button"
-                className="flex min-h-11 items-center gap-2 rounded-full border border-black/10 bg-black/[0.02] px-3 font-medium text-black/75 transition-colors hover:bg-black/[0.05] hover:text-black dark:border-white/15 dark:bg-white/[0.04] dark:text-white/75 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                className="flex min-h-11 items-center gap-2 rounded-full border border-black/10 bg-black/[0.02] px-3 font-medium text-foreground transition-colors hover:bg-black/[0.05] hover:text-black dark:border-white/15 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] dark:hover:text-white"
             >
                 <IconGlobe className="h-4 w-4" />
                 {LOCALE_LABEL[activeLocale]}
@@ -77,7 +77,7 @@ export default function LanguageSwitcher() {
                                 className={`flex min-h-11 items-center justify-between rounded-lg px-3 transition-colors ${
                                     active
                                         ? 'bg-brand/10 font-semibold text-brand'
-                                        : 'text-black/75 hover:bg-black/[0.05] hover:text-black dark:text-white/75 dark:hover:bg-white/[0.08] dark:hover:text-white'
+                                        : 'text-foreground hover:bg-black/[0.05] hover:text-black dark:hover:bg-white/[0.08] dark:hover:text-white'
                                 }`}
                             >
                                 {LOCALE_LABEL[locale]}

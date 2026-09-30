@@ -87,7 +87,7 @@ function Field({
                 autoComplete={autoComplete}
                 data-testid={`password-${name}`}
             />
-            {hint ? <span className="text-xs text-black/65 dark:text-white/65">{hint}</span> : null}
+            {hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
         </label>
     );
 }

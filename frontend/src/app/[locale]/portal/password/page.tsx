@@ -57,7 +57,7 @@ export default async function ChangePasswordPage({
                 }}
             />
 
-            <p className="mt-6 text-xs text-black/60 dark:text-white/60">
+            <p className="mt-6 text-xs text-muted-foreground">
                 {t('noteOtherSessions')}
             </p>
 

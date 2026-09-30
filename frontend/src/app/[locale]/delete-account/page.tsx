@@ -32,7 +32,7 @@ export default async function DeleteAccountPage({
 
             <section className="mb-8">
                 <h2 className="mb-2 text-lg font-semibold">{t('inAppHeading')}</h2>
-                <ol className="list-decimal space-y-1 pl-5 text-sm text-black/80 dark:text-white/80">
+                <ol className="list-decimal space-y-1 pl-5 text-sm text-foreground">
                     <li>{t('inAppStep1')}</li>
                     <li>{t('inAppStep2')}</li>
                     <li>{t('inAppStep3')}</li>
@@ -41,7 +41,7 @@ export default async function DeleteAccountPage({
 
             <section className="mb-8">
                 <h2 className="mb-2 text-lg font-semibold">{t('noAppHeading')}</h2>
-                <p className="text-sm text-black/80 dark:text-white/80">{t('noAppBody')}</p>
+                <p className="text-sm text-foreground">{t('noAppBody')}</p>
                 {supportEmail ? (
                     <p className="mt-3 text-sm">
                         <a
@@ -61,7 +61,7 @@ export default async function DeleteAccountPage({
 
             <section className="mb-8">
                 <h2 className="mb-2 text-lg font-semibold">{t('whatHeading')}</h2>
-                <ul className="list-disc space-y-1 pl-5 text-sm text-black/80 dark:text-white/80">
+                <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
                     <li>{t('whatDeleted')}</li>
                     <li>{t('whatClosed')}</li>
                     <li>{t('whatKept')}</li>
