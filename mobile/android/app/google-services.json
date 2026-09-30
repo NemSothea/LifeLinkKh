@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "45594180154-vegbjejs1aofvnu9qg7fcplj699dik9s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kosign.lifelinkkh",
+            "certificate_hash": "931ed16e190d3810ce5b834f6126c0b09c080fbc"
+          }
+        },
+        {
           "client_id": "45594180154-nr4unhfv72fe4hve2oepevgva0rdmtrg.apps.googleusercontent.com",
           "client_type": 3
         }

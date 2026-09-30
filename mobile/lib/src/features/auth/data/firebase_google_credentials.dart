@@ -19,6 +19,10 @@ import '../domain/reauthentication.dart';
 ///    in the Firebase console. `docs/scope.md` calls this the single most common wasted
 ///    afternoon on a project of this shape, so it throws with the diagnosis rather than
 ///    returning null and looking like a cancel.
+/// 4. **Not every `canceled` is the user.** On Android, Credential Manager reports Play
+///    services' `[16] Account reauth failed.` — what a signing SHA-1 missing from the
+///    Firebase console produces — with the same `canceled` code as a dismissed chooser.
+///    Read as a cancel, the button just silently did nothing, every time.
 final class FirebaseGoogleCredentials implements GoogleCredentials {
     FirebaseGoogleCredentials({
         FirebaseAuth? auth,
@@ -54,7 +58,7 @@ final class FirebaseGoogleCredentials implements GoogleCredentials {
         try {
             account = await _google.authenticate();
         } on GoogleSignInException catch (error) {
-            if (error.code == GoogleSignInExceptionCode.canceled) return null;
+            if (isUserCancel(error)) return null;
             // Anything else is a real failure — misconfiguration, no activity, or an
             // interrupted flow. The service above turns it into a Failure; it must not be
             // mistaken for a cancel.
@@ -95,7 +99,7 @@ final class FirebaseGoogleCredentials implements GoogleCredentials {
         try {
             account = await _google.authenticate();
         } on GoogleSignInException catch (error) {
-            if (error.code == GoogleSignInExceptionCode.canceled) {
+            if (isUserCancel(error)) {
                 return Reauthentication.cancelled;
             }
             rethrow;
@@ -147,3 +151,12 @@ Future<Reauthentication> reauthenticateFirebaseUser(User user, AuthCredential cr
     await user.getIdToken(true);
     return Reauthentication.confirmed;
 }
+
+/// Whether [error] is the user dismissing the Google account chooser, as opposed to
+/// Google refusing the sign-in. google_sign_in_android maps Play services' status 16
+/// (`CANCELED`) to [GoogleSignInExceptionCode.canceled] whatever its message, so the
+/// `Account reauth failed` variant — an unregistered signing SHA-1 — has to be told
+/// apart by its description.
+bool isUserCancel(GoogleSignInException error) =>
+    error.code == GoogleSignInExceptionCode.canceled &&
+    !(error.description?.toLowerCase().contains('reauth failed') ?? false);
