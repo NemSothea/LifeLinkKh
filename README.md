@@ -77,7 +77,7 @@ A Samsung Galaxy Z Flip3 on Android 15 — the platform the app ships on (signed
 | | | |
 |---|---|---|
 | ![Sign-in](docs/assets/screens/mobile-signin-km.png) | ![The intro, first slide](docs/assets/screens/mobile-intro-km.png) | ![Donor home](docs/assets/screens/mobile-home-km.png) |
-| **Sign-in.** One tap with Google or Facebook — no password to remember in an emergency. | **First launch explains itself.** Three slides — one donation reaching three patients, who gets alerted, the 56-day rule — skippable from the first one and never shown twice. | **Eligible, four requests nearby.** The two critical ones first, each with the blood type needed, the distance and how long ago it was posted. A request that has been fulfilled or cancelled drops off the list. |
+| **Sign-in.** One tap with Google or Facebook — no password to remember in an emergency. | **First launch explains itself.** Three slides — one donation reaching three patients, who gets alerted, the 3–4 month wait — skippable from the first one and never shown twice. | **Eligible, four requests nearby.** The two critical ones first, each with the blood type needed, the distance and how long ago it was posted. A request that has been fulfilled or cancelled drops off the list. |
 | ![An alert](docs/assets/screens/mobile-alert-km.png) | ![Donation history](docs/assets/screens/mobile-history-km.png) | ![Donor profile](docs/assets/screens/mobile-profile-km.png) |
 | **One alert.** Checked by an admin before it went out, how many units, which hospital and how far — and Accept or Decline. Accepting reveals the family's number. | **History and the cooldown.** Every confirmed donation, how many patients it could have helped, and whether the donor can give again yet. | **Profile.** Blood type, district and last donation; the switch that stops alerts without deleting anything. |
 | ![The Me tab](docs/assets/screens/mobile-me-km.png) | ![Choosing an avatar](docs/assets/screens/mobile-avatar-km.png) | ![Home in English](docs/assets/screens/mobile-home-en.png) |
@@ -112,12 +112,12 @@ phone, and cannot read GPS in the background. Those two capabilities *are* the p
 
 ## What it does
 
-1. **Donor register** — blood type, district, last-donation date, with an automatic 56-day
-   eligibility check.
+1. **Donor register** — blood type, district, last-donation date, with an automatic
+   eligibility check: 90 days for men, 120 for women ([DEC-019](docs/decisions.md)).
 2. **Urgent request broadcast** — a family or hospital posts a need; an admin approves it; the
    portal's server then selects matching donors by **ABO/Rh compatibility** (a lookup table, not a
    string match) and distance, and alerts them by push.
-3. **Donation history and eligibility** — the 56-day cooldown, visible, with the date a donor becomes
+3. **Donation history and eligibility** — the 90/120-day cooldown (DEC-019), visible, with the date a donor becomes
    eligible again.
 
 Also in the app: **delete your account** (Me → Delete account; personal data goes, anonymous counts
@@ -170,7 +170,7 @@ with the caller's Firebase ID token:
 | `createRequest` | the app | Shape check, rate limit, hospital name; writes the request as `PENDING` with its private contact |
 | `reviewRequest` | the admin | Approve (`OPEN`) or reject with a reason; on approve, matching, match documents, donor push, requester told |
 | `respondToMatch` | the app | The donor's one answer; on accept, the accepted count, the public board row, "donor accepted" push |
-| `confirmDonation` | the admin | Records the donation, starts the 56-day cooldown |
+| `confirmDonation` | the admin | Records the donation, starts the 90/120-day cooldown (DEC-019) |
 | `deleteAccount` | callable, self | Deletes personal data, anonymises counts (DEC-016) |
 
  Why the Spring Boot +

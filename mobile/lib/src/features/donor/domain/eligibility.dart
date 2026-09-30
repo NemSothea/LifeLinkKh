@@ -11,7 +11,7 @@ import 'donor_sex.dart';
 /// two implementations of one rule will disagree. With no server there are now two anyway —
 /// [Eligibility.forLastDonation] for what the donor sees, and the matching Function for who
 /// gets alerted. Both are ports of `EligibilityCalculator.forLastDonation`, and both have a
-/// test pinning the 56-day boundary, which is the only place they could drift.
+/// test pinning the 90- and 120-day boundaries, which is the only place they could drift.
 final class Eligibility {
     const Eligibility({
         required this.isEligible,
@@ -32,8 +32,8 @@ final class Eligibility {
     /// Eligibility on [today] for a donor who last gave on [lastDonationDate].
     ///
     /// Both are calendar dates: only year, month and day are read, so the time of day and
-    /// the device timezone cannot move the boundary. Exactly 56 days after donating is
-    /// eligible — `<=`, not `<`, same as the backend.
+    /// the device timezone cannot move the boundary. Exactly the cooldown (90 or 120 days)
+    /// after donating is eligible — `<=`, not `<`, same as the backend.
     factory Eligibility.forLastDonation(
         DateTime? lastDonationDate,
         DateTime today, {

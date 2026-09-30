@@ -640,9 +640,9 @@
     "@introAlertBody": {
         "description": "Intro slide 2 body. Matching is ABO/Rh compatibility plus distance (ADR 0003, ADR 0004)."
     },
-    "introEligibleTitle": "Every 56 days, and we track it",
+    "introEligibleTitle": "Every 3–4 months, and we track it",
     "@introEligibleTitle": {
-        "description": "Intro slide 3 title — the 56-day rule, FR-DONOR-002."
+        "description": "Intro slide 3 title — the wait between donations: 90 days for men, 120 for women (DEC-019, FR-DONOR-002)."
     },
     "introEligibleBody": "Your body replaces what you give. The app counts the days for you and says when you are eligible again.",
     "@introEligibleBody": {
@@ -675,11 +675,11 @@
     },
     "donationHistoryEligibleNow": "You can donate again now.",
     "@donationHistoryEligibleNow": {
-        "description": "Donation history — the 56-day cycle, when it has already elapsed."
+        "description": "Donation history — the wait between donations (90 or 120 days, DEC-019), when it has already elapsed."
     },
     "donationHistoryEligibleOn": "You can donate again on {date}.",
     "@donationHistoryEligibleOn": {
-        "description": "Donation history — the date the 56-day cooldown ends.",
+        "description": "Donation history — the date the cooldown (90 or 120 days, DEC-019) ends.",
         "placeholders": {
             "date": {
                 "type": "String"
