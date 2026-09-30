@@ -1,4 +1,6 @@
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import { pageMetadata } from '@/lib/seo';
 import PillLink from '@/components/PillLink';
 import { IconArrowLeft } from '@/components/icons';
 import PageHeader from '@/components/PageHeader';
@@ -15,6 +17,21 @@ import Highlight from '@/components/Highlight';
  * `DonationGuideScreen`). Sources: `docs/po/research/2026-09-cambodia-donation-reality.md`.
  */
 type Section = { heading: string; items: string[] };
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+    const { locale } = await params;
+    const t = await getTranslations({ locale, namespace: 'gettingBlood' });
+    return pageMetadata({
+        locale,
+        path: '/getting-blood',
+        title: t('title'),
+        description: t('metaDescription'),
+    });
+}
 
 export default async function GettingBloodPage({
     params,

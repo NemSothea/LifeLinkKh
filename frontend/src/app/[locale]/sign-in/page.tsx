@@ -1,4 +1,6 @@
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import { pageMetadata } from '@/lib/seo';
 import { redirect } from 'next/navigation';
 import LegalLinks from '@/components/LegalLinks';
 import { hasPortalSession } from '@/lib/api/session';
@@ -6,6 +8,23 @@ import { passwordSignInEnabled } from '@/lib/api/sign-in-options';
 import GoogleSignIn from './google-sign-in';
 import SignInForm from './sign-in-form';
 import PageHeader from '@/components/PageHeader';
+
+// Admin-only: kept out of search results. Not blocked in robots.txt, because a crawler
+// that cannot fetch the page never sees this tag.
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+    const { locale } = await params;
+    const t = await getTranslations({ locale, namespace: 'signIn' });
+    return pageMetadata({
+        locale,
+        path: '/sign-in',
+        title: t('title'),
+        index: false,
+    });
+}
 
 /**
  * Portal admin sign-in — the screen that replaces `PORTAL_DEV_JWT`. v1 has no hospital staff.

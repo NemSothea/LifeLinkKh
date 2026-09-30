@@ -1,4 +1,6 @@
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import { jsonLd, mobileAppJsonLd, pageMetadata } from '@/lib/seo';
 import PillLink from '@/components/PillLink';
 import LegalLinks from '@/components/LegalLinks';
 import { IconArrowLeft } from '@/components/icons';
@@ -21,6 +23,21 @@ import PageHeader from '@/components/PageHeader';
 const DEFAULT_APK_URL =
     'https://github.com/NemSothea/LifeLinkKh/releases/latest/download/lifelink-kh.apk';
 
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+    const { locale } = await params;
+    const t = await getTranslations({ locale, namespace: 'download' });
+    return pageMetadata({
+        locale,
+        path: '/download',
+        title: t('title'),
+        description: t('metaDescription'),
+    });
+}
+
 export default async function DownloadPage({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
     const t = await getTranslations('download');
@@ -35,6 +52,19 @@ export default async function DownloadPage({ params }: { params: Promise<{ local
 
     return (
         <main className="mx-auto max-w-2xl p-6 sm:p-10">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: jsonLd(
+                        mobileAppJsonLd({
+                            locale,
+                            description: t('metaDescription'),
+                            downloadUrl: apkUrl,
+                            version: versionName ?? undefined,
+                        }),
+                    ),
+                }}
+            />
             <PageHeader locale={locale} title={t('title')} />
 
             <p className="mb-6 text-sm text-foreground">{t('intro')}</p>

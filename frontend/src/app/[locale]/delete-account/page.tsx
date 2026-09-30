@@ -1,8 +1,25 @@
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import { pageMetadata } from '@/lib/seo';
 import Notice from '@/components/Notice';
 import PillLink from '@/components/PillLink';
 import { IconArrowLeft, IconShield } from '@/components/icons';
 import PageHeader from '@/components/PageHeader';
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+    const { locale } = await params;
+    const t = await getTranslations({ locale, namespace: 'deleteAccount' });
+    return pageMetadata({
+        locale,
+        path: '/delete-account',
+        title: t('title'),
+        description: t('metaDescription'),
+    });
+}
 
 /**
  * The web link Google Play requires for account deletion (DEC-016). Public — the whole point is
