@@ -57,6 +57,12 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
     // React hydrates — on a slow connection someone starts typing into a rendered field and
     // watches it empty itself, which is worse than the state this ref costs.
     const usernameRef = useRef<HTMLInputElement>(null);
+    // The username's *default*, not its value. React 19 resets a form once its action
+    // settles, putting every field back to its default — after a wrong password the username
+    // emptied and "Remember" unticked, which read as the remembering being broken. Tracking
+    // the remembered or last-submitted username here makes the reset put it back.
+    const [usernameDefault, setUsernameDefault] = useState('');
+    const rememberRef = useRef<HTMLInputElement>(null);
     const usernameId = useId();
     const passwordId = useId();
     const rememberId = useId();
@@ -68,11 +74,12 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
             const saved = window.localStorage.getItem(REMEMBERED_USERNAME_KEY);
             if (saved) {
                 setRemember(true);
-                // Only into an empty field: if someone typed while the page was hydrating,
-                // what they typed wins over what was remembered.
-                if (usernameRef.current && usernameRef.current.value === '') {
-                    usernameRef.current.value = saved;
-                }
+                // Ticked by hand as well: React sets `checked` itself on hydration, and after
+                // that a browser ignores a changed default.
+                if (rememberRef.current) rememberRef.current.checked = true;
+                // A new default only shows in a field nobody has typed into: if someone typed
+                // while the page was hydrating, what they typed wins over what was remembered.
+                setUsernameDefault(saved);
             }
         } catch {
             // Private windows and "block site data" both throw on access rather than
@@ -98,7 +105,13 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
             action={formAction}
             // On submit rather than on every keystroke: a half-typed username written to
             // storage would come back as the prefill next time.
-            onSubmit={() => persistUsername(remember, usernameRef.current?.value ?? '')}
+            onSubmit={() => {
+                const typed = usernameRef.current?.value ?? '';
+                persistUsername(remember, typed);
+                // Kept for the reset after a failed attempt whether or not it is remembered:
+                // retyping the username to fix a password is no part of remembering.
+                setUsernameDefault(typed);
+            }}
             className="flex flex-col gap-4"
         >
             <input type="hidden" name="locale" value={locale} />
@@ -116,6 +129,7 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
                     id={usernameId}
                     type="text"
                     name="username"
+                    defaultValue={usernameDefault}
                     required
                     autoComplete="username"
                     autoFocus
@@ -174,9 +188,12 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
                     className="flex min-h-11 cursor-pointer items-center gap-3 text-sm"
                 >
                     <input
+                        ref={rememberRef}
                         id={rememberId}
                         type="checkbox"
-                        checked={remember}
+                        // Uncontrolled for the same reset: a `checked` prop leaves the box
+                        // unticked after it while the state still says remember.
+                        defaultChecked={remember}
                         // Unticking clears it immediately rather than at the next submit —
                         // someone who unticks this on a shared machine means "forget it now",
                         // and may well close the tab without signing in.
