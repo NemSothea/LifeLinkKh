@@ -51,7 +51,7 @@ dependencies:
   # documents (closing requests, withdrawing acceptances), which the Security Rules rightly
   # refuse to a client — so it is a Function, and this is the only one the app calls.
   cloud_functions: ^6.5.0
-  flutter_secure_storage: ^10.0.0
+  flutter_secure_storage: ^10.3.4
   google_fonts: ^8.2.1
   # M6 (root CLAUDE.md §4): FR-DONOR-001's "use my current location" button. Coordinates only —
   # no google_maps_flutter, no map widget (DEC-004).
