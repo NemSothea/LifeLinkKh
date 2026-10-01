@@ -4,7 +4,7 @@ description: "LifeLink KH (ជីវិត) — blood donor matching app for Cam
 publish_to: 'none'
 
 # versionName / versionCode for the Play Store. Bump before each M7 upload.
-version: 1.0.1+2
+version: 1.0.0+1
 
 environment:
   sdk: ^3.12.2
