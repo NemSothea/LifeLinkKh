@@ -2,11 +2,14 @@
 
 **Owner:** Sothea. **Why:** every medical number in the app and the research report rests on
 secondary sources (news, NGOs, WHO). One call or visit to the National Blood Transfusion Center
-turns them into facts. Phase 2 of DEC-019 (the cooldown rule) waits on answers 1–2.
+turns them into facts. Phase 2 of DEC-019 (the cooldown rule) no longer waits: it shipped
+2026-09-29 as 90 days for men and 120 for women (DEC-019 amendment). Answers 1–2 now confirm or
+correct those numbers — a one-line change on each side.
 
 **Where:** NBTC, Yothapol Khemarak Phoumin Blvd (St 271, corner of St 187), next to
 Khmer-Soviet Friendship Hospital, Phnom Penh. Phone reported in 2016 as 092 998 000 /
-093 998 000 — check it is still current. Facebook: "Cambodia Blood Service".
+093 998 000 — check it is still current. Facebook: "Cambodia Blood Service" — its only online
+channel; no public email (checked 2026-10-01). Message: [`nbtc-messages.md`](nbtc-messages.md).
 Letter to send first: [`nbtc-letter.md`](nbtc-letter.md).
 
 ## Ask the NBTC

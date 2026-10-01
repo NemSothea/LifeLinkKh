@@ -4,6 +4,29 @@
 
 Every claim about Cambodia, blood exchange or medicine carries a source number from §9. `[unverified]` means no reliable source was found. It is a gap, not a guess. Several news sites (Khmer Times, Phnom Penh Post, Cambodia Daily) block direct reading, so news figures come from search summaries of those articles. Treat them as medium confidence. **Before any eligibility or exchange wording ships, confirm it with the NBTC.** Nothing here is medical advice.
 
+> **Status, 2026-10-01.** The report below is kept as written on 2026-09-29, when no code had
+> changed; its gap table (§6) describes the app *before* DEC-019. Since then:
+>
+> | # | Recommendation (§7) | Status |
+> |---|---|---|
+> | 1 | Cooldown by sex | **Built** (12af8ff): 90 days men, 120 women or not given; optional `sex` field; privacy page updated. Rules hardened in 21f71d1 (SEC-REVIEW-003 F-04). NBTC numbers still unconfirmed |
+> | 2 | "Never pay" notice | **Built** — app (27831f5) and web board and home (857d42b) |
+> | 3 | "How getting blood works" for families | **Built** — app screen (27831f5), web `/{locale}/getting-blood` (857d42b) |
+> | 4 | Zero-match screen points to replacement | **Built** (27831f5) |
+> | 5 | Pre-donation self-check before Accept | **Built** (6382abd): warns, never blocks, nothing stored |
+> | 6 | "Reviewed" badge + review hours | **Half**: "Checked by a LifeLink admin" badge built (27831f5); review hours still unset (DEC-015) |
+> | 7 | Report a request | **Built** (9c1fa5a): admin reads reports on the portal |
+> | 8 | Donation guide facts | **Built** (27831f5): 45 kg, 350 ml, meal, deferrals, NBTC location. NBTC phone and hours not added (`[unverified]`) |
+> | 9 | Request kind "replacement, any type" | Not started — needs an ADR |
+> | 10 | Regular-donor invite + eligibility reminder push | Not started — `FR-NOTIFY-002` still deferred |
+> | 11 | Blood-bank location/phone/hours per hospital | Not started |
+> | 12 | NBTC or hospital as second reviewer | Not started — letter drafted ([`nbtc-letter.md`](nbtc-letter.md)), not sent |
+>
+> Still open from this report: the NBTC answers and Sothea's own answers to §8
+> ([`nbtc-confirmation-checklist.md`](nbtc-confirmation-checklist.md)), and a native Khmer check of
+> the DEC-019 strings. The `firestore.rules` change (donor `sex`, `reports`) must be deployed to
+> the real `lifelinkkh` project before a new APK's sex field or reports are accepted there.
+
 ---
 
 ## 1. Summary
