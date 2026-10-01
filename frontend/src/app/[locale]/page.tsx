@@ -11,6 +11,8 @@ import type { CSSProperties } from 'react';
 const SOURCE_URL = 'https://github.com/NemSothea/LifeLinkKh';
 
 type Step = { title: string; body: string };
+/** One row of the numbered team list — a name and what that person built. */
+type TeamMember = { name: string; role: string };
 
 /**
  * The portal's front door. Most visitors are donors or families who came for the app, so
@@ -27,6 +29,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     const th = await getTranslations('home');
     const steps = th.raw('steps') as Step[];
     const safety = th.raw('safety') as string[];
+    const team = th.raw('team') as TeamMember[];
     const supportEmail = process.env.SUPPORT_EMAIL?.trim() || null;
 
     return (
@@ -108,9 +111,23 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     {th('aboutHeading')}
                 </h2>
                 <p className="text-sm text-foreground">{th('aboutBody')}</p>
-                <p className="mt-3 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">{th('teamLabel')}:</span>{' '}
-                    {th('team')}
+                <h3 className="mt-4 mb-2 text-sm font-semibold">{th('teamLabel')}</h3>
+                <ol className="space-y-2 text-sm" data-testid="home-team">
+                    {team.map((member, i) => (
+                        <li key={member.name} className="flex items-baseline gap-3">
+                            <span className="w-5 shrink-0 text-right font-semibold text-brand tabular-nums">
+                                {i + 1}.
+                            </span>
+                            <span>
+                                <span className="font-medium text-foreground">{member.name}</span>
+                                <span className="text-muted-foreground"> — {member.role}</span>
+                            </span>
+                        </li>
+                    ))}
+                </ol>
+                <p className="mt-4 border-t border-border pt-3 text-sm" data-testid="home-lecturer">
+                    <span className="font-semibold">{th('lecturerLabel')}</span>{' '}
+                    <span className="text-foreground">{th('lecturer')}</span>
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                     <Button asChild variant="outline" className="rounded-full">

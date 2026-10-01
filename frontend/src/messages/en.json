@@ -368,7 +368,15 @@
         "aboutHeading": "Who made LifeLink",
         "aboutBody": "LifeLink KH is a student project by Group 2 of the Cross-Platform Mobile App Development course in Cambodia. It is free and non-commercial: no ads, and your information is never sold. It is not run by a hospital or by the National Blood Transfusion Center.",
         "teamLabel": "Team",
-        "team": "Nem Sothea, Moeun Nithvaraman, Suon Pisey, Sourn SAVOURN, Oun Sreynich",
+        "team": [
+            { "name": "Nem Sothea", "role": "Tech Lead · Mobile app (Flutter)" },
+            { "name": "Moeun Nithvaraman", "role": "Backend & database" },
+            { "name": "Suon Pisey", "role": "Web portal (Next.js)" },
+            { "name": "Sourn SAVOURN", "role": "Product Owner" },
+            { "name": "Oun Sreynich", "role": "Quality assurance" }
+        ],
+        "lecturerLabel": "Lecturer:",
+        "lecturer": "Mr. SOK Pongsametrey",
         "sourceLink": "Source code on GitHub",
         "contactHeading": "Questions or help",
         "contactBody": "Call or email us — we answer in Khmer or English."

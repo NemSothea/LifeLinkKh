@@ -368,7 +368,15 @@
         "aboutHeading": "អ្នកបង្កើត LifeLink",
         "aboutBody": "LifeLink KH ជាគម្រោងនិស្សិតរបស់ក្រុមទី ២ នៃមុខវិជ្ជា Cross-Platform Mobile App Development នៅកម្ពុជា។ វាឥតគិតថ្លៃ និងមិនមែនដើម្បីរកប្រាក់ចំណេញ៖ គ្មានពាណិជ្ជកម្ម ហើយព័ត៌មានរបស់អ្នកមិនដែលត្រូវបានលក់ឡើយ។ វាមិនត្រូវបានដំណើរការដោយមន្ទីរពេទ្យ ឬមជ្ឈមណ្ឌលជាតិផ្តល់ឈាមទេ។",
         "teamLabel": "ក្រុម",
-        "team": "Nem Sothea, Moeun Nithvaraman, Suon Pisey, Sourn SAVOURN, Oun Sreynich",
+        "team": [
+            { "name": "Nem Sothea", "role": "ប្រធានបច្ចេកទេស · កម្មវិធីទូរស័ព្ទ (Flutter)" },
+            { "name": "Moeun Nithvaraman", "role": "ផ្នែកខាងក្រោយ និងមូលដ្ឋានទិន្នន័យ" },
+            { "name": "Suon Pisey", "role": "គេហទំព័រ (Next.js)" },
+            { "name": "Sourn SAVOURN", "role": "អ្នកគ្រប់គ្រងផលិតផល" },
+            { "name": "Oun Sreynich", "role": "ធានាគុណភាព" }
+        ],
+        "lecturerLabel": "គ្រូទទួលបន្ទុក៖",
+        "lecturer": "លោក SOK Pongsametrey",
         "sourceLink": "កូដប្រភពនៅលើ GitHub",
         "contactHeading": "សំណួរ ឬជំនួយ",
         "contactBody": "ទូរស័ព្ទ ឬផ្ញើអ៊ីមែលមកយើង — យើងឆ្លើយជាភាសាខ្មែរ ឬអង់គ្លេស។"
