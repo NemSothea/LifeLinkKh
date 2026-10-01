@@ -425,7 +425,7 @@ would go stale.
 | Nem Sothea | Tech Lead / Mobile (Flutter) · also PO, Security |
 | Moeun Nithvaraman | Backend / Database (Firestore rules, Functions) |
 | Suon Pisey | Frontend (Next.js) |
-| Sourn SAVOURN | PO |
+| Sourn Savourn | PO |
 | Oun Sreynich | QA |
 
 Write scopes and role overlays: [`docs/team.md`](docs/team.md). Team members onboard with

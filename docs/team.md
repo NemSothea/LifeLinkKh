@@ -5,7 +5,7 @@
 | Nem Sothea | Tech Lead / Mobile | PO (co), Security | docs/tech-lead/, mobile/, architecture + ADRs, the Firebase project + deploys, `scripts/`, CI (.github/workflows/), deploy runbook, Play Store release |
 | Moeun Nithvaraman | Fullstack (Backend/DB) | — | firebase/ (Firestore rules + tests, Cloud Functions, seeds), docs/fullstack/ (specs) |
 | Suon Pisey | Fullstack (Frontend) | — | frontend/ (Next.js web portal), Firebase REST client, i18n |
-| Sourn SAVOURN | PO | — | docs/po/ (PRD, briefs, prototypes, FRs), changelog |
+| Sourn Savourn | PO | — | docs/po/ (PRD, briefs, prototypes, FRs), changelog |
 | Oun Sreynich | QA | — | docs/qa/, test cases, bug registry, DoD sign-off |
 
 ## Role index (R2)
@@ -27,7 +27,7 @@
 > CR-DEVOPS records were not kept — recoverable from git history at `3e93e6b` if ever needed.
 
 > **Rotation 2026-08-17.** Three roles swapped hands: Moeun Nithvaraman took Backend/DB,
-> Suon Pisey took Frontend, Sourn SAVOURN took PO. Write scopes (R2) followed the roles.
+> Suon Pisey took Frontend, Sourn Savourn took PO. Write scopes (R2) followed the roles.
 > Anything signed before this date was signed by the previous holder — check the date on a
 > sign-off before attributing it.
 

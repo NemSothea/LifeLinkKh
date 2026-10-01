@@ -160,10 +160,10 @@ posts, answers and deletes through it). Setup: `docs/tech-lead/local-development
 
 | Member | Role | Owns |
 |--------|------|------|
-| **Nem Sothea** | Tech Lead / Flutter + PO (Senior) | Architecture, Flutter mobile app, FCM push, GPS/maps, Android build & Play Store release, Firebase project and deploys. Reviews all PRs. Co-PO with Sourn SAVOURN. Also holds Security overlay and CI (`.github/workflows/`). |
+| **Nem Sothea** | Tech Lead / Flutter + PO (Senior) | Architecture, Flutter mobile app, FCM push, GPS/maps, Android build & Play Store release, Firebase project and deploys. Reviews all PRs. Co-PO with Sourn Savourn. Also holds Security overlay and CI (`.github/workflows/`). |
 | **Moeun Nithvaraman** | Backend / Database (Senior) | Firestore data model and Security Rules (+ their emulator tests), Cloud Functions, seed data, auth, blood-type/distance matching logic. |
 | **Suon Pisey** | Frontend (Senior) | Next.js web portal (public board + admin), Firebase REST client, forms, Khmer/English i18n. |
-| **Sourn SAVOURN** | PO (Senior) | `docs/po/` — PRD, briefs, prototypes, FRs, changelog. Co-PO with Nem Sothea. |
+| **Sourn Savourn** | PO (Senior) | `docs/po/` — PRD, briefs, prototypes, FRs, changelog. Co-PO with Nem Sothea. |
 | **Oun Sreynich** | QA (Senior) | Test plan, e2e/integration tests, milestone acceptance, bug tracking. |
 
 > Note: original assignment says teams of 3; this team is 5 — confirm with the instructor.
@@ -174,7 +174,7 @@ posts, answers and deletes through it). Setup: `docs/tech-lead/local-development
 > Tech Lead. No deploy runbook exists yet; write one before M7. See `docs/team.md`.
 >
 > Amended 2026-08-17: three-way role rotation. Moeun Nithvaraman → Backend/Database,
-> Suon Pisey → Frontend (Next.js), Sourn SAVOURN → PO (co-PO with Nem Sothea).
+> Suon Pisey → Frontend (Next.js), Sourn Savourn → PO (co-PO with Nem Sothea).
 > Write scopes (R2) move with the roles; nothing else changes.
 
 ## 6. Course context
