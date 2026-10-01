@@ -25,5 +25,8 @@
     "firebase-tools": "^15.31.0",
     "geofire-common": "^6.0.0",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.5"
   }
 }
