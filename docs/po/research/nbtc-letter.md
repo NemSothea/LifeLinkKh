@@ -20,7 +20,7 @@ Sign it first. Record answers in [`nbtc-confirmation-checklist.md`](nbtc-confirm
 
 **កម្មវត្ថុ៖** សំណើសុំការណែនាំ និងការបញ្ជាក់ព័ត៌មាន សម្រាប់កម្មវិធីទូរស័ព្ទ LifeLink KH ដែលភ្ជាប់អ្នកបរិច្ចាគឈាមស្ម័គ្រចិត្ត ជាមួយអ្នកជំងឺដែលត្រូវការឈាម
 
-ខ្ញុំបាទឈ្មោះ **ណេម សុធា** និស្សិតថ្នាក់អនុបណ្ឌិតព័ត៌មានវិទ្យា នៅសាកលវិទ្យាល័យអាស៊ីអឺរ៉ុប (AEU) តំណាងឱ្យក្រុមនិស្សិតចំនួន ៥ នាក់ ដែលបានបង្កើតកម្មវិធីទូរស័ព្ទ **LifeLink KH (ជីវិត)** ក្នុងមុខវិជ្ជា Cross-Platform Mobile App Development ក្រោមការណែនាំរបស់សាស្ត្រាចារ្យ លោក SOK Pongsametrey។ ខ្ញុំបាទផ្ទាល់ក៏ជាអ្នកបរិច្ចាគឈាមស្ម័គ្រចិត្តផងដែរ។
+ខ្ញុំបាទឈ្មោះ **ណេម សុធា** ជាវិស្វករផ្នែកសូហ្វវែរជាន់ខ្ពស់ (Senior Software Engineer) និងជានិស្សិតថ្នាក់អនុបណ្ឌិតព័ត៌មានវិទ្យា នៅសាកលវិទ្យាល័យអាស៊ីអឺរ៉ុប (AEU)។ ខ្ញុំបាទតំណាងឱ្យក្រុមនិស្សិតចំនួន ៥ នាក់ ដែលបានបង្កើតកម្មវិធីទូរស័ព្ទ **LifeLink KH (ជីវិត)** ក្នុងមុខវិជ្ជា Cross-Platform Mobile App Development ក្រោមការណែនាំរបស់សាស្ត្រាចារ្យ លោក SOK Pongsametrey។ ខ្ញុំបាទផ្ទាល់ក៏ជាអ្នកបរិច្ចាគឈាមស្ម័គ្រចិត្តផងដែរ។
 
 LifeLink KH ជាកម្មវិធីឥតគិតថ្លៃ គ្មានការផ្សាយពាណិជ្ជកម្ម និងមិនលក់ព័ត៌មានអ្នកប្រើឡើយ។ វាជួយ៖
 - ក្រុមគ្រួសារអ្នកជំងឺ ដាក់សំណើត្រូវការឈាម ហើយអ្នកគ្រប់គ្រងរបស់យើងពិនិត្យសំណើនោះ មុននឹងផ្ញើការជូនដំណឹងទៅអ្នកបរិច្ចាគដែលមានប្រភេទឈាមត្រូវគ្នា និងនៅក្បែរមន្ទីរពេទ្យ។
@@ -30,6 +30,12 @@ LifeLink KH ជាកម្មវិធីឥតគិតថ្លៃ គ្ម�
 កម្មវិធីនេះណែនាំអ្នកបរិច្ចាគឱ្យទៅបរិច្ចាគតែនៅមជ្ឈមណ្ឌលជាតិផ្តល់ឈាម ឬផ្នែកផ្តល់ឈាមនៃមន្ទីរពេទ្យប៉ុណ្ណោះ ហើយតែងតែបញ្ជាក់ថា បុគ្គលិកមជ្ឈមណ្ឌលជាអ្នកសម្រេចចុងក្រោយ។
 
 យើងបង្កើតកម្មវិធីនេះដោយស្ម័គ្រចិត្ត មិនមែនដើម្បីរកប្រាក់ចំណេញទេ។ បំណងរបស់យើងគឺចង់ជួយអ្នកជំងឺ និងក្រុមគ្រួសារ ពេលពួកគេត្រូវការឈាមជាបន្ទាន់ ហើយចង់ឱ្យសហគមន៍អ្នកបរិច្ចាគឈាមនៅកម្ពុជា រីកចម្រើនជាមួយគ្នា។ ថ្ងៃណាមួយ យើងក៏សង្ឃឹមថាអាចចែករំលែកបទពិសោធន៍នេះ ដល់ប្រជាជននៅប្រទេសផ្សេងទៀតផងដែរ។ យើងមិនស្នើសុំថវិកា ឬការឧបត្ថម្ភណាមួយឡើយ គឺសុំតែការណែនាំ ដើម្បីឱ្យព័ត៌មានក្នុងកម្មវិធីត្រឹមត្រូវ និងមានសុវត្ថិភាពសម្រាប់អ្នកបរិច្ចាគ។
+
+**អ្វីដែលយើងអាចជួយបាន (ដោយឥតគិតថ្លៃ)៖**
+- កែតម្រូវព័ត៌មាន និងអត្ថបទណែនាំក្នុងកម្មវិធីភ្លាមៗ តាមការណែនាំរបស់មជ្ឈមណ្ឌល។
+- រំលឹកអ្នកបរិច្ចាគ ពេលដល់ថ្ងៃដែលពួកគេអាចបរិច្ចាគម្តងទៀត ដើម្បីឱ្យពួកគេត្រឡប់មកមជ្ឈមណ្ឌលជាប្រចាំ។
+- បន្ថែមកាលវិភាគយុទ្ធនាការបរិច្ចាគឈាមរបស់មជ្ឈមណ្ឌល ទៅក្នុងការណែនាំសម្រាប់អ្នកបរិច្ចាគក្នុងកម្មវិធី។
+- ថែទាំ និងកែលម្អកម្មវិធីបន្ត ហើយផ្តល់ការប្រឹក្សាបច្ចេកទេស បើមជ្ឈមណ្ឌលត្រូវការ។
 
 **របៀបដែលយើងការពារព័ត៌មានអ្នកប្រើ៖**
 - ទីតាំងពិតប្រាកដរបស់អ្នកបរិច្ចាគ មិនត្រូវបានបង្ហាញដល់អ្នកប្រើផ្សេងទៀតឡើយ។ លេខទូរស័ព្ទរបស់ក្រុមគ្រួសារ បង្ហាញតែដល់អ្នកបរិច្ចាគដែលបានយល់ព្រមជួយសំណើនោះប៉ុណ្ណោះ។
@@ -55,7 +61,7 @@ LifeLink KH ជាកម្មវិធីឥតគិតថ្លៃ គ្ម�
 
 **ណេម សុធា**
 តំណាងក្រុម LifeLink KH
-ថ្នាក់អនុបណ្ឌិតព័ត៌មានវិទ្យា សាកលវិទ្យាល័យអាស៊ីអឺរ៉ុប (AEU)
+វិស្វករផ្នែកសូហ្វវែរជាន់ខ្ពស់ · និស្សិតថ្នាក់អនុបណ្ឌិតព័ត៌មានវិទ្យា សាកលវិទ្យាល័យអាស៊ីអឺរ៉ុប (AEU)
 សាស្ត្រាចារ្យទទួលបន្ទុក៖ លោក SOK Pongsametrey
 
 ---
@@ -68,7 +74,7 @@ Phnom Penh, 30 September 2026
 
 **Subject:** Request for guidance and confirmation of facts for LifeLink KH, a mobile app that connects voluntary blood donors with patients who need blood
 
-My name is **Nem Sothea**, an IT Master's student at AEU University (សាកលវិទ្យាល័យអាស៊ីអឺរ៉ុប). I write on behalf of a team of five students who built the mobile app **LifeLink KH** in the course Cross-Platform Mobile App Development, supervised by Mr. SOK Pongsametrey. I am also a voluntary blood donor myself.
+My name is **Nem Sothea**. I am a Senior Software Engineer and an IT Master's student at Asia Euro University (AEU). I write on behalf of a team of five students who built the mobile app **LifeLink KH** in the course Cross-Platform Mobile App Development, supervised by Mr. SOK Pongsametrey. I am also a voluntary blood donor.
 
 LifeLink KH is free, shows no ads and never sells its users' information. It helps:
 - **Families** post a need for blood. Our admin checks each request before the app alerts donors whose blood type is compatible and who are near the hospital.
@@ -78,6 +84,12 @@ LifeLink KH is free, shows no ads and never sells its users' information. It hel
 The app sends donors only to the NBTC or a hospital blood bank, and always says that the centre's staff make the final decision.
 
 We built LifeLink as volunteers, not for profit. We want to help patients and their families when they need blood urgently, and to help Cambodia's donor community grow together — and one day to share what we learn with people in other countries too. We are not asking for funding or sponsorship, only for guidance, so that what the app tells donors is correct and safe.
+
+**What we can offer (free of charge):**
+- Correct the facts and guide text in the app as soon as the NBTC advises.
+- Remind donors when they become eligible again, so they come back to the centre regularly.
+- Add the NBTC's blood-drive dates to the donor guide in the app.
+- Keep maintaining the app, and give technical advice if the NBTC ever wants it.
 
 **How we protect users' information:**
 - A donor's exact location is never shown to other users. A family's phone number is shown only to a donor who has accepted that family's request.
@@ -105,5 +117,5 @@ Respectfully,
 
 **Nem Sothea**
 On behalf of the LifeLink KH team
-IT Master's Degree class, AEU University
+Senior Software Engineer · IT Master's student, Asia Euro University (AEU)
 Supervising lecturer: Mr. SOK Pongsametrey

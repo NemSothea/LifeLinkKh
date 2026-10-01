@@ -1,0 +1,20 @@
+@page { size: A4; margin: 11mm 16mm 9mm; }
+:root { --red: #c62828; --ink: #1a1a1a; --navy: #1f3b8f; }
+* { box-sizing: border-box; }
+html, body { background: #fff; color: var(--ink); margin: 0; }
+body { font-family: "Inter", "Kantumruy Pro", sans-serif; font-size: 9pt; line-height: 1.4; }
+body.km { font-family: "Kantumruy Pro", "Inter", sans-serif; font-size: 8.9pt; line-height: 1.5; }
+header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2mm; }
+.brand { display: flex; align-items: center; gap: 8px; color: var(--red); font-family: "Inter", sans-serif; font-weight: 600; font-size: 11pt; letter-spacing: .02em; }
+.brand img { width: 26px; height: 26px; }
+.note { font-style: italic; color: #555; font-size: 9pt; }
+.kingdom { text-align: center; font-family: "Moul", serif; color: var(--navy); font-size: 12pt; line-height: 1.55; margin: -2mm 0 2mm; }
+.date { text-align: right; margin: 0 0 2mm; }
+p { margin: 0 0 1.6mm; }
+ul, ol { margin: 0 0 1.6mm; padding-left: 7mm; }
+ol ul { list-style: circle; margin: 0.5mm 0 1mm; }
+li { margin: 0; }
+h3 { font-size: inherit; font-weight: 600; margin: 0 0 1mm; }
+a { color: var(--red); text-decoration: none; }
+.sign { margin-top: 10mm; }
+.sign p { margin: 0; }
