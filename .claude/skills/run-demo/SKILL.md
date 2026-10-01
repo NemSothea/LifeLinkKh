@@ -56,7 +56,7 @@ npm run seed:demo                                          # 2 O− donors, requ
   confirmation is needed on the emulator stack; it must print `… 1 accepted — ready to confirm in
   the portal` and `demo-pending: waiting in the portal's review queue`. `matching found nobody`
   → the seed data is not intact; re-run `seed:app` first.
-- Why every rehearsal: a confirmed donation puts that donor into a 56-day cooldown, and the next
+- Why every rehearsal: a confirmed donation puts that donor into a 90/120-day cooldown (DEC-019), and the next
   run matches nobody (runbook §4, trap 2).
 
 ## 3. Web portal

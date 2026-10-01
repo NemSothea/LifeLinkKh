@@ -10,7 +10,7 @@ brief_ref: ../prd.md — FR-08
 
 ## Problem
 A donor gives blood and the app forgets. They cannot see what they have done, nobody has confirmed it
-happened, and — worst — the system has no idea when they last donated, so the 56-day cooldown is
+happened, and — worst — the system has no idea when they last donated, so the cooldown is
 computed from a date nobody maintains.
 
 ## Desired outcome
@@ -24,7 +24,7 @@ Two reasons, one emotional and one mechanical.
 `prd.md` FR-08's own user story is about a donor feeling their impact — a volunteer giving blood for
 free deserves to see the count, and that feeling is the retention mechanism for the whole product.
 
-Mechanically, this is the only trustworthy source for the 56-day cooldown. `FR-DONOR-002` computes
+Mechanically, this is the only trustworthy source for the cooldown (90/120 days, DEC-019). `FR-DONOR-002` computes
 eligibility from the last donation date, and hospital confirmation is what makes that date real rather
 than self-reported.
 

@@ -124,8 +124,8 @@ like a broken product instead of a calm one.
 > "This is the portal — the one piece of this product that isn't a phone screen, because a desk
 > isn't reaching for a phone mid-shift. The admin signs in with a username and password; nobody
 > self-registers here. They see the accepted donor, and once the donation actually happens, they
-> click confirm. That single click is what starts the donor's 56-day
-> cooldown — the system doesn't trust a self-report, it trusts a confirmation."
+> click confirm. That single click is what starts the donor's cooldown —
+> 90 days for men, 120 for women — the system doesn't trust a self-report, it trusts a confirmation."
 
 Sign in as `soborey`. If asked why hospitals don't confirm their own donations: v1 is deliberately
 admin-only (`DEC-014`) — one account to secure during a pilot, hospital staff roles are a v2 call.
@@ -210,7 +210,7 @@ Eight things, in the order they bite:
 3. **Rehearse from cold.** Emulators stopped, both device emulators closed. Run
    `../demo-runbook.md` sections 1, 3 and 4 start to finish and time it. Over six minutes means
    cutting a step, not talking faster. A rehearsal that reaches step 6 puts that donor into a
-   56-day cooldown; re-seed afterwards or the next run matches nobody.
+   90/120-day cooldown; re-seed afterwards or the next run matches nobody.
 4. **Check the admin can sign in.** The portal has one account, `soborey`, created by
    `npm run seed:admin` with the password in `PORTAL_ADMIN_PASSWORD` (`../demo-runbook.md` §9). On
    the emulator it is forgotten every time the emulators stop, so re-seed it after every start. If
@@ -228,7 +228,7 @@ Eight things, in the order they bite:
    that matches nobody is silent, not an error — nothing on screen explains it, because
    `FR-MATCH-002` is deferred. The two that bite in rehearsal: one account playing both roles (a
    donor never matches their own request), and a donation already confirmed for that donor, which
-   starts the 56-day cooldown.
+   starts the 90/120-day cooldown.
 
 ---
 

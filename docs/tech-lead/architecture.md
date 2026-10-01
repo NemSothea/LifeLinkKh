@@ -30,7 +30,7 @@
   document per notified donor. `matchedAt` is claimed in a transaction, so a retry alerts nobody twice.
 - **Notifications:** FCM push from the portal's server — the alert to matched donors, the
   requester's approved / rejected / "donor accepted" notices. Scheduled eligibility reminders are
-  deferred (DEC-004) — the 56-day status is shown in-app instead.
+  deferred (DEC-004) — the eligibility status (90/120 days) is shown in-app instead.
 - **Portal:** Next.js Server Components; every Firestore read goes over REST from the Next server
   with the admin's ID token from an httpOnly cookie. The one credential on the server is the
   service account the functions use (`FIREBASE_SERVICE_ACCOUNT`), read in one file.

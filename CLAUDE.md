@@ -22,10 +22,10 @@ Facebook-post approach used by hospitals and the National Blood Transfusion Cent
 
 ### Three core features
 1. **Donor register** — blood type, location, last-donation date, with automatic
-   eligibility check (56-day cooldown rule).
+   eligibility check (cooldown: 90 days men, 120 women — DEC-019; was 56 days).
 2. **Urgent request broadcast** — a family or hospital posts a need; the app push-notifies
    matching donors filtered by blood type and distance.
-3. **Donation history + eligibility reminder** — tracks the 56-day cooldown and notifies
+3. **Donation history + eligibility reminder** — tracks the cooldown (90/120 days) and notifies
    a donor when they become eligible to donate again.
 
 ### Why we chose it

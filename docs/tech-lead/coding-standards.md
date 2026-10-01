@@ -39,7 +39,7 @@ plain modules like `functions/src/matching.js` with unit tests, and keep the tri
 around them.
 
 **Clinical rules stay data.** The ABO/Rh compatibility table is one constant (ADR 0004), not
-branching code, and the 56-day cooldown is one named constant. A client check is a convenience; the
+branching code, and the cooldown is one named pair of constants (90/120 days, DEC-019). A client check is a convenience; the
 rule or Function check is the rule.
 
 **Location never leaves rounded.** ADR 0003: a donor's `lat`/`lng`/`geohash` are readable only by

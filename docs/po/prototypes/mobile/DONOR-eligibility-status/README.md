@@ -1,7 +1,7 @@
 # DONOR-eligibility-status (mobile)
 
 **Milestone:** M5 wireframe · freeze before M5 build
-**FR:** [`FR-DONOR-002`](../../../features/) (56-day cooldown)
+**FR:** [`FR-DONOR-002`](../../../features/) (cooldown: 90 days men, 120 women — DEC-019)
 
 > **Drafted retroactively, after the screen shipped.** `EligibilityCard` has shown this since
 > M3 (`donor_setup_screen.dart`'s result step, then `donor_profile_screen.dart` on every open).
@@ -36,7 +36,7 @@ criterion at M3 and nothing about moving the question to M5 changes it.
 ## Cross-check against the API
 
 `GET /donors/me`'s `eligibility` object, computed server-side by `EligibilityCalculator` — never
-recomputed on the client (two implementations of a 56-day rule would eventually disagree). No new
+recomputed on the client (two implementations of the cooldown rule would eventually disagree). No new
 endpoint needed; this was never blocked on anything M5-specific.
 
 ## What is deliberately absent

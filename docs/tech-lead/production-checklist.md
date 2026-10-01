@@ -179,7 +179,7 @@ installed from the `/km/download` page the way a user would.
 - [ ] Account A accepts. Account B gets **"A donor accepted your request"**. The public board
   shows 1 accepted.
 - [ ] Portal: **Confirm donation**. The request moves to Recently fulfilled. Account A's history
-  shows the donation, and eligibility shows 56 days.
+  shows the donation, and eligibility shows 90 days (man) or 120 (woman, or sex not given).
 - [ ] Post a second request from B and **Reject** it with a reason. B sees the reason in the app.
   The request never appears on the public board.
 - [ ] `npm run metrics -- --project lifelinkkh` shows 1 donor, 2 requests and 1 donation.
@@ -233,7 +233,7 @@ items do not come from code.
   way to verify anything.
 - [ ] **A safety line in the app** where a donor sees the family's phone number: "LifeLink never
   asks for money. Donate only at the hospital." Scammers aim at exactly this moment.
-- [ ] **Medical disclaimer.** The 56-day rule is only a reminder. The hospital screens every
+- [ ] **Medical disclaimer.** The 90/120-day interval is only a reminder. The hospital screens every
   donor, and the app is not medical advice.
 
 **Should do early:**

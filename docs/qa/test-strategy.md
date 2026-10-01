@@ -33,7 +33,7 @@ A 13-week course project cannot afford full-pyramid coverage on three clients. E
 | Layer | Tool | Covers | Command |
 |---|---|---|---|
 | Security Rules | `@firebase/rules-unit-testing` + Vitest, Firestore emulator (`demo-lifelink`) | **One test per rule.** Each principal — signed out, donor, requester, another donor, an ADMIN claim without its `admins/{uid}` record — reading and writing each collection. A rule without a test is treated as absent (ADR 0009) | `cd firebase && npm run test:rules` |
-| Functions, unit | Vitest, no emulator | Pure logic: the ABO/Rh table and its direction, the 56-day cooldown boundary, the 10 km radius, no-GPS-sorts-last, the 25-donor cap, push payloads. Every clause of the old matching SQL | `cd firebase/functions && npm test` |
+| Functions, unit | Vitest, no emulator | Pure logic: the ABO/Rh table and its direction, the 90/120-day cooldown boundaries (DEC-019), the 10 km radius, no-GPS-sorts-last, the 25-donor cap, push payloads. Every clause of the old matching SQL | `cd frontend && npm run test:server` |
 | Functions, emulator | Vitest against the Firestore emulator, FCM faked | Every handler end to end: `onRequestCreated` (rate limit, match documents, alert), `onMatchAnswered` (accepted count, board row, acceptance push), `confirmDonation` (admin only, cooldown written) | `cd firebase/functions && npm run test:emulator` |
 | Seed data | Node script against the emulator | 14 districts, 5 hospitals, no orphans | `cd firebase && npm run test:seed` |
 
@@ -93,7 +93,7 @@ can be "covered" by an allowed read while its denial path is never exercised.
 |---|---|---|---|---|
 | `FR-AUTH-003` Google Sign-In | — | you create and read only your own `users/{uid}`; no client-set role | — | first-run on device |
 | `FR-DONOR-001` Donor profile | — | own profile only; bad values refused; form validation | — | GPS acquisition |
-| `FR-DONOR-002` 56-day eligibility | **yes — boundary cases 55/56/57 days, and never-donated** | eligibility banner | `confirmDonation` writes the cooldown | — |
+| `FR-DONOR-002` eligibility (90/120 days, DEC-019) | **yes — boundary cases 89/90 (men), 119/120 (women and not given), and never-donated** | eligibility banner | `confirmDonation` writes the cooldown | — |
 | `FR-REQUEST-001` Create request | — | starts `OPEN` with zero counts; contact normalized to +855; form | rate limit closes the sixth request | — |
 | `FR-MATCH-001` Matching | **compatibility table + direction, radius, no-GPS-last, own-request excluded, cap 25** | only the Function creates a match | `onRequestCreated` writes the right matches | — |
 | `FR-NOTIFY-001` Push alert | payload builder | — | the alert lands in `_outbox` | **device receipt** |

@@ -174,7 +174,7 @@ in front of an audience is how that happens.
 |---|---|---|---|
 | 1 | **Account A** — blood type | **O−**, or the donor's real type | O− is the universal donor, so nothing can miss it. But the pin that actually protects this demo is the patient's type below — with an AB+ patient, **any** donor type matches |
 | 1 | Account A — district | **Doun Penh (1202)** | Calmette's own district. If the donor grants GPS, the distance is ~0 km, far inside the 10 km radius |
-| 1 | Account A — last donation | **leave blank** | Blank means never donated, which means immediately eligible. Any date inside 56 days removes the donor from every match |
+| 1 | Account A — last donation | **leave blank** | Blank means never donated, which means immediately eligible. Any date inside the cooldown (90 days men, 120 women or not given — DEC-019) removes the donor from every match |
 | 2 | **Account B** — hospital | **Calmette Hospital** | Seeded by `npm run seed:app`, and the district above is chosen against it |
 | 2 | Account B — patient type | **AB+** | **The one value not to improvise.** AB+ is the universal recipient — it accepts all eight donor types. Change it and compatibility becomes a real filter again |
 | 2 | Account B — urgency | **CRITICAL** | Top tier reads clearest on the portal list, and urgency does not affect matching |
@@ -196,7 +196,7 @@ in front of an audience is how that happens.
    Account A is listed as an accepted donor. Click **confirm donation** (the `confirmDonation`
    callable, admin only).
 7. Back on Account A's app — donation history shows the entry, eligibility flips to "next
-   eligible in 56 days."
+   eligible in 90 days" (men) or 120 days (women, or sex not given).
 
 That loop — register, request, match, accept, confirm, history — is the whole product.
 Everything else in `docs/scope.md`'s "8 FRs built" table supports one of these six steps.
@@ -236,7 +236,7 @@ them produces an error the audience can see.
 
 1. **One account playing both roles.** A donor never matches their own request. Deliberate, and
    the fastest way to a silent demo. Two accounts, always.
-2. **Step 6 already ran today.** Confirming a donation starts the 56-day cooldown, and that donor
+2. **Step 6 already ran today.** Confirming a donation starts the 90/120-day cooldown, and that donor
    is then excluded from every match. **Rehearsing the full loop twice with the same donor gives
    a silent second run.** On the emulator, restart the emulators and re-seed; on the real
    project, use a different donor account for the rehearsal.

@@ -50,7 +50,7 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 
 **Module B — Donor Management**
 - Create/edit donor profile.
-- Automatic eligibility status from the 56-day cooldown rule.
+- Automatic eligibility status from the cooldown rule (90 days men, 120 women — DEC-019; was 56 days).
 - Availability toggle (available / unavailable to be contacted).
 
 **Module C — Urgent Requests & Matching**
@@ -61,7 +61,7 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 
 **Module D — Donation History & Reminders**
 - Record of each donation (date, hospital, request link).
-- 56-day cooldown tracking; push reminder when the donor becomes eligible again.
+- Cooldown tracking (90/120 days); push reminder when the donor becomes eligible again.
 
 **Module E — Hospital / Admin Portal (Web)**
 - Hospital: view and manage requests for their facility; confirm completed donations.
@@ -267,7 +267,7 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 |---|---|
 | Priority | Should Have |
 | User Role | Donor |
-| Description | Notify a donor when the 56-day cooldown ends and they can donate again. |
+| Description | Notify a donor when the cooldown (90/120 days) ends and they can donate again. |
 
 **User Stories:**
 - As a donor, I want a reminder when I'm eligible again, so that I return to donate.
@@ -383,7 +383,7 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 6. Hospital confirms the donation; donor's last-donation date updates.
 
 #### Flow: Eligibility Reminder
-1. 56 days pass since a donor's last donation.
+1. The donor's cooldown (90 or 120 days, DEC-019) passes since their last donation.
 2. System flips donor to eligible and sends a reminder push.
 3. Donor is again included in future matching.
 
@@ -401,7 +401,7 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 - Donors have Android smartphones with data/Wi-Fi and can receive push.
 - Donors have a Google account on their Android device (Play Store access implies one).
 - Hospitals will designate staff to use the web portal.
-- The 56-day interval is the eligibility rule used for whole-blood donation.
+- The interval between whole-blood donations is 90 days for men and 120 for women (DEC-019, reported Cambodian practice; was 56 days, the US rule).
 
 ### Dependencies
 - Firebase — Auth (Google Sign-In) and Cloud Messaging (push). No SMS provider.
@@ -423,8 +423,8 @@ there is no systematic way to alert matching donors nearby. Lives are lost to de
 |---|---|
 | **ABO/Rh** | Blood group system (A, B, AB, O) with Rhesus factor (+/−). |
 | **Compatibility** | A recipient of type X can receive from specific donor types (e.g., O− is universal donor; AB+ universal recipient). Matching uses this, not exact-type only. |
-| **Eligibility** | Whether a donor may donate now; here, ≥ 56 days since last donation. |
-| **Cooldown** | The 56-day rest period after donating whole blood. |
+| **Eligibility** | Whether a donor may donate now; here, ≥ 90 days (men) or ≥ 120 days (women, or sex not given) since last donation (DEC-019). |
+| **Cooldown** | The rest period after donating whole blood: 90 days for men, 120 for women (DEC-019). |
 | **Google Sign-In** | Firebase Auth flow where the device's Google account proves identity; the backend verifies the resulting ID token. |
 | **ID token** | Signed token from Google asserting who the user is. Verified server-side — never trusted from the client unchecked. |
 | **FCM** | Firebase Cloud Messaging — push notification service. |

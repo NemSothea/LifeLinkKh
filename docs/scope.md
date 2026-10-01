@@ -23,7 +23,7 @@ Week 12.
 |---|---|
 | `FR-AUTH-003` Google Sign-In | Graded (authentication). Also the cheapest possible option — Firebase does the identity proof, so there is no code to generate, expire, or rate-limit (ADR 0002) |
 | `FR-DONOR-001` Donor profile | Graded (relational DB). The data the whole app operates on |
-| `FR-DONOR-002` 56-day eligibility | The one real business rule in the product, and cheap — a date comparison against `donations.donated_on` |
+| `FR-DONOR-002` eligibility (56 days; 90/120 since DEC-019) | The one real business rule in the product, and cheap — a date comparison against `donations.donated_on` |
 | `FR-REQUEST-001` Create urgent request | Start of the core loop |
 | `FR-MATCH-001` Matching | The demo moment. A compatibility join (ADR 0004) plus a distance sort (ADR 0003) |
 | `FR-NOTIFY-001` Request push alert | Graded (push notifications) |
@@ -51,7 +51,7 @@ Documents kept, `status: deferred`, nothing started. These are the "future work"
 | `FR-REQUEST-004` Withdraw acceptance | State transition + re-notify path + UI, for an edge case a phone call handles during a pilot |
 | `FR-REQUEST-005` Request expiry | Needs a scheduled job and a rule nobody has written. `status = 'EXPIRED'` stays a dead value; requests are closed manually |
 | `FR-MATCH-002` Zero-match fallback | Needs radius widening and retry. A zero-match is handled by telling the requester none were found |
-| `FR-NOTIFY-002` Eligibility reminder push | Needs a scheduled job + FCM batch that nothing else in the build requires. **Only the unprompted push is cut** — the 56-day status is still visible in-app at M5 |
+| `FR-NOTIFY-002` Eligibility reminder push | Needs a scheduled job + FCM batch that nothing else in the build requires. **Only the unprompted push is cut** — the eligibility status is still visible in-app at M5 |
 | `FR-PORTAL-002` Admin dashboard | A second web surface with charts. `FR-PORTAL-001` already covers the Next.js requirement |
 | `FR-GLOBAL-002` Metrics instrumentation | Event capture across three milestones plus a dashboard. Replaced by SQL `COUNT` queries against pilot data at demo time — same numbers for the defence, none of the instrumentation. This withdraws DEC-003 |
 | `FR-SECURITY-001` Account and data deletion | See the warning below |

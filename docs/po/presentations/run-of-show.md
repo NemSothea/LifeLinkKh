@@ -42,7 +42,7 @@ come immediately before the demo.
 | 0:45 | **The push lands on the donor's phone** | Stop talking. Let the room watch the lock screen. This is the entire pitch |
 | 1:15 | Donor opens it, accepts — **the requester's phone gets the push back** | "One tap. Now the family's phone: 'a donor accepted your request.' Push goes both ways. They see that someone is coming; the portal sees who" |
 | 2:00 | Portal, signed in as the admin `soborey` | "The portal, in a browser. The admin sees the accepted donor" |
-| 3:00 | Confirm donation | "That click starts the 56-day cooldown. The system doesn't trust a self-report, it trusts a confirmation" |
+| 3:00 | Confirm donation | "That click starts the cooldown — 90 days for men, 120 for women. The system doesn't trust a self-report, it trusts a confirmation" |
 | 3:45 | Back to the phone — history | "History updates, eligibility flips to a countdown. That's the loop closing" |
 | 4:30 | Buffer | Where a slow emulator or a re-tap goes |
 

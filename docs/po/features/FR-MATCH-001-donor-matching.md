@@ -8,6 +8,11 @@ owner: PO
 brief_ref: ../prd.md — FR-05
 ---
 
+> **Amended 2026-09-29 by DEC-019 (`../../decisions.md`).** The eligibility filter uses the donor's
+> interval, **90 days for men and 120 for women** (120 when sex is not given), not 56 days for
+> everyone — `cooldownDaysFor()` in `frontend/src/server/matching.js`. The criteria below keep their
+> original wording; read "56 days" as "the donor's interval".
+
 ## Problem
 A Facebook post reaches whoever happens to scroll past — mostly people with the wrong blood type, in
 the wrong city, or who donated last month. The people who could actually help never see it. Reach

@@ -18,7 +18,7 @@
    nothing and shows everything.
 2. **Yes, skippable.** `donor_profiles.last_donation_date` is nullable and NULL means "never
    donated", which is the correct state for a first-time donor. Forcing a date would make
-   first-timers invent one, and the 56-day cooldown would then be wrong for exactly the people most
+   first-timers invent one, and the cooldown would then be wrong for exactly the people most
    likely to be eligible.
 3. **GPS button + district dropdown, both optional.** No map (DEC-004). Coordinates are read once by
    `geolocator`; the district is a plain dropdown and is required. See the note under screen 2.

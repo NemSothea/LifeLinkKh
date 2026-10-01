@@ -221,7 +221,7 @@ English:
 5. find blood donor near me
 6. blood donation app Cambodia
 7. blood type O negative donor Cambodia
-8. blood donation eligibility 56 days
+8. blood donation eligibility Cambodia 90 days
 9. National Blood Transfusion Center Cambodia
 10. volunteer blood donor app Android
 
@@ -255,7 +255,7 @@ Adding it is a new dependency tree under `docs/book/` only — ask before `npx c
 **Table of contents** (`docs/book/docs/` = **km**, the default locale; `docs/book/i18n/en/docusaurus-plugin-content-docs/current/` = en).
 Chapter 7 is generated from `docs/decisions.md` + the ADRs by `docs/book/scripts/gen-decisions.mjs` on every build.
 1. What LifeLink KH is / LifeLink KH ជាអ្វី
-2. User guide — donors: register, alerts, accept/decline, history, 56-day eligibility
+2. User guide — donors: register, alerts, accept/decline, history, eligibility (90 days men, 120 women)
 3. User guide — requesters: post a request, admin review (DEC-015), when help is coming
 4. Donor FAQ — eligibility, privacy, deleting your account (DEC-016)
 5. Architecture — link/adapt `docs/tech-lead/` and ADRs 0009/0010; one diagram
