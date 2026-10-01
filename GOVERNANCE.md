@@ -19,7 +19,7 @@ The project started as the Group 2 team project (see README → History). Each a
 | Mobile app | `mobile/`, `docs/mobile/` | Tech Lead / Mobile: Nem Sothea |
 | Web portal | `frontend/` | Frontend: Suon Pisey |
 | Firebase rules, seeds | `firebase/`, `docs/fullstack/` | Backend / DB: Moeun Nithvaraman |
-| Product (PRD, FRs, changelog) | `docs/po/` | PO: Sourn Savourn (co-PO Nem Sothea) |
+| Product (PRD, FRs, changelog) | `docs/po/` | PO scope: Sourn Savourn, Product Supporter (co-PO Nem Sothea) |
 | Tests, QA, Definition of Done | `docs/qa/` | QA: Oun Sreynich |
 | Architecture, CI, security, releases | `docs/tech-lead/`, `docs/security/`, `.github/`, `scripts/` | Tech Lead: Nem Sothea |
 
