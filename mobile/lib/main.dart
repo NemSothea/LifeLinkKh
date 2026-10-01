@@ -17,6 +17,7 @@ import 'src/core/settings/preferences_locale_store.dart';
 import 'src/core/settings/preferences_onboarding_store.dart';
 import 'src/features/notify/application/push_providers.dart';
 import 'src/features/avatar/application/avatar_providers.dart';
+import 'src/features/avatar/data/firestore_avatar_account.dart';
 import 'src/features/avatar/data/preferences_avatar_store.dart';
 import 'src/features/notify/application/push_session_sync.dart';
 import 'src/features/notify/application/inbox_providers.dart';
@@ -93,6 +94,10 @@ Future<void> main() async {
             ),
             // The avatar the user picked on the Me tab.
             avatarStoreProvider.overrideWithValue(PreferencesAvatarStore(preferences)),
+            // ...and on the account, so a reinstall or another phone shows it again.
+            avatarAccountProvider.overrideWith(
+                (ref) => FirestoreAvatarAccount(ref.watch(firestoreProvider)),
+            ),
         ],
     );
 

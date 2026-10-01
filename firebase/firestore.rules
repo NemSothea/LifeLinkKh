@@ -27,12 +27,15 @@ service cloud.firestore {
 
     // ── users/{uid} ─────────────────────────────────────────────────────────────────────────────
     function validUser(d) {
-      return d.keys().hasOnly(['displayName', 'language', 'role', 'fcmToken', 'createdAt', 'updatedAt'])
+      return d.keys().hasOnly(['displayName', 'language', 'role', 'fcmToken', 'avatar', 'createdAt', 'updatedAt'])
           && d.keys().hasAll(['language', 'role', 'createdAt', 'updatedAt'])
           && (!('displayName' in d) || d.displayName == null || isName(d.displayName, 120))
           && d.language in ['km', 'en']
           && d.role in ['DONOR', 'REQUESTER']
           && (!('fcmToken' in d) || d.fcmToken == null || (d.fcmToken is string && d.fcmToken.size() <= 4096))
+          // The face picked on the Me tab, as AvatarSpec.encode writes it: a gender and a seed
+          // under 2^31. Kept on the account so a reinstall or another phone shows it again.
+          && (!('avatar' in d) || d.avatar == null || (d.avatar is string && d.avatar.matches('^[mf]:[0-9]{1,10}$')))
           && d.updatedAt == request.time;
     }
     match /users/{userId} {

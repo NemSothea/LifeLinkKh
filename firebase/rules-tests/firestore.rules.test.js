@@ -158,6 +158,17 @@ describe('users', () => {
   test('you cannot write someone else\'s user doc', async () => {
     await assertFails(setDoc(doc(as('u2'), 'users/u1'), user()));
   });
+
+  test('you keep your picked avatar on your own doc, in the one shape the app writes', async () => {
+    await seed((db) => setDoc(doc(db, 'users/u1'), user({ createdAt: Timestamp.now(), updatedAt: Timestamp.now() })));
+    await assertSucceeds(updateDoc(doc(as('u1'), 'users/u1'), { avatar: 'f:42', updatedAt: serverTimestamp() }));
+    await assertSucceeds(updateDoc(doc(as('u1'), 'users/u1'), { avatar: 'm:2147483647', updatedAt: serverTimestamp() }));
+    await assertSucceeds(updateDoc(doc(as('u1'), 'users/u1'), { avatar: null, updatedAt: serverTimestamp() }));
+    for (const bad of ['x:1', 'm:-3', 'm:', 'm:1:2', 'https://evil.example/a.png', 'm:12345678901', 7]) {
+      await assertFails(updateDoc(doc(as('u1'), 'users/u1'), { avatar: bad, updatedAt: serverTimestamp() }));
+    }
+    await assertFails(updateDoc(doc(as('u2'), 'users/u1'), { avatar: 'f:1', updatedAt: serverTimestamp() }));
+  });
 });
 
 describe('users/{uid}/notifications — the bell', () => {
