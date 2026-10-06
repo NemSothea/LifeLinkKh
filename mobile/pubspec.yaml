@@ -24,15 +24,15 @@ dependencies:
   # flutter_riverpod 3.x on Flutter 3.44.6 — the generator needs matcher <0.12.19
   # and this SDK's flutter_test pins 0.12.19 exactly. Code generation is a Week 4
   # requirement, so the runtime moved to meet it.
-  flutter_riverpod: ^2.6.1
-  riverpod_annotation: ^2.6.1
+  flutter_riverpod: ^3.4.3
+  riverpod_annotation: ^4.0.7
   go_router: ^17.4.0
 
   # flutter_localizations pins intl from the SDK, so this constraint has to contain
   # whatever the SDK asks for: 0.20.2 on Flutter 3.44.6, ^0.20.3 on newer stables. A caret
   # resolves to exactly 0.20.2 here and still solves on a newer SDK; the old exact pin did
   # not, and broke CI the day stable moved.
-  intl: ^0.20.2
+  intl: ^0.20.3
   firebase_core: ^4.13.0
   firebase_auth: ^6.5.7
   google_sign_in: ^7.2.0
@@ -55,12 +55,12 @@ dependencies:
   google_fonts: ^8.2.1
   # M6 (root CLAUDE.md §4): FR-DONOR-001's "use my current location" button. Coordinates only —
   # no google_maps_flutter, no map widget (DEC-004).
-  geolocator: ^14.0.2
+  geolocator: ^14.1.1
   # FR-GLOBAL-001's mobile half: the in-app language choice has to survive a restart,
   # and it is a preference, not a credential — flutter_secure_storage (the Keystore /
   # Keychain, used for the session JWT) would be the wrong store for it.
   shared_preferences: ^2.5.5
-  drift: ^2.22.0
+  drift: ^2.35.1
   # 0.5.x, deliberately NOT ^0.6.0+eol. Version 0.6.0 is an empty package — it exists only to
   # assert that the old Flutter build scripts are gone, and it is meant for apps that have moved
   # to sqlite3 3.x. Drift 2.28 still resolves sqlite3 2.9.x here, which gets its native library
@@ -68,7 +68,7 @@ dependencies:
   # installs, signs in, and throws the first time a donor with a profile opens Home:
   #   Failed to load dynamic library '.../lib/libsqlite3.so': dlopen failed
   # Found on a real device 2026-09-24. Host tests never see it — macOS has a system SQLite.
-  sqlite3_flutter_libs: ^0.5.41
+  sqlite3_flutter_libs: ^0.6.0+eol
   connectivity_plus: ^7.3.1
   path_provider: ^2.1.6
   path: ^1.9.1
@@ -78,10 +78,10 @@ dependencies:
   flutter_native_splash: ^2.4.8
   # Sideloaded APKs never update themselves (no Play Store until 500 users), so the app
   # compares its own build number against `config/app` and says when a newer one exists.
-  package_info_plus: ^10.2.1
+  package_info_plus: ^10.2.2
   # Opens the download page and the privacy policy in the phone's browser — always
   # externally, so a sideload download goes through the browser's own installer flow.
-  url_launcher: ^6.3.2
+  url_launcher: ^6.3.3
   skeletonizer: ^3.0.0
 
 dev_dependencies:
@@ -95,15 +95,15 @@ dev_dependencies:
 
   # Turns @riverpod annotations into *.g.dart provider plumbing.
   # Dev loop: dart run build_runner watch -d
-  riverpod_generator: ^2.6.3
-  build_runner: ^2.4.13
+  riverpod_generator: ^4.0.9
+  build_runner: ^2.16.1
 
   # Generates the launcher icons for both platforms from assets/branding/.
   # Dev-only: it is a one-shot generator, not something the app links against.
   # Re-run after editing the source art:
   #   dart run flutter_launcher_icons
   flutter_launcher_icons: ^0.14.4
-  drift_dev: ^2.22.0
+  drift_dev: ^2.35.1
   # In-memory Firestore for the repository tests. It does not evaluate Security Rules —
   # those are tested against the real emulator in firebase/rules-tests/.
   fake_cloud_firestore: ^4.3.0
