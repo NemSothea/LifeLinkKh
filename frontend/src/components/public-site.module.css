@@ -1,0 +1,544 @@
+.page,
+.footerSurface {
+    --surface: #fff9f7;
+    --blush: #fce9e7;
+    --mint: #e9f6ed;
+    background: var(--surface);
+}
+:global(.dark) .page,
+:global(.dark) .footerSurface {
+    --surface: #100e0f;
+    --blush: #2a181b;
+    --mint: #14291f;
+}
+.container {
+    max-width: 1184px;
+    margin: 0 auto;
+    padding: 0 32px;
+}
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 24px 0;
+}
+.brand {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 750;
+    color: var(--brand);
+    white-space: nowrap;
+    font-size: 18px;
+}
+.brandMark {
+    display: flex;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    flex-shrink: 0;
+}
+.navigation {
+    display: flex;
+    gap: 28px;
+    font-size: 14px;
+    color: var(--muted-foreground);
+}
+.navigation a,
+.footerLinks a {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+}
+.navigation a:hover,
+.footerLinks a:hover {
+    color: var(--brand);
+}
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.controls :global([data-testid='theme-switcher-button']) {
+    width: 48px;
+    height: 48px;
+}
+.controls :global([data-testid='language-switcher-button']) {
+    min-height: 48px;
+}
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 13px 22px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    font-size: 14px;
+    font-weight: 650;
+    text-align: center;
+    background: var(--card);
+}
+.button svg {
+    flex-shrink: 0;
+}
+.button:hover {
+    border-color: var(--brand);
+}
+.primary {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+.primary:hover {
+    background: #ab2020;
+}
+.headerDownload {
+    font-size: 12px;
+    min-height: 48px;
+    padding: 10px 15px;
+}
+.page a:focus-visible,
+.footerSurface a:focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 4px;
+    border-radius: 8px;
+}
+.content {
+    padding: 34px 0 64px;
+}
+.documentHeading {
+    max-width: 840px;
+    margin: 0 auto 32px;
+}
+.documentHeading h1,
+.hero h1 {
+    font-size: clamp(34px, 3.8vw, 52px);
+    line-height: 1.12;
+    letter-spacing: -0.045em;
+    font-weight: 780;
+    text-wrap: balance;
+}
+:global(html:lang(km)) .documentHeading h1,
+:global(html:lang(km)) .hero h1 {
+    line-height: 1.5;
+    letter-spacing: 0;
+}
+.documentHeading > p {
+    color: var(--muted-foreground);
+    margin-top: 15px;
+    font-size: 14px;
+}
+.hero {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    align-items: center;
+    gap: 60px;
+    margin-bottom: 48px;
+}
+.eyebrow {
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brand);
+    margin-bottom: 18px;
+}
+.intro {
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--muted-foreground);
+    margin: 20px 0 24px;
+    max-width: 600px;
+}
+.heroActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.note {
+    color: var(--muted-foreground);
+    font-size: 12px;
+    margin-top: 13px;
+}
+.preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background: var(--blush);
+    border-radius: 32px;
+    padding: 25px;
+}
+.phone {
+    width: 184px;
+    border: 6px solid #242122;
+    border-radius: 27px;
+    overflow: hidden;
+    box-shadow: 0 8px 22px #4f29291a;
+}
+.phone img {
+    width: 100%;
+    height: auto;
+}
+.previewCaption {
+    font-size: 11px;
+    text-align: center;
+    color: var(--muted-foreground);
+    margin-top: 12px;
+}
+.guideArt {
+    min-height: 260px;
+}
+.guideArt img {
+    width: 250px;
+    height: auto;
+}
+.twoColumns {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 28px;
+    align-items: start;
+}
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+.card {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--card);
+    padding: 28px;
+}
+.card h2 {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    margin-bottom: 15px;
+}
+.card p,
+.card li {
+    font-size: 14px;
+    line-height: 1.8;
+}
+.card p {
+    color: var(--muted-foreground);
+}
+.cardTitle {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.cardTitle svg {
+    color: var(--brand);
+    flex-shrink: 0;
+    margin-top: 3px;
+}
+.warning {
+    background: var(--warning-surface);
+    border-color: color-mix(in srgb, var(--warning) 25%, transparent);
+}
+.warning h2,
+.warning p,
+.warning svg {
+    color: var(--warning);
+}
+.installSteps {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.installSteps li {
+    display: flex;
+    gap: 18px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+}
+.installSteps li:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+.stepNumber {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--brand);
+    background: var(--blush);
+    font-size: 12px;
+    font-weight: 700;
+}
+.installSteps li > div {
+    flex: 1;
+    min-width: 0;
+}
+.installSteps h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+.installSteps p {
+    color: var(--muted-foreground);
+}
+.readingLayout {
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    gap: 38px;
+    align-items: start;
+}
+.toc {
+    position: sticky;
+    top: 24px;
+    padding: 21px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+}
+.toc h2 {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    font-weight: 650;
+    margin-bottom: 10px;
+}
+.toc a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    color: var(--muted-foreground);
+    font-size: 12px;
+    padding: 8px 0;
+}
+.toc a:hover {
+    color: var(--brand);
+}
+.toc a > span {
+    color: var(--brand);
+    font-size: 10px;
+    flex-shrink: 0;
+}
+.article {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+.article .card {
+    scroll-margin-top: 24px;
+}
+.article ul {
+    list-style: disc;
+    padding-left: 20px;
+}
+.article li + li {
+    margin-top: 9px;
+}
+.article p + p {
+    margin-top: 12px;
+}
+.source {
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--muted-foreground);
+    padding: 0 8px;
+}
+.articleIntro {
+    font-size: 17px;
+    line-height: 1.8;
+    margin-bottom: 30px;
+    color: var(--muted-foreground);
+}
+.document {
+    max-width: 840px;
+    margin: 0 auto;
+}
+.document .card {
+    margin-bottom: 22px;
+}
+.document ul,
+.document ol {
+    padding-left: 22px;
+}
+.document ul {
+    list-style: disc;
+}
+.document ol {
+    list-style: decimal;
+}
+.document li + li {
+    margin-top: 10px;
+}
+.bottomActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 26px;
+}
+.footer {
+    display: grid;
+    grid-template-columns: auto 1fr 280px;
+    gap: 32px;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    padding-bottom: 24px;
+}
+.footer .brand {
+    font-size: 15px;
+}
+.footer .brandMark {
+    width: 38px;
+    height: 38px;
+}
+.footerLinks {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 22px;
+    color: var(--muted-foreground);
+    font-size: 11px;
+}
+.footerFinePrint {
+    color: var(--muted-foreground);
+    font-size: 10px;
+    line-height: 1.65;
+}
+.footerFinePrint p + p {
+    margin-top: 10px;
+}
+@media (max-width: 1050px) {
+    .headerDownload {
+        display: none;
+    }
+    .navigation {
+        gap: 18px;
+    }
+    .footer {
+        grid-template-columns: auto 1fr;
+        gap: 16px;
+    }
+    .footerFinePrint {
+        grid-column: 1 / -1;
+        max-width: 600px;
+    }
+    .hero {
+        gap: 32px;
+    }
+}
+@media (max-width: 700px) {
+    .container {
+        padding: 0 20px;
+    }
+    .header {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 18px 0 8px;
+    }
+    .brand {
+        font-size: 15px;
+        gap: 8px;
+    }
+    .brandMark {
+        width: 36px;
+        height: 36px;
+    }
+    .controls {
+        margin-left: auto;
+    }
+    .navigation {
+        order: 3;
+        width: 100%;
+        justify-content: space-between;
+        font-size: 12px;
+        gap: 10px;
+    }
+    .content {
+        padding: 30px 0 40px;
+    }
+    .hero,
+    .twoColumns,
+    .readingLayout {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+    .hero {
+        margin-bottom: 32px;
+    }
+    .hero h1,
+    .documentHeading h1 {
+        font-size: 35px;
+    }
+    .intro {
+        font-size: 16px;
+        margin: 18px 0 22px;
+    }
+    .heroActions {
+        flex-direction: column;
+    }
+    .heroActions .button {
+        width: 100%;
+    }
+    .phone {
+        width: 160px;
+    }
+    .guideArt {
+        min-height: 170px;
+    }
+    .guideArt img {
+        width: 190px;
+    }
+    .toc {
+        position: static;
+    }
+    .card {
+        padding: 23px;
+    }
+    .card h2 {
+        font-size: 20px;
+    }
+    .card p,
+    .card li {
+        font-size: 15px;
+    }
+    .footer {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .footerLinks {
+        justify-content: flex-start;
+        gap: 0 22px;
+        font-size: 12px;
+    }
+    .footerFinePrint {
+        font-size: 11px;
+    }
+}
+@media (max-width: 370px) {
+    .container {
+        padding: 0 16px;
+    }
+    .brand {
+        font-size: 13px;
+    }
+    .header {
+        column-gap: 4px;
+    }
+}
+.documentHeading .eyebrow {
+    color: var(--brand);
+    font-size: 11px;
+    margin: 0 0 16px;
+}
+.bottomActions a {
+    min-height: 48px;
+}

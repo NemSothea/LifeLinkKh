@@ -1,10 +1,21 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { pageMetadata } from '@/lib/seo';
-import PillLink from '@/components/PillLink';
-import { IconArrowLeft } from '@/components/icons';
-import PageHeader from '@/components/PageHeader';
+import Image from 'next/image';
+import Link from 'next/link';
+import PublicPage from '@/components/PublicPage';
+import styles from '@/components/public-site.module.css';
 import Highlight from '@/components/Highlight';
+import {
+    ArrowLeft,
+    ArrowRight,
+    Building2,
+    Droplet,
+    Heart,
+    ShieldCheck,
+    Timer,
+    Users,
+} from 'lucide-react';
 
 /**
  * "How getting blood works" — DEC-019. Public, for families first and donors second.
@@ -41,40 +52,73 @@ export default async function GettingBloodPage({
     const { locale } = await params;
     const t = await getTranslations('gettingBlood');
     const sections = t.raw('sections') as Section[];
+    const ui = await getTranslations('publicPages');
+    const icons = [Users, Heart, ShieldCheck, Droplet, Timer, Building2];
 
     return (
-        <main className="mx-auto max-w-2xl p-6 sm:p-10" data-testid="getting-blood">
-            <PageHeader locale={locale} title={t('title')} subtitle={t('subtitle')} />
-
-            <p className="mb-8 text-base text-foreground">
-                <Highlight text={t('intro')} />
-            </p>
-
-            <div className="flex flex-col gap-4">
-                {sections.map((section) => (
-                    <section
-                        key={section.heading}
-                        className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm"
-                    >
-                        <h2 className="mb-3 text-lg font-semibold">{section.heading}</h2>
-                        <ul className="list-disc space-y-1.5 pl-5 text-sm text-foreground">
-                            {section.items.map((item) => (
-                                <li key={item}>
-                                    <Highlight text={item} />
-                                </li>
-                            ))}
-                        </ul>
-                    </section>
-                ))}
+        <PublicPage locale={locale} testId="getting-blood">
+            <section className={styles.hero} aria-labelledby="guide-title">
+                <div>
+                    <p className={styles.eyebrow}>{ui('guideEyebrow')}</p>
+                    <h1 id="guide-title">{t('title')}</h1>
+                    <p className={styles.intro}>{t('subtitle')}</p>
+                    <p className={styles.articleIntro}>
+                        <Highlight text={t('intro')} />
+                    </p>
+                </div>
+                <div className={`${styles.preview} ${styles.guideArt}`}>
+                    <Image src="/landing/family.svg" width={320} height={240} alt="" />
+                </div>
+            </section>
+            <div className={styles.readingLayout}>
+                <nav className={styles.toc} aria-label={ui('onThisPage')}>
+                    <h2>{ui('onThisPage')}</h2>
+                    {sections.map((section, i) => (
+                        <a key={section.heading} href={`#guide-${i + 1}`}>
+                            <span>{String(i + 1).padStart(2, '0')}</span>
+                            {section.heading}
+                        </a>
+                    ))}
+                </nav>
+                <div className={styles.article}>
+                    {sections.map((section, i) => {
+                        const Icon = icons[i];
+                        return (
+                            <section
+                                id={`guide-${i + 1}`}
+                                key={section.heading}
+                                className={styles.card}
+                            >
+                                <h2 className={styles.cardTitle}>
+                                    {Icon && <Icon size={24} aria-hidden="true" />}
+                                    {section.heading}
+                                </h2>
+                                <ul>
+                                    {section.items.map((item) => (
+                                        <li key={item}>
+                                            <Highlight text={item} />
+                                        </li>
+                                    ))}
+                                </ul>
+                            </section>
+                        );
+                    })}
+                    <p className={styles.source}>{t('source')}</p>
+                    <div className={styles.bottomActions}>
+                        <Link
+                            href={`/${locale}/download`}
+                            className={`${styles.button} ${styles.primary}`}
+                        >
+                            {ui('requestInApp')}
+                            <ArrowRight size={17} aria-hidden="true" />
+                        </Link>
+                        <Link href={`/${locale}`} className={styles.button}>
+                            <ArrowLeft size={17} aria-hidden="true" />
+                            {t('backHome')}
+                        </Link>
+                    </div>
+                </div>
             </div>
-
-            <p className="mt-8 text-sm text-muted-foreground">{t('source')}</p>
-
-            <p className="mt-8">
-                <PillLink href={`/${locale}`} icon={<IconArrowLeft />}>
-                    {t('backHome')}
-                </PillLink>
-            </p>
-        </main>
+        </PublicPage>
     );
 }
