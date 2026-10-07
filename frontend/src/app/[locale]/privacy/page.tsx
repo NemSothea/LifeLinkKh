@@ -3,7 +3,8 @@ import { getTranslations } from 'next-intl/server';
 import { pageMetadata } from '@/lib/seo';
 import PillLink from '@/components/PillLink';
 import { IconArrowLeft, IconTrash } from '@/components/icons';
-import PageHeader from '@/components/PageHeader';
+import PublicPage from '@/components/PublicPage';
+import styles from '@/components/public-site.module.css';
 import Highlight from '@/components/Highlight';
 import { SUPPORT_PHONE } from '@/lib/support';
 
@@ -38,70 +39,76 @@ export async function generateMetadata({
 export default async function PrivacyPage({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
     const t = await getTranslations('privacy');
+    const ui = await getTranslations('publicPages');
     const sections = t.raw('sections') as Section[];
     const supportEmail = process.env.SUPPORT_EMAIL?.trim() || null;
 
     return (
-        <main className="mx-auto max-w-2xl p-6 sm:p-10">
-            <PageHeader locale={locale} title={t('title')} subtitle={t('effective')} />
+        <PublicPage
+            locale={locale}
+            title={t('title')}
+            eyebrow={ui('privacyEyebrow')}
+            subtitle={t('effective')}
+        >
+            <div className={styles.document}>
+                <p className={styles.articleIntro}>
+                    <Highlight text={t('intro')} />
+                </p>
 
-            <p className="mb-8 text-sm text-foreground">
-                <Highlight text={t('intro')} />
-            </p>
+                {sections.map((section) => (
+                    <section key={section.heading} className={styles.card}>
+                        <h2 className="mb-2 text-lg font-semibold">{section.heading}</h2>
+                        {section.paragraphs?.map((p) => (
+                            <p key={p} className="mb-2 text-sm text-foreground">
+                                <Highlight text={p} />
+                            </p>
+                        ))}
+                        {section.items ? (
+                            <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
+                                {section.items.map((item) => (
+                                    <li key={item}>
+                                        <Highlight text={item} />
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : null}
+                    </section>
+                ))}
 
-            {sections.map((section) => (
-                <section key={section.heading} className="mb-8">
-                    <h2 className="mb-2 text-lg font-semibold">{section.heading}</h2>
-                    {section.paragraphs?.map((p) => (
-                        <p key={p} className="mb-2 text-sm text-foreground">
-                            <Highlight text={p} />
+                <section className={styles.card}>
+                    <h2 className="mb-2 text-lg font-semibold">{t('contactHeading')}</h2>
+                    <p className="text-sm text-foreground">{t('contactBody')}</p>
+                    {supportEmail ? (
+                        <p className="mt-2 text-sm">
+                            <a
+                                href={`mailto:${supportEmail}`}
+                                data-testid="privacy-email"
+                                className="font-medium text-brand underline-offset-4 hover:underline"
+                            >
+                                {supportEmail}
+                            </a>
                         </p>
-                    ))}
-                    {section.items ? (
-                        <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
-                            {section.items.map((item) => (
-                                <li key={item}>
-                                    <Highlight text={item} />
-                                </li>
-                            ))}
-                        </ul>
                     ) : null}
-                </section>
-            ))}
-
-            <section className="mb-8">
-                <h2 className="mb-2 text-lg font-semibold">{t('contactHeading')}</h2>
-                <p className="text-sm text-foreground">{t('contactBody')}</p>
-                {supportEmail ? (
                     <p className="mt-2 text-sm">
                         <a
-                            href={`mailto:${supportEmail}`}
-                            data-testid="privacy-email"
+                            href={`tel:${SUPPORT_PHONE.tel}`}
+                            data-testid="privacy-phone"
                             className="font-medium text-brand underline-offset-4 hover:underline"
                         >
-                            {supportEmail}
+                            {SUPPORT_PHONE.carrier}: {SUPPORT_PHONE.display}
                         </a>
                     </p>
-                ) : null}
-                <p className="mt-2 text-sm">
-                    <a
-                        href={`tel:${SUPPORT_PHONE.tel}`}
-                        data-testid="privacy-phone"
-                        className="font-medium text-brand underline-offset-4 hover:underline"
-                    >
-                        {SUPPORT_PHONE.carrier}: {SUPPORT_PHONE.display}
-                    </a>
-                </p>
-                <p className="mt-3">
-                    <PillLink href={`/${locale}/delete-account`} icon={<IconTrash />}>
-                        {t('deleteLink')}
-                    </PillLink>
-                </p>
-            </section>
+                    <p className="mt-3">
+                        <PillLink href={`/${locale}/delete-account`} icon={<IconTrash />}>
+                            {t('deleteLink')}
+                        </PillLink>
+                    </p>
+                </section>
 
-            <PillLink href={`/${locale}`} icon={<IconArrowLeft />}>
-                {t('backCta')}
-            </PillLink>
-        </main>
+                <PillLink href={`/${locale}`} icon={<IconArrowLeft />}>
+                    {t('backCta')}
+                </PillLink>
+            </div>
+        </PublicPage>
     );
 }

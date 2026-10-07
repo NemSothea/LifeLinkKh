@@ -369,11 +369,26 @@
         "aboutBody": "LifeLink KH is a student project by Group 2 of the Cross-Platform Mobile App Development course in Cambodia. It is free and non-commercial: no ads, and your information is never sold. It is not run by a hospital or by the National Blood Transfusion Center.",
         "teamLabel": "Team",
         "team": [
-            { "name": "Nem Sothea", "role": "Tech Lead · Mobile app (Flutter)" },
-            { "name": "Moeun Nithvaraman", "role": "Backend & database" },
-            { "name": "Suon Pisey", "role": "Web portal (Next.js)" },
-            { "name": "Sourn Savourn", "role": "Product Supporter" },
-            { "name": "Oun Sreynich", "role": "Quality assurance" }
+            {
+                "name": "Nem Sothea",
+                "role": "Tech Lead · Mobile app (Flutter)"
+            },
+            {
+                "name": "Moeun Nithvaraman",
+                "role": "Backend & database"
+            },
+            {
+                "name": "Suon Pisey",
+                "role": "Web portal (Next.js)"
+            },
+            {
+                "name": "Sourn Savourn",
+                "role": "Product Supporter"
+            },
+            {
+                "name": "Oun Sreynich",
+                "role": "Quality assurance"
+            }
         ],
         "lecturerLabel": "Lecturer:",
         "lecturer": "Mr. SOK Pongsametrey",
@@ -476,5 +491,74 @@
         "source": "Based on Cambodia's national blood policy and WHO guidance. The hospital's blood bank and the NBTC have the final word on their own rules.",
         "backHome": "Back to home",
         "metaDescription": "Getting blood for a patient in Cambodia: any family blood type can help, blood is free by policy, never pay a broker, and what donors should know."
+    },
+    "landing": {
+        "navigation": "Main navigation",
+        "aboutNav": "About",
+        "headerDownload": "Get Android app",
+        "eyebrow": "Blood donor coordination · Phnom Penh",
+        "headline": "Be there when someone needs",
+        "headlineAccent": "blood.",
+        "intro": "LifeLink connects families with compatible donors nearby. Requests are reviewed before donors receive an alert.",
+        "download": "Get the Android app",
+        "guide": "Need blood? Start here",
+        "installNote": "Free Android APK · Khmer & English",
+        "reviewed": "Admin-reviewed requests",
+        "free": "Free to use",
+        "contactPrivacy": "Contact shared after acceptance",
+        "appAlt": "LifeLink Android Home screen with donation eligibility, the request blood button, and nearby blood requests.",
+        "appCaption": "The LifeLink Android app · Preview with example requests",
+        "pathways": "For donors and families",
+        "donorTitle": "Want to donate?",
+        "donorBody": "Create a donor profile and receive compatible alerts.",
+        "donorAction": "Get the app",
+        "familyTitle": "Need blood for family?",
+        "familyBody": "Read the guide, then submit a request in the app.",
+        "familyAction": "Read the family guide",
+        "howHeading": "From a request to a connection",
+        "steps": [
+            {
+                "title": "Submit a request",
+                "body": "A family adds the hospital, blood type and units in the app."
+            },
+            {
+                "title": "Review and matching",
+                "body": "An admin reviews it before eligible nearby donors are alerted."
+            },
+            {
+                "title": "Accept and coordinate",
+                "body": "An accepting donor can contact the family and donate at the hospital."
+            }
+        ],
+        "boardHeading": "See current blood requests",
+        "boardBody": "The public board is open to everyone. No account needed.",
+        "boardAction": "Open request board",
+        "boardInvitation": "A small step toward helping someone",
+        "boardDetail": "Visit the board to see current hospital requests, blood types and units needed.",
+        "boardAccess": "Public access · No sign-in required",
+        "safetyHeading": "Built with care. Free to use.",
+        "madeIn": "Made in Cambodia",
+        "finalHeading": "Be there for your community.",
+        "aboutSummary": "A free, non-commercial student project by Group 2. Independent of hospitals and the National Blood Transfusion Center.",
+        "teamSource": "Meet the team & view source",
+        "contactSummary": "Questions? We can help in Khmer or English.",
+        "contactTeam": "Contact the team",
+        "footerNavigation": "Footer navigation",
+        "privacyShort": "Privacy",
+        "deleteShort": "Delete account"
+    },
+    "publicPages": {
+        "downloadEyebrow": "Your next step starts here",
+        "guideEyebrow": "For families & donors",
+        "onThisPage": "In this guide",
+        "requestInApp": "Submit a request in the app",
+        "installTitles": [
+            "Download the APK",
+            "Allow installation",
+            "Install LifeLink",
+            "Sign in and get started"
+        ],
+        "privacyEyebrow": "Your information, your choice",
+        "deleteEyebrow": "You stay in control"
     }
 }

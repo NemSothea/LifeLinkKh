@@ -4,7 +4,8 @@ import { pageMetadata } from '@/lib/seo';
 import Notice from '@/components/Notice';
 import PillLink from '@/components/PillLink';
 import { IconArrowLeft, IconShield } from '@/components/icons';
-import PageHeader from '@/components/PageHeader';
+import PublicPage from '@/components/PublicPage';
+import styles from '@/components/public-site.module.css';
 
 export async function generateMetadata({
     params,
@@ -41,58 +42,59 @@ export default async function DeleteAccountPage({
 }) {
     const { locale } = await params;
     const t = await getTranslations('deleteAccount');
+    const ui = await getTranslations('publicPages');
     const supportEmail = process.env.SUPPORT_EMAIL?.trim() || null;
 
     return (
-        <main className="mx-auto max-w-2xl p-6 sm:p-10">
-            <PageHeader locale={locale} title={t('title')} />
+        <PublicPage locale={locale} title={t('title')} eyebrow={ui('deleteEyebrow')}>
+            <div className={styles.document}>
+                <section className={styles.card}>
+                    <h2 className="mb-2 text-lg font-semibold">{t('inAppHeading')}</h2>
+                    <ol className="list-decimal space-y-1 pl-5 text-sm text-foreground">
+                        <li>{t('inAppStep1')}</li>
+                        <li>{t('inAppStep2')}</li>
+                        <li>{t('inAppStep3')}</li>
+                    </ol>
+                </section>
 
-            <section className="mb-8">
-                <h2 className="mb-2 text-lg font-semibold">{t('inAppHeading')}</h2>
-                <ol className="list-decimal space-y-1 pl-5 text-sm text-foreground">
-                    <li>{t('inAppStep1')}</li>
-                    <li>{t('inAppStep2')}</li>
-                    <li>{t('inAppStep3')}</li>
-                </ol>
-            </section>
+                <section className={styles.card}>
+                    <h2 className="mb-2 text-lg font-semibold">{t('noAppHeading')}</h2>
+                    <p className="text-sm text-foreground">{t('noAppBody')}</p>
+                    {supportEmail ? (
+                        <p className="mt-3 text-sm">
+                            <a
+                                href={`mailto:${supportEmail}?subject=${encodeURIComponent(t('mailSubject'))}`}
+                                data-testid="delete-account-email"
+                                className="font-medium text-brand underline-offset-4 hover:underline"
+                            >
+                                {supportEmail}
+                            </a>
+                        </p>
+                    ) : (
+                        <Notice tone="warning" testId="delete-account-no-email" className="mt-3">
+                            {t('noEmailConfigured')}
+                        </Notice>
+                    )}
+                </section>
 
-            <section className="mb-8">
-                <h2 className="mb-2 text-lg font-semibold">{t('noAppHeading')}</h2>
-                <p className="text-sm text-foreground">{t('noAppBody')}</p>
-                {supportEmail ? (
-                    <p className="mt-3 text-sm">
-                        <a
-                            href={`mailto:${supportEmail}?subject=${encodeURIComponent(t('mailSubject'))}`}
-                            data-testid="delete-account-email"
-                            className="font-medium text-brand underline-offset-4 hover:underline"
-                        >
-                            {supportEmail}
-                        </a>
-                    </p>
-                ) : (
-                    <Notice tone="warning" testId="delete-account-no-email" className="mt-3">
-                        {t('noEmailConfigured')}
-                    </Notice>
-                )}
-            </section>
+                <section className={styles.card}>
+                    <h2 className="mb-2 text-lg font-semibold">{t('whatHeading')}</h2>
+                    <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
+                        <li>{t('whatDeleted')}</li>
+                        <li>{t('whatClosed')}</li>
+                        <li>{t('whatKept')}</li>
+                    </ul>
+                </section>
 
-            <section className="mb-8">
-                <h2 className="mb-2 text-lg font-semibold">{t('whatHeading')}</h2>
-                <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
-                    <li>{t('whatDeleted')}</li>
-                    <li>{t('whatClosed')}</li>
-                    <li>{t('whatKept')}</li>
-                </ul>
-            </section>
-
-            <div className="flex flex-wrap gap-2">
-                <PillLink href={`/${locale}/privacy`} icon={<IconShield />}>
-                    {t('privacyLink')}
-                </PillLink>
-                <PillLink href={`/${locale}`} icon={<IconArrowLeft />}>
-                    {t('backCta')}
-                </PillLink>
+                <div className={styles.bottomActions}>
+                    <PillLink href={`/${locale}/privacy`} icon={<IconShield />}>
+                        {t('privacyLink')}
+                    </PillLink>
+                    <PillLink href={`/${locale}`} icon={<IconArrowLeft />}>
+                        {t('backCta')}
+                    </PillLink>
+                </div>
             </div>
-        </main>
+        </PublicPage>
     );
 }
