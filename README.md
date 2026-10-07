@@ -427,6 +427,7 @@ would go stale.
 | Suon Pisey | Frontend (Next.js) |
 | Sourn Savourn | Product Supporter (PO scope) |
 | Oun Sreynich | QA |
+| Math Rorpheeyah | Mobile (Flutter) · Web portal (Next.js) · Product Supporter |
 
 Write scopes and role overlays: [`docs/team.md`](docs/team.md). Team members onboard with
 [`ONBOARDING.md`](ONBOARDING.md); outside contributors start at [`CONTRIBUTING.md`](CONTRIBUTING.md).

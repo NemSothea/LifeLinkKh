@@ -7,6 +7,7 @@
 | Suon Pisey | Fullstack (Frontend) | — | frontend/ (Next.js web portal), Firebase REST client, i18n |
 | Sourn Savourn | Product Supporter (PO scope) | — | docs/po/ (PRD, briefs, prototypes, FRs), changelog |
 | Oun Sreynich | QA | — | docs/qa/, test cases, bug registry, DoD sign-off |
+| Math Rorpheeyah | Mobile + Web contributor | Product Supporter | Contributes to mobile/ (Flutter) and frontend/ (Next.js) — the 2026-10 public-site redesign; changes go through PR review by the area owner |
 
 ## Role index (R2)
 - **PO** — product defs (docs/po/). Sourn primary; Tech Lead co-holds and drives in tooling.

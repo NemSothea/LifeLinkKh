@@ -165,6 +165,7 @@ posts, answers and deletes through it). Setup: `docs/tech-lead/local-development
 | **Suon Pisey** | Frontend (Senior) | Next.js web portal (public board + admin), Firebase REST client, forms, Khmer/English i18n. |
 | **Sourn Savourn** | Product Supporter (Senior; PO scope) | `docs/po/` — PRD, briefs, prototypes, FRs, changelog. Co-PO with Nem Sothea. |
 | **Oun Sreynich** | QA (Senior) | Test plan, e2e/integration tests, milestone acceptance, bug tracking. |
+| **Math Rorpheeyah** | Mobile + Web + Product Supporter | Contributes to the Flutter app (`mobile/`) and the Next.js portal (`frontend/`) — the public-site redesign; Product Supporter alongside Sourn Savourn. Changes go through PR review by the area owner. |
 
 > Note: original assignment says teams of 3; this team is 5 — confirm with the instructor.
 >
@@ -176,6 +177,9 @@ posts, answers and deletes through it). Setup: `docs/tech-lead/local-development
 > Amended 2026-08-17: three-way role rotation. Moeun Nithvaraman → Backend/Database,
 > Suon Pisey → Frontend (Next.js), Sourn Savourn → PO (co-PO with Nem Sothea).
 > Write scopes (R2) move with the roles; nothing else changes.
+>
+> Amended 2026-10-07: Math Rorpheeyah added as a sixth contributor — Mobile (Flutter), Web portal
+> (Next.js) and Product Supporter. Contributes through PRs; owns no path outright.
 
 ## 6. Course context
 
