@@ -33,7 +33,7 @@ Anyone can read it — no account, no login. Khmer is the default, because the u
 | | |
 |---|---|
 | ![The same board in English](docs/assets/screens/board-public-en.png) | ![The front door](docs/assets/screens/landing-km.png) |
-| **The same board, one tap later.** Every string in both clients ships in Khmer and English. | **The front door.** Get the app first, the board one card below, and the privacy and account-deletion pages. |
+| **The same board, one tap later.** Every string in both clients ships in Khmer and English. | **The front door.** Download the Android app first; a family that needs blood starts one button below. The phone beside it is the real app. |
 
 ## The admin portal
 
