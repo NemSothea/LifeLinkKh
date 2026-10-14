@@ -15,7 +15,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^2.0.0
 
   # Architecture choices recorded in docs/tech-lead/adr/0006-flutter-course-architecture.md.
   #
