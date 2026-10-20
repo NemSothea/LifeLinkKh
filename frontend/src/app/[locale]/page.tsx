@@ -242,9 +242,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                             aria-labelledby="about-heading"
                         >
                             <Image
-                                src="/landing/angkor-wat.png"
-                                width={2008}
-                                height={783}
+                                src="/landing/angkor-wat.webp"
+                                width={1200}
+                                height={468}
                                 sizes="(max-width: 700px) 90vw, 480px"
                                 alt=""
                                 className={styles.temple}

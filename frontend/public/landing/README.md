@@ -2,7 +2,7 @@
 
 - `app-home-en.png` and `app-home-km.png`: unchanged real Android screenshots copied from `docs/assets/screens/`. These are illustrative app previews, not live request data.
 - `donor.svg` and `family.svg`: reusable, code-authored red and blush illustrations matching the supplied landing concept. Interface icons use the existing Lucide package; the brand mark remains the existing app mark.
-- `angkor-wat.png`: transparent decorative artwork generated with the built-in imagegen tool, then copied into this project. No external API/CLI was used.
+- `angkor-wat.webp`: transparent decorative artwork (1200px WebP, resized from the 2008px PNG original) generated with the built-in imagegen tool, then copied into this project. No external API/CLI was used.
 
 ## Exact imagegen prompt
 
