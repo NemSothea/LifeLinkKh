@@ -31,6 +31,8 @@ export default function AutoRefresh({ intervalMs = DEFAULT_INTERVAL_MS }: { inte
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
     useEffect(() => {
+        // Deliberate: the timestamp is the browser's, set once mounted, never the server's.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLastUpdated(new Date().toISOString());
 
         function refresh() {

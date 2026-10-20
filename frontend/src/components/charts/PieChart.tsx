@@ -49,7 +49,11 @@ export default function PieChart({
     }
     const outer = R - 4;
     const inner = donut ? outer * 0.6 : 0;
-    let angle = 0;
+    // Each slice's start angle, worked out before render rather than by mutating a counter inside
+    // the map: the React Compiler rules reject a variable reassigned from the JSX.
+    const starts = slices.map((_, i) =>
+        slices.slice(0, i).reduce((sum, s) => sum + (s.value / total) * Math.PI * 2, 0),
+    );
 
     return (
         // Side by side only when the card itself is wide (a container query, not the screen):
@@ -66,12 +70,12 @@ export default function PieChart({
                     className="shrink-0"
                 >
                     <g className="animate-spin-in">
-                        {slices.map((s) => {
-                            const start = angle;
+                        {slices.map((s, i) => {
+                            const start = starts[i];
                             const sweep = (s.value / total) * Math.PI * 2;
-                            angle += sweep;
                             // A lone slice is a full ring; an arc from 0 to 2π draws nothing.
-                            const end = slices.length === 1 ? start + Math.PI * 2 - 0.0001 : angle;
+                            const end =
+                                slices.length === 1 ? start + Math.PI * 2 - 0.0001 : start + sweep;
                             const mid = start + sweep / 2;
                             const lift = hover === s.key ? 5 : 0;
                             return (

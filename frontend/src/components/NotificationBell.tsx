@@ -43,6 +43,8 @@ export default function NotificationBell({ items }: { items: AdminNotification[]
     const rootRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
 
+    // Deliberate: localStorage only exists after mount, so reading it during render would mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => setSeenAt(readSeen()), []);
 
     useEffect(() => {

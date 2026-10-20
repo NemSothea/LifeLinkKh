@@ -21,6 +21,8 @@ export default function RelativeTime({ iso, className }: { iso: string; classNam
     const [now, setNow] = useState<Date | null>(null);
 
     useEffect(() => {
+        // Deliberate: the first client tick corrects the server's clock after hydration.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setNow(new Date());
         const timer = setInterval(() => setNow(new Date()), 30_000);
         return () => clearInterval(timer);

@@ -73,6 +73,7 @@ export default function SignInForm({ locale, copy }: { locale: string; copy: Cop
         try {
             const saved = window.localStorage.getItem(REMEMBERED_USERNAME_KEY);
             if (saved) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect -- see the comment above the effect
                 setRemember(true);
                 // Ticked by hand as well: React sets `checked` itself on hydration, and after
                 // that a browser ignores a changed default.
