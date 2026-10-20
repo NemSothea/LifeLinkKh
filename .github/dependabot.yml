@@ -3,8 +3,8 @@
 # the queue. The remediation windows (critical 7 days, high 30) are in
 # docs/security/security-checklist.md §Dependencies.
 #
-# Dependabot reads this file from the default branch only. Until feat/firebase-backend reaches
-# main, it does nothing; `target-branch` makes it update the live branch once it does.
+# Dependabot reads this file from the default branch only, which on GitHub is now
+# feat/firebase-backend; `target-branch` keeps it there if the default changes back to main.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -14,6 +14,11 @@ updates:
     open-pull-requests-limit: 5
     groups:
       minor-and-patch: { update-types: [minor, patch] }
+    # @types/node follows the runtime (engines 22.x), not the newest Node: a major bump would type
+    # APIs that Vercel's Node 22 does not have. Raise it by hand with the engines field.
+    ignore:
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
   - package-ecosystem: npm
     directory: /firebase
     target-branch: feat/firebase-backend
