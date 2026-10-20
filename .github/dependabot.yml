@@ -26,6 +26,15 @@ updates:
     open-pull-requests-limit: 5
     groups:
       minor-and-patch: { update-types: [minor, patch] }
+  # The handbook's build tooling. Monthly: it ships static pages, and a stale minor version there
+  # costs nothing; security updates still open at once.
+  - package-ecosystem: npm
+    directory: /docs/book
+    target-branch: feat/firebase-backend
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    groups:
+      minor-and-patch: { update-types: [minor, patch] }
   - package-ecosystem: pub
     directory: /mobile
     target-branch: feat/firebase-backend
