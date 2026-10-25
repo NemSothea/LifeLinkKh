@@ -48,9 +48,24 @@ echo "✅ dist/lifelink-kh.apk ($(du -h dist/lifelink-kh.apk | cut -f1))"
 # `shasum -c` format, relative name, so `cd` to the download folder and run it there.
 (cd dist && shasum -a 256 lifelink-kh.apk > lifelink-kh.apk.sha256)
 echo "   file SHA-256: $(cut -d' ' -f1 dist/lifelink-kh.apk.sha256)  (dist/lifelink-kh.apk.sha256)"
-cert=$(keytool -printcert -jarfile dist/lifelink-kh.apk 2>/dev/null | sed -n 's/^[[:space:]]*SHA256: //p' | head -1)
-echo "   signing certificate SHA-256: ${cert:-<keytool could not read it>}"
-if keytool -printcert -jarfile dist/lifelink-kh.apk 2>/dev/null | grep -q "CN=Android Debug"; then
+# apksigner, not `keytool -printcert -jarfile`: minSdk 24 means the APK carries only a v2
+# signature, and keytool reads v1 (JAR) signatures only — it printed nothing, so the debug check
+# below could never fire. Unreadable certificate = refuse, never pass.
+sdk=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}
+apksigner=$(ls -d "$sdk"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
+if [ -z "$apksigner" ]; then
+    echo "❌ apksigner not found under $sdk/build-tools — cannot check the signing certificate."
+    exit 1
+fi
+certs=$("$apksigner" verify --print-certs dist/lifelink-kh.apk 2>&1) || {
+    echo "❌ apksigner could not verify dist/lifelink-kh.apk:"
+    echo "$certs"
+    exit 1
+}
+cert=$(echo "$certs" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -1 \
+    | tr '[:lower:]' '[:upper:]' | sed 's/../&:/g; s/:$//')
+echo "   signing certificate SHA-256: $cert"
+if echo "$certs" | grep -q "CN=Android Debug"; then
     echo "❌ This APK is signed with the DEBUG key. Do not publish it — check key.properties."
     exit 1
 fi
