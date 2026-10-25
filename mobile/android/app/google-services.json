@@ -82,6 +82,14 @@
           }
         },
         {
+          "client_id": "45594180154-ndpam88ctijpdb5hcrg5hied1ibiqbjk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kosigndemo.lifelinkkh",
+            "certificate_hash": "e7b4a6e4e8f4da6f4cea33b6e14f8fe91970f286"
+          }
+        },
+        {
           "client_id": "45594180154-nr4unhfv72fe4hve2oepevgva0rdmtrg.apps.googleusercontent.com",
           "client_type": 3
         }
