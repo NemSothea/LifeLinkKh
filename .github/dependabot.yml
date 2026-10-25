@@ -42,6 +42,10 @@ updates:
     open-pull-requests-limit: 5
     groups:
       minor-and-patch: { update-types: [minor, patch] }
+    # flutter_localizations pins intl to the exact version the Flutter SDK ships, so any newer
+    # intl fails version solving. It moves when the pinned Flutter in CI moves, by hand.
+    ignore:
+      - dependency-name: intl
   - package-ecosystem: github-actions
     directory: /
     target-branch: feat/firebase-backend
