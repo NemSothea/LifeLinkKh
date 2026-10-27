@@ -3,6 +3,10 @@
 # the queue. The remediation windows (critical 7 days, high 30) are in
 # docs/security/security-checklist.md §Dependencies.
 #
+# Major versions are ignored for the four package ecosystems (2026-10-27): each one is a
+# migration, not a bump, and they were piling up unreviewed. Raise a major by hand when the
+# migration is planned; security updates still open regardless of this ignore.
+#
 # Dependabot reads this file from the default branch only, which on GitHub is now
 # feat/firebase-backend; `target-branch` keeps it there if the default changes back to main.
 version: 2
@@ -19,6 +23,8 @@ updates:
     ignore:
       - dependency-name: '@types/node'
         update-types: [version-update:semver-major]
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
   - package-ecosystem: npm
     directory: /firebase
     target-branch: feat/firebase-backend
@@ -26,6 +32,9 @@ updates:
     open-pull-requests-limit: 5
     groups:
       minor-and-patch: { update-types: [minor, patch] }
+    ignore:
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
   # The handbook's build tooling. Monthly: it ships static pages, and a stale minor version there
   # costs nothing; security updates still open at once.
   - package-ecosystem: npm
@@ -35,6 +44,9 @@ updates:
     open-pull-requests-limit: 3
     groups:
       minor-and-patch: { update-types: [minor, patch] }
+    ignore:
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
   - package-ecosystem: pub
     directory: /mobile
     target-branch: feat/firebase-backend
@@ -46,6 +58,8 @@ updates:
     # intl fails version solving. It moves when the pinned Flutter in CI moves, by hand.
     ignore:
       - dependency-name: intl
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
   - package-ecosystem: github-actions
     directory: /
     target-branch: feat/firebase-backend
