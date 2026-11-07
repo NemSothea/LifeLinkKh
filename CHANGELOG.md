@@ -23,7 +23,7 @@ Owner: PO (Sourn Savourn). The Tech Lead adds the release entry when a release i
 
 ## [1.0.1] - 2026-10-25
 
-> **ខ្មែរ** `[km-review]`៖ រូបតំណាងដែលអ្នកជ្រើសរើស ត្រូវបានរក្សាទុកក្នុងគណនី។ កំណែនេះចុះហត្ថលេខាដោយកូនសោថ្មី
+> **ខ្មែរ** (reviewed by Nem Sothea, 2026-11-07)៖ រូបតំណាងដែលអ្នកជ្រើសរើស ត្រូវបានរក្សាទុកក្នុងគណនី។ កំណែនេះចុះហត្ថលេខាដោយកូនសោថ្មី
 > ដូច្នេះអ្នកដែលមាន 1.0.0 ត្រូវលុបវាចេញម្តងសិន រួចដំឡើងកំណែនេះ។ រឿងនេះកើតឡើងតែម្តងនេះប៉ុណ្ណោះ។
 
 ### Added
@@ -39,7 +39,7 @@ Owner: PO (Sourn Savourn). The Tech Lead adds the release entry when a release i
 
 ## [1.0.0] - 2026-10-01
 
-> **ខ្មែរ** `[km-review]`៖ កំណែសាធារណៈដំបូងសម្រាប់ Android។ ចុះឈ្មោះជាអ្នកបរិច្ចាគ ដាក់សំណើឈាមបន្ទាន់
+> **ខ្មែរ** (reviewed by Nem Sothea, 2026-11-07)៖ កំណែសាធារណៈដំបូងសម្រាប់ Android។ ចុះឈ្មោះជាអ្នកបរិច្ចាគ ដាក់សំណើឈាមបន្ទាន់
 > ទទួលការជូនដំណឹង និងមើលប្រវត្តិបរិច្ចាគ ព្រមទាំងពេលដែលអ្នកអាចបរិច្ចាគម្តងទៀត។
 
 First public release for Android, on GitHub Releases with an install guide at `/download`.
