@@ -5,7 +5,9 @@
 # and mobile (Flutter). scripts/verify-all.sh runs the same steps locally.
 name: ci
 on:
-  push: { branches: [ main ] }
+  # feat/firebase-backend is the GitHub default branch; without it here a direct push to it
+  # (an admin bypassing the PR rule) runs no checks at all.
+  push: { branches: [ main, feat/firebase-backend ] }
   pull_request: {}
 
 jobs:
