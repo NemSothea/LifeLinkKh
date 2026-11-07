@@ -7,7 +7,7 @@
 > - Telegram group: https://t.me/LifeLinkKH (created 2026-11-07).
 > - The Facebook page does not exist yet. Hold the Facebook post until it does, then replace `[FB_PAGE]`.
 > - Replace `[LAUNCH_DATE]` and `[WATCH_PERSON]`.
-> - Have a native speaker review every Khmer line marked `[km-review]` (see #18 and #23).
+> - Khmer reviewed by a native speaker (Nem Sothea) on 2026-11-07. Any new Khmer added here gets `[km-review]` until reviewed.
 > - The disclaimer and no-money lines reuse strings the portal and app already ship
 >   (`app.disclaimer`, `portal.moneyNotice`). Keep them word for word.
 > - Each post is 120 words or fewer, not counting links.
@@ -33,7 +33,7 @@
 
 Khmer first. One call to action: install. The post goes inside the group, so it does not link to the group.
 
-### ខ្មែរ `[km-review]`
+### ខ្មែរ (reviewed by Nem Sothea, 2026-11-07)
 
 > 🩸 **LifeLink KH (ជីវិត) អាចប្រើបានហើយ!**
 >
@@ -68,7 +68,7 @@ Khmer first. One call to action: install. The post goes inside the group, so it 
 Khmer first. Attach **one** screenshot: `docs/assets/screens/mobile-home-km.png`. It comes from demo data, not
 real people. Check it again before posting.
 
-### ខ្មែរ `[km-review]`
+### ខ្មែរ (reviewed by Nem Sothea, 2026-11-07)
 
 > **ត្រូវការឈាមបន្ទាន់? ឬចង់ជួយសង្គ្រោះជីវិត?** 🩸
 >
@@ -120,7 +120,7 @@ English first. The aim is contributors, not installs.
 > 🌱 Good first issues: https://github.com/NemSothea/LifeLinkKh/issues?q=is%3Aopen+label%3A%22good+first+issue%22
 > 📖 Handbook: https://nemsothea.github.io/LifeLinkKh/
 
-### ខ្មែរ `[km-review]`
+### ខ្មែរ (reviewed by Nem Sothea, 2026-11-07)
 
 > **LifeLink KH៖ កម្មវិធីកូដបើកចំហ សម្រាប់ផ្គូផ្គងអ្នកបរិច្ចាគឈាមនៅកម្ពុជា (Apache-2.0)**
 >
