@@ -55,7 +55,7 @@
 ## សួរសំណួរនៅទីណា
 
 - [GitHub Discussions](https://github.com/NemSothea/LifeLinkKh/discussions): សំណួរ និងគំនិត
-- Telegram: `[TELEGRAM_LINK]` · Facebook: `[FB_PAGE]`
+- Telegram: https://t.me/LifeLinkKH · Facebook: ឆាប់ៗនេះ
 - បញ្ហា និងសំណើមុខងារថ្មី សូមដាក់ក្នុង GitHub issues ជានិច្ច។
 
 ## អាជ្ញាប័ណ្ណ

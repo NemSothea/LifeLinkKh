@@ -70,7 +70,7 @@ reuse, fork or contribute to it. Choosing a license is the first blocker for eve
 
 | Item | State |
 |---|---|
-| Telegram group, Facebook page | unknown to the repo: `[TELEGRAM_LINK]`, `[FB_PAGE]` |
+| Telegram group, Facebook page | Telegram group https://t.me/LifeLinkKH (created 2026-11-07); Facebook page not created yet: `[FB_PAGE]` |
 | `docs/community/` | **missing** |
 
 ## Secrets

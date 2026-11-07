@@ -9,7 +9,7 @@
 |---|---|---|---|
 | **GitHub Issues** | Bugs, feature requests, translations: anything that needs tracking | Chat, emergencies, security holes | <https://github.com/NemSothea/LifeLinkKh/issues> |
 | **GitHub Discussions** | Questions, ideas, proposals before a DEC, announcements | Bug reports (open an issue) | <https://github.com/NemSothea/LifeLinkKh/discussions> |
-| **Telegram group** | Quick questions, news, coordinating testers and translators, Khmer-first chat | Decisions, bug tracking, personal data | `[TELEGRAM_LINK]` |
+| **Telegram group** | Quick questions, news, coordinating testers and translators, Khmer-first chat | Decisions, bug tracking, personal data | https://t.me/LifeLinkKH |
 | **Facebook page** | Public news, release announcements, reaching donors and students | Support threads, technical discussion | `[FB_PAGE]` |
 | **Security** | Vulnerabilities, privately | Anything public | [`SECURITY.md`](../../SECURITY.md) |
 
@@ -45,7 +45,7 @@ All Khmer descriptions are `[km-review]`.
 
 1. Create a **group** (not a channel) named **"LifeLink KH · ជីវិត — Community"**.
 2. Settings:
-   - public link `[TELEGRAM_LINK]`;
+   - public link https://t.me/LifeLinkKH;
    - history visible to new members;
    - slow mode 10 s;
    - approve new members off (keep the barrier low), but turn on the anti-spam bot if spam arrives;
