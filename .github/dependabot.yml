@@ -56,8 +56,28 @@ updates:
       minor-and-patch: { update-types: [minor, patch] }
     # flutter_localizations pins intl to the exact version the Flutter SDK ships, so any newer
     # intl fails version solving. It moves when the pinned Flutter in CI moves, by hand.
+    #
+    # The '*' major ignore below did not hold for pub inside a group: PR #60 (2026-11-03) still
+    # carried flutter_riverpod 2→3 and riverpod_generator 2→4. So the risky ones are named:
+    # - build_runner / drift_dev / riverpod_generator pull a newer analyzer, which needs a newer
+    #   Dart SDK than the pinned Flutter ships (build_runner 2.16.2 failed version solving against
+    #   flutter_test's meta pin). Move them by hand with the pinned Flutter.
+    # - drift moves together with drift_dev.
+    # - riverpod runtime majors are a migration plus a full codegen rebuild.
+    # - sqlite3_flutter_libs 0.6.0+eol is an empty package; on Drift 2.28 it drops the native
+    #   library and the app crashes on device (see the comment in mobile/pubspec.yaml).
     ignore:
       - dependency-name: intl
+      - dependency-name: build_runner
+      - dependency-name: drift
+      - dependency-name: drift_dev
+      - dependency-name: riverpod_generator
+      - dependency-name: flutter_riverpod
+        update-types: [version-update:semver-major]
+      - dependency-name: riverpod_annotation
+        update-types: [version-update:semver-major]
+      - dependency-name: sqlite3_flutter_libs
+        versions: ['>=0.6.0']
       - dependency-name: '*'
         update-types: [version-update:semver-major]
   - package-ecosystem: github-actions
