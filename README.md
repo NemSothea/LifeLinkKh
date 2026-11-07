@@ -396,7 +396,7 @@ LifeLink KH ជាគម្រោងសហគមន៍បើកចំហ។ យ�
 | How decisions are made | [`GOVERNANCE.md`](GOVERNANCE.md) · channels: [`docs/community/channels.md`](docs/community/channels.md) · translating: [`docs/community/translating.md`](docs/community/translating.md) |
 | Questions and ideas | [GitHub Discussions](https://github.com/NemSothea/LifeLinkKh/discussions) |
 | Security problems | [`SECURITY.md`](SECURITY.md): report privately, never in a public issue |
-| Community | Telegram `[TELEGRAM_LINK]` · Facebook `[FB_PAGE]` |
+| Community | Telegram https://t.me/LifeLinkKH · Facebook: coming soon · ឆាប់ៗនេះ |
 
 > **Medical disclaimer · ការបដិសេធផ្នែកវេជ្ជសាស្ត្រ:** LifeLink KH helps connect donors and patients.
 > It does not replace the National Blood Transfusion Center or medical advice. ·

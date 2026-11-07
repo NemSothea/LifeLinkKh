@@ -123,7 +123,7 @@ Outside contributors may send a PR to any area; the owner reviews it. We aim to 
 ## Where to ask
 
 - [GitHub Discussions](https://github.com/NemSothea/LifeLinkKh/discussions) for questions, ideas and proposals.
-- Telegram: `[TELEGRAM_LINK]` · Facebook: `[FB_PAGE]`.
+- Telegram: https://t.me/LifeLinkKH · Facebook: coming soon.
 - Bugs and features always go in GitHub issues, so they don't get lost in chat.
 
 ## License
